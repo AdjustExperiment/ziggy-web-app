@@ -27,7 +27,11 @@ export function Navbar() {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <div className="flex items-center">
-            <img src="/lovable-uploads/bb7e942b-4006-461c-b9ed-9bdde6f1500c.png" alt="Debate Champions Logo" className="rounded-full" />
+            <img 
+              src="/lovable-uploads/bb7e942b-4006-461c-b9ed-9bdde6f1500c.png" 
+              alt="Debate Champions Logo" 
+              className="h-8 sm:h-10 w-auto rounded-full" 
+            />
           </div>
 
           {/* Desktop Navigation */}

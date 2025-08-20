@@ -34,7 +34,7 @@ const Login = () => {
               <img 
                 src="/lovable-uploads/bb7e942b-4006-461c-b9ed-9bdde6f1500c.png" 
                 alt="Debate Champions Logo" 
-                className="h-12 w-12 sm:h-16 sm:w-16 mx-auto lg:mx-0 mb-4 rounded-full" 
+                className="h-12 sm:h-16 w-auto mx-auto lg:mx-0 mb-4 rounded-full" 
               />
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-4 font-primary">
                 Welcome Back
