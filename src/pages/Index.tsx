@@ -46,9 +46,10 @@ const Index = () => {
       <section className="py-24 bg-background">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <Badge className="mb-4 bg-primary/10 text-primary border-primary/20">
-              Platform Features
-            </Badge>
+              <Badge className="mb-4 bg-primary/10 text-primary border-primary/20">
+                <span className="inline-block w-2 h-2 bg-primary rounded-full mr-2"></span>
+                Featured by the Cato Institute
+              </Badge>
             <h2 className="text-3xl font-bold text-foreground mb-4">
               Everything You Need to Excel
             </h2>

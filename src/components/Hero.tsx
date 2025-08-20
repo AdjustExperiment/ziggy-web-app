@@ -14,8 +14,8 @@ export function Hero() {
           <div className="space-y-8">
             <div className="space-y-4">
               <Badge className="bg-white/10 text-white border-white/20 hover:bg-white/20">
-                <Trophy className="h-3 w-3 mr-1" />
-                #1 Tournament Platform
+                <span className="inline-block w-2 h-2 bg-white rounded-full mr-2"></span>
+                Featured by the Cato Institute
               </Badge>
               
               <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl lg:text-7xl">
