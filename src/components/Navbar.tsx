@@ -68,19 +68,19 @@ export function Navbar() {
               <DropdownMenuContent align="end" className="bg-black border-white/20">
                 <DropdownMenuItem 
                   className="text-white hover:text-red-500 hover:bg-white/10"
-                  onClick={() => window.location.href = '/login'}
+                  onClick={() => window.location.href = '/login?type=team'}
                 >
                   Team Login
                 </DropdownMenuItem>
                 <DropdownMenuItem 
                   className="text-white hover:text-red-500 hover:bg-white/10"
-                  onClick={() => window.location.href = '/login'}
+                  onClick={() => window.location.href = '/login?type=individual'}
                 >
                   Individual Login
                 </DropdownMenuItem>
                 <DropdownMenuItem 
                   className="text-white hover:text-red-500 hover:bg-white/10"
-                  onClick={() => window.location.href = '/login'}
+                  onClick={() => window.location.href = '/login?type=admin'}
                 >
                   Admin Portal
                 </DropdownMenuItem>

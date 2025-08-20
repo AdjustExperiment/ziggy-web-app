@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,8 +10,19 @@ import { Badge } from "@/components/ui/badge";
 import { User, Lock, Mail, Users, Shield, Eye, EyeOff, ArrowRight } from "lucide-react";
 
 const Login = () => {
+  const [searchParams] = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
-  const [loginType, setLoginType] = useState("team");
+  const [loginType, setLoginType] = useState(() => {
+    const typeParam = searchParams.get("type");
+    return ["team", "individual", "admin"].includes(typeParam || "") ? typeParam || "team" : "team";
+  });
+
+  useEffect(() => {
+    const typeParam = searchParams.get("type");
+    if (["team", "individual", "admin"].includes(typeParam || "")) {
+      setLoginType(typeParam || "team");
+    }
+  }, [searchParams]);
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center">
