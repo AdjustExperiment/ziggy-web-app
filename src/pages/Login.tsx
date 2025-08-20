@@ -26,20 +26,20 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center">
-      <div className="w-full max-w-6xl mx-auto px-4 py-12">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+      <div className="w-full max-w-6xl mx-auto px-4 py-8 sm:py-12">
+        <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 items-center">
           {/* Left Side - Branding */}
-          <div className="text-center lg:text-left">
-            <div className="mb-8">
+          <div className="text-center lg:text-left order-last lg:order-first">
+            <div className="mb-6 sm:mb-8">
               <img 
                 src="/lovable-uploads/bb7e942b-4006-461c-b9ed-9bdde6f1500c.png" 
                 alt="Debate Champions Logo" 
-                className="h-16 w-16 mx-auto lg:mx-0 mb-4 rounded-full" 
+                className="h-12 w-12 sm:h-16 sm:w-16 mx-auto lg:mx-0 mb-4 rounded-full" 
               />
-              <h1 className="text-4xl font-bold text-white mb-4 font-primary">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-4 font-primary">
                 Welcome Back
               </h1>
-              <p className="text-xl text-white/70 mb-8">
+              <p className="text-lg sm:text-xl text-white/70 mb-6 sm:mb-8">
                 Access your debate tournament platform and continue your journey to excellence.
               </p>
             </div>
@@ -61,30 +61,30 @@ const Login = () => {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-3 gap-4 mt-12 pt-8 border-t border-white/10">
+            <div className="hidden lg:grid grid-cols-3 gap-4 mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-white/10">
               <div className="text-center">
-                <div className="text-2xl font-bold text-white">1,342+</div>
-                <div className="text-sm text-white/70">Active Users</div>
+                <div className="text-xl sm:text-2xl font-bold text-white">1,342+</div>
+                <div className="text-xs sm:text-sm text-white/70">Active Users</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-white">156</div>
-                <div className="text-sm text-white/70">Teams</div>
+                <div className="text-xl sm:text-2xl font-bold text-white">156</div>
+                <div className="text-xs sm:text-sm text-white/70">Teams</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-white">98.7%</div>
-                <div className="text-sm text-white/70">Uptime</div>
+                <div className="text-xl sm:text-2xl font-bold text-white">98.7%</div>
+                <div className="text-xs sm:text-sm text-white/70">Uptime</div>
               </div>
             </div>
           </div>
 
           {/* Right Side - Login Forms */}
-          <div className="w-full">
+          <div className="w-full order-first lg:order-last">
             <Card className="bg-black border-white/10 shadow-tournament">
-              <CardHeader className="text-center">
-                <CardTitle className="text-2xl text-white font-primary">Sign In</CardTitle>
-                <p className="text-white/70">Choose your account type to continue</p>
+              <CardHeader className="text-center px-4 sm:px-6 py-4 sm:py-6">
+                <CardTitle className="text-xl sm:text-2xl text-white font-primary">Sign In</CardTitle>
+                <p className="text-sm sm:text-base text-white/70">Choose your account type to continue</p>
               </CardHeader>
-              <CardContent>
+              <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
                 <Tabs value={loginType} onValueChange={setLoginType} className="space-y-6">
                   <TabsList className="grid w-full grid-cols-3 bg-black border border-white/10">
                     <TabsTrigger 

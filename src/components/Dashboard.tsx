@@ -41,17 +41,17 @@ const recentResults = [
 export function Dashboard() {
   return (
     <div className="min-h-screen bg-gradient-subtle">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:py-8 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground">Tournament Analytics</h1>
-          <p className="mt-2 text-muted-foreground">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Tournament Analytics</h1>
+          <p className="mt-2 text-sm sm:text-base text-muted-foreground">
             Comprehensive insights into debate tournament performance and engagement
           </p>
         </div>
 
         {/* KPI Cards */}
-        <div className="mb-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mb-6 sm:mb-8 grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           <KPICard
             title="Total Participants"
             value="1,342"
@@ -87,7 +87,7 @@ export function Dashboard() {
         </div>
 
         {/* Charts Grid */}
-        <div className="mb-8 grid gap-6 lg:grid-cols-2">
+        <div className="mb-6 sm:mb-8 grid gap-4 sm:gap-6 grid-cols-1 xl:grid-cols-2">
           {/* Growth Chart */}
           <Card className="bg-gradient-card shadow-card">
             <CardHeader>
@@ -96,8 +96,8 @@ export function Dashboard() {
                 Growth Trajectory
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
+            <CardContent className="p-4 sm:p-6">
+              <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
                 <LineChart data={growthData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
@@ -136,8 +136,8 @@ export function Dashboard() {
                 Tournament Categories
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
+            <CardContent className="p-4 sm:p-6">
+              <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
                 <PieChart>
                   <Pie
                     data={tournamentData}
