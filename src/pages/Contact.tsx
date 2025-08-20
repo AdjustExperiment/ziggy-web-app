@@ -18,7 +18,7 @@ const Contact = () => {
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6 font-primary">
             Contact Us
           </h1>
-          <p className="text-lg sm:text-xl text-white/90 leading-relaxed max-w-3xl mx-auto">
+          <p className="text-lg sm:text-xl text-white/90 leading-relaxed max-w-3xl mx-auto font-secondary">
             Contact us at any time, via text, email, Google Chat, or Facebook Messenger. 
             We typically respond within 2 hours.
           </p>
@@ -119,7 +119,7 @@ const Contact = () => {
                     className="bg-black/50 border-white/20 text-white placeholder:text-white/70"
                   />
                 </div>
-                <Button className="w-full bg-red-500 hover:bg-red-600 text-white">
+                <Button className="w-full bg-red-500 hover:bg-red-600 text-white font-secondary">
                   Send Message
                 </Button>
               </CardContent>

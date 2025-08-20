@@ -83,7 +83,7 @@ const Index = () => {
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-4 font-primary">
               Ziggy Online Debate Features
             </h2>
-            <p className="text-lg sm:text-xl text-white/70 max-w-3xl mx-auto">
+            <p className="text-lg sm:text-xl text-white/70 max-w-3xl mx-auto font-secondary">
               Check out everything Ziggy has to offer! From national competition to advanced scheduling, 
               we provide comprehensive tools for debaters worldwide.
             </p>
@@ -114,7 +114,7 @@ const Index = () => {
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-4 font-primary">
               What Our Debaters Say
             </h2>
-            <p className="text-lg sm:text-xl text-white/70 max-w-3xl mx-auto">
+            <p className="text-lg sm:text-xl text-white/70 max-w-3xl mx-auto font-secondary">
               Real testimonials from competitors who have experienced success with Ziggy Online Debate.
             </p>
           </div>
@@ -159,7 +159,7 @@ const Index = () => {
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-4 font-primary">
             Ready to Start Your Championship Journey?
           </h2>
-          <p className="text-lg sm:text-xl text-white/90 mb-6 sm:mb-8 max-w-2xl mx-auto">
+          <p className="text-lg sm:text-xl text-white/90 mb-6 sm:mb-8 max-w-2xl mx-auto font-secondary">
             Join thousands of debaters who trust our platform for competitive excellence.
             Sign up today and take your first step toward victory.
           </p>
@@ -167,7 +167,7 @@ const Index = () => {
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
             <Button 
               size="lg" 
-              className="bg-white text-black hover:bg-white/90 shadow-glow text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-6 min-h-[44px] sm:min-h-[56px]"
+              className="bg-red-500 text-white hover:bg-red-600 shadow-glow text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-6 min-h-[44px] sm:min-h-[56px]"
               onClick={() => window.location.href = '/signup'}
             >
               Get Started Now

@@ -25,7 +25,7 @@ export function Hero() {
                 </span>
               </h1>
               
-              <p className="text-lg sm:text-xl text-white/90 leading-relaxed max-w-2xl mx-auto lg:mx-0">
+              <p className="text-lg sm:text-xl text-white/90 leading-relaxed max-w-2xl mx-auto lg:mx-0 font-secondary">
                 Connecting debaters worldwide. Practice with competitors from all across the country with powermatching, 
                 flexible scheduling, and affordable tournaments starting at just $30-35. Multiple debate formats including 
                 LD, TP, Parli, and Moot Court.
@@ -35,7 +35,7 @@ export function Hero() {
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start">
               <Button 
                 size="lg" 
-                className="bg-white text-black hover:bg-white/90 shadow-glow text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-6 min-h-[44px] sm:min-h-[56px]"
+                className="bg-red-500 text-white hover:bg-red-600 shadow-glow text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-6 min-h-[44px] sm:min-h-[56px]"
               >
                 Sign Up Now
                 <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />

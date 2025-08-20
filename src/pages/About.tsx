@@ -15,7 +15,7 @@ const About = () => {
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6 font-primary">
             About Ziggy Online Debate
           </h1>
-          <p className="text-lg sm:text-xl text-white/90 leading-relaxed max-w-3xl mx-auto">
+          <p className="text-lg sm:text-xl text-white/90 leading-relaxed max-w-3xl mx-auto font-secondary">
             The Best Online Debate Tournament - Connecting debaters, world-wide.
           </p>
         </div>
@@ -70,7 +70,7 @@ const About = () => {
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-6 font-primary">
             Our Mission
           </h2>
-          <p className="text-lg sm:text-xl text-white/90 leading-relaxed">
+          <p className="text-lg sm:text-xl text-white/90 leading-relaxed font-secondary">
             We are committed to providing the best online debate tournament experience, connecting debaters from around the world 
             and helping them develop their skills through national competition, affordable pricing, and comprehensive support. 
             Our platform has helped thousands of students improve their debate abilities and earn scholarship opportunities.

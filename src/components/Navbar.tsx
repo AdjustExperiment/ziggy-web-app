@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Menu, X, ExternalLink, User } from "lucide-react";
+import { Search, Menu, X, ExternalLink, User, ChevronDown } from "lucide-react";
 import debateLogo from "@/assets/debate-logo.png";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,11 +9,25 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from "@/components/ui/navigation-menu";
 
 const navigation = [
-  { name: "About", href: "/about" },
+  { name: "Dashboard", href: "/dashboard" },
   { name: "Tournaments", href: "/tournaments" },
   { name: "Results", href: "/results" },
+  { name: "Analytics", href: "/analytics" },
+  { name: "Teams", href: "/teams" },
+];
+
+const aboutNavigation = [
+  { name: "About Us", href: "/about" },
   { name: "Features", href: "/features" },
   { name: "Testimonials", href: "/testimonials" },
   { name: "Contact", href: "/contact" },
@@ -37,6 +51,26 @@ export function Navbar() {
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center space-x-6 xl:space-x-8">
+            <NavigationMenu>
+              <NavigationMenuList className="space-x-6 xl:space-x-8">
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger className="bg-transparent text-white hover:text-red-500 transition-smooth font-medium text-sm xl:text-base data-[state=open]:text-red-500">
+                    About <ChevronDown className="ml-1 h-3 w-3" />
+                  </NavigationMenuTrigger>
+                  <NavigationMenuContent className="bg-black border-white/20 p-2 min-w-[200px] z-50">
+                    {aboutNavigation.map((item) => (
+                      <NavigationMenuLink
+                        key={item.name}
+                        href={item.href}
+                        className="block px-4 py-2 text-white hover:text-red-500 hover:bg-white/10 rounded transition-smooth text-sm"
+                      >
+                        {item.name}
+                      </NavigationMenuLink>
+                    ))}
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+              </NavigationMenuList>
+            </NavigationMenu>
             {navigation.map((item) => (
               <a
                 key={item.name}
@@ -58,7 +92,7 @@ export function Navbar() {
               />
             </div>
             
-            <Button variant="outline" size="sm" className="border-white/30 text-white hover:bg-red-500 hover:border-red-500 text-sm">
+            <Button variant="outline" size="sm" className="border-red-500/50 text-red-500 hover:bg-red-500 hover:text-white hover:border-red-500 text-sm">
               <ExternalLink className="h-4 w-4 mr-2" />
               <span className="hidden xl:inline">Platform</span>
             </Button>
@@ -108,6 +142,21 @@ export function Navbar() {
         {isOpen && (
           <div className="lg:hidden border-t bg-black/95 backdrop-blur-sm border-white/10">
             <div className="px-4 py-4 space-y-4">
+              {/* About dropdown items */}
+              <div className="space-y-2">
+                <div className="px-4 py-2 text-red-500 font-medium text-sm">About</div>
+                {aboutNavigation.map((item) => (
+                  <a
+                    key={item.name}
+                    href={item.href}
+                    className="block px-8 py-2 text-white hover:text-red-500 transition-smooth text-base rounded-lg hover:bg-white/5 min-h-[44px] flex items-center"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    {item.name}
+                  </a>
+                ))}
+              </div>
+              {/* Main navigation items */}
               {navigation.map((item) => (
                 <a
                   key={item.name}
@@ -130,7 +179,7 @@ export function Navbar() {
               <div className="px-4 space-y-3">
                 <Button 
                   variant="outline" 
-                  className="w-full border-white/30 text-white hover:bg-red-500 hover:border-red-500 py-3 text-base min-h-[44px]"
+                  className="w-full border-red-500/50 text-red-500 hover:bg-red-500 hover:text-white hover:border-red-500 py-3 text-base min-h-[44px]"
                 >
                   <ExternalLink className="h-5 w-5 mr-2" />
                   Platform

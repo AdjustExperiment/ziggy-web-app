@@ -43,7 +43,7 @@ const Testimonials = () => {
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6 font-primary">
             What Our Debaters Say
           </h1>
-          <p className="text-lg sm:text-xl text-white/90 leading-relaxed max-w-3xl mx-auto">
+          <p className="text-lg sm:text-xl text-white/90 leading-relaxed max-w-3xl mx-auto font-secondary">
             Real testimonials from competitors who have experienced success with Ziggy Online Debate. 
             See how our platform has helped debaters improve their skills and achieve their goals.
           </p>

@@ -90,7 +90,7 @@ const Features = () => {
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6 font-primary">
             Ziggy Online Debate Features
           </h1>
-          <p className="text-lg sm:text-xl text-white/90 leading-relaxed max-w-3xl mx-auto">
+          <p className="text-lg sm:text-xl text-white/90 leading-relaxed max-w-3xl mx-auto font-secondary">
             Check out everything Ziggy has to offer! From national competition to advanced scheduling, 
             we provide comprehensive tools for debaters worldwide.
           </p>
