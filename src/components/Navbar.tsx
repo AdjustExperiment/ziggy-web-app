@@ -11,11 +11,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const navigation = [
-  { name: "Dashboard", href: "/dashboard" },
+  { name: "About", href: "/about" },
   { name: "Tournaments", href: "/tournaments" },
-  { name: "Analytics", href: "/analytics" },
   { name: "Results", href: "/results" },
-  { name: "Teams", href: "/teams" },
+  { name: "Features", href: "/features" },
+  { name: "Testimonials", href: "/testimonials" },
+  { name: "Contact", href: "/contact" },
 ];
 
 export function Navbar() {

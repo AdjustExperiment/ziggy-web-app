@@ -2,38 +2,68 @@ import { Hero } from "@/components/Hero";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Trophy, Users, BarChart3, Target, Zap, Shield } from "lucide-react";
+import { ArrowRight, Trophy, Users, BarChart3, Target, Zap, Shield, Globe, DollarSign, Clock, Award, Calendar, TrendingUp } from "lucide-react";
 
 const features = [
   {
-    icon: <Trophy className="h-6 w-6" />,
-    title: "Professional Tournaments",
-    description: "Compete in high-stakes tournaments with standardized rules and professional judging."
-  },
-  {
-    icon: <BarChart3 className="h-6 w-6" />,
-    title: "Advanced Analytics",
-    description: "Track performance metrics, win rates, and improvement trends with detailed insights."
-  },
-  {
-    icon: <Users className="h-6 w-6" />,
-    title: "Team Management",
-    description: "Organize teams, manage schedules, and coordinate training with powerful tools."
+    icon: <Globe className="h-6 w-6" />,
+    title: "National Competition",
+    description: "Debate students from all across the country. Easy access for rural competitors. Sign up for one or multiple debate leagues."
   },
   {
     icon: <Target className="h-6 w-6" />,
-    title: "Skill Development",
-    description: "Personalized coaching recommendations and targeted practice modules."
+    title: "Powermatching",
+    description: "Debate against other competitors with similar skill levels using our advanced matching system."
   },
   {
-    icon: <Zap className="h-6 w-6" />,
-    title: "Real-time Results",
-    description: "Live tournament updates, instant scoring, and automated bracket management."
+    icon: <DollarSign className="h-6 w-6" />,
+    title: "Affordable",
+    description: "Ziggy tournaments cost far less than most in-person tournaments—just $30-35! We keep costs low and avoid raising prices."
+  },
+  {
+    icon: <Users className="h-6 w-6" />,
+    title: "Customer Support",
+    description: "Contact us at any time, via text, email, Google Chat, or Facebook Messenger. We typically respond within 2 hours."
   },
   {
     icon: <Shield className="h-6 w-6" />,
-    title: "Secure Platform",
-    description: "Enterprise-grade security with protected data and fair play enforcement."
+    title: "Privacy",
+    description: "We value your privacy and protect pages with contact information. We will never sell your information to anyone, period."
+  },
+  {
+    icon: <Clock className="h-6 w-6" />,
+    title: "Flexibility",
+    description: "Ziggy lets you and your opponent coordinate when to debate for maximum scheduling flexibility."
+  },
+  {
+    icon: <Award className="h-6 w-6" />,
+    title: "Awards & Scholarships",
+    description: "Our top competitors get free Ziggy swag! We work with educational institutions to offer scholarship awards for top performing students."
+  },
+  {
+    icon: <Calendar className="h-6 w-6" />,
+    title: "Advanced Scheduling",
+    description: "Select rounds/weeks to opt out of when signing up, and schedule rounds based on your availability."
+  },
+  {
+    icon: <TrendingUp className="h-6 w-6" />,
+    title: "Real-World Results",
+    description: "Ziggy debaters have proven track records of performing well in league tournaments with measurable success."
+  },
+  {
+    icon: <BarChart3 className="h-6 w-6" />,
+    title: "Analytics",
+    description: "Get prizes for top teams and comprehensive rankings at the end of each tournament."
+  },
+  {
+    icon: <Trophy className="h-6 w-6" />,
+    title: "Multiple Debate Styles",
+    description: "We offer LD, TP, junior team debate, Team and Individual Parli (collegiate welcome), and Moot Court for students from various debate leagues."
+  },
+  {
+    icon: <Zap className="h-6 w-6" />,
+    title: "National Prep Group",
+    description: "Ziggy TP members can apply to an NCFCA National Prep Group. Exclusive preparation opportunities for serious competitors."
   }
 ];
 
@@ -51,15 +81,15 @@ const Index = () => {
               Featured by the Cato Institute
             </Badge>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-4 font-primary">
-              Everything You Need to Excel
+              Ziggy Online Debate Features
             </h2>
             <p className="text-lg sm:text-xl text-white/70 max-w-3xl mx-auto">
-              From tournament registration to performance analytics, our comprehensive platform 
-              supports debaters at every level of competition.
+              Check out everything Ziggy has to offer! From national competition to advanced scheduling, 
+              we provide comprehensive tools for debaters worldwide.
             </p>
           </div>
 
-          <div className="grid gap-6 sm:gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 sm:gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {features.map((feature, index) => (
               <Card key={index} className="bg-black border-white/10 shadow-card hover:shadow-tournament transition-smooth group hover:border-red-500/30">
                 <CardHeader>
@@ -73,6 +103,52 @@ const Index = () => {
                 </CardContent>
               </Card>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section className="py-16 sm:py-20 lg:py-24 bg-gradient-subtle">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12 sm:mb-16">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-4 font-primary">
+              What Our Debaters Say
+            </h2>
+            <p className="text-lg sm:text-xl text-white/70 max-w-3xl mx-auto">
+              Real testimonials from competitors who have experienced success with Ziggy Online Debate.
+            </p>
+          </div>
+
+          <div className="grid gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-3">
+            <Card className="bg-black/50 border-white/10 shadow-card">
+              <CardContent className="p-6">
+                <p className="text-white/80 mb-4 italic">
+                  "I'm going into my third year of competition and Ziggy was one of the best decisions I made to help prepare myself. 
+                  It gave me a national perspective as each region is different in its own way."
+                </p>
+                <p className="text-red-500 font-medium">— Zoe Abbott, Competitor</p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-black/50 border-white/10 shadow-card">
+              <CardContent className="p-6">
+                <p className="text-white/80 mb-4 italic">
+                  "I am grateful for Ziggy because it gives you a ton of practice with arguments from all over the nation. 
+                  If you have a small debate club then Ziggy should be a top investment for you."
+                </p>
+                <p className="text-red-500 font-medium">— Kaylee Dodson, Competitor</p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-black/50 border-white/10 shadow-card">
+              <CardContent className="p-6">
+                <p className="text-white/80 mb-4 italic">
+                  "Ziggy is a necessity for any debater. On a personal level, I credit much of my success to honing my skills 
+                  in Ziggy tournaments. The experience is unparalleled. 11/10"
+                </p>
+                <p className="text-red-500 font-medium">— Nathan Spencer, Competitor</p>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>

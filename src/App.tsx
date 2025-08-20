@@ -13,6 +13,10 @@ import Results from "./pages/Results";
 import Teams from "./pages/Teams";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
+import About from "./pages/About";
+import Features from "./pages/Features";
+import Contact from "./pages/Contact";
+import Testimonials from "./pages/Testimonials";
 
 const queryClient = new QueryClient();
 
@@ -26,10 +30,14 @@ const App = () => (
           <Navbar />
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/about" element={<About />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/tournaments" element={<Tournaments />} />
-            <Route path="/analytics" element={<Analytics />} />
             <Route path="/results" element={<Results />} />
+            <Route path="/features" element={<Features />} />
+            <Route path="/testimonials" element={<Testimonials />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/analytics" element={<Analytics />} />
             <Route path="/teams" element={<Teams />} />
             <Route path="/login" element={<Login />} />
             <Route path="/admin" element={<Login />} />

@@ -15,20 +15,20 @@ export function Hero() {
             <div className="space-y-4 sm:space-y-6">
               <Badge className="bg-white/10 text-white border-white/20 hover:bg-white/20 text-sm sm:text-base">
                 <span className="inline-block w-2 h-2 bg-white rounded-full mr-2"></span>
-                Featured by the Cato Institute
+                Founded 2011 • $2.4M+ in Scholarships
               </Badge>
               
               <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-primary leading-tight">
-                Elevate Your
+                The Best Online
                 <span className="block bg-gradient-to-r from-white to-red-200 bg-clip-text text-transparent">
-                  Debate Game
+                  Debate Tournament
                 </span>
               </h1>
               
               <p className="text-lg sm:text-xl text-white/90 leading-relaxed max-w-2xl mx-auto lg:mx-0">
-                Join the premier debate tournament platform where champions are made. 
-                Advanced analytics, professional tournaments, and comprehensive tracking 
-                for debaters at every level.
+                Connecting debaters worldwide. Practice with competitors from all across the country with powermatching, 
+                flexible scheduling, and affordable tournaments starting at just $30-35. Multiple debate formats including 
+                LD, TP, Parli, and Moot Court.
               </p>
             </div>
 
@@ -37,7 +37,7 @@ export function Hero() {
                 size="lg" 
                 className="bg-white text-black hover:bg-white/90 shadow-glow text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-6 min-h-[44px] sm:min-h-[56px]"
               >
-                Join Tournament
+                Sign Up Now
                 <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
               </Button>
               
@@ -46,23 +46,23 @@ export function Hero() {
                 size="lg"
                 className="border-white/30 text-white hover:bg-white/10 text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-6 min-h-[44px] sm:min-h-[56px]"
               >
-                View Analytics
+                Members Page
               </Button>
             </div>
 
             {/* Stats */}
             <div className="grid grid-cols-3 gap-4 sm:gap-8 pt-6 sm:pt-8 border-t border-white/20">
               <div className="text-center">
-                <div className="text-xl sm:text-2xl font-bold text-white">1,342+</div>
-                <div className="text-xs sm:text-sm text-white/70">Active Debaters</div>
+                <div className="text-xl sm:text-2xl font-bold text-white">2,712+</div>
+                <div className="text-xs sm:text-sm text-white/70">Total Signups</div>
               </div>
               <div className="text-center">
-                <div className="text-xl sm:text-2xl font-bold text-white">32</div>
-                <div className="text-xs sm:text-sm text-white/70">Live Tournaments</div>
+                <div className="text-xl sm:text-2xl font-bold text-white">$2.4M+</div>
+                <div className="text-xs sm:text-sm text-white/70">Scholarships Awarded</div>
               </div>
               <div className="text-center">
-                <div className="text-xl sm:text-2xl font-bold text-white">94.2%</div>
-                <div className="text-xs sm:text-sm text-white/70">Satisfaction</div>
+                <div className="text-xl sm:text-2xl font-bold text-white">2011</div>
+                <div className="text-xs sm:text-sm text-white/70">Founded</div>
               </div>
             </div>
           </div>
