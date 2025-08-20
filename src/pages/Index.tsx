@@ -50,7 +50,7 @@ const Index = () => {
                 <span className="inline-block w-2 h-2 bg-primary rounded-full mr-2"></span>
                 Featured by the Cato Institute
               </Badge>
-            <h2 className="text-3xl font-bold text-foreground mb-4">
+            <h2 className="text-3xl font-bold text-foreground mb-4 font-primary">
               Everything You Need to Excel
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
@@ -66,7 +66,7 @@ const Index = () => {
                   <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-4 group-hover:scale-110 transition-spring">
                     {feature.icon}
                   </div>
-                  <CardTitle className="text-xl">{feature.title}</CardTitle>
+                  <CardTitle className="text-xl font-primary">{feature.title}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground">{feature.description}</p>
@@ -80,7 +80,7 @@ const Index = () => {
       {/* CTA Section */}
       <section className="py-24 bg-gradient-hero">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold text-white mb-4">
+          <h2 className="text-3xl font-bold text-white mb-4 font-primary">
             Ready to Start Your Championship Journey?
           </h2>
           <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">

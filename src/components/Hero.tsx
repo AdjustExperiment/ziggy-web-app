@@ -18,7 +18,7 @@ export function Hero() {
                 Featured by the Cato Institute
               </Badge>
               
-              <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl lg:text-7xl">
+              <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl lg:text-7xl font-primary">
                 Elevate Your
                 <span className="block bg-gradient-to-r from-white to-red-200 bg-clip-text text-transparent">
                   Debate Game

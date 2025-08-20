@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Search, Menu, X, ExternalLink, User } from "lucide-react";
-import debateLogo from "@/assets/debate-logo.svg";
+import debateLogo from "@/assets/debate-logo.png";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -28,7 +28,7 @@ export function Navbar() {
           {/* Logo */}
           <div className="flex items-center space-x-3">
             <img src={debateLogo} alt="Debate Champions Logo" className="h-8 w-8" />
-            <span className="text-xl font-bold bg-gradient-accent bg-clip-text text-transparent">
+            <span className="text-xl font-bold bg-gradient-accent bg-clip-text text-transparent font-primary">
               DebateChampions
             </span>
           </div>
