@@ -66,9 +66,24 @@ export function Navbar() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="bg-black border-white/20">
-                <DropdownMenuItem className="text-white hover:text-red-500 hover:bg-white/10">Team Login</DropdownMenuItem>
-                <DropdownMenuItem className="text-white hover:text-red-500 hover:bg-white/10">Admin Portal</DropdownMenuItem>
-                <DropdownMenuItem className="text-white hover:text-red-500 hover:bg-white/10">Support</DropdownMenuItem>
+                <DropdownMenuItem 
+                  className="text-white hover:text-red-500 hover:bg-white/10"
+                  onClick={() => window.location.href = '/login'}
+                >
+                  Team Login
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  className="text-white hover:text-red-500 hover:bg-white/10"
+                  onClick={() => window.location.href = '/login'}
+                >
+                  Individual Login
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  className="text-white hover:text-red-500 hover:bg-white/10"
+                  onClick={() => window.location.href = '/login'}
+                >
+                  Admin Portal
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -104,7 +119,7 @@ export function Navbar() {
                 <Button variant="outline" size="sm" className="flex-1 border-white/30 text-white hover:bg-red-500 hover:border-red-500">
                   Platform
                 </Button>
-                <Button variant="ghost" size="sm" className="flex-1 text-white hover:text-red-500">
+                <Button variant="ghost" size="sm" className="flex-1 text-white hover:text-red-500" onClick={() => window.location.href = '/login'}>
                   Login
                 </Button>
               </div>
