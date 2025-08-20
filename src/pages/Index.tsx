@@ -1,12 +1,113 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { Hero } from "@/components/Hero";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { ArrowRight, Trophy, Users, BarChart3, Target, Zap, Shield } from "lucide-react";
+
+const features = [
+  {
+    icon: <Trophy className="h-6 w-6" />,
+    title: "Professional Tournaments",
+    description: "Compete in high-stakes tournaments with standardized rules and professional judging."
+  },
+  {
+    icon: <BarChart3 className="h-6 w-6" />,
+    title: "Advanced Analytics",
+    description: "Track performance metrics, win rates, and improvement trends with detailed insights."
+  },
+  {
+    icon: <Users className="h-6 w-6" />,
+    title: "Team Management",
+    description: "Organize teams, manage schedules, and coordinate training with powerful tools."
+  },
+  {
+    icon: <Target className="h-6 w-6" />,
+    title: "Skill Development",
+    description: "Personalized coaching recommendations and targeted practice modules."
+  },
+  {
+    icon: <Zap className="h-6 w-6" />,
+    title: "Real-time Results",
+    description: "Live tournament updates, instant scoring, and automated bracket management."
+  },
+  {
+    icon: <Shield className="h-6 w-6" />,
+    title: "Secure Platform",
+    description: "Enterprise-grade security with protected data and fair play enforcement."
+  }
+];
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen">
+      <Hero />
+      
+      {/* Features Section */}
+      <section className="py-24 bg-background">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <Badge className="mb-4 bg-primary/10 text-primary border-primary/20">
+              Platform Features
+            </Badge>
+            <h2 className="text-3xl font-bold text-foreground mb-4">
+              Everything You Need to Excel
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              From tournament registration to performance analytics, our comprehensive platform 
+              supports debaters at every level of competition.
+            </p>
+          </div>
+
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+            {features.map((feature, index) => (
+              <Card key={index} className="bg-gradient-card shadow-card hover:shadow-tournament transition-smooth group">
+                <CardHeader>
+                  <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-4 group-hover:scale-110 transition-spring">
+                    {feature.icon}
+                  </div>
+                  <CardTitle className="text-xl">{feature.title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">{feature.description}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-24 bg-gradient-hero">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl font-bold text-white mb-4">
+            Ready to Start Your Championship Journey?
+          </h2>
+          <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
+            Join thousands of debaters who trust our platform for competitive excellence.
+            Sign up today and take your first step toward victory.
+          </p>
+          
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button 
+              size="lg" 
+              className="bg-white text-black hover:bg-white/90 shadow-glow text-lg px-8 py-6"
+              onClick={() => window.location.href = '/signup'}
+            >
+              Get Started Now
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              size="lg"
+              className="border-white/30 text-white hover:bg-white/10 text-lg px-8 py-6"
+              onClick={() => window.location.href = '/dashboard'}
+            >
+              View Dashboard
+            </Button>
+          </div>
+        </div>
+      </section>
     </div>
   );
 };
