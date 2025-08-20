@@ -22,7 +22,7 @@ export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <nav className="sticky top-0 z-50 border-b bg-card/80 backdrop-blur-lg">
+    <nav className="sticky top-0 z-50 border-b bg-black backdrop-blur-lg border-white/10">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
@@ -36,7 +36,7 @@ export function Navbar() {
               <a
                 key={item.name}
                 href={item.href}
-                className="text-foreground/80 hover:text-primary transition-smooth font-medium"
+                className="text-white hover:text-red-500 transition-smooth font-medium"
               >
                 {item.name}
               </a>
@@ -46,29 +46,29 @@ export function Navbar() {
           {/* Search & Actions */}
           <div className="hidden md:flex items-center space-x-4">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/70" />
               <Input
                 placeholder="Search tournaments..."
-                className="w-64 pl-10 bg-muted/50 border-border/50"
+                className="w-64 pl-10 bg-black/50 border-white/20 text-white placeholder:text-white/70"
               />
             </div>
             
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" className="border-white/30 text-white hover:bg-red-500 hover:border-red-500">
               <ExternalLink className="h-4 w-4 mr-2" />
               Platform
             </Button>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" className="text-white hover:text-red-500 hover:bg-white/10">
                   <User className="h-4 w-4 mr-2" />
                   Login
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem>Team Login</DropdownMenuItem>
-                <DropdownMenuItem>Admin Portal</DropdownMenuItem>
-                <DropdownMenuItem>Support</DropdownMenuItem>
+              <DropdownMenuContent align="end" className="bg-black border-white/20">
+                <DropdownMenuItem className="text-white hover:text-red-500 hover:bg-white/10">Team Login</DropdownMenuItem>
+                <DropdownMenuItem className="text-white hover:text-red-500 hover:bg-white/10">Admin Portal</DropdownMenuItem>
+                <DropdownMenuItem className="text-white hover:text-red-500 hover:bg-white/10">Support</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -77,7 +77,7 @@ export function Navbar() {
           <Button
             variant="ghost"
             size="sm"
-            className="md:hidden"
+            className="md:hidden text-white hover:text-red-500"
             onClick={() => setIsOpen(!isOpen)}
           >
             {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -86,25 +86,25 @@ export function Navbar() {
 
         {/* Mobile Navigation */}
         {isOpen && (
-          <div className="md:hidden border-t bg-card/95 backdrop-blur-sm">
+          <div className="md:hidden border-t bg-black/95 backdrop-blur-sm border-white/10">
             <div className="px-2 py-3 space-y-3">
               {navigation.map((item) => (
                 <a
                   key={item.name}
                   href={item.href}
-                  className="block px-3 py-2 text-foreground/80 hover:text-primary transition-smooth"
+                  className="block px-3 py-2 text-white hover:text-red-500 transition-smooth"
                 >
                   {item.name}
                 </a>
               ))}
               <div className="px-3 py-2">
-                <Input placeholder="Search..." className="w-full" />
+                <Input placeholder="Search..." className="w-full bg-black/50 border-white/20 text-white placeholder:text-white/70" />
               </div>
               <div className="flex space-x-2 px-3">
-                <Button variant="outline" size="sm" className="flex-1">
+                <Button variant="outline" size="sm" className="flex-1 border-white/30 text-white hover:bg-red-500 hover:border-red-500">
                   Platform
                 </Button>
-                <Button variant="ghost" size="sm" className="flex-1">
+                <Button variant="ghost" size="sm" className="flex-1 text-white hover:text-red-500">
                   Login
                 </Button>
               </div>
