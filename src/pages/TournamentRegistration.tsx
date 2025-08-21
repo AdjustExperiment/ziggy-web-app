@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { timezones } from '@/lib/timezones';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/components/ui/use-toast';
@@ -31,6 +32,7 @@ interface FormData {
   schoolOrganization: string;
   experienceLevel: string;
   additionalNotes: string;
+  timezone: string;
 }
 
 const initialFormData: FormData = {
@@ -44,6 +46,7 @@ const initialFormData: FormData = {
   schoolOrganization: '',
   experienceLevel: '',
   additionalNotes: '',
+  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
 };
 
 export default function TournamentRegistration() {
@@ -116,7 +119,8 @@ export default function TournamentRegistration() {
         school_organization: formData.schoolOrganization || null,
         additional_info: {
           experience_level: formData.experienceLevel,
-          additional_notes: formData.additionalNotes
+          additional_notes: formData.additionalNotes,
+          timezone: formData.timezone
         },
         payment_status: 'pending',
         partnership_status: formData.partnerName ? 'with_partner' : 'individual',
@@ -316,6 +320,24 @@ export default function TournamentRegistration() {
                   placeholder="Name and phone number"
                 />
               </div>
+            </div>
+            <div>
+              <Label htmlFor="timezone">Timezone *</Label>
+              <Select 
+                value={formData.timezone} 
+                onValueChange={(value) => handleInputChange('timezone', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select your timezone" />
+                </SelectTrigger>
+                <SelectContent className="max-h-60">
+                  {timezones.map((tz) => (
+                    <SelectItem key={tz.value} value={tz.value}>
+                      {tz.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label htmlFor="experienceLevel">Experience Level</Label>

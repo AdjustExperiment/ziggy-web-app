@@ -42,6 +42,7 @@ function App() {
                 <Route path="/" element={<Index />} />
                 <Route path="/tournaments" element={<Tournaments />} />
                 <Route path="/tournaments/:id/register" element={<TournamentRegistration />} />
+                <Route path="/tournament/:id/register" element={<TournamentRegistration />} />
                 <Route path="/results" element={<Results />} />
                 <Route path="/blog" element={<Blog />} />
                 <Route path="/teams" element={<Teams />} />

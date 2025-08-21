@@ -11,9 +11,10 @@ import { Switch } from '@/components/ui/switch';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CalendarIcon, Plus, Edit, Trash2, Users, DollarSign, Upload, X, Link, Image } from 'lucide-react';
+import { CalendarIcon, Plus, Edit, Trash2, Users, DollarSign, Upload, X, Link, Image, Download, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { toast } from '@/components/ui/use-toast';
@@ -68,6 +69,9 @@ interface Tournament {
 
 const TournamentManager = () => {
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
+  const [registrations, setRegistrations] = useState<any[]>([]);
+  const [selectedTournamentForRegistrations, setSelectedTournamentForRegistrations] = useState<Tournament | null>(null);
+  const [viewMode, setViewMode] = useState<'tournaments' | 'registrations'>('tournaments');
   const [loading, setLoading] = useState(true);
   const [editingTournament, setEditingTournament] = useState<Tournament | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -460,8 +464,169 @@ const TournamentManager = () => {
     }
   };
 
+  const fetchRegistrations = async (tournamentId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('tournament_registrations')
+        .select('*')
+        .eq('tournament_id', tournamentId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setRegistrations(data || []);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to fetch registrations",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const exportRegistrations = () => {
+    if (registrations.length === 0) {
+      toast({
+        title: "No Data",
+        description: "No registrations to export",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const csvHeaders = [
+      'Name',
+      'Email', 
+      'Partner Name',
+      'Judge Name',
+      'Judge Phone',
+      'School/Organization',
+      'Emergency Contact',
+      'Experience Level',
+      'Timezone',
+      'Payment Status',
+      'Registration Date',
+      'Additional Notes'
+    ];
+
+    const csvData = registrations.map(reg => [
+      reg.participant_name,
+      reg.participant_email,
+      reg.partner_name || '',
+      reg.judge_name || '',
+      reg.additional_info?.judge_phone || '',
+      reg.school_organization || '',
+      reg.emergency_contact || '',
+      reg.additional_info?.experience_level || '',
+      reg.additional_info?.timezone || '',
+      reg.payment_status,
+      new Date(reg.registration_date).toLocaleDateString(),
+      reg.additional_info?.additional_notes || ''
+    ]);
+
+    const csvContent = [
+      csvHeaders.join(','),
+      ...csvData.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `${selectedTournamentForRegistrations?.name || 'tournament'}_registrations.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast({
+      title: "Success",
+      description: "Registrations exported successfully",
+    });
+  };
+
   if (loading) {
     return <div className="flex justify-center p-8">Loading tournaments...</div>;
+  }
+
+  if (viewMode === 'registrations' && selectedTournamentForRegistrations) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setViewMode('tournaments');
+                setSelectedTournamentForRegistrations(null);
+                setRegistrations([]);
+              }}
+            >
+              ← Back to Tournaments
+            </Button>
+            <h2 className="text-2xl font-bold text-foreground mt-2">
+              Registrations for {selectedTournamentForRegistrations.name}
+            </h2>
+            <p className="text-muted-foreground">
+              {registrations.length} registrations
+            </p>
+          </div>
+          
+          <Button onClick={exportRegistrations} disabled={registrations.length === 0}>
+            <Download className="h-4 w-4 mr-2" />
+            Export CSV
+          </Button>
+        </div>
+
+        <Card>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="min-w-[200px]">Participant</TableHead>
+                    <TableHead className="min-w-[200px]">Email</TableHead>
+                    <TableHead className="min-w-[150px]">Partner</TableHead>
+                    <TableHead className="min-w-[150px]">Judge</TableHead>
+                    <TableHead className="min-w-[150px]">School</TableHead>
+                    <TableHead className="min-w-[120px]">Payment</TableHead>
+                    <TableHead className="min-w-[120px]">Timezone</TableHead>
+                    <TableHead className="min-w-[120px]">Registered</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {registrations.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                        No registrations found
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    registrations.map((reg) => (
+                      <TableRow key={reg.id}>
+                        <TableCell className="font-medium">{reg.participant_name}</TableCell>
+                        <TableCell className="font-mono text-sm">{reg.participant_email}</TableCell>
+                        <TableCell>{reg.partner_name || '-'}</TableCell>
+                        <TableCell>{reg.judge_name || '-'}</TableCell>
+                        <TableCell>{reg.school_organization || '-'}</TableCell>
+                        <TableCell>
+                          <Badge variant={reg.payment_status === 'paid' ? 'default' : 'secondary'}>
+                            {reg.payment_status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-sm">{reg.additional_info?.timezone || '-'}</TableCell>
+                        <TableCell className="text-sm">
+                          {new Date(reg.registration_date).toLocaleDateString()}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
@@ -1019,6 +1184,19 @@ const TournamentManager = () => {
                     onClick={() => handleEdit(tournament)}
                   >
                     <Edit className="h-4 w-4" />
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedTournamentForRegistrations(tournament);
+                      setViewMode('registrations');
+                      fetchRegistrations(tournament.id);
+                    }}
+                  >
+                    <Eye className="h-4 w-4 mr-1" />
+                    <span className="hidden sm:inline">Registrations</span>
                   </Button>
                   
                   <Button
