@@ -13,6 +13,7 @@ import { toast } from '@/components/ui/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import PaymentButtons from '@/components/PaymentButtons';
 import TournamentInfo from '@/components/TournamentInfo';
+import TournamentCalendarView from '@/components/TournamentCalendarView';
 import DOMPurify from 'dompurify';
 
 interface Sponsor {
@@ -238,44 +239,6 @@ const TournamentRegistration = () => {
     }
   };
 
-  const exportCalendar = () => {
-    if (!tournament) return;
-    
-    const startDate = new Date(tournament.start_date);
-    const endDate = new Date(tournament.end_date);
-    
-    const formatDate = (date: Date) => {
-      return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-    };
-    
-    const icsContent = `BEGIN:VCALENDAR
-VERSION:2.0
-PRODID:-//Tournament App//Tournament Calendar//EN
-BEGIN:VEVENT
-UID:tournament-${tournament.id}@tournamentapp.com
-DTSTAMP:${formatDate(new Date())}
-DTSTART:${formatDate(startDate)}
-DTEND:${formatDate(endDate)}
-SUMMARY:${tournament.name}
-DESCRIPTION:${tournament.description || ''}
-LOCATION:${tournament.venue_details || tournament.location}
-END:VEVENT
-END:VCALENDAR`;
-
-    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${tournament.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.ics`;
-    link.click();
-    URL.revokeObjectURL(url);
-    
-    toast({
-      title: "Calendar Exported",
-      description: "Tournament added to your calendar",
-    });
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -483,31 +446,8 @@ END:VCALENDAR`;
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <CalendarIcon className="h-5 w-5" />
-                  Add to Calendar
-                </CardTitle>
-                <CardDescription>
-                  Export tournament dates to your personal calendar
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div>
-                    <p className="font-medium">{tournament.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {format(new Date(tournament.start_date), "PPP")} - {format(new Date(tournament.end_date), "PPP")}
-                    </p>
-                  </div>
-                  <Button onClick={exportCalendar} variant="outline">
-                    <Download className="h-4 w-4 mr-2" />
-                    Export
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Tournament Calendar View */}
+            <TournamentCalendarView tournament={tournament} />
           </div>
 
           {/* Registration Form or Payment */}
