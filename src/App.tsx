@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { BackgroundFX } from "@/components/BackgroundFX";
+import { AuthProvider } from "@/hooks/useAuth";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import SignUpPage from "./pages/SignUpPage";
@@ -19,6 +21,7 @@ import Features from "./pages/Features";
 import Contact from "./pages/Contact";
 import Testimonials from "./pages/Testimonials";
 import Blog from "./pages/Blog";
+import AdminDashboard from "./pages/AdminDashboard";
 
 const queryClient = new QueryClient();
 
@@ -28,28 +31,37 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <div className="min-h-screen">
-          <BackgroundFX />
-          <Navbar />
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/tournaments" element={<Tournaments />} />
-            <Route path="/results" element={<Results />} />
-            <Route path="/features" element={<Features />} />
-            <Route path="/testimonials" element={<Testimonials />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/blog" element={<Blog />} />
-            <Route path="/analytics" element={<Analytics />} />
-            <Route path="/teams" element={<Teams />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/admin" element={<Login />} />
-            <Route path="/signup" element={<SignUpPage />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </div>
+        <AuthProvider>
+          <div className="min-h-screen">
+            <BackgroundFX />
+            <Navbar />
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/tournaments" element={<Tournaments />} />
+              <Route path="/results" element={<Results />} />
+              <Route path="/features" element={<Features />} />
+              <Route path="/testimonials" element={<Testimonials />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/blog" element={<Blog />} />
+              <Route path="/analytics" element={<Analytics />} />
+              <Route path="/teams" element={<Teams />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<SignUpPage />} />
+              <Route 
+                path="/admin" 
+                element={
+                  <ProtectedRoute requireAdmin>
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </div>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
