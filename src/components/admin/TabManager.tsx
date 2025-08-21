@@ -7,22 +7,27 @@ import { PairingsManager } from './PairingsManager';
 import { JudgesManager } from './JudgesManager';
 import { BallotTemplatesManager } from './BallotTemplatesManager';
 import { BallotRevealSettings } from './BallotRevealSettings';
-import { Users, Clock, Gavel, FileText, Eye } from 'lucide-react';
+import { DebateFormatsManager } from './DebateFormatsManager';
+import { Users, Clock, Gavel, FileText, Eye, MessageSquare } from 'lucide-react';
 
 export function TabManager() {
-  const [activeTab, setActiveTab] = useState('rounds');
+  const [activeTab, setActiveTab] = useState('formats');
 
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold">Tournament Tab Management</h2>
         <p className="text-muted-foreground">
-          Manage rounds, pairings, judges, and ballots for tournaments
+          Manage debate formats, rounds, pairings, judges, and ballots for tournaments
         </p>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
+          <TabsTrigger value="formats" className="flex items-center gap-2">
+            <MessageSquare className="h-4 w-4" />
+            Formats
+          </TabsTrigger>
           <TabsTrigger value="rounds" className="flex items-center gap-2">
             <Clock className="h-4 w-4" />
             Rounds
@@ -44,6 +49,10 @@ export function TabManager() {
             Ballot Reveal
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="formats">
+          <DebateFormatsManager />
+        </TabsContent>
 
         <TabsContent value="rounds">
           <RoundsManager />

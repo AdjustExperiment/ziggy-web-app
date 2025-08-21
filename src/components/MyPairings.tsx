@@ -4,44 +4,38 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { toast } from '@/components/ui/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { MessageSquare, Clock, Users, Calendar, Gavel, Send } from 'lucide-react';
+import { MessageSquare, Clock, Users, Calendar, Gavel } from 'lucide-react';
 
 interface Pairing {
   id: string;
-  tournament_name: string;
-  round_name: string;
-  room: string;
-  scheduled_time?: string;
-  scheduling_status: string;
-  aff_participant: string;
-  neg_participant: string;
-  judges: string[];
-}
-
-interface PairingMessage {
-  id: string;
-  message: string;
-  sender_name: string;
-  created_at: string;
+  tournament_id: string;
+  round_id: string;
+  room: string | null;
+  scheduled_time: string | null;
+  released: boolean;
+  aff_registration: {
+    participant_name: string;
+    participant_email: string;
+  };
+  neg_registration: {
+    participant_name: string;
+    participant_email: string;
+  };
+  round: {
+    name: string;
+  };
+  tournaments: {
+    name: string;
+  };
 }
 
 export function MyPairings() {
   const { user } = useAuth();
   const [pairings, setPairings] = useState<Pairing[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedPairing, setSelectedPairing] = useState<string>('');
-  const [messages, setMessages] = useState<PairingMessage[]>([]);
-  const [newMessage, setNewMessage] = useState('');
-  const [proposedTime, setProposedTime] = useState('');
-  const [sendingMessage, setSendingMessage] = useState(false);
-  const [confirmingTime, setConfirmingTime] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -53,24 +47,37 @@ export function MyPairings() {
     if (!user) return;
 
     try {
-      // For now, we'll show placeholder data until the new tables are properly set up
-      // This prevents TypeScript errors while maintaining the UI structure
-      const placeholderPairings: Pairing[] = [
-        {
-          id: '1',
-          tournament_name: 'Sample Tournament',
-          round_name: 'Round 1',
-          room: 'Room A',
-          scheduled_time: new Date().toISOString(),
-          scheduling_status: 'pending',
-          aff_participant: 'Team A',
-          neg_participant: 'Team B',
-          judges: ['Judge Smith']
-        }
-      ];
+      // Get user's registrations first
+      const { data: userRegistrations, error: regError } = await supabase
+        .from('tournament_registrations')
+        .select('id')
+        .eq('user_id', user.id);
 
-      // Remove placeholder when real data is available
-      setPairings([]);
+      if (regError) throw regError;
+
+      const registrationIds = userRegistrations?.map(r => r.id) || [];
+
+      if (registrationIds.length === 0) {
+        setPairings([]);
+        return;
+      }
+
+      // Get pairings where user is either aff or neg
+      const { data, error } = await supabase
+        .from('pairings')
+        .select(`
+          *,
+          aff_registration:tournament_registrations!pairings_aff_registration_id_fkey(participant_name, participant_email),
+          neg_registration:tournament_registrations!pairings_neg_registration_id_fkey(participant_name, participant_email),
+          round:rounds(name),
+          tournaments(name)
+        `)
+        .or(`aff_registration_id.in.(${registrationIds.join(',')}),neg_registration_id.in.(${registrationIds.join(',')})`)
+        .eq('released', true)
+        .order('scheduled_time', { ascending: true });
+
+      if (error) throw error;
+      setPairings(data || []);
     } catch (error: any) {
       console.error('Error fetching pairings:', error);
       toast({
@@ -80,71 +87,6 @@ export function MyPairings() {
       });
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchMessages = async () => {
-    // Placeholder for now
-    setMessages([]);
-  };
-
-  const sendMessage = async () => {
-    if (!newMessage.trim() || !selectedPairing || !user) return;
-
-    setSendingMessage(true);
-    try {
-      // Placeholder implementation
-      toast({
-        title: "Feature Coming Soon",
-        description: "Messaging functionality will be available once the database setup is complete",
-      });
-      setNewMessage('');
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: "Failed to send message",
-        variant: "destructive",
-      });
-    } finally {
-      setSendingMessage(false);
-    }
-  };
-
-  const confirmTime = async () => {
-    if (!proposedTime || !selectedPairing) return;
-
-    setConfirmingTime(true);
-    try {
-      toast({
-        title: "Feature Coming Soon",
-        description: "Time confirmation will be available once the database setup is complete",
-      });
-      setProposedTime('');
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: "Failed to confirm time",
-        variant: "destructive",
-      });
-    } finally {
-      setConfirmingTime(false);
-    }
-  };
-
-  const requestJudges = async (pairingId: string, count: number = 1, auto: boolean = false) => {
-    if (!user) return;
-
-    try {
-      toast({
-        title: "Feature Coming Soon",
-        description: "Judge requests will be available once the database setup is complete",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: "Failed to request judges",
-        variant: "destructive",
-      });
     }
   };
 
@@ -161,7 +103,7 @@ export function MyPairings() {
       <div>
         <h2 className="text-2xl font-bold">My Pairings</h2>
         <p className="text-muted-foreground">
-          View your debate pairings, chat with judges, and schedule round times
+          View your debate pairings and round information
         </p>
       </div>
 
@@ -172,9 +114,6 @@ export function MyPairings() {
             <h3 className="text-lg font-semibold mb-2">No Pairings Yet</h3>
             <p className="text-muted-foreground">
               Your debate pairings will appear here once they are released by tournament directors.
-            </p>
-            <p className="text-sm text-muted-foreground mt-2">
-              This feature is being set up and will be fully functional soon.
             </p>
           </CardContent>
         </Card>
@@ -187,15 +126,13 @@ export function MyPairings() {
                   <div>
                     <CardTitle className="flex items-center gap-2">
                       <Users className="h-5 w-5" />
-                      {pairing.tournament_name} - {pairing.round_name}
+                      {pairing.tournaments.name} - {pairing.round.name}
                     </CardTitle>
                     <CardDescription>
                       Room: {pairing.room || 'TBD'}
                     </CardDescription>
                   </div>
-                  <Badge variant={pairing.scheduling_status === 'confirmed' ? 'default' : 'secondary'}>
-                    {pairing.scheduling_status}
-                  </Badge>
+                  <Badge variant="default">Released</Badge>
                 </div>
               </CardHeader>
               <CardContent>
@@ -203,17 +140,17 @@ export function MyPairings() {
                   {/* Participants */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label className="text-sm font-medium">Affirmative</Label>
+                      <div className="text-sm font-medium mb-1">Affirmative</div>
                       <div className="flex items-center gap-2">
                         <Badge variant="outline">AFF</Badge>
-                        <span>{pairing.aff_participant}</span>
+                        <span>{pairing.aff_registration.participant_name}</span>
                       </div>
                     </div>
                     <div>
-                      <Label className="text-sm font-medium">Negative</Label>
+                      <div className="text-sm font-medium mb-1">Negative</div>
                       <div className="flex items-center gap-2">
                         <Badge variant="secondary">NEG</Badge>
-                        <span>{pairing.neg_participant}</span>
+                        <span>{pairing.neg_registration.participant_name}</span>
                       </div>
                     </div>
                   </div>
@@ -221,10 +158,10 @@ export function MyPairings() {
                   {/* Scheduled Time */}
                   {pairing.scheduled_time && (
                     <div>
-                      <Label className="text-sm font-medium flex items-center gap-2">
+                      <div className="text-sm font-medium flex items-center gap-2 mb-1">
                         <Clock className="h-4 w-4" />
                         Scheduled Time
-                      </Label>
+                      </div>
                       <div className="text-sm">
                         {new Date(pairing.scheduled_time).toLocaleString()}
                       </div>
@@ -235,49 +172,53 @@ export function MyPairings() {
                   <div className="flex gap-2 flex-wrap">
                     <Dialog>
                       <DialogTrigger asChild>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => setSelectedPairing(pairing.id)}
-                        >
+                        <Button variant="outline" size="sm">
                           <MessageSquare className="h-4 w-4 mr-2" />
-                          Chat
+                          View Details
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="max-w-2xl max-h-[80vh]">
+                      <DialogContent className="max-w-2xl">
                         <DialogHeader>
-                          <DialogTitle>Pairing Chat</DialogTitle>
+                          <DialogTitle>Pairing Details</DialogTitle>
                           <DialogDescription>
-                            Communicate with judges and coordinate scheduling
+                            {pairing.tournaments.name} - {pairing.round.name}
                           </DialogDescription>
                         </DialogHeader>
                         
                         <div className="space-y-4">
-                          <div className="text-center py-8 text-muted-foreground">
-                            <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                            <p>Chat functionality is being set up and will be available soon.</p>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <h4 className="font-semibold text-green-600">Affirmative</h4>
+                              <p>{pairing.aff_registration.participant_name}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {pairing.aff_registration.participant_email}
+                              </p>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold text-red-600">Negative</h4>
+                              <p>{pairing.neg_registration.participant_name}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {pairing.neg_registration.participant_email}
+                              </p>
+                            </div>
                           </div>
+                          
+                          {pairing.room && (
+                            <div>
+                              <h4 className="font-semibold">Room</h4>
+                              <p>{pairing.room}</p>
+                            </div>
+                          )}
+                          
+                          {pairing.scheduled_time && (
+                            <div>
+                              <h4 className="font-semibold">Scheduled Time</h4>
+                              <p>{new Date(pairing.scheduled_time).toLocaleString()}</p>
+                            </div>
+                          )}
                         </div>
                       </DialogContent>
                     </Dialog>
-
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => requestJudges(pairing.id, 1, true)}
-                    >
-                      <Gavel className="h-4 w-4 mr-2" />
-                      Request Judge (Auto)
-                    </Button>
-
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => requestJudges(pairing.id, 1, false)}
-                    >
-                      <Gavel className="h-4 w-4 mr-2" />
-                      Request Judge (Manual)
-                    </Button>
                   </div>
                 </div>
               </CardContent>

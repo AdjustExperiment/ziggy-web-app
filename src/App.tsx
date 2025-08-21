@@ -1,96 +1,84 @@
-
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/hooks/useAuth";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
-import Navbar from "@/components/Navbar";
-import Index from "./pages/Index";
-import About from "./pages/About";
-import Features from "./pages/Features";
-import Teams from "./pages/Teams";
-import Results from "./pages/Results";
-import Tournaments from "./pages/Tournaments";
-import TournamentRegistration from "./pages/TournamentRegistration";
-import Contact from "./pages/Contact";
-import FAQ from "./pages/FAQ";
-import Blog from "./pages/Blog";
-import Testimonials from "./pages/Testimonials";
-import GettingStarted from "./pages/GettingStarted";
-import Analytics from "./pages/Analytics";
-import Login from "./pages/Login";
-import SignUpPage from "./pages/SignUpPage";
-import Dashboard from "./pages/Dashboard";
-import AdminDashboard from "./pages/AdminDashboard";
-import UserAccount from "./pages/UserAccount";
-import NotFound from "./pages/NotFound";
-
-const queryClient = new QueryClient();
+import React from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import Index from '@/pages/Index';
+import Tournaments from '@/pages/Tournaments';
+import Results from '@/pages/Results';
+import Blog from '@/pages/Blog';
+import Teams from '@/pages/Teams';
+import Login from '@/pages/Login';
+import SignUpPage from '@/pages/SignUpPage';
+import Dashboard from '@/pages/Dashboard';
+import UserAccount from '@/pages/UserAccount';
+import AdminDashboard from '@/pages/AdminDashboard';
+import GettingStarted from '@/pages/GettingStarted';
+import Features from '@/pages/Features';
+import About from '@/pages/About';
+import Contact from '@/pages/Contact';
+import Testimonials from '@/pages/Testimonials';
+import FAQ from '@/pages/FAQ';
+import Analytics from '@/pages/Analytics';
+import NotFound from '@/pages/NotFound';
+import TournamentRegistration from '@/pages/TournamentRegistration';
+import { AuthProvider } from '@/hooks/useAuth';
+import { ThemeProvider } from "@/components/theme-provider"
+import { Toaster } from "@/components/ui/toaster"
+import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { MyPairings } from '@/components/MyPairings';
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <BrowserRouter>
-          <AuthProvider>
+    <Router>
+      <AuthProvider>
+        <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+          <Toaster />
+          <div className="min-h-screen bg-background">
             <Navbar />
-            <Routes>
-              {/* Public routes */}
-              <Route path="/" element={<Index />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/features" element={<Features />} />
-              <Route path="/teams" element={<Teams />} />
-              <Route path="/results" element={<Results />} />
-              <Route path="/tournaments" element={<Tournaments />} />
-              <Route path="/tournament/:id/register" element={<TournamentRegistration />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/faq" element={<FAQ />} />
-              <Route path="/blog" element={<Blog />} />
-              <Route path="/testimonials" element={<Testimonials />} />
-              <Route path="/getting-started" element={<GettingStarted />} />
-              <Route path="/analytics" element={<Analytics />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<SignUpPage />} />
-              
-              {/* Protected user routes */}
-              <Route 
-                path="/account" 
-                element={
-                  <ProtectedRoute>
-                    <UserAccount />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/dashboard" 
-                element={
+            <main>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/tournaments" element={<Tournaments />} />
+                <Route path="/tournaments/:id/register" element={<TournamentRegistration />} />
+                <Route path="/results" element={<Results />} />
+                <Route path="/blog" element={<Blog />} />
+                <Route path="/teams" element={<Teams />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<SignUpPage />} />
+                <Route path="/dashboard" element={
                   <ProtectedRoute>
                     <Dashboard />
                   </ProtectedRoute>
-                } 
-              />
-              
-              {/* Admin routes */}
-              <Route 
-                path="/admin" 
-                element={
-                  <ProtectedRoute requireAdmin>
+                } />
+                <Route path="/my-pairings" element={
+                  <ProtectedRoute>
+                    <div className="container mx-auto px-4 py-8">
+                      <MyPairings />
+                    </div>
+                  </ProtectedRoute>
+                } />
+                <Route path="/account" element={
+                  <ProtectedRoute>
+                    <UserAccount />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin" element={
+                  <ProtectedRoute>
                     <AdminDashboard />
                   </ProtectedRoute>
-                } 
-              />
-              
-              {/* 404 */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-            <Toaster />
-            <Sonner />
-          </AuthProvider>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
+                } />
+                <Route path="/getting-started" element={<GettingStarted />} />
+                <Route path="/features" element={<Features />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/testimonials" element={<Testimonials />} />
+                <Route path="/faq" element={<FAQ />} />
+                <Route path="/analytics" element={<Analytics />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </main>
+          </div>
+        </ThemeProvider>
+      </AuthProvider>
+    </Router>
   );
 }
 
