@@ -54,7 +54,6 @@ const TournamentRegistration = () => {
     participant_email: '',
     school_organization: '',
     partner_name: '',
-    dietary_requirements: '',
     emergency_contact: '',
   });
 
@@ -122,7 +121,7 @@ const TournamentRegistration = () => {
           participant_email: formData.participant_email,
           school_organization: formData.school_organization,
           partner_name: formData.partner_name,
-          dietary_requirements: formData.dietary_requirements,
+          dietary_requirements: null,
           emergency_contact: formData.emergency_contact,
           user_id: user?.id || null,
           amount_paid: tournament.registration_fee,
@@ -277,7 +276,7 @@ END:VCALENDAR`;
 
   const isRegistrationClosed = !tournament.registration_open || 
     tournament.current_participants >= tournament.max_participants ||
-    new Date() > new Date(tournament.registration_deadline);
+    (tournament.registration_deadline && new Date() > new Date(tournament.registration_deadline));
 
   return (
     <div className="min-h-screen bg-background">
@@ -527,15 +526,6 @@ END:VCALENDAR`;
                         />
                       </div>
                       
-                      <div>
-                        <Label htmlFor="dietary_requirements">Dietary Requirements</Label>
-                        <Textarea
-                          id="dietary_requirements"
-                          value={formData.dietary_requirements}
-                          onChange={(e) => setFormData({...formData, dietary_requirements: e.target.value})}
-                          rows={2}
-                        />
-                      </div>
                       
                       <div>
                         <Label htmlFor="emergency_contact">Emergency Contact</Label>
@@ -575,9 +565,11 @@ END:VCALENDAR`;
                         }
                       </Button>
                       
-                      <p className="text-xs text-muted-foreground text-center">
-                        Registration deadline: {format(new Date(tournament.registration_deadline), "PPP")}
-                      </p>
+                      {tournament.registration_deadline && (
+                        <p className="text-xs text-muted-foreground text-center">
+                          Registration deadline: {format(new Date(tournament.registration_deadline), "PPP")}
+                        </p>
+                      )}
                     </form>
                   </CardContent>
                 )}

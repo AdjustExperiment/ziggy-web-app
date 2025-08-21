@@ -3,9 +3,11 @@ import { useAuth } from '@/hooks/useAuth';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { LogOut, FileText, Trophy, Settings, Users } from 'lucide-react';
+import { LogOut, FileText, Trophy, Settings, Users, CreditCard } from 'lucide-react';
 import { BlogManager } from '@/components/admin/BlogManager';
 import { ResultsManager } from '@/components/admin/ResultsManager';
+import { UserManager } from '@/components/admin/UserManager';
+import { PaymentManager } from '@/components/admin/PaymentManager';
 import TournamentManager from '@/components/admin/TournamentManager';
 import { useNavigate } from 'react-router-dom';
 
@@ -40,7 +42,7 @@ export default function AdminDashboard() {
 
       <div className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <Settings className="h-4 w-4" />
               Overview
@@ -61,10 +63,14 @@ export default function AdminDashboard() {
               <Users className="h-4 w-4" />
               Users
             </TabsTrigger>
+            <TabsTrigger value="payments" className="flex items-center gap-2">
+              <CreditCard className="h-4 w-4" />
+              Payments
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="mt-6">
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               <Card>
                 <CardHeader>
                   <CardTitle>Tournaments</CardTitle>
@@ -113,15 +119,44 @@ export default function AdminDashboard() {
               <Card>
                 <CardHeader>
                   <CardTitle>User Management</CardTitle>
-                  <CardDescription>Manage user accounts</CardDescription>
+                  <CardDescription>Create and manage user accounts</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Button 
                     onClick={() => setActiveTab('users')} 
                     className="w-full"
-                    variant="outline"
                   >
-                    View Users
+                    Manage Users
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Payment Management</CardTitle>
+                  <CardDescription>Monitor payments and configure handlers</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button 
+                    onClick={() => setActiveTab('payments')} 
+                    className="w-full"
+                  >
+                    Manage Payments
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>System Settings</CardTitle>
+                  <CardDescription>Configure platform settings</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button 
+                    variant="outline"
+                    className="w-full"
+                  >
+                    Settings
                   </Button>
                 </CardContent>
               </Card>
@@ -141,17 +176,11 @@ export default function AdminDashboard() {
           </TabsContent>
 
           <TabsContent value="users" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>User Management</CardTitle>
-                <CardDescription>
-                  User management features will be implemented here
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">Coming soon...</p>
-              </CardContent>
-            </Card>
+            <UserManager />
+          </TabsContent>
+
+          <TabsContent value="payments" className="mt-6">
+            <PaymentManager />
           </TabsContent>
         </Tabs>
       </div>
