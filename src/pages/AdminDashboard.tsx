@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { LogOut, FileText, Trophy, Settings, Users } from 'lucide-react';
 import { BlogManager } from '@/components/admin/BlogManager';
 import { ResultsManager } from '@/components/admin/ResultsManager';
+import TournamentManager from '@/components/admin/TournamentManager';
 import { useNavigate } from 'react-router-dom';
 
 export default function AdminDashboard() {
@@ -39,10 +40,14 @@ export default function AdminDashboard() {
 
       <div className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <Settings className="h-4 w-4" />
               Overview
+            </TabsTrigger>
+            <TabsTrigger value="tournaments" className="flex items-center gap-2">
+              <Trophy className="h-4 w-4" />
+              Tournaments
             </TabsTrigger>
             <TabsTrigger value="blog" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
@@ -59,7 +64,22 @@ export default function AdminDashboard() {
           </TabsList>
 
           <TabsContent value="overview" className="mt-6">
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Tournaments</CardTitle>
+                  <CardDescription>Create and manage tournaments</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button 
+                    onClick={() => setActiveTab('tournaments')} 
+                    className="w-full"
+                  >
+                    Manage Tournaments
+                  </Button>
+                </CardContent>
+              </Card>
+
               <Card>
                 <CardHeader>
                   <CardTitle>Blog Posts</CardTitle>
@@ -106,6 +126,10 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          <TabsContent value="tournaments" className="mt-6">
+            <TournamentManager />
           </TabsContent>
 
           <TabsContent value="blog" className="mt-6">

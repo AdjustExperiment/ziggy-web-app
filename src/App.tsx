@@ -11,6 +11,7 @@ import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import SignUpPage from "./pages/SignUpPage";
 import Tournaments from "./pages/Tournaments";
+import TournamentRegistration from "./pages/TournamentRegistration";
 import Analytics from "./pages/Analytics";
 import Results from "./pages/Results";
 import Teams from "./pages/Teams";
@@ -47,7 +48,8 @@ const App = () => (
                   </ProtectedRoute>
                 } 
               />
-              <Route path="/tournaments" element={<Tournaments />} />
+          <Route path="/tournaments" element={<Tournaments />} />
+          <Route path="/tournament/:tournamentId/register" element={<TournamentRegistration />} />
               <Route path="/results" element={<Results />} />
               <Route path="/features" element={<Features />} />
               <Route path="/testimonials" element={<Testimonials />} />

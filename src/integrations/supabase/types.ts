@@ -191,6 +191,149 @@ export type Database = {
         }
         Relationships: []
       }
+      tournament_registrations: {
+        Row: {
+          additional_info: Json | null
+          amount_paid: number | null
+          created_at: string
+          dietary_requirements: string | null
+          emergency_contact: string | null
+          id: string
+          participant_email: string
+          participant_name: string
+          partner_name: string | null
+          payment_id: string | null
+          payment_status: string
+          registration_date: string
+          school_organization: string | null
+          tournament_id: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          additional_info?: Json | null
+          amount_paid?: number | null
+          created_at?: string
+          dietary_requirements?: string | null
+          emergency_contact?: string | null
+          id?: string
+          participant_email: string
+          participant_name: string
+          partner_name?: string | null
+          payment_id?: string | null
+          payment_status?: string
+          registration_date?: string
+          school_organization?: string | null
+          tournament_id: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          additional_info?: Json | null
+          amount_paid?: number | null
+          created_at?: string
+          dietary_requirements?: string | null
+          emergency_contact?: string | null
+          id?: string
+          participant_email?: string
+          participant_name?: string
+          partner_name?: string | null
+          payment_id?: string | null
+          payment_status?: string
+          registration_date?: string
+          school_organization?: string | null
+          tournament_id?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tournament_registrations_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tournaments: {
+        Row: {
+          additional_info: Json | null
+          created_at: string
+          created_by: string | null
+          current_participants: number
+          debate_style: string | null
+          description: string | null
+          end_date: string
+          format: string
+          id: string
+          location: string
+          max_participants: number
+          name: string
+          payment_handler: string | null
+          paypal_client_id: string | null
+          prize_pool: string | null
+          registration_deadline: string | null
+          registration_fee: number | null
+          registration_open: boolean | null
+          sponsors: Json | null
+          start_date: string
+          status: string
+          updated_at: string
+          venue_details: string | null
+        }
+        Insert: {
+          additional_info?: Json | null
+          created_at?: string
+          created_by?: string | null
+          current_participants?: number
+          debate_style?: string | null
+          description?: string | null
+          end_date: string
+          format: string
+          id?: string
+          location: string
+          max_participants?: number
+          name: string
+          payment_handler?: string | null
+          paypal_client_id?: string | null
+          prize_pool?: string | null
+          registration_deadline?: string | null
+          registration_fee?: number | null
+          registration_open?: boolean | null
+          sponsors?: Json | null
+          start_date: string
+          status?: string
+          updated_at?: string
+          venue_details?: string | null
+        }
+        Update: {
+          additional_info?: Json | null
+          created_at?: string
+          created_by?: string | null
+          current_participants?: number
+          debate_style?: string | null
+          description?: string | null
+          end_date?: string
+          format?: string
+          id?: string
+          location?: string
+          max_participants?: number
+          name?: string
+          payment_handler?: string | null
+          paypal_client_id?: string | null
+          prize_pool?: string | null
+          registration_deadline?: string | null
+          registration_fee?: number | null
+          registration_open?: boolean | null
+          sponsors?: Json | null
+          start_date?: string
+          status?: string
+          updated_at?: string
+          venue_details?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
