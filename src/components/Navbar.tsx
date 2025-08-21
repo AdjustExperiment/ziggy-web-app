@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Search, Menu, X, ExternalLink, User, ChevronDown, Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import debateLogo from "@/assets/debate-logo.svg";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavbarSearch } from "@/hooks/useNavbarSearch";
+import { supabase } from "@/integrations/supabase/client";
 
 const navigation = [
   { name: "Results", href: "/results" },
@@ -38,9 +40,50 @@ export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [dashboardOpen, setDashboardOpen] = useState(false);
+  const [navigationLoading, setNavigationLoading] = useState(false);
   const { isAdmin } = useAuth();
   const { searchTerm, setSearchTerm, results, isSearching, showResults, clearSearch, setShowResults } = useNavbarSearch();
   const searchRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+
+  // Navigate to open tournament registration
+  const goToOpenRegistration = async () => {
+    setNavigationLoading(true);
+    try {
+      // First, try to find tournaments with registration_open = true
+      let { data: tournaments, error } = await supabase
+        .from('tournaments')
+        .select('id')
+        .eq('registration_open', true)
+        .gte('start_date', new Date().toISOString().split('T')[0]) // Future tournaments only
+        .order('start_date', { ascending: true })
+        .limit(1);
+
+      // If no tournaments with registration_open = true, try status = 'Registration Open'
+      if (!tournaments || tournaments.length === 0) {
+        const { data: fallbackTournaments } = await supabase
+          .from('tournaments')
+          .select('id')
+          .ilike('status', '%registration%open%')
+          .gte('start_date', new Date().toISOString().split('T')[0])
+          .order('start_date', { ascending: true })
+          .limit(1);
+        tournaments = fallbackTournaments;
+      }
+
+      if (tournaments && tournaments.length > 0) {
+        navigate(`/tournament-registration/${tournaments[0].id}`);
+      } else {
+        // No open tournaments, go to tournaments page
+        navigate('/tournaments');
+      }
+    } catch (error) {
+      console.error('Error finding open tournament:', error);
+      navigate('/tournaments');
+    } finally {
+      setNavigationLoading(false);
+    }
+  };
 
   // Close search results when clicking outside
   useEffect(() => {
@@ -198,8 +241,19 @@ export function Navbar() {
               )}
             </div>
             
-            <Button className="bg-red-500 text-white hover:bg-red-600 border-red-500 text-sm font-secondary transition-all duration-300 hover:scale-105 rounded-xl">
-              Sign Up
+            <Button 
+              onClick={goToOpenRegistration}
+              disabled={navigationLoading}
+              className="bg-red-500 text-white hover:bg-red-600 border-red-500 text-sm font-secondary transition-all duration-300 hover:scale-105 rounded-xl"
+            >
+              {navigationLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Finding...
+                </>
+              ) : (
+                "Sign Up"
+              )}
             </Button>
             
             <a href="/tournaments">
@@ -321,9 +375,18 @@ export function Navbar() {
               </div>
               <div className="px-4 space-y-3">
                 <Button 
+                  onClick={goToOpenRegistration}
+                  disabled={navigationLoading}
                   className="w-full bg-red-500 text-white hover:bg-red-600 py-3 text-base min-h-[44px] font-secondary transition-all duration-300 hover:scale-105"
                 >
-                  Sign Up
+                  {navigationLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Finding...
+                    </>
+                  ) : (
+                    "Sign Up"
+                  )}
                 </Button>
                 <a href="/tournaments">
                   <Button 
