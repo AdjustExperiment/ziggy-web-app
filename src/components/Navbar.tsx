@@ -17,7 +17,9 @@ import {
   Info,
   ChevronDown,
   Home,
-  HelpCircle
+  HelpCircle,
+  Menu,
+  X
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -29,6 +31,7 @@ import {
 
 export function Navbar() {
   const { user, profile, signOut, isAdmin } = useAuth();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
   const displayName = profile?.first_name 
     ? `${profile.first_name} ${profile.last_name || ''}`.trim()
@@ -41,10 +44,11 @@ export function Navbar() {
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-2">
               <img src="/src/assets/debate-logo.svg" alt="Ziggy" className="h-8 w-8" />
-              <span className="text-xl font-bold">Ziggy Online Debate</span>
+              <span className="text-lg sm:text-xl font-bold">Ziggy Online Debate</span>
             </Link>
             
-            <div className="ml-10 flex items-baseline space-x-4">
+            {/* Desktop Navigation */}
+            <div className="hidden lg:flex ml-10 items-baseline space-x-4">
               <Link to="/tournaments" className="flex items-center space-x-1 hover:text-primary transition-colors">
                 <Calendar className="h-4 w-4" />
                 <span>Tournaments</span>
@@ -98,71 +102,75 @@ export function Navbar() {
             </div>
           </div>
           
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-4">
             <ThemeToggle />
             
             {user ? (
               <>
                 {isAdmin && <NotificationsDropdown />}
                 
-                {/* Dashboard Dropdown */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="flex items-center space-x-1 hover:text-primary transition-colors">
-                      <BarChart3 className="h-4 w-4" />
-                      <span>Dashboard</span>
-                      <ChevronDown className="h-3 w-3" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem asChild>
-                      <Link to="/dashboard" className="flex items-center">
-                        <Home className="mr-2 h-4 w-4" />
-                        <span>My Dashboard</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to="/my-tournaments" className="flex items-center">
-                        <Trophy className="mr-2 h-4 w-4" />
-                        <span>My Tournaments</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    {isAdmin && (
+                {/* Desktop Dashboard Dropdown */}
+                <div className="hidden sm:block">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="flex items-center space-x-1 hover:text-primary transition-colors">
+                        <BarChart3 className="h-4 w-4" />
+                        <span className="hidden lg:inline">Dashboard</span>
+                        <ChevronDown className="h-3 w-3" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
                       <DropdownMenuItem asChild>
-                        <Link to="/admin" className="flex items-center">
-                          <Settings className="mr-2 h-4 w-4" />
-                          <span>Admin Dashboard</span>
+                        <Link to="/dashboard" className="flex items-center">
+                          <Home className="mr-2 h-4 w-4" />
+                          <span>My Dashboard</span>
                         </Link>
                       </DropdownMenuItem>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                      <DropdownMenuItem asChild>
+                        <Link to="/my-tournaments" className="flex items-center">
+                          <Trophy className="mr-2 h-4 w-4" />
+                          <span>My Tournaments</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      {isAdmin && (
+                        <DropdownMenuItem asChild>
+                          <Link to="/admin" className="flex items-center">
+                            <Settings className="mr-2 h-4 w-4" />
+                            <span>Admin Dashboard</span>
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
 
-                {/* User Account Dropdown */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="flex items-center space-x-2">
-                      <User className="h-4 w-4" />
-                      <span>{displayName}</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuItem asChild>
-                      <Link to="/account" className="flex items-center">
-                        <Settings className="mr-2 h-4 w-4" />
-                        <span>Account Settings</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={signOut} className="flex items-center">
-                      <LogOut className="mr-2 h-4 w-4" />
-                      <span>Sign out</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                {/* Desktop User Account Dropdown */}
+                <div className="hidden sm:block">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className="flex items-center space-x-2">
+                        <User className="h-4 w-4" />
+                        <span className="hidden lg:inline">{displayName}</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                      <DropdownMenuItem asChild>
+                        <Link to="/account" className="flex items-center">
+                          <Settings className="mr-2 h-4 w-4" />
+                          <span>Account Settings</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={signOut} className="flex items-center">
+                        <LogOut className="mr-2 h-4 w-4" />
+                        <span>Sign out</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </>
             ) : (
-              <div className="flex items-center space-x-2">
+              <div className="hidden sm:flex items-center space-x-2">
                 <Button variant="ghost" asChild>
                   <Link to="/login">Sign in</Link>
                 </Button>
@@ -171,8 +179,127 @@ export function Navbar() {
                 </Button>
               </div>
             )}
+
+            {/* Mobile menu button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="lg:hidden"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </Button>
           </div>
         </div>
+
+        {/* Mobile Navigation Menu */}
+        {isMobileMenuOpen && (
+          <div className="lg:hidden border-t border-border">
+            <div className="px-2 pt-2 pb-3 space-y-1">
+              <Link
+                to="/tournaments"
+                className="flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium hover:bg-muted"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <Calendar className="h-4 w-4" />
+                <span>Tournaments</span>
+              </Link>
+              
+              <Link
+                to="/results"
+                className="flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium hover:bg-muted"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <BarChart3 className="h-4 w-4" />
+                <span>Results</span>
+              </Link>
+
+              <Link
+                to="/about"
+                className="flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium hover:bg-muted"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <Info className="h-4 w-4" />
+                <span>About</span>
+              </Link>
+
+              <Link
+                to="/blog"
+                className="flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium hover:bg-muted"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <FileText className="h-4 w-4" />
+                <span>Blog</span>
+              </Link>
+
+              {user ? (
+                <>
+                  <Link
+                    to="/dashboard"
+                    className="flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium hover:bg-muted"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <Home className="h-4 w-4" />
+                    <span>My Dashboard</span>
+                  </Link>
+
+                  <Link
+                    to="/my-tournaments"
+                    className="flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium hover:bg-muted"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <Trophy className="h-4 w-4" />
+                    <span>My Tournaments</span>
+                  </Link>
+
+                  {isAdmin && (
+                    <Link
+                      to="/admin"
+                      className="flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium hover:bg-muted"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <Settings className="h-4 w-4" />
+                      <span>Admin Dashboard</span>
+                    </Link>
+                  )}
+
+                  <Link
+                    to="/account"
+                    className="flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium hover:bg-muted"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <User className="h-4 w-4" />
+                    <span>Account Settings</span>
+                  </Link>
+
+                  <button
+                    onClick={() => {
+                      signOut();
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium hover:bg-muted w-full text-left"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span>Sign out</span>
+                  </button>
+                </>
+              ) : (
+                <div className="space-y-2 px-3 py-2">
+                  <Link to="/login" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Button variant="ghost" className="w-full justify-start">
+                      Sign in
+                    </Button>
+                  </Link>
+                  <Link to="/signup" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Button className="w-full justify-start">
+                      Sign up
+                    </Button>
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </nav>
   );
