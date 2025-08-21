@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Trophy, Calendar, MapPin, Users, Eye, Clock } from 'lucide-react';
+import { Trophy, Calendar, MapPin, Users, Eye, Clock, FileText } from 'lucide-react';
 import { Registration } from '@/types/database';
 
 interface TournamentWithRegistration extends Registration {
@@ -201,27 +201,36 @@ export default function MyTournaments() {
                   )}
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <Button variant="outline" size="sm" asChild className="flex-1 text-xs sm:text-sm">
-                    <Link to={`/tournaments/${registration.tournament.id}`}>
-                      <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                      <span className="hidden sm:inline">View </span>Tournament
+                <div className="flex flex-col gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Button variant="outline" size="sm" asChild className="flex-1 text-xs sm:text-sm">
+                      <Link to={`/tournaments/${registration.tournament.id}`}>
+                        <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                        <span className="hidden sm:inline">View </span>Tournament
+                      </Link>
+                    </Button>
+                    
+                    <Button variant="outline" size="sm" asChild className="flex-1 text-xs sm:text-sm">
+                      <Link to={`/tournaments/${registration.tournament.id}/rounds`}>
+                        <Clock className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                        <span className="hidden sm:inline">View </span>Rounds
+                      </Link>
+                    </Button>
+                  </div>
+
+                  <Button variant="outline" size="sm" asChild className="w-full text-xs sm:text-sm">
+                    <Link to={`/tournaments/${registration.tournament.id}/postings`}>
+                      <FileText className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                      View Postings
                     </Link>
                   </Button>
-                  
-                  <Button variant="outline" size="sm" asChild className="flex-1 text-xs sm:text-sm">
-                    <Link to={`/tournaments/${registration.tournament.id}/rounds`}>
-                      <Clock className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                      <span className="hidden sm:inline">View </span>Rounds
+
+                  <Button size="sm" asChild className="w-full text-xs sm:text-sm">
+                    <Link to={`/tournaments/${registration.tournament.id}/my-match`}>
+                      View My Match
                     </Link>
                   </Button>
                 </div>
-
-                <Button size="sm" asChild className="w-full text-xs sm:text-sm">
-                  <Link to={`/tournaments/${registration.tournament.id}/my-match`}>
-                    View My Match
-                  </Link>
-                </Button>
               </CardContent>
             </Card>
           ))}
