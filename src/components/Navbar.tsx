@@ -30,6 +30,7 @@ const dashboardNavigation = [
 
 const aboutNavigation = [
   { name: "About Us", href: "/about" },
+  { name: "Getting Started", href: "/getting-started" },
   { name: "Features", href: "/features" },
   { name: "Testimonials", href: "/testimonials" },
   { name: "Contact", href: "/contact" },

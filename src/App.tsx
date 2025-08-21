@@ -20,6 +20,7 @@ import Teams from "./pages/Teams";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import About from "./pages/About";
+import GettingStarted from "./pages/GettingStarted";
 import Features from "./pages/Features";
 import Contact from "./pages/Contact";
 import Testimonials from "./pages/Testimonials";
@@ -39,6 +40,7 @@ const AppContent = () => {
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/about" element={<About />} />
+        <Route path="/getting-started" element={<GettingStarted />} />
         <Route 
           path="/dashboard" 
           element={
