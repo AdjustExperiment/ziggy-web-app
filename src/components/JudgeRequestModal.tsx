@@ -14,7 +14,6 @@ import { Gavel, Send, Calendar, Clock } from 'lucide-react';
 interface Judge {
   id: string;
   name: string;
-  email: string;
   experience_level: string;
   qualifications: string | null;
   bio: string | null;
@@ -53,8 +52,8 @@ export default function JudgeRequestModal({
   const fetchJudges = async () => {
     try {
       const { data, error } = await supabase
-        .from('judge_profiles')
-        .select('id, name, email, experience_level, qualifications, bio')
+        .from('judge_profiles_public')
+        .select('id, name, experience_level, qualifications, bio')
         .order('name');
 
       if (error) throw error;
@@ -258,9 +257,9 @@ export default function JudgeRequestModal({
                             </Badge>
                           </div>
                           
-                          <div className="text-sm text-muted-foreground">
-                            {selectedJudge.email}
-                          </div>
+                           <div className="text-sm text-muted-foreground">
+                             Contact information available to admins only
+                           </div>
 
                           {selectedJudge.qualifications && (
                             <div>

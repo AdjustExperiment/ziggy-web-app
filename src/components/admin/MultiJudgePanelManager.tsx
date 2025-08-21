@@ -102,7 +102,7 @@ export default function MultiJudgePanelManager({ tournamentId }: MultiJudgePanel
 
       if (pairingsError) throw pairingsError;
 
-      // Fetch available judges
+      // Fetch available judges (admin access, can see all data)
       const { data: judgesData, error: judgesError } = await supabase
         .from('judge_profiles')
         .select('*')

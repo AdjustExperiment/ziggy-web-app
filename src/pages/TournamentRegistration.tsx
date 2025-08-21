@@ -115,6 +115,7 @@ export default function TournamentRegistration() {
     setJudgeValidation({ status: 'checking' });
 
     try {
+      // For tournament registration, we need to check judge by email from the full table (admin query)
       const { data, error } = await supabase
         .from('judge_profiles')
         .select('id, name, email')
