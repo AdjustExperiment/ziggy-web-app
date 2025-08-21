@@ -9,7 +9,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { SpectateRequestManager } from '@/components/SpectateRequestManager';
 import { 
-  ArrowLeft, 
   Users, 
   Clock, 
   MapPin, 
@@ -18,6 +17,7 @@ import {
   Eye,
   FileText
 } from 'lucide-react';
+import { BackButton } from '@/components/ui/back-button';
 
 interface PairingWithDetails {
   id: string;
@@ -282,12 +282,9 @@ export default function TournamentPostings() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-6">
-        <Button variant="ghost" asChild className="mb-4">
-          <Link to="/my-tournaments">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to My Tournaments
-          </Link>
-        </Button>
+        <BackButton>
+          Back to My Tournaments
+        </BackButton>
         
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>

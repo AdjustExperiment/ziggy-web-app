@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Clock, MapPin, Users, Trophy, Calendar } from 'lucide-react';
+import { Clock, MapPin, Users, Trophy, Calendar } from 'lucide-react';
+import { BackButton } from '@/components/ui/back-button';
 
 interface MyPairing {
   id: string;
@@ -174,12 +175,9 @@ export default function TournamentMyMatch() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-6">
-        <Button variant="ghost" asChild className="mb-4">
-          <Link to="/my-tournaments">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to My Tournaments
-          </Link>
-        </Button>
+        <BackButton>
+          Back to My Tournaments
+        </BackButton>
         
         <div className="flex items-center justify-between">
           <div>

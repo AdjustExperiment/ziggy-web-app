@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -467,10 +468,10 @@ export function SpectateRequestManager({ tournamentId, pairings }: SpectateReque
                   {request.status === 'approved' && (
                     <div className="mt-3">
                       <Button size="sm" asChild>
-                        <a href={`/pairings/${request.pairing_id}`}>
+                        <Link to={`/pairings/${request.pairing_id}`}>
                           <Eye className="h-4 w-4 mr-1" />
                           View Pairing
-                        </a>
+                        </Link>
                       </Button>
                     </div>
                   )}

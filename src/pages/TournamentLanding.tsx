@@ -24,6 +24,7 @@ import {
   Edit
 } from 'lucide-react';
 import { TournamentContentManager } from '@/components/admin/TournamentContentManager';
+import { BackButton } from '@/components/ui/back-button';
 
 interface Tournament {
   id: string;
@@ -191,6 +192,9 @@ export default function TournamentLanding() {
     <div className="container mx-auto px-4 py-8">
       {/* Tournament Header */}
       <div className="mb-8">
+        <BackButton fallbackRoute="/tournaments">
+          Back to Tournaments
+        </BackButton>
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           <div>
             <h1 className="text-3xl font-bold mb-2">{tournament.name}</h1>
