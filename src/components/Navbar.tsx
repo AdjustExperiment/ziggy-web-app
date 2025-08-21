@@ -36,13 +36,13 @@ export function Navbar() {
   return (
     <nav className="sticky top-0 z-50 border-b bg-black/95 backdrop-blur-lg border-white/10 animate-fade-in rounded-b-2xl">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-20 items-center justify-between">
+        <div className="flex h-24 items-center justify-between">
           {/* Logo */}
           <div className="flex items-center">
             <img 
               src="/lovable-uploads/bb7e942b-4006-461c-b9ed-9bdde6f1500c.png" 
               alt="Debate Champions Logo" 
-              className="h-12 sm:h-16 w-auto object-contain rounded-lg hover:scale-105 transition-transform duration-300" 
+              className="h-16 sm:h-20 w-auto object-contain rounded-lg hover:scale-105 transition-transform duration-300" 
             />
           </div>
 
@@ -61,7 +61,7 @@ export function Navbar() {
                     <span className="absolute inset-x-0 -bottom-1 h-0.5 bg-red-500 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="bg-black/95 border-white/20 backdrop-blur-lg min-w-[200px] animate-scale-in rounded-xl z-50">
+                <DropdownMenuContent className="bg-black border-red-500/30 backdrop-blur-lg min-w-[200px] animate-scale-in rounded-xl z-50">
                   {aboutNavigation.map((item) => (
                     <DropdownMenuItem key={item.name} asChild>
                       <a
@@ -87,7 +87,7 @@ export function Navbar() {
                     <span className="absolute inset-x-0 -bottom-1 h-0.5 bg-red-500 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="bg-black/95 border-white/20 backdrop-blur-lg min-w-[200px] animate-scale-in rounded-xl z-50">
+                <DropdownMenuContent className="bg-black border-red-500/30 backdrop-blur-lg min-w-[200px] animate-scale-in rounded-xl z-50">
                   {dashboardNavigation.map((item) => (
                     <DropdownMenuItem key={item.name} asChild>
                       <a
