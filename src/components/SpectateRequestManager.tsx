@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -72,13 +73,13 @@ export function SpectateRequestManager({ tournamentId, pairings }: SpectateReque
         .from('spectate_requests')
         .select(`
           *,
-          pairing:pairings!inner(
+          pairings!inner(
             id,
             scheduled_time,
             room,
-            aff_registration:tournament_registrations!aff_registration_id(participant_name, user_id),
-            neg_registration:tournament_registrations!neg_registration_id(participant_name, user_id),
-            round:rounds(name)
+            aff_registration_id,
+            neg_registration_id,
+            rounds!inner(name)
           )
         `)
         .eq('requester_user_id', user.id)
@@ -86,7 +87,37 @@ export function SpectateRequestManager({ tournamentId, pairings }: SpectateReque
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setSpectateRequests(data as any || []);
+
+      // Now we need to fetch the registration details separately
+      const requestsWithDetails = await Promise.all(
+        (data || []).map(async (request) => {
+          const { data: affReg } = await supabase
+            .from('tournament_registrations')
+            .select('participant_name, user_id')
+            .eq('id', request.pairings.aff_registration_id)
+            .single();
+
+          const { data: negReg } = await supabase
+            .from('tournament_registrations')
+            .select('participant_name, user_id')
+            .eq('id', request.pairings.neg_registration_id)
+            .single();
+
+          return {
+            ...request,
+            pairing: {
+              id: request.pairings.id,
+              aff_registration: affReg || { participant_name: 'Unknown', user_id: '' },
+              neg_registration: negReg || { participant_name: 'Unknown', user_id: '' },
+              scheduled_time: request.pairings.scheduled_time,
+              room: request.pairings.room,
+              round: { name: request.pairings.rounds?.name || 'Unknown Round' }
+            }
+          };
+        })
+      );
+
+      setSpectateRequests(requestsWithDetails);
     } catch (error: any) {
       console.error('Error fetching spectate requests:', error);
     }
@@ -103,15 +134,15 @@ export function SpectateRequestManager({ tournamentId, pairings }: SpectateReque
         .from('spectate_requests')
         .select(`
           *,
-          pairing:pairings!inner(
+          pairings!inner(
             id,
             scheduled_time,
             room,
-            aff_registration:tournament_registrations!aff_registration_id(participant_name, user_id),
-            neg_registration:tournament_registrations!neg_registration_id(participant_name, user_id),
-            round:rounds(name)
+            aff_registration_id,
+            neg_registration_id,
+            rounds!inner(name)
           ),
-          requester:profiles!requester_user_id(first_name, last_name)
+          profiles!requester_user_id(first_name, last_name)
         `)
         .eq('status', 'pending')
         .in('pairing_id', pairingIds)
@@ -119,13 +150,43 @@ export function SpectateRequestManager({ tournamentId, pairings }: SpectateReque
 
       if (error) throw error;
 
+      // Fetch registration details and filter for user's pairings
+      const requestsWithDetails = await Promise.all(
+        (data || []).map(async (request) => {
+          const { data: affReg } = await supabase
+            .from('tournament_registrations')
+            .select('participant_name, user_id')
+            .eq('id', request.pairings.aff_registration_id)
+            .single();
+
+          const { data: negReg } = await supabase
+            .from('tournament_registrations')
+            .select('participant_name, user_id')
+            .eq('id', request.pairings.neg_registration_id)
+            .single();
+
+          return {
+            ...request,
+            pairing: {
+              id: request.pairings.id,
+              aff_registration: affReg || { participant_name: 'Unknown', user_id: '' },
+              neg_registration: negReg || { participant_name: 'Unknown', user_id: '' },
+              scheduled_time: request.pairings.scheduled_time,
+              room: request.pairings.room,
+              round: { name: request.pairings.rounds?.name || 'Unknown Round' }
+            },
+            requester: request.profiles || { first_name: 'Unknown', last_name: 'User' }
+          };
+        })
+      );
+
       // Filter to only show requests for pairings where the current user is a participant
-      const userPendingApprovals = (data || []).filter(request => {
+      const userPendingApprovals = requestsWithDetails.filter(request => {
         return request.pairing?.aff_registration?.user_id === user.id || 
                request.pairing?.neg_registration?.user_id === user.id;
       });
 
-      setPendingApprovals(userPendingApprovals as any);
+      setPendingApprovals(userPendingApprovals);
     } catch (error: any) {
       console.error('Error fetching pending approvals:', error);
     }
