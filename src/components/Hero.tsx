@@ -52,6 +52,7 @@ export function Hero() {
               <Button 
                 size="lg" 
                 className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-glow text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-6 min-h-[44px] sm:min-h-[56px] transition-all duration-300 hover:scale-105"
+                onClick={() => window.location.href = '/tournaments'}
               >
                 Sign Up Now
                 <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
