@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -26,6 +27,7 @@ interface Sponsor {
   name: string;
   link?: string;
   logo_url?: string;
+  [key: string]: any; // Add index signature for Json compatibility
 }
 
 interface Tournament {
@@ -240,13 +242,26 @@ const TournamentManager = () => {
     
     try {
       const tournamentData = {
-        ...formData,
+        name: formData.name,
+        description: formData.description,
         tournament_info: DOMPurify.sanitize(formData.tournament_info),
-        sponsors: formData.sponsors,
-        prize_items: formData.prize_items,
+        format: formData.format,
+        debate_style: formData.debate_style,
         start_date: format(formData.start_date, 'yyyy-MM-dd'),
         end_date: format(formData.end_date, 'yyyy-MM-dd'),
+        location: formData.location,
+        venue_details: formData.venue_details,
+        max_participants: formData.max_participants,
+        registration_fee: formData.registration_fee,
+        prize_pool: formData.prize_pool,
+        cash_prize_total: formData.cash_prize_total,
+        prize_items: formData.prize_items,
+        sponsors: formData.sponsors as any, // Cast to any for Json compatibility
+        status: formData.status,
+        registration_open: formData.registration_open,
         registration_deadline: format(formData.registration_deadline, 'yyyy-MM-dd'),
+        payment_handler: formData.payment_handler,
+        paypal_client_id: formData.paypal_client_id,
         additional_info: JSON.parse(formData.additional_info || '{}')
       };
 
@@ -261,7 +276,7 @@ const TournamentManager = () => {
       } else {
         const { error } = await supabase
           .from('tournaments')
-          .insert([tournamentData]);
+          .insert(tournamentData);
         
         if (error) throw error;
         toast({ title: "Success", description: "Tournament created successfully" });
