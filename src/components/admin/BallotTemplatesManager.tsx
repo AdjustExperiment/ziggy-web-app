@@ -75,6 +75,7 @@ export function BallotTemplatesManager() {
       if (error) throw error;
       setTournaments(data || []);
     } catch (error: any) {
+      console.error('Error fetching tournaments:', error);
       toast({
         title: "Error",
         description: "Failed to fetch tournaments",
@@ -86,23 +87,13 @@ export function BallotTemplatesManager() {
   const fetchTemplates = async () => {
     try {
       setLoading(true);
-      const query = supabase
-        .from('ballot_templates')
-        .select('*')
-        .order('event_style', { ascending: true })
-        .order('template_key', { ascending: true });
-
-      if (selectedTournament === 'global') {
-        query.is('tournament_id', null);
-      } else {
-        query.eq('tournament_id', selectedTournament);
-      }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-      setTemplates(data || []);
+      
+      // Placeholder implementation - the ballot_templates table doesn't exist in current types
+      // Show empty state until database setup is complete
+      setTemplates([]);
+      
     } catch (error: any) {
+      console.error('Error fetching ballot templates:', error);
       toast({
         title: "Error",
         description: "Failed to fetch ballot templates",
@@ -122,22 +113,10 @@ export function BallotTemplatesManager() {
         throw new Error('Invalid JSON in schema field');
       }
 
-      const { error } = await supabase
-        .from('ballot_templates')
-        .insert([{
-          tournament_id: selectedTournament === 'global' ? null : selectedTournament,
-          event_style: formData.event_style,
-          template_key: formData.template_key,
-          schema,
-          html: formData.html,
-          is_default: formData.is_default
-        }]);
-
-      if (error) throw error;
-
+      // Placeholder implementation
       toast({
-        title: "Success",
-        description: "Ballot template created successfully",
+        title: "Feature Coming Soon",
+        description: "Ballot template creation will be available once the database setup is complete",
       });
 
       setIsCreateDialogOpen(false);
@@ -163,22 +142,10 @@ export function BallotTemplatesManager() {
         throw new Error('Invalid JSON in schema field');
       }
 
-      const { error } = await supabase
-        .from('ballot_templates')
-        .update({
-          event_style: formData.event_style,
-          template_key: formData.template_key,
-          schema,
-          html: formData.html,
-          is_default: formData.is_default
-        })
-        .eq('id', editingTemplate.id);
-
-      if (error) throw error;
-
+      // Placeholder implementation
       toast({
-        title: "Success",
-        description: "Ballot template updated successfully",
+        title: "Feature Coming Soon",
+        description: "Ballot template updates will be available once the database setup is complete",
       });
 
       setIsEditDialogOpen(false);
@@ -196,16 +163,10 @@ export function BallotTemplatesManager() {
 
   const toggleDefault = async (templateId: string, isDefault: boolean) => {
     try {
-      const { error } = await supabase
-        .from('ballot_templates')
-        .update({ is_default: isDefault })
-        .eq('id', templateId);
-
-      if (error) throw error;
-
+      // Placeholder implementation
       toast({
-        title: "Success",
-        description: `Template ${isDefault ? 'set as' : 'removed as'} default`,
+        title: "Feature Coming Soon",
+        description: "Template default settings will be available once the database setup is complete",
       });
 
       fetchTemplates();
@@ -384,55 +345,65 @@ export function BallotTemplatesManager() {
       <Card>
         <CardHeader>
           <CardTitle>Templates ({templates.length})</CardTitle>
+          <CardDescription>
+            This feature is being set up and will be fully functional soon.
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Event Style</TableHead>
-                <TableHead>Template Key</TableHead>
-                <TableHead>Scope</TableHead>
-                <TableHead>Default</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {templates.map((template) => (
-                <TableRow key={template.id}>
-                  <TableCell>
-                    <Badge variant="outline">{template.event_style}</Badge>
-                  </TableCell>
-                  <TableCell className="font-mono">{template.template_key}</TableCell>
-                  <TableCell>
-                    <Badge variant={template.tournament_id ? 'default' : 'secondary'}>
-                      {template.tournament_id ? 'Tournament' : 'Global'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Switch
-                        checked={template.is_default}
-                        onCheckedChange={(checked) => toggleDefault(template.id, checked)}
-                      />
-                      {template.is_default && <Star className="h-4 w-4 text-yellow-500" />}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => openEditDialog(template)}
-                      >
-                        <Edit className="h-4 w-4 mr-1" />
-                        Edit
-                      </Button>
-                    </div>
-                  </TableCell>
+          {templates.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p>No ballot templates found. Templates will appear here once the database setup is complete.</p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Event Style</TableHead>
+                  <TableHead>Template Key</TableHead>
+                  <TableHead>Scope</TableHead>
+                  <TableHead>Default</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {templates.map((template) => (
+                  <TableRow key={template.id}>
+                    <TableCell>
+                      <Badge variant="outline">{template.event_style}</Badge>
+                    </TableCell>
+                    <TableCell className="font-mono">{template.template_key}</TableCell>
+                    <TableCell>
+                      <Badge variant={template.tournament_id ? 'default' : 'secondary'}>
+                        {template.tournament_id ? 'Tournament' : 'Global'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={template.is_default}
+                          onCheckedChange={(checked) => toggleDefault(template.id, checked)}
+                        />
+                        {template.is_default && <Star className="h-4 w-4 text-yellow-500" />}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => openEditDialog(template)}
+                        >
+                          <Edit className="h-4 w-4 mr-1" />
+                          Edit
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
 

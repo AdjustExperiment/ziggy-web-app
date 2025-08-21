@@ -29,14 +29,23 @@ export function BallotRevealSettings() {
 
   const fetchTournaments = async () => {
     try {
+      // Placeholder implementation - using existing tournaments table without ballot_reveal_mode
       const { data, error } = await supabase
         .from('tournaments')
-        .select('id, name, ballot_reveal_mode, end_date, status')
+        .select('id, name, end_date, status')
         .order('name');
 
       if (error) throw error;
-      setTournaments(data || []);
+      
+      // Add placeholder ballot_reveal_mode for display
+      const tournamentsWithRevealMode = (data || []).map(tournament => ({
+        ...tournament,
+        ballot_reveal_mode: 'after_tournament' // Default placeholder
+      }));
+      
+      setTournaments(tournamentsWithRevealMode);
     } catch (error: any) {
+      console.error('Error fetching tournaments:', error);
       toast({
         title: "Error",
         description: "Failed to fetch tournaments",
@@ -50,19 +59,13 @@ export function BallotRevealSettings() {
   const updateRevealMode = async (tournamentId: string, mode: string) => {
     try {
       setUpdating(tournamentId);
-      const { error } = await supabase
-        .from('tournaments')
-        .update({ ballot_reveal_mode: mode })
-        .eq('id', tournamentId);
-
-      if (error) throw error;
-
+      
+      // Placeholder implementation
       toast({
-        title: "Success",
-        description: "Ballot reveal mode updated successfully",
+        title: "Feature Coming Soon",
+        description: "Ballot reveal mode settings will be available once the database setup is complete",
       });
 
-      fetchTournaments();
     } catch (error: any) {
       toast({
         title: "Error",
@@ -167,74 +170,84 @@ export function BallotRevealSettings() {
       <Card>
         <CardHeader>
           <CardTitle>Tournament Settings ({tournaments.length})</CardTitle>
+          <CardDescription>
+            This feature is being set up and will be fully functional soon.
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Tournament</TableHead>
-                <TableHead>End Date</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Current Setting</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {tournaments.map((tournament) => (
-                <TableRow key={tournament.id}>
-                  <TableCell>
-                    <div className="font-medium">{tournament.name}</div>
-                  </TableCell>
-                  <TableCell>
-                    {tournament.end_date ? (
-                      new Date(tournament.end_date).toLocaleDateString()
-                    ) : (
-                      <span className="text-muted-foreground">Not set</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{tournament.status}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      {getRevealModeIcon(tournament.ballot_reveal_mode)}
-                      <Badge variant={getRevealModeVariant(tournament.ballot_reveal_mode)}>
-                        {tournament.ballot_reveal_mode === 'auto_on_submit' ? 'Auto on Submit' : 'After Tournament'}
-                      </Badge>
-                    </div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      {getRevealModeDescription(tournament.ballot_reveal_mode)}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Select
-                      value={tournament.ballot_reveal_mode}
-                      onValueChange={(value) => updateRevealMode(tournament.id, value)}
-                      disabled={updating === tournament.id}
-                    >
-                      <SelectTrigger className="w-48">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="auto_on_submit">
-                          <div className="flex items-center gap-2">
-                            <CheckCircle className="h-4 w-4 text-green-500" />
-                            Auto on Submit
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="after_tournament">
-                          <div className="flex items-center gap-2">
-                            <Clock className="h-4 w-4 text-blue-500" />
-                            After Tournament
-                          </div>
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
+          {tournaments.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Eye className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p>No tournaments found. Tournament settings will appear here once available.</p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Tournament</TableHead>
+                  <TableHead>End Date</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Current Setting</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {tournaments.map((tournament) => (
+                  <TableRow key={tournament.id}>
+                    <TableCell>
+                      <div className="font-medium">{tournament.name}</div>
+                    </TableCell>
+                    <TableCell>
+                      {tournament.end_date ? (
+                        new Date(tournament.end_date).toLocaleDateString()
+                      ) : (
+                        <span className="text-muted-foreground">Not set</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{tournament.status}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {getRevealModeIcon(tournament.ballot_reveal_mode)}
+                        <Badge variant={getRevealModeVariant(tournament.ballot_reveal_mode)}>
+                          {tournament.ballot_reveal_mode === 'auto_on_submit' ? 'Auto on Submit' : 'After Tournament'}
+                        </Badge>
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {getRevealModeDescription(tournament.ballot_reveal_mode)}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Select
+                        value={tournament.ballot_reveal_mode}
+                        onValueChange={(value) => updateRevealMode(tournament.id, value)}
+                        disabled={updating === tournament.id}
+                      >
+                        <SelectTrigger className="w-48">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="auto_on_submit">
+                            <div className="flex items-center gap-2">
+                              <CheckCircle className="h-4 w-4 text-green-500" />
+                              Auto on Submit
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="after_tournament">
+                            <div className="flex items-center gap-2">
+                              <Clock className="h-4 w-4 text-blue-500" />
+                              After Tournament
+                            </div>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>
