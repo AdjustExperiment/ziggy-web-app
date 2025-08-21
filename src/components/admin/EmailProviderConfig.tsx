@@ -48,9 +48,16 @@ export const EmailProviderConfig = () => {
       }
 
       if (data) {
-        setSettings(data);
+        // Type guard to ensure provider is valid
+        const provider = data.provider === 'sendgrid' ? 'sendgrid' : 'resend';
+        const settingsData: EmailProviderSettings = {
+          ...data,
+          provider
+        };
+        
+        setSettings(settingsData);
         setFormData({
-          provider: data.provider,
+          provider,
           from_email: data.from_email || '',
           reply_to: data.reply_to || ''
         });
