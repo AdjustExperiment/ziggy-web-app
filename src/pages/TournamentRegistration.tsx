@@ -1,124 +1,106 @@
+
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { useParams, Navigate } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
-import { CalendarIcon, MapPin, Users, DollarSign, Trophy, Download, ArrowLeft, ExternalLink, CreditCard } from 'lucide-react';
-import { format } from 'date-fns';
-import { toast } from '@/components/ui/use-toast';
+import { AlertCircle, Calendar, MapPin, Users, Trophy, Clock, DollarSign } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import PaymentButtons from '@/components/PaymentButtons';
-import TournamentInfo from '@/components/TournamentInfo';
-import TournamentCalendarView from '@/components/TournamentCalendarView';
-import DOMPurify from 'dompurify';
-
-interface Sponsor {
-  name: string;
-  link?: string;
-  logo_url?: string;
-}
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ProfileSetup } from '@/components/auth/ProfileSetup';
 
 interface Tournament {
   id: string;
   name: string;
   description: string;
-  tournament_info: string;
-  format: string;
-  debate_style: string;
   start_date: string;
   end_date: string;
   location: string;
   venue_details: string;
+  registration_fee: number;
+  format: string;
+  debate_style: string;
+  registration_deadline: string;
+  registration_open: boolean;
   max_participants: number;
   current_participants: number;
-  registration_fee: number;
-  prize_pool: string;
-  cash_prize_total: number;
-  prize_items: string[];
-  sponsors: Sponsor[];
-  status: string;
-  registration_open: boolean;
-  registration_deadline: string;
-  payment_handler: string;
-  paypal_client_id: string;
-  paypal_button_html: string;
-  venmo_button_html: string;
+  tournament_info: string;
   additional_info: any;
+  status: string;
 }
 
 const TournamentRegistration = () => {
-  const { tournamentId } = useParams<{ tournamentId: string }>();
-  const navigate = useNavigate();
-  const { user } = useAuth();
+  const { id } = useParams<{ id: string }>();
+  const { user, profile, loading: authLoading } = useAuth();
+  const { toast } = useToast();
   
   const [tournament, setTournament] = useState<Tournament | null>(null);
+  const [formData, setFormData] = useState({
+    participant_name: '',
+    participant_email: '',
+    partner_name: '',
+    school_organization: '',
+    dietary_requirements: '',
+    emergency_contact: '',
+    additional_info: {}
+  });
+  
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
   const [registrationId, setRegistrationId] = useState<string | null>(null);
-  const [formData, setFormData] = useState({
-    participant_name: '',
-    participant_email: '',
-    school_organization: '',
-    partner_name: '',
-    emergency_contact: '',
-  });
+  const [profileIncomplete, setProfileIncomplete] = useState(false);
+
+  // Redirect to login if not authenticated
+  if (!authLoading && !user) {
+    return <Navigate to={`/login?redirect=/tournament/${id}/register`} replace />;
+  }
 
   useEffect(() => {
-    fetchTournament();
-  }, [tournamentId]);
+    if (id) {
+      fetchTournament();
+    }
+  }, [id]);
 
   useEffect(() => {
-    if (user) {
+    if (profile && user) {
+      // Check if profile is complete
+      const isComplete = profile.first_name && profile.last_name && profile.state && profile.time_zone && profile.phone;
+      setProfileIncomplete(!isComplete);
+      
+      // Auto-fill form with profile data
       setFormData(prev => ({
         ...prev,
+        participant_name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim(),
         participant_email: user.email || '',
       }));
     }
-  }, [user]);
+  }, [profile, user]);
 
   const fetchTournament = async () => {
-    if (!tournamentId) {
-      navigate('/tournaments');
-      return;
-    }
-
     try {
       const { data, error } = await supabase
         .from('tournaments')
         .select('*')
-        .eq('id', tournamentId)
+        .eq('id', id)
         .single();
 
       if (error) throw error;
-      
-      const transformedTournament = {
-        ...data,
-        sponsors: Array.isArray(data.sponsors) 
-          ? data.sponsors.map((sponsor: any) => 
-              typeof sponsor === 'string' ? { name: sponsor } : sponsor
-            )
-          : [],
-        prize_items: Array.isArray(data.prize_items) ? data.prize_items : [],
-        tournament_info: data.tournament_info || '',
-        cash_prize_total: data.cash_prize_total || 0,
-        paypal_button_html: (data as any).paypal_button_html || '',
-        venmo_button_html: (data as any).venmo_button_html || '',
-        additional_info: data.additional_info || {}
-      };
-      
-      setTournament(transformedTournament);
-    } catch (error: any) {
+      setTournament(data);
+    } catch (error) {
+      console.error('Error fetching tournament:', error);
       toast({
-        title: "Error",
-        description: "Tournament not found",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to load tournament details.',
+        variant: 'destructive',
       });
-      navigate('/tournaments');
     } finally {
       setLoading(false);
     }
@@ -126,51 +108,44 @@ const TournamentRegistration = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!tournament || !tournament.registration_open) return;
-    
+    if (!tournament || !user) return;
+
     setSubmitting(true);
-    
+
     try {
-      const { data: registration, error: regError } = await supabase
+      const { data, error } = await supabase
         .from('tournament_registrations')
         .insert([{
           tournament_id: tournament.id,
           participant_name: formData.participant_name,
           participant_email: formData.participant_email,
-          school_organization: formData.school_organization,
-          partner_name: formData.partner_name,
-          dietary_requirements: null,
-          emergency_contact: formData.emergency_contact,
-          user_id: user?.id || null,
+          partner_name: formData.partner_name || null,
+          school_organization: formData.school_organization || null,
+          dietary_requirements: formData.dietary_requirements || null,
+          emergency_contact: formData.emergency_contact || null,
+          additional_info: formData.additional_info,
+          payment_status: 'pending',
           amount_paid: tournament.registration_fee,
+          user_id: user.id
         }])
         .select()
         .single();
 
-      if (regError) throw regError;
+      if (error) throw error;
 
-      setRegistrationId(registration.id);
-
-      if (tournament.registration_fee > 0) {
-        setShowPayment(true);
-      } else {
-        await supabase
-          .from('tournament_registrations')
-          .update({ payment_status: 'completed' })
-          .eq('id', registration.id);
-        
-        toast({
-          title: "Registration Successful!",
-          description: "You have been registered for the tournament.",
-        });
-        
-        navigate('/tournaments');
-      }
-    } catch (error: any) {
+      setRegistrationId(data.id);
+      setShowPayment(true);
+      
       toast({
-        title: "Registration Failed",
-        description: error.message || "Please try again",
-        variant: "destructive",
+        title: 'Registration Submitted',
+        description: 'Please complete your payment to confirm your registration.',
+      });
+    } catch (error) {
+      console.error('Error submitting registration:', error);
+      toast({
+        title: 'Registration Failed',
+        description: error.message || 'Please try again.',
+        variant: 'destructive',
       });
     } finally {
       setSubmitting(false);
@@ -178,374 +153,148 @@ const TournamentRegistration = () => {
   };
 
   const handlePayPalPayment = async () => {
-    if (!registrationId || !tournament) return;
-    
-    const confirmPayment = confirm(`Process payment of $${tournament.registration_fee} via PayPal?`);
-    
-    if (confirmPayment) {
-      try {
-        await supabase
-          .from('tournament_registrations')
-          .update({ 
-            payment_status: 'completed',
-            payment_id: `paypal_${Date.now()}_${registrationId.slice(0, 8)}`
-          })
-          .eq('id', registrationId);
-        
-        toast({
-          title: "Payment Successful!",
-          description: "Your tournament registration is complete.",
-        });
-        
-        navigate('/tournaments');
-      } catch (error: any) {
-        toast({
-          title: "Payment Failed",
-          description: "Please try again",
-          variant: "destructive",
-        });
-      }
-    }
+    // PayPal integration would go here
+    toast({
+      title: 'PayPal Payment',
+      description: 'PayPal integration coming soon!',
+    });
   };
 
   const handleVenmoPayment = async () => {
-    if (!registrationId || !tournament) return;
-    
-    const confirmPayment = confirm(`Process payment of $${tournament.registration_fee} via Venmo?`);
-    
-    if (confirmPayment) {
-      try {
-        await supabase
-          .from('tournament_registrations')
-          .update({ 
-            payment_status: 'completed',
-            payment_id: `venmo_${Date.now()}_${registrationId.slice(0, 8)}`
-          })
-          .eq('id', registrationId);
-        
-        toast({
-          title: "Payment Successful!",
-          description: "Your tournament registration is complete.",
-        });
-        
-        navigate('/tournaments');
-      } catch (error: any) {
-        toast({
-          title: "Payment Failed",
-          description: "Please try again",
-          variant: "destructive",
-        });
-      }
-    }
+    // Venmo integration would go here
+    toast({
+      title: 'Venmo Payment',
+      description: 'Venmo integration coming soon!',
+    });
   };
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-          <p className="mt-4 text-muted-foreground">Loading tournament details...</p>
-        </div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   if (!tournament) {
-    return null;
+    return (
+      <div className="min-h-screen bg-gradient-subtle flex items-center justify-center">
+        <Card className="max-w-md w-full mx-4">
+          <CardContent className="text-center py-8">
+            <AlertCircle className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+            <h2 className="text-xl font-semibold mb-2">Tournament Not Found</h2>
+            <p className="text-muted-foreground">The tournament you're looking for doesn't exist or has been removed.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   const isRegistrationClosed = !tournament.registration_open || 
+    (tournament.registration_deadline && new Date(tournament.registration_deadline) < new Date()) ||
     tournament.current_participants >= tournament.max_participants;
 
   return (
-    <div className="min-h-screen bg-background">
-      <section className="bg-black py-12">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-          <Button
-            variant="outline"
-            onClick={() => navigate('/tournaments')}
-            className="mb-6 border-white/30 text-white hover:bg-white/10"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Tournaments
-          </Button>
-          
-          <div className="text-center">
-            <Badge 
-              variant={tournament.registration_open ? "default" : "secondary"}
-              className={`mb-4 ${tournament.registration_open ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}
-            >
-              {tournament.status}
-            </Badge>
-            
-            <h1 className="text-4xl font-bold text-white mb-4 font-primary">
-              {tournament.name}
-            </h1>
-            
-            <p className="text-xl text-white/70 max-w-3xl mx-auto">
-              {tournament.description}
-            </p>
-          </div>
-        </div>
-      </section>
+    <div className="min-h-screen bg-gradient-subtle">
+      <div className="mx-auto max-w-4xl px-4 py-8">
+        {/* Profile Completion Dialog */}
+        <Dialog open={profileIncomplete} onOpenChange={() => {}}>
+          <DialogContent className="max-w-2xl" onPointerDownOutside={(e) => e.preventDefault()}>
+            <DialogHeader>
+              <DialogTitle>Complete Your Profile</DialogTitle>
+            </DialogHeader>
+            <div className="mb-4">
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  Please complete your profile information before registering for tournaments.
+                </AlertDescription>
+              </Alert>
+            </div>
+            <ProfileSetup 
+              isModal 
+              onComplete={() => {
+                setProfileIncomplete(false);
+                window.location.reload();
+              }} 
+            />
+          </DialogContent>
+        </Dialog>
 
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Tournament Details */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Tournament Information Section */}
-            {tournament.tournament_info && (
+        {/* Tournament Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-foreground mb-4">{tournament.name}</h1>
+          
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Calendar className="h-4 w-4" />
+              <span className="text-sm">
+                {new Date(tournament.start_date).toLocaleDateString()} - {new Date(tournament.end_date).toLocaleDateString()}
+              </span>
+            </div>
+            
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <MapPin className="h-4 w-4" />
+              <span className="text-sm">{tournament.location}</span>
+            </div>
+            
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Users className="h-4 w-4" />
+              <span className="text-sm">{tournament.current_participants}/{tournament.max_participants} registered</span>
+            </div>
+            
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <DollarSign className="h-4 w-4" />
+              <span className="text-sm">${tournament.registration_fee}</span>
+            </div>
+          </div>
+
+          {tournament.description && (
+            <p className="text-muted-foreground mb-4">{tournament.description}</p>
+          )}
+        </div>
+
+        {isRegistrationClosed ? (
+          <Alert className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Registration for this tournament is currently closed.
+            </AlertDescription>
+          </Alert>
+        ) : showPayment ? (
+          <div className="space-y-6">
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Your registration has been submitted. Please complete your payment to confirm your spot.
+              </AlertDescription>
+            </Alert>
+            
+            <PaymentButtons
+              amount={tournament.registration_fee}
+              onPayPalPayment={handlePayPalPayment}
+              onVenmoPayment={handleVenmoPayment}
+            />
+          </div>
+        ) : (
+          <div className="grid gap-8 lg:grid-cols-3">
+            {/* Registration Form */}
+            <div className="lg:col-span-2">
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Trophy className="h-5 w-5" />
-                    Tournament Information
-                  </CardTitle>
+                  <CardTitle>Tournament Registration</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <TournamentInfo tournamentInfo={tournament.tournament_info} />
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Basic Info */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Trophy className="h-5 w-5" />
-                  Event Details
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="flex items-center gap-2">
-                    <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">Tournament Dates</p>
-                      <p className="text-sm text-muted-foreground">
-                        {format(new Date(tournament.start_date), "MMM d")} - {format(new Date(tournament.end_date), "MMM d, yyyy")}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">Location</p>
-                      <p className="text-sm text-muted-foreground">{tournament.location}</p>
-                      {tournament.venue_details && (
-                        <p className="text-xs text-muted-foreground">{tournament.venue_details}</p>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">Participants</p>
-                      <p className="text-sm text-muted-foreground">
-                        {tournament.current_participants} / {tournament.max_participants} registered
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <DollarSign className="h-4 w-4 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">Registration Fee</p>
-                      <p className="text-sm text-muted-foreground">
-                        ${tournament.registration_fee}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                
-                <Separator />
-                
-                <div>
-                  <p className="font-medium mb-2">Format & Style</p>
-                  <div className="flex gap-2">
-                    <Badge variant="outline">{tournament.format}</Badge>
-                    {tournament.debate_style && (
-                      <Badge variant="outline">{tournament.debate_style}</Badge>
-                    )}
-                  </div>
-                </div>
-                
-                {(tournament.prize_pool || tournament.cash_prize_total > 0 || tournament.prize_items.length > 0) && (
-                  <>
-                    <Separator />
-                    <div>
-                      <p className="font-medium mb-3">Prizes</p>
-                      <div className="space-y-3">
-                        {tournament.prize_pool && (
-                          <div>
-                            <p className="text-sm font-medium text-muted-foreground">Total Prize Pool</p>
-                            <p className="text-2xl font-bold text-primary">{tournament.prize_pool}</p>
-                          </div>
-                        )}
-                        
-                        {tournament.cash_prize_total > 0 && (
-                          <div>
-                            <p className="text-sm font-medium text-muted-foreground">Cash Prizes</p>
-                            <p className="text-xl font-bold text-green-600">${tournament.cash_prize_total.toLocaleString()}</p>
-                          </div>
-                        )}
-                        
-                        {tournament.prize_items.length > 0 && (
-                          <div>
-                            <p className="text-sm font-medium text-muted-foreground mb-2">Additional Prizes & Services</p>
-                            <ul className="list-disc list-inside space-y-1 text-sm">
-                              {tournament.prize_items.map((item, index) => (
-                                <li key={index} className="text-muted-foreground">{item}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </>
-                )}
-                
-                {tournament.sponsors && tournament.sponsors.length > 0 && (
-                  <>
-                    <Separator />
-                    <div>
-                      <p className="font-medium mb-3">Sponsors</p>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {tournament.sponsors.map((sponsor, index) => (
-                          <div key={index} className="flex items-center gap-3 p-2 border rounded-lg">
-                            {sponsor.logo_url && (
-                              <img 
-                                src={sponsor.logo_url} 
-                                alt={sponsor.name} 
-                                className="h-8 w-8 object-contain"
-                              />
-                            )}
-                            <div className="flex-1">
-                              {sponsor.link ? (
-                                <a 
-                                  href={sponsor.link} 
-                                  target="_blank" 
-                                  rel="noopener noreferrer"
-                                  className="font-medium text-primary hover:underline flex items-center gap-1"
-                                >
-                                  {sponsor.name}
-                                  <ExternalLink className="h-3 w-3" />
-                                </a>
-                              ) : (
-                                <span className="font-medium">{sponsor.name}</span>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Tournament Calendar View */}
-            <TournamentCalendarView tournament={tournament} />
-          </div>
-
-          {/* Registration Form or Payment */}
-          <div className="space-y-6">
-            {showPayment && tournament.registration_fee > 0 ? (
-              tournament.paypal_button_html || tournament.venmo_button_html ? (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <CreditCard className="h-5 w-5" />
-                      Payment Options
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="bg-muted/50 p-4 rounded-lg">
-                      <div className="text-center mb-4">
-                        <p className="text-sm text-muted-foreground">Registration Fee</p>
-                        <p className="text-2xl font-bold">${tournament.registration_fee.toFixed(2)}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-3">
-                      {tournament.paypal_button_html && (
-                        <div 
-                          className="w-full"
-                          dangerouslySetInnerHTML={{ 
-                            __html: DOMPurify.sanitize(tournament.paypal_button_html) 
-                          }} 
-                        />
-                      )}
-                      
-                      {tournament.paypal_button_html && tournament.venmo_button_html && (
-                        <div className="relative">
-                          <div className="absolute inset-0 flex items-center">
-                            <Separator className="w-full" />
-                          </div>
-                          <div className="relative flex justify-center text-xs uppercase">
-                            <span className="bg-background px-2 text-muted-foreground">or</span>
-                          </div>
-                        </div>
-                      )}
-                      
-                      {tournament.venmo_button_html && (
-                        <div 
-                          className="w-full"
-                          dangerouslySetInnerHTML={{ 
-                            __html: DOMPurify.sanitize(tournament.venmo_button_html) 
-                          }} 
-                        />
-                      )}
-                    </div>
-                    
-                    <div className="text-xs text-muted-foreground text-center mt-4">
-                      Your payment information is secure and encrypted. Registration will be confirmed upon successful payment.
-                    </div>
-                  </CardContent>
-                </Card>
-              ) : (
-                <PaymentButtons
-                  amount={tournament.registration_fee}
-                  onPayPalPayment={handlePayPalPayment}
-                  onVenmoPayment={handleVenmoPayment}
-                />
-              )
-            ) : (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Register for Tournament</CardTitle>
-                  <CardDescription>
-                    {isRegistrationClosed 
-                      ? "Registration is currently closed"
-                      : "Fill out the form below to register"
-                    }
-                  </CardDescription>
-                </CardHeader>
-                
-                {isRegistrationClosed ? (
-                  <CardContent>
-                    <div className="text-center p-6">
-                      <Badge variant="destructive" className="mb-4">Registration Closed</Badge>
-                      <p className="text-muted-foreground">
-                        {tournament.current_participants >= tournament.max_participants 
-                          ? "Tournament is full"
-                          : `Registration deadline was ${format(new Date(tournament.registration_deadline), "PPP")}`
-                        }
-                      </p>
-                    </div>
-                  </CardContent>
-                ) : (
-                  <CardContent>
-                    <form onSubmit={handleSubmit} className="space-y-4">
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="grid gap-4 md:grid-cols-2">
                       <div>
-                        <Label htmlFor="participant_name">Full Name *</Label>
+                        <Label htmlFor="participant_name">Participant Name *</Label>
                         <Input
                           id="participant_name"
                           value={formData.participant_name}
-                          onChange={(e) => setFormData({...formData, participant_name: e.target.value})}
+                          onChange={(e) => setFormData(prev => ({ ...prev, participant_name: e.target.value }))}
                           required
+                          disabled={!profile?.first_name || !profile?.last_name}
                         />
                       </div>
                       
@@ -555,80 +304,115 @@ const TournamentRegistration = () => {
                           id="participant_email"
                           type="email"
                           value={formData.participant_email}
-                          onChange={(e) => setFormData({...formData, participant_email: e.target.value})}
+                          onChange={(e) => setFormData(prev => ({ ...prev, participant_email: e.target.value }))}
                           required
+                          disabled
                         />
                       </div>
-                      
+                    </div>
+
+                    {tournament.format?.toLowerCase().includes('team') && (
                       <div>
-                        <Label htmlFor="school_organization">School/Organization</Label>
-                        <Input
-                          id="school_organization"
-                          value={formData.school_organization}
-                          onChange={(e) => setFormData({...formData, school_organization: e.target.value})}
-                        />
-                      </div>
-                      
-                      <div>
-                        <Label htmlFor="partner_name">Partner Name (if applicable)</Label>
+                        <Label htmlFor="partner_name">Partner Name</Label>
                         <Input
                           id="partner_name"
                           value={formData.partner_name}
-                          onChange={(e) => setFormData({...formData, partner_name: e.target.value})}
+                          onChange={(e) => setFormData(prev => ({ ...prev, partner_name: e.target.value }))}
+                          placeholder="Required for team formats"
                         />
                       </div>
-                      
-                      
-                      <div>
-                        <Label htmlFor="emergency_contact">Emergency Contact</Label>
-                        <Input
-                          id="emergency_contact"
-                          value={formData.emergency_contact}
-                          onChange={(e) => setFormData({...formData, emergency_contact: e.target.value})}
-                          placeholder="Name and phone number"
-                        />
-                      </div>
-                      
-                      <Separator />
-                      
-                      <div className="bg-muted/50 p-4 rounded-lg">
-                        <div className="flex justify-between items-center mb-2">
-                          <span>Registration Fee:</span>
-                          <span className="font-bold">${tournament.registration_fee}</span>
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          {tournament.registration_fee > 0 
-                            ? "Payment options will be shown after registration" 
-                            : "Free registration"
-                          }
-                        </p>
-                      </div>
-                      
-                      <Button 
-                        type="submit" 
-                        className="w-full"
-                        disabled={submitting}
-                      >
-                        {submitting 
-                          ? 'Processing...' 
-                          : tournament.registration_fee > 0 
-                            ? 'Continue to Payment' 
-                            : 'Register Now'
-                        }
-                      </Button>
-                      
-                      {tournament.registration_deadline && (
-                        <p className="text-xs text-muted-foreground text-center">
-                          Registration deadline: {format(new Date(tournament.registration_deadline), "PPP")}
-                        </p>
-                      )}
-                    </form>
-                  </CardContent>
-                )}
+                    )}
+
+                    <div>
+                      <Label htmlFor="school_organization">School/Organization</Label>
+                      <Input
+                        id="school_organization"
+                        value={formData.school_organization}
+                        onChange={(e) => setFormData(prev => ({ ...prev, school_organization: e.target.value }))}
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="dietary_requirements">Dietary Requirements</Label>
+                      <Textarea
+                        id="dietary_requirements"
+                        value={formData.dietary_requirements}
+                        onChange={(e) => setFormData(prev => ({ ...prev, dietary_requirements: e.target.value }))}
+                        placeholder="Any dietary restrictions or allergies we should know about?"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="emergency_contact">Emergency Contact</Label>
+                      <Input
+                        id="emergency_contact"
+                        value={formData.emergency_contact}
+                        onChange={(e) => setFormData(prev => ({ ...prev, emergency_contact: e.target.value }))}
+                        placeholder="Name and phone number"
+                      />
+                    </div>
+
+                    <Button type="submit" disabled={submitting || profileIncomplete} className="w-full">
+                      {submitting ? 'Submitting...' : 'Register for Tournament'}
+                    </Button>
+                  </form>
+                </CardContent>
               </Card>
-            )}
+            </div>
+
+            {/* Tournament Details Sidebar */}
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Trophy className="h-5 w-5" />
+                    Tournament Details
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label className="text-sm text-muted-foreground">Format</Label>
+                    <p className="font-medium">{tournament.format}</p>
+                  </div>
+                  
+                  {tournament.debate_style && (
+                    <div>
+                      <Label className="text-sm text-muted-foreground">Debate Style</Label>
+                      <p className="font-medium">{tournament.debate_style}</p>
+                    </div>
+                  )}
+                  
+                  {tournament.venue_details && (
+                    <div>
+                      <Label className="text-sm text-muted-foreground">Venue</Label>
+                      <p className="font-medium">{tournament.venue_details}</p>
+                    </div>
+                  )}
+                  
+                  {tournament.registration_deadline && (
+                    <div>
+                      <Label className="text-sm text-muted-foreground">Registration Deadline</Label>
+                      <p className="font-medium">
+                        {new Date(tournament.registration_deadline).toLocaleDateString()}
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {tournament.tournament_info && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Additional Information</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm whitespace-pre-wrap">{tournament.tournament_info}</p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
