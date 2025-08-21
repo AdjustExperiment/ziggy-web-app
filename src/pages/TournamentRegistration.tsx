@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { useParams, Navigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,59 +7,42 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { toast } from '@/components/ui/use-toast';
-import { PaymentButtons } from '@/components/PaymentButtons';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, MapPin, Users, DollarSign, User, Mail, Phone, Building } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import PaymentButtons from '@/components/PaymentButtons';
+import { toast } from '@/components/ui/use-toast';
+import { Calendar, MapPin, Users, DollarSign, Trophy, Clock } from 'lucide-react';
+import { format } from 'date-fns';
+import DOMPurify from 'dompurify';
 
-interface Tournament {
-  id: string;
-  name: string;
-  description: string;
-  format: string;
-  location: string;
-  start_date: string;
-  end_date: string;
-  registration_fee: number;
-  max_participants: number;
-  current_participants: number;
-  registration_open: boolean;
-  registration_deadline: string;
-  tournament_info: string;
-  additional_info: any;
-}
-
-export default function TournamentRegistration() {
-  const { id } = useParams<{ id: string }>();
-  const { user, loading: authLoading } = useAuth();
-  const [tournament, setTournament] = useState<Tournament | null>(null);
+const TournamentRegistration = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [tournament, setTournament] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
+  const [registering, setRegistering] = useState(false);
+  const [isRegistered, setIsRegistered] = useState(false);
   const [formData, setFormData] = useState({
-    participant_name: '',
-    participant_email: '',
+    team_name: '',
     partner_name: '',
-    club_organization: '', // Changed from school_organization
+    partner_email: '',
+    dietary_restrictions: '',
     emergency_contact: '',
-    dietary_requirements: '',
-    additional_info: ''
+    emergency_phone: '',
+    school_affiliation: '',
+    experience_level: '',
+    additional_notes: ''
   });
 
   useEffect(() => {
     if (id) {
       fetchTournament();
+      if (user) {
+        checkRegistrationStatus();
+      }
     }
-  }, [id]);
-
-  useEffect(() => {
-    if (user) {
-      // Pre-fill form with user data if available
-      setFormData(prev => ({
-        ...prev,
-        participant_email: user.email || ''
-      }));
-    }
-  }, [user]);
+  }, [id, user]);
 
   const fetchTournament = async () => {
     try {
@@ -73,65 +55,118 @@ export default function TournamentRegistration() {
       if (error) throw error;
       setTournament(data);
     } catch (error: any) {
-      console.error('Error fetching tournament:', error);
       toast({
         title: "Error",
-        description: "Failed to load tournament details",
+        description: "Failed to fetch tournament details",
         variant: "destructive",
       });
+      navigate('/tournaments');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!tournament) return;
+  const checkRegistrationStatus = async () => {
+    if (!user || !id) return;
 
-    setSubmitting(true);
     try {
-      const registrationData = {
-        tournament_id: tournament.id,
-        user_id: user?.id || null,
-        participant_name: formData.participant_name,
-        participant_email: formData.participant_email,
-        partner_name: formData.partner_name || null,
-        school_organization: formData.club_organization || null, // Keep DB column name but use club data
-        emergency_contact: formData.emergency_contact || null,
-        dietary_requirements: formData.dietary_requirements || null,
-        additional_info: formData.additional_info ? { notes: formData.additional_info } : {},
-        payment_status: 'pending'
-      };
-
       const { data, error } = await supabase
         .from('tournament_registrations')
-        .insert([registrationData])
-        .select()
+        .select('*')
+        .eq('tournament_id', id)
+        .eq('user_id', user.id)
         .single();
 
-      if (error) throw error;
-
-      toast({
-        title: "Registration Submitted",
-        description: "Your registration has been submitted. Please complete payment to confirm your spot.",
-      });
-
-      // You could redirect to a payment page here
-      console.log('Registration created:', data);
-      
-    } catch (error: any) {
-      console.error('Registration error:', error);
-      toast({
-        title: "Registration Failed",
-        description: error.message || "Failed to submit registration",
-        variant: "destructive",
-      });
-    } finally {
-      setSubmitting(false);
+      if (data) {
+        setIsRegistered(true);
+        setFormData({
+          team_name: data.team_name || '',
+          partner_name: data.partner_name || '',
+          partner_email: data.partner_email || '',
+          dietary_restrictions: data.dietary_restrictions || '',
+          emergency_contact: data.emergency_contact || '',
+          emergency_phone: data.emergency_phone || '',
+          school_affiliation: data.school_affiliation || '',
+          experience_level: data.experience_level || '',
+          additional_notes: data.additional_notes || ''
+        });
+      }
+    } catch (error) {
+      // User is not registered, which is fine
     }
   };
 
-  if (authLoading || loading) {
+  const handleRegistration = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to register for tournaments",
+        variant: "destructive",
+      });
+      navigate('/login');
+      return;
+    }
+
+    if (!tournament?.registration_open) {
+      toast({
+        title: "Registration Closed",
+        description: "Registration for this tournament is currently closed",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setRegistering(true);
+
+    try {
+      const registrationData = {
+        tournament_id: id,
+        user_id: user.id,
+        ...formData,
+        registration_status: 'pending',
+        payment_status: 'pending'
+      };
+
+      if (isRegistered) {
+        const { error } = await supabase
+          .from('tournament_registrations')
+          .update(registrationData)
+          .eq('tournament_id', id)
+          .eq('user_id', user.id);
+
+        if (error) throw error;
+
+        toast({
+          title: "Success",
+          description: "Registration updated successfully",
+        });
+      } else {
+        const { error } = await supabase
+          .from('tournament_registrations')
+          .insert(registrationData);
+
+        if (error) throw error;
+
+        setIsRegistered(true);
+        toast({
+          title: "Success",
+          description: "Registration submitted successfully",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to register for tournament",
+        variant: "destructive",
+      });
+    } finally {
+      setRegistering(false);
+    }
+  };
+
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
@@ -140,277 +175,285 @@ export default function TournamentRegistration() {
   }
 
   if (!tournament) {
-    return <Navigate to="/tournaments" replace />;
-  }
-
-  if (!tournament.registration_open) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card className="max-w-md">
-          <CardHeader>
-            <CardTitle>Registration Closed</CardTitle>
-            <CardDescription>
-              Registration for this tournament is currently closed.
-            </CardDescription>
-          </CardHeader>
+      <div className="container mx-auto px-4 py-8">
+        <Card>
+          <CardContent className="p-8 text-center">
+            <h2 className="text-2xl font-bold mb-4">Tournament Not Found</h2>
+            <p className="text-muted-foreground mb-4">
+              The tournament you're looking for doesn't exist or has been removed.
+            </p>
+            <Button onClick={() => navigate('/tournaments')}>
+              Browse Tournaments
+            </Button>
+          </CardContent>
         </Card>
       </div>
     );
   }
 
-  const isRegistrationFull = tournament.current_participants >= tournament.max_participants;
-  const registrationDeadlinePassed = tournament.registration_deadline && 
-    new Date(tournament.registration_deadline) < new Date();
-
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
-          {/* Tournament Header */}
-          <Card className="mb-8">
+    <div className="container mx-auto px-4 py-8">
+      <div className="grid gap-8 lg:grid-cols-2">
+        {/* Tournament Information */}
+        <div>
+          <Card>
             <CardHeader>
-              <div className="flex items-start justify-between">
-                <div>
-                  <CardTitle className="text-2xl mb-2">{tournament.name}</CardTitle>
-                  <CardDescription className="text-base mb-4">
-                    {tournament.description}
-                  </CardDescription>
-                </div>
-                <Badge variant={tournament.registration_open ? 'default' : 'secondary'}>
-                  {tournament.registration_open ? 'Registration Open' : 'Registration Closed'}
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-2xl">{tournament.name}</CardTitle>
+                <Badge 
+                  variant={tournament.registration_open ? "default" : "secondary"}
+                  className={tournament.registration_open ? "bg-green-500" : ""}
+                >
+                  {tournament.status}
                 </Badge>
               </div>
+              <CardDescription>{tournament.format}</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                   <div>
-                    <div className="text-sm font-medium">Dates</div>
-                    <div className="text-sm text-muted-foreground">
-                      {new Date(tournament.start_date).toLocaleDateString()} - {new Date(tournament.end_date).toLocaleDateString()}
-                    </div>
+                    <p className="text-sm font-medium">Start Date</p>
+                    <p className="text-sm text-muted-foreground">
+                      {format(new Date(tournament.start_date), "PPP")}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm font-medium">End Date</p>
+                    <p className="text-sm text-muted-foreground">
+                      {format(new Date(tournament.end_date), "PPP")}
+                    </p>
                   </div>
                 </div>
                 
                 <div className="flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-muted-foreground" />
                   <div>
-                    <div className="text-sm font-medium">Location</div>
-                    <div className="text-sm text-muted-foreground">{tournament.location}</div>
+                    <p className="text-sm font-medium">Location</p>
+                    <p className="text-sm text-muted-foreground">{tournament.location}</p>
                   </div>
                 </div>
                 
                 <div className="flex items-center gap-2">
                   <Users className="h-4 w-4 text-muted-foreground" />
                   <div>
-                    <div className="text-sm font-medium">Participants</div>
-                    <div className="text-sm text-muted-foreground">
-                      {tournament.current_participants} / {tournament.max_participants}
-                    </div>
+                    <p className="text-sm font-medium">Capacity</p>
+                    <p className="text-sm text-muted-foreground">
+                      {tournament.current_participants}/{tournament.max_participants}
+                    </p>
                   </div>
                 </div>
                 
                 <div className="flex items-center gap-2">
                   <DollarSign className="h-4 w-4 text-muted-foreground" />
                   <div>
-                    <div className="text-sm font-medium">Registration Fee</div>
-                    <div className="text-sm text-muted-foreground">${tournament.registration_fee}</div>
+                    <p className="text-sm font-medium">Registration Fee</p>
+                    <p className="text-sm text-muted-foreground">${tournament.registration_fee}</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <Trophy className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm font-medium">Prize Pool</p>
+                    <p className="text-sm text-muted-foreground">{tournament.prize_pool || 'TBD'}</p>
                   </div>
                 </div>
               </div>
+              
+              {tournament.venue_details && (
+                <>
+                  <Separator />
+                  <div>
+                    <h4 className="font-medium mb-2">Venue Details</h4>
+                    <p className="text-sm text-muted-foreground">{tournament.venue_details}</p>
+                  </div>
+                </>
+              )}
+              
+              {tournament.description && (
+                <>
+                  <Separator />
+                  <div>
+                    <h4 className="font-medium mb-2">Description</h4>
+                    <p className="text-sm text-muted-foreground">{tournament.description}</p>
+                  </div>
+                </>
+              )}
+              
+              {tournament.tournament_info && (
+                <>
+                  <Separator />
+                  <div>
+                    <h4 className="font-medium mb-2">Tournament Information</h4>
+                    <div 
+                      className="text-sm text-muted-foreground prose prose-sm max-w-none"
+                      dangerouslySetInnerHTML={{ 
+                        __html: DOMPurify.sanitize(tournament.tournament_info) 
+                      }}
+                    />
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
+        </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Registration Form */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Tournament Registration</CardTitle>
-                <CardDescription>
-                  Fill out the form below to register for this tournament
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {isRegistrationFull ? (
-                  <div className="text-center py-8">
-                    <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">Tournament Full</h3>
-                    <p className="text-muted-foreground">
-                      This tournament has reached its maximum capacity.
-                    </p>
+        {/* Registration Form */}
+        <div>
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                {isRegistered ? 'Update Registration' : 'Register for Tournament'}
+              </CardTitle>
+              <CardDescription>
+                {isRegistered 
+                  ? 'Update your registration details below'
+                  : 'Fill out the form below to register for this tournament'
+                }
+              </CardDescription>
+            </CardHeader>
+            
+            <CardContent>
+              {!tournament.registration_open ? (
+                <div className="text-center p-6">
+                  <p className="text-muted-foreground mb-4">
+                    Registration is currently closed for this tournament.
+                  </p>
+                  <Badge variant="secondary">Registration Closed</Badge>
+                </div>
+              ) : (
+                <form onSubmit={handleRegistration} className="space-y-4">
+                  <div>
+                    <Label htmlFor="team_name">Team Name *</Label>
+                    <Input
+                      id="team_name"
+                      value={formData.team_name}
+                      onChange={(e) => setFormData({...formData, team_name: e.target.value})}
+                      required
+                    />
                   </div>
-                ) : registrationDeadlinePassed ? (
-                  <div className="text-center py-8">
-                    <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">Registration Deadline Passed</h3>
-                    <p className="text-muted-foreground">
-                      The registration deadline for this tournament has passed.
-                    </p>
-                  </div>
-                ) : (
-                  <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="participant_name" className="flex items-center gap-2">
-                          <User className="h-4 w-4" />
-                          Participant Name *
-                        </Label>
-                        <Input
-                          id="participant_name"
-                          value={formData.participant_name}
-                          onChange={(e) => setFormData({...formData, participant_name: e.target.value})}
-                          required
-                        />
-                      </div>
-                      
-                      <div>
-                        <Label htmlFor="participant_email" className="flex items-center gap-2">
-                          <Mail className="h-4 w-4" />
-                          Email Address *
-                        </Label>
-                        <Input
-                          id="participant_email"
-                          type="email"
-                          value={formData.participant_email}
-                          onChange={(e) => setFormData({...formData, participant_email: e.target.value})}
-                          required
-                        />
-                      </div>
-                    </div>
-
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="partner_name">Partner Name (if applicable)</Label>
+                      <Label htmlFor="partner_name">Partner Name</Label>
                       <Input
                         id="partner_name"
                         value={formData.partner_name}
                         onChange={(e) => setFormData({...formData, partner_name: e.target.value})}
-                        placeholder="Leave blank if competing individually"
                       />
                     </div>
-
+                    
                     <div>
-                      <Label htmlFor="club_organization" className="flex items-center gap-2">
-                        <Building className="h-4 w-4" />
-                        Club/Organization
-                      </Label>
+                      <Label htmlFor="partner_email">Partner Email</Label>
                       <Input
-                        id="club_organization"
-                        value={formData.club_organization}
-                        onChange={(e) => setFormData({...formData, club_organization: e.target.value})}
-                        placeholder="Your club or organization name"
+                        id="partner_email"
+                        type="email"
+                        value={formData.partner_email}
+                        onChange={(e) => setFormData({...formData, partner_email: e.target.value})}
                       />
                     </div>
-
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="school_affiliation">School/Organization</Label>
+                    <Input
+                      id="school_affiliation"
+                      value={formData.school_affiliation}
+                      onChange={(e) => setFormData({...formData, school_affiliation: e.target.value})}
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="experience_level">Experience Level</Label>
+                    <Input
+                      id="experience_level"
+                      value={formData.experience_level}
+                      onChange={(e) => setFormData({...formData, experience_level: e.target.value})}
+                      placeholder="e.g., Novice, Varsity, Open"
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="emergency_contact" className="flex items-center gap-2">
-                        <Phone className="h-4 w-4" />
-                        Emergency Contact
-                      </Label>
+                      <Label htmlFor="emergency_contact">Emergency Contact</Label>
                       <Input
                         id="emergency_contact"
                         value={formData.emergency_contact}
                         onChange={(e) => setFormData({...formData, emergency_contact: e.target.value})}
-                        placeholder="Name and phone number"
                       />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="dietary_requirements">Dietary Requirements</Label>
-                      <Textarea
-                        id="dietary_requirements"
-                        value={formData.dietary_requirements}
-                        onChange={(e) => setFormData({...formData, dietary_requirements: e.target.value})}
-                        placeholder="Any dietary restrictions or requirements"
-                        rows={3}
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="additional_info">Additional Information</Label>
-                      <Textarea
-                        id="additional_info"
-                        value={formData.additional_info}
-                        onChange={(e) => setFormData({...formData, additional_info: e.target.value})}
-                        placeholder="Any additional information or special requests"
-                        rows={3}
-                      />
-                    </div>
-
-                    <Button 
-                      type="submit" 
-                      className="w-full" 
-                      disabled={submitting}
-                    >
-                      {submitting ? 'Submitting...' : 'Submit Registration'}
-                    </Button>
-                  </form>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Tournament Information */}
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Tournament Details</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div>
-                      <h4 className="font-semibold mb-2">Format</h4>
-                      <Badge variant="outline">{tournament.format}</Badge>
                     </div>
                     
-                    {tournament.tournament_info && (
-                      <div>
-                        <h4 className="font-semibold mb-2">Information</h4>
-                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                          {tournament.tournament_info}
-                        </p>
-                      </div>
-                    )}
-                    
-                    {tournament.registration_deadline && (
-                      <div>
-                        <h4 className="font-semibold mb-2">Registration Deadline</h4>
-                        <p className="text-sm text-muted-foreground">
-                          {new Date(tournament.registration_deadline).toLocaleDateString()}
-                        </p>
-                      </div>
-                    )}
+                    <div>
+                      <Label htmlFor="emergency_phone">Emergency Phone</Label>
+                      <Input
+                        id="emergency_phone"
+                        value={formData.emergency_phone}
+                        onChange={(e) => setFormData({...formData, emergency_phone: e.target.value})}
+                      />
+                    </div>
                   </div>
-                </CardContent>
-              </Card>
-
-              {/* Payment Information */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Payment Information</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span>Registration Fee:</span>
-                      <span className="font-semibold text-lg">${tournament.registration_fee}</span>
-                    </div>
-                    
-                    <div className="text-sm text-muted-foreground">
-                      Payment is required to complete your registration. You can pay after submitting your registration form.
-                    </div>
-
-                    <PaymentButtons
-                      amount={tournament.registration_fee}
-                      tournamentId={tournament.id}
-                      tournamentName={tournament.name}
+                  
+                  <div>
+                    <Label htmlFor="dietary_restrictions">Dietary Restrictions</Label>
+                    <Textarea
+                      id="dietary_restrictions"
+                      value={formData.dietary_restrictions}
+                      onChange={(e) => setFormData({...formData, dietary_restrictions: e.target.value})}
+                      rows={2}
                     />
                   </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
+                  
+                  <div>
+                    <Label htmlFor="additional_notes">Additional Notes</Label>
+                    <Textarea
+                      id="additional_notes"
+                      value={formData.additional_notes}
+                      onChange={(e) => setFormData({...formData, additional_notes: e.target.value})}
+                      rows={3}
+                    />
+                  </div>
+                  
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={registering}
+                  >
+                    {registering 
+                      ? 'Processing...' 
+                      : isRegistered 
+                        ? 'Update Registration' 
+                        : 'Submit Registration'
+                    }
+                  </Button>
+                </form>
+              )}
+              
+              {isRegistered && tournament.registration_fee > 0 && (
+                <>
+                  <Separator className="my-6" />
+                  <div>
+                    <h4 className="font-medium mb-4">Payment</h4>
+                    <PaymentButtons
+                      tournament={tournament}
+                      amount={tournament.registration_fee}
+                    />
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default TournamentRegistration;

@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Navigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { TournamentManager } from '@/components/admin/TournamentManager';
+import TournamentManager from '@/components/admin/TournamentManager';
 import { UserManager } from '@/components/admin/UserManager';
 import { PaymentManager } from '@/components/admin/PaymentManager';
 import { EmailManager } from '@/components/admin/EmailManager';
