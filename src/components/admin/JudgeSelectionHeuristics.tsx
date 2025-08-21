@@ -27,7 +27,8 @@ interface JudgeAvailability {
   time_preferences: any;
   max_rounds_per_day: number;
   special_requirements: string;
-  additional_info: any;
+  created_at: string;
+  updated_at: string;
 }
 
 interface JudgeScore {
@@ -125,7 +126,18 @@ export default function JudgeSelectionHeuristics({ tournamentId }: JudgeSelectio
 
       setPairings(pairingsData || []);
       setJudges(judgesData || []);
-      setAvailabilities(availabilityData || []);
+      
+      // Process availability data to match expected format
+      const processedAvailabilities: JudgeAvailability[] = (availabilityData || []).map(item => ({
+        ...item,
+        available_dates: Array.isArray(item.available_dates) 
+          ? item.available_dates as string[]
+          : typeof item.available_dates === 'string'
+          ? JSON.parse(item.available_dates) || []
+          : []
+      }));
+      
+      setAvailabilities(processedAvailabilities);
     } catch (error) {
       console.error('Error fetching data:', error);
       toast({
@@ -189,9 +201,9 @@ export default function JudgeSelectionHeuristics({ tournamentId }: JudgeSelectio
     const hour = pairingTime.getHours();
     let timeScore = 0;
     
-    if (availability.time_preferences.morning && hour >= 8 && hour < 12) timeScore += 30;
-    if (availability.time_preferences.afternoon && hour >= 12 && hour < 17) timeScore += 30;
-    if (availability.time_preferences.evening && hour >= 17 && hour < 21) timeScore += 30;
+    if (availability.time_preferences?.morning && hour >= 8 && hour < 12) timeScore += 30;
+    if (availability.time_preferences?.afternoon && hour >= 12 && hour < 17) timeScore += 30;
+    if (availability.time_preferences?.evening && hour >= 17 && hour < 21) timeScore += 30;
     
     factors.availability = Math.min(factors.availability + timeScore, 100);
 
@@ -215,7 +227,16 @@ export default function JudgeSelectionHeuristics({ tournamentId }: JudgeSelectio
     }
 
     // Conflict scoring
-    const conflicts = availability.additional_info?.conflicts || [];
+    let conflicts: string[] = [];
+    try {
+      if (availability.special_requirements) {
+        const parsed = JSON.parse(availability.special_requirements);
+        conflicts = parsed.additional_data?.conflicts || [];
+      }
+    } catch (e) {
+      conflicts = [];
+    }
+
     const affSchool = pairing.aff_registration.school_organization;
     const negSchool = pairing.neg_registration.school_organization;
     

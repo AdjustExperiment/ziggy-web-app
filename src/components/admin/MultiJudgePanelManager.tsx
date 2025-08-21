@@ -11,22 +11,63 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Users, Plus, Trash2, Crown, Eye, UserCheck, UserX } from 'lucide-react';
-import { PairingJudgeAssignment, JudgeProfile, Pairing } from '@/types/database';
+
+interface JudgeProfile {
+  id: string;
+  name: string;
+  email: string;
+  experience_level: string;
+}
+
+interface PairingJudgeAssignment {
+  id: string;
+  pairing_id: string;
+  judge_profile_id: string;
+  role: string;
+  status: string;
+  assigned_by: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  judge_profiles: JudgeProfile;
+}
+
+interface Pairing {
+  id: string;
+  tournament_id: string;
+  round_id: string;
+  aff_registration_id: string;
+  neg_registration_id: string;
+  judge_id: string | null;
+  room: string | null;
+  scheduled_time: string | null;
+  released: boolean;
+  status: string;
+  result: any;
+  created_at: string;
+  updated_at: string;
+  aff_registration: {
+    participant_name: string;
+  };
+  neg_registration: {
+    participant_name: string;
+  };
+  round: {
+    name: string;
+  };
+  judge_assignments: PairingJudgeAssignment[];
+}
 
 interface MultiJudgePanelManagerProps {
   tournamentId: string;
 }
 
-interface PairingWithAssignments extends Pairing {
-  judge_assignments: (PairingJudgeAssignment & { judge_profiles: JudgeProfile })[];
-}
-
 export default function MultiJudgePanelManager({ tournamentId }: MultiJudgePanelManagerProps) {
   const { toast } = useToast();
-  const [pairings, setPairings] = useState<PairingWithAssignments[]>([]);
+  const [pairings, setPairings] = useState<Pairing[]>([]);
   const [judges, setJudges] = useState<JudgeProfile[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedPairing, setSelectedPairing] = useState<PairingWithAssignments | null>(null);
+  const [selectedPairing, setSelectedPairing] = useState<Pairing | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   
   const [assignmentForm, setAssignmentForm] = useState({

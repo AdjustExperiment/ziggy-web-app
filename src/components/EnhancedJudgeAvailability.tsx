@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -24,6 +25,7 @@ interface Tournament {
 interface Availability {
   id: string;
   tournament_id: string;
+  judge_profile_id: string;
   available_dates: string[];
   time_preferences: {
     morning?: boolean;
@@ -43,6 +45,8 @@ interface Availability {
     arrival_date?: string;
     departure_date?: string;
   };
+  created_at: string;
+  updated_at: string;
   tournament?: Tournament;
 }
 
@@ -124,18 +128,44 @@ export default function EnhancedJudgeAvailability({ judgeProfileId }: EnhancedJu
 
       if (error) throw error;
       
-      const processedData = (data || []).map(item => ({
-        ...item,
-        available_dates: Array.isArray(item.available_dates) ? item.available_dates as string[] : [],
-        time_preferences: typeof item.time_preferences === 'object' && item.time_preferences !== null 
-          ? item.time_preferences as any : {},
-        preferred_roles: item.additional_info?.preferred_roles || [],
-        conflicts: item.additional_info?.conflicts || [],
-        travel_requirements: item.additional_info?.travel_requirements || {},
-        tournament: item.tournament && typeof item.tournament === 'object' && !('error' in item.tournament)
-          ? item.tournament as Tournament
-          : undefined
-      }));
+      const processedData: Availability[] = (data || []).map(item => {
+        // Parse available_dates from JSON
+        const availableDates = Array.isArray(item.available_dates) 
+          ? item.available_dates as string[]
+          : typeof item.available_dates === 'string'
+          ? JSON.parse(item.available_dates) || []
+          : [];
+
+        // Parse time_preferences from JSON
+        const timePreferences = typeof item.time_preferences === 'object' && item.time_preferences !== null 
+          ? item.time_preferences as any
+          : {};
+
+        // For now, we'll store additional data in special_requirements as JSON until we add an additional_info column
+        let additionalData = { preferred_roles: [], conflicts: [], travel_requirements: {} };
+        try {
+          if (item.special_requirements && item.special_requirements.startsWith('{')) {
+            const parsed = JSON.parse(item.special_requirements);
+            if (parsed.additional_data) {
+              additionalData = parsed.additional_data;
+            }
+          }
+        } catch (e) {
+          // If parsing fails, just use defaults
+        }
+
+        return {
+          ...item,
+          available_dates: availableDates,
+          time_preferences: timePreferences,
+          preferred_roles: additionalData.preferred_roles || [],
+          conflicts: additionalData.conflicts || [],
+          travel_requirements: additionalData.travel_requirements || {},
+          tournament: item.tournament && typeof item.tournament === 'object' && !('error' in item.tournament)
+            ? item.tournament as Tournament
+            : undefined
+        };
+      });
 
       setAvailabilities(processedData);
     } catch (error) {
@@ -149,6 +179,24 @@ export default function EnhancedJudgeAvailability({ judgeProfileId }: EnhancedJu
     e.preventDefault();
 
     try {
+      // Store additional data in special_requirements as JSON for now
+      const additionalData = {
+        preferred_roles: formData.preferred_roles,
+        conflicts: formData.conflicts.filter(c => c.trim() !== ''),
+        travel_requirements: {
+          needs_accommodation: formData.needs_accommodation,
+          accommodation_nights: formData.accommodation_nights,
+          travel_reimbursement_needed: formData.travel_reimbursement_needed,
+          arrival_date: formData.arrival_date || null,
+          departure_date: formData.departure_date || null
+        }
+      };
+
+      const specialRequirementsData = {
+        text: formData.special_requirements,
+        additional_data: additionalData
+      };
+
       const availabilityData = {
         judge_profile_id: judgeProfileId,
         tournament_id: formData.tournament_id,
@@ -161,18 +209,7 @@ export default function EnhancedJudgeAvailability({ judgeProfileId }: EnhancedJu
           preferred_end: formData.preferred_end
         },
         max_rounds_per_day: formData.max_rounds_per_day,
-        special_requirements: formData.special_requirements,
-        additional_info: {
-          preferred_roles: formData.preferred_roles,
-          conflicts: formData.conflicts.filter(c => c.trim() !== ''),
-          travel_requirements: {
-            needs_accommodation: formData.needs_accommodation,
-            accommodation_nights: formData.accommodation_nights,
-            travel_reimbursement_needed: formData.travel_reimbursement_needed,
-            arrival_date: formData.arrival_date || null,
-            departure_date: formData.departure_date || null
-          }
-        }
+        special_requirements: JSON.stringify(specialRequirementsData)
       };
 
       if (editingAvailability) {
@@ -264,6 +301,21 @@ export default function EnhancedJudgeAvailability({ judgeProfileId }: EnhancedJu
 
   const openEditDialog = (availability: Availability) => {
     setEditingAvailability(availability);
+    
+    // Parse special_requirements to get additional data
+    let specialText = '';
+    let additionalData = { preferred_roles: [], conflicts: [], travel_requirements: {} };
+    
+    try {
+      if (availability.special_requirements) {
+        const parsed = JSON.parse(availability.special_requirements);
+        specialText = parsed.text || '';
+        additionalData = parsed.additional_data || additionalData;
+      }
+    } catch (e) {
+      specialText = availability.special_requirements || '';
+    }
+
     setFormData({
       tournament_id: availability.tournament_id,
       available_dates: availability.available_dates.length > 0 ? availability.available_dates : [''],
@@ -273,14 +325,14 @@ export default function EnhancedJudgeAvailability({ judgeProfileId }: EnhancedJu
       preferred_start: availability.time_preferences.preferred_start || '09:00',
       preferred_end: availability.time_preferences.preferred_end || '17:00',
       max_rounds_per_day: availability.max_rounds_per_day,
-      special_requirements: availability.special_requirements || '',
-      preferred_roles: availability.preferred_roles || [],
-      conflicts: availability.conflicts || [''],
-      needs_accommodation: availability.travel_requirements.needs_accommodation || false,
-      accommodation_nights: availability.travel_requirements.accommodation_nights || 1,
-      travel_reimbursement_needed: availability.travel_requirements.travel_reimbursement_needed || false,
-      arrival_date: availability.travel_requirements.arrival_date || '',
-      departure_date: availability.travel_requirements.departure_date || ''
+      special_requirements: specialText,
+      preferred_roles: additionalData.preferred_roles || [],
+      conflicts: additionalData.conflicts && additionalData.conflicts.length > 0 ? additionalData.conflicts : [''],
+      needs_accommodation: additionalData.travel_requirements?.needs_accommodation || false,
+      accommodation_nights: additionalData.travel_requirements?.accommodation_nights || 1,
+      travel_reimbursement_needed: additionalData.travel_requirements?.travel_reimbursement_needed || false,
+      arrival_date: additionalData.travel_requirements?.arrival_date || '',
+      departure_date: additionalData.travel_requirements?.departure_date || ''
     });
     setIsDialogOpen(true);
   };
@@ -636,7 +688,11 @@ export default function EnhancedJudgeAvailability({ judgeProfileId }: EnhancedJu
                         <div key={index} className="flex items-center gap-2">
                           <Input
                             value={conflict}
-                            onChange={(e) => updateConflict(index, e.target.value)}
+                            onChange={(e) => {
+                              const newConflicts = [...formData.conflicts];
+                              newConflicts[index] = e.target.value;
+                              setFormData(prev => ({ ...prev, conflicts: newConflicts }));
+                            }}
                             placeholder="School, organization, or participant name..."
                             className="flex-1"
                           />
@@ -645,14 +701,25 @@ export default function EnhancedJudgeAvailability({ judgeProfileId }: EnhancedJu
                               type="button"
                               variant="outline"
                               size="icon"
-                              onClick={() => removeConflict(index)}
+                              onClick={() => {
+                                if (formData.conflicts.length > 1) {
+                                  setFormData(prev => ({
+                                    ...prev,
+                                    conflicts: prev.conflicts.filter((_, i) => i !== index)
+                                  }));
+                                }
+                              }}
                             >
                               <X className="h-4 w-4" />
                             </Button>
                           )}
                         </div>
                       ))}
-                      <Button type="button" variant="outline" onClick={addConflict}>
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={() => setFormData(prev => ({ ...prev, conflicts: [...prev.conflicts, ''] }))}
+                      >
                         <Plus className="h-4 w-4 mr-2" />
                         Add Conflict
                       </Button>
@@ -695,18 +762,22 @@ export default function EnhancedJudgeAvailability({ judgeProfileId }: EnhancedJu
                   <div>
                     <CardTitle className="flex items-center gap-2">
                       <Calendar className="h-5 w-5" />
-                      {availability.tournament?.name}
+                      {availability.tournament?.name || 'Tournament'}
                     </CardTitle>
                     <CardDescription className="flex items-center gap-4 mt-1">
-                      <span className="flex items-center gap-1">
-                        <MapPin className="h-4 w-4" />
-                        {availability.tournament?.location}
-                      </span>
-                      <span>{availability.tournament?.format}</span>
-                      <span>
-                        {new Date(availability.tournament?.start_date || '').toLocaleDateString()} - 
-                        {new Date(availability.tournament?.end_date || '').toLocaleDateString()}
-                      </span>
+                      {availability.tournament && (
+                        <>
+                          <span className="flex items-center gap-1">
+                            <MapPin className="h-4 w-4" />
+                            {availability.tournament.location}
+                          </span>
+                          <span>{availability.tournament.format}</span>
+                          <span>
+                            {new Date(availability.tournament.start_date).toLocaleDateString()} - 
+                            {new Date(availability.tournament.end_date).toLocaleDateString()}
+                          </span>
+                        </>
+                      )}
                     </CardDescription>
                   </div>
                   <div className="flex gap-2">
@@ -814,14 +885,29 @@ export default function EnhancedJudgeAvailability({ judgeProfileId }: EnhancedJu
                   </div>
                 )}
 
-                {availability.special_requirements && (
-                  <div>
-                    <h4 className="font-medium mb-2">Special Requirements</h4>
-                    <p className="text-sm text-muted-foreground bg-muted p-3 rounded">
-                      {availability.special_requirements}
-                    </p>
-                  </div>
-                )}
+                {(() => {
+                  try {
+                    const parsed = JSON.parse(availability.special_requirements || '{}');
+                    const specialText = parsed.text || availability.special_requirements;
+                    return specialText ? (
+                      <div>
+                        <h4 className="font-medium mb-2">Special Requirements</h4>
+                        <p className="text-sm text-muted-foreground bg-muted p-3 rounded">
+                          {specialText}
+                        </p>
+                      </div>
+                    ) : null;
+                  } catch (e) {
+                    return availability.special_requirements ? (
+                      <div>
+                        <h4 className="font-medium mb-2">Special Requirements</h4>
+                        <p className="text-sm text-muted-foreground bg-muted p-3 rounded">
+                          {availability.special_requirements}
+                        </p>
+                      </div>
+                    ) : null;
+                  }
+                })()}
               </CardContent>
             </Card>
           ))}
