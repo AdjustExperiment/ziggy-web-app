@@ -553,6 +553,69 @@ export type Database = {
         }
         Relationships: []
       }
+      pairing_evidence: {
+        Row: {
+          created_at: string
+          description: string | null
+          file_name: string
+          file_size: number | null
+          file_type: string | null
+          file_url: string
+          id: string
+          pairing_id: string
+          uploader_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          file_name: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url: string
+          id?: string
+          pairing_id: string
+          uploader_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          file_name?: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string
+          id?: string
+          pairing_id?: string
+          uploader_id?: string
+        }
+        Relationships: []
+      }
+      pairing_messages: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          pairing_id: string
+          sender_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          pairing_id: string
+          sender_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          pairing_id?: string
+          sender_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       pairings: {
         Row: {
           aff_registration_id: string

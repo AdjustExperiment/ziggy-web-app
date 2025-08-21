@@ -28,6 +28,7 @@ import MyTournaments from '@/pages/MyTournaments';
 import TournamentRounds from '@/pages/TournamentRounds';
 import TournamentMyMatch from '@/pages/TournamentMyMatch';
 import TournamentPostings from '@/pages/TournamentPostings';
+import PairingDetail from '@/pages/PairingDetail';
 import { Navbar } from '@/components/Navbar';
 
 function App() {
@@ -72,6 +73,11 @@ function App() {
                 <Route path="/tournaments/:tournamentId/postings" element={
                   <ProtectedRoute>
                     <TournamentPostings />
+                  </ProtectedRoute>
+                } />
+                <Route path="/pairings/:pairingId" element={
+                  <ProtectedRoute>
+                    <PairingDetail />
                   </ProtectedRoute>
                 } />
                 <Route path="/account" element={

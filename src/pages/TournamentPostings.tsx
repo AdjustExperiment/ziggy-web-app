@@ -387,6 +387,18 @@ export default function TournamentPostings() {
                             {pairing.judge_profile?.name || 'TBD'}
                           </p>
                         </div>
+
+                        {/* View Details Button */}
+                        {isMyPairing(pairing) && (
+                          <div className="pt-2 border-t">
+                            <Button asChild size="sm" className="w-full">
+                              <Link to={`/pairings/${pairing.id}`}>
+                                <Eye className="h-4 w-4 mr-2" />
+                                View Details & Chat
+                              </Link>
+                            </Button>
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
                   ))}
@@ -421,51 +433,63 @@ export default function TournamentPostings() {
                     )}
                   </CardHeader>
 
-                  <CardContent className="space-y-4">
-                    {/* Debaters */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-medium text-muted-foreground uppercase">Affirmative</span>
-                          {pairing.aff_registration.id === userRegistrationId && (
-                            <Badge variant="outline" className="text-xs">You</Badge>
+                    <CardContent className="space-y-4">
+                      {/* Debaters */}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-medium text-muted-foreground uppercase">Affirmative</span>
+                            {pairing.aff_registration.id === userRegistrationId && (
+                              <Badge variant="outline" className="text-xs">You</Badge>
+                            )}
+                          </div>
+                          <p className="font-medium text-sm">{pairing.aff_registration.participant_name}</p>
+                          {pairing.aff_registration.partner_name && (
+                            <p className="text-sm text-muted-foreground">{pairing.aff_registration.partner_name}</p>
                           )}
                         </div>
-                        <p className="font-medium text-sm">{pairing.aff_registration.participant_name}</p>
-                        {pairing.aff_registration.partner_name && (
-                          <p className="text-sm text-muted-foreground">{pairing.aff_registration.partner_name}</p>
-                        )}
-                      </div>
-                      
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-medium text-muted-foreground uppercase">Negative</span>
-                          {pairing.neg_registration.id === userRegistrationId && (
-                            <Badge variant="outline" className="text-xs">You</Badge>
+                        
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-medium text-muted-foreground uppercase">Negative</span>
+                            {pairing.neg_registration.id === userRegistrationId && (
+                              <Badge variant="outline" className="text-xs">You</Badge>
+                            )}
+                          </div>
+                          <p className="font-medium text-sm">{pairing.neg_registration.participant_name}</p>
+                          {pairing.neg_registration.partner_name && (
+                            <p className="text-sm text-muted-foreground">{pairing.neg_registration.partner_name}</p>
                           )}
                         </div>
-                        <p className="font-medium text-sm">{pairing.neg_registration.participant_name}</p>
-                        {pairing.neg_registration.partner_name && (
-                          <p className="text-sm text-muted-foreground">{pairing.neg_registration.partner_name}</p>
-                        )}
                       </div>
-                    </div>
 
-                    {/* Judge */}
-                    <div className="pt-2 border-t">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium text-muted-foreground uppercase">Judge</span>
-                        {pairing.judge_profile && (
-                          <Badge variant={getJudgeExperienceColor(pairing.judge_profile.experience_level)} className="text-xs">
-                            {pairing.judge_profile.experience_level}
-                          </Badge>
-                        )}
+                      {/* Judge */}
+                      <div className="pt-2 border-t">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-medium text-muted-foreground uppercase">Judge</span>
+                          {pairing.judge_profile && (
+                            <Badge variant={getJudgeExperienceColor(pairing.judge_profile.experience_level)} className="text-xs">
+                              {pairing.judge_profile.experience_level}
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="font-medium text-sm mt-1">
+                          {pairing.judge_profile?.name || 'TBD'}
+                        </p>
                       </div>
-                      <p className="font-medium text-sm mt-1">
-                        {pairing.judge_profile?.name || 'TBD'}
-                      </p>
-                    </div>
-                  </CardContent>
+
+                      {/* View Details Button */}
+                      {isMyPairing(pairing) && (
+                        <div className="pt-2 border-t">
+                          <Button asChild size="sm" className="w-full">
+                            <Link to={`/pairings/${pairing.id}`}>
+                              <Eye className="h-4 w-4 mr-2" />
+                              View Details & Chat
+                            </Link>
+                          </Button>
+                        </div>
+                      )}
+                    </CardContent>
                 </Card>
               ))}
             </div>

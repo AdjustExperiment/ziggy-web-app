@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -205,26 +206,12 @@ export function MyPairings() {
 
                     {/* Actions */}
                     <div className="flex gap-2 flex-wrap">
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button variant="outline" size="sm">
-                            <MessageSquare className="h-4 w-4 mr-2" />
-                            Chat
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Pairing Chat</DialogTitle>
-                            <DialogDescription>
-                              Communicate with your opponent and judge about scheduling and logistics
-                            </DialogDescription>
-                          </DialogHeader>
-                          <div className="text-center py-8 text-muted-foreground">
-                            <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                            <p>Chat functionality is coming soon.</p>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
+                      <Button asChild variant="outline" size="sm">
+                        <Link to={`/pairings/${pairing.id}`}>
+                          <MessageSquare className="h-4 w-4 mr-2" />
+                          View Details & Chat
+                        </Link>
+                      </Button>
 
                       <Button 
                         variant="outline" 
