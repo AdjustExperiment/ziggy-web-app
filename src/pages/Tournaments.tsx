@@ -213,8 +213,21 @@ const Tournaments = () => {
                     <div className="flex justify-between items-start mb-2">
                       <div className="flex items-center gap-4">
                         <Badge 
-                          variant={tournament.registration_open ? 'default' : 'secondary'}
-                          className={tournament.registration_open ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}
+                          variant={
+                            tournament.status === 'Registration Open' ? 'default' :
+                            tournament.status === 'Ongoing' ? 'default' :
+                            tournament.status === 'Completed' ? 'secondary' :
+                            tournament.status === 'Registration Closed' ? 'destructive' :
+                            'outline'
+                          }
+                          className={
+                            tournament.status === 'Registration Open' ? 'bg-green-600 hover:bg-green-700 text-white' :
+                            tournament.status === 'Ongoing' ? 'bg-blue-600 hover:bg-blue-700 text-white' :
+                            tournament.status === 'Completed' ? 'bg-gray-600 hover:bg-gray-700 text-white' :
+                            tournament.status === 'Registration Closed' ? 'bg-red-600 hover:bg-red-700 text-white' :
+                            tournament.status === 'Planning Phase' ? 'bg-yellow-600 hover:bg-yellow-700 text-white' :
+                            'bg-muted text-muted-foreground'
+                          }
                         >
                           {tournament.status}
                         </Badge>
