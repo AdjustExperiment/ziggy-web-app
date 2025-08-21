@@ -26,7 +26,7 @@ interface Registration {
   };
 }
 
-const UserAccount = () => {
+export default function UserAccount() {
   const { user, profile, loading } = useAuth();
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [loadingRegistrations, setLoadingRegistrations] = useState(true);
@@ -316,6 +316,4 @@ const UserAccount = () => {
       </div>
     </div>
   );
-};
-
-export default UserAccount;
+}
