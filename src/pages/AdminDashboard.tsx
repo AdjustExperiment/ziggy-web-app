@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TournamentManager } from "@/components/admin/TournamentManager";
+import TournamentManager from "@/components/admin/TournamentManager";
 import { UserManager } from "@/components/admin/UserManager";
 import { PaymentManager } from "@/components/admin/PaymentManager";
 import { ResultsManager } from "@/components/admin/ResultsManager";
