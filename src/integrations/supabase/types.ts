@@ -1117,6 +1117,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_lock_ballots: {
+        Args: { _round_id?: string; _tournament_id: string }
+        Returns: number
+      }
       can_submit_ballot: {
         Args: { _pairing_id: string }
         Returns: boolean
@@ -1130,6 +1134,10 @@ export type Database = {
         Returns: boolean
       }
       publish_due_ballots: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      recompute_results_from_ballots: {
         Args: Record<PropertyKey, never>
         Returns: number
       }

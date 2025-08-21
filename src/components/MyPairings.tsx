@@ -15,6 +15,7 @@ export function MyPairings() {
   const [pairings, setPairings] = useState<Pairing[]>([]);
   const [userRegistrationIds, setUserRegistrationIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedResults, setSelectedResults] = useState<any>(null);
 
   useEffect(() => {
     if (user) {
@@ -81,6 +82,34 @@ export function MyPairings() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPairingResults = async (pairingId: string) => {
+    try {
+      const { data: ballots, error } = await supabase
+        .from('ballots')
+        .select('*')
+        .eq('pairing_id', pairingId)
+        .eq('is_published', true);
+
+      if (error) throw error;
+
+      if (ballots && ballots.length > 0) {
+        setSelectedResults(ballots[0]);
+      } else {
+        toast({
+          title: "No Results Available",
+          description: "Results for this debate have not been published yet.",
+        });
+      }
+    } catch (error: any) {
+      console.error('Error fetching results:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load results",
+        variant: "destructive",
+      });
     }
   };
 
@@ -197,12 +226,14 @@ export function MyPairings() {
                         </DialogContent>
                       </Dialog>
 
-                      {pairing.status === 'completed' && (
-                        <Button variant="outline" size="sm">
-                          <Clock className="h-4 w-4 mr-2" />
-                          View Results
-                        </Button>
-                      )}
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => fetchPairingResults(pairing.id)}
+                      >
+                        <Clock className="h-4 w-4 mr-2" />
+                        View Results
+                      </Button>
                     </div>
                   </div>
                 </CardContent>
@@ -211,6 +242,47 @@ export function MyPairings() {
           })}
         </div>
       )}
+
+      {/* Results Dialog */}
+      <Dialog open={!!selectedResults} onOpenChange={() => setSelectedResults(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Debate Results</DialogTitle>
+            <DialogDescription>Official ballot results</DialogDescription>
+          </DialogHeader>
+          {selectedResults && (
+            <div className="space-y-4">
+              <div className="text-center">
+                <Badge variant="default" className="text-lg px-4 py-2">
+                  Winner: {(selectedResults.payload as any)?.winner === 'aff' ? 'Affirmative' : 'Negative'}
+                </Badge>
+              </div>
+              
+              {((selectedResults.payload as any)?.aff_points || (selectedResults.payload as any)?.neg_points) && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="text-center">
+                    <div className="font-semibold">Affirmative Points</div>
+                    <div className="text-2xl">{(selectedResults.payload as any)?.aff_points || 'N/A'}</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-semibold">Negative Points</div>
+                    <div className="text-2xl">{(selectedResults.payload as any)?.neg_points || 'N/A'}</div>
+                  </div>
+                </div>
+              )}
+              
+              {(selectedResults.payload as any)?.comments && (
+                <div>
+                  <div className="font-semibold mb-2">Judge Comments</div>
+                  <div className="bg-muted p-3 rounded-md">
+                    {(selectedResults.payload as any).comments}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -1,3 +1,5 @@
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -107,6 +109,41 @@ const tournamentHistory = [
 ];
 
 const Results = () => {
+  const [recentResults, setRecentResults] = useState<any[]>([]);
+  const [topPerformers, setTopPerformers] = useState<any[]>([]);
+  const [championships, setChampionships] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchAllResults();
+  }, []);
+
+  const fetchAllResults = async () => {
+    try {
+      const [recentRes, performersRes, champRes] = await Promise.all([
+        supabase.from('results_recent').select('*').order('date', { ascending: false }).limit(10),
+        supabase.from('top_performers').select('*').order('rank').limit(10),
+        supabase.from('championships').select('*').order('date', { ascending: false }).limit(10)
+      ]);
+
+      if (recentRes.data) setRecentResults(recentRes.data);
+      if (performersRes.data) setTopPerformers(performersRes.data);
+      if (champRes.data) setChampionships(champRes.data);
+    } catch (error) {
+      console.error('Error fetching results:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -182,13 +219,21 @@ const Results = () => {
 
             <TabsContent value="recent" className="space-y-6">
               <div className="grid gap-6">
-                {recentResults.map((result, index) => (
+                {recentResults.length === 0 ? (
+                  <Card className="bg-black border-white/10">
+                    <CardContent className="text-center py-8">
+                      <Trophy className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <p className="text-white/70">No recent results available</p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  recentResults.map((result, index) => (
                   <Card key={index} className="bg-black border-white/10 hover:border-red-500/30 transition-smooth">
                     <CardContent className="pt-6">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                           <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-500/10 border border-red-500/20">
-                            {result.position === 1 ? (
+                            {result.position?.toLowerCase() === 'win' || result.position === 1 ? (
                               <Crown className="h-6 w-6 text-red-500" />
                             ) : result.position === 2 ? (
                               <Medal className="h-6 w-6 text-red-500" />
@@ -202,7 +247,7 @@ const Results = () => {
                             <div className="flex items-center gap-4 text-sm text-white/70">
                               <span>{result.format}</span>
                               <span>•</span>
-                              <span>{result.date}</span>
+                              <span>{new Date(result.date).toLocaleDateString()}</span>
                               <span>•</span>
                               <span>{result.participants} participants</span>
                             </div>
@@ -211,19 +256,23 @@ const Results = () => {
                         
                         <div className="text-right">
                           <Badge 
-                            variant={result.position === 1 ? 'default' : 'secondary'}
-                            className={result.position === 1 ? 'bg-red-500 text-white' : 'bg-white/10 text-white/70'}
+                            variant={result.position?.toLowerCase() === 'win' || result.position === 1 ? 'default' : 'secondary'}
+                            className={result.position?.toLowerCase() === 'win' || result.position === 1 ? 'bg-red-500 text-white' : 'bg-white/10 text-white/70'}
                           >
-                            {result.position === 1 ? '1st Place' : result.position === 2 ? '2nd Place' : `${result.position}rd Place`}
+                            {result.position?.toLowerCase() === 'win' ? 'Win' : 
+                             result.position === 1 ? '1st Place' : 
+                             result.position === 2 ? '2nd Place' : 
+                             `${result.position} Place`}
                           </Badge>
                           <div className="text-sm text-white/70 mt-1">
-                            {result.points} points • {result.prize}
+                            {result.points} points {result.prize && `• ${result.prize}`}
                           </div>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
-                ))}
+                  ))
+                )}
               </div>
             </TabsContent>
 
@@ -236,8 +285,14 @@ const Results = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    {topPerformers.map((performer) => (
+                  {topPerformers.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Star className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <p className="text-white/70">No performers data available</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {topPerformers.map((performer) => (
                       <div key={performer.rank} className="flex items-center justify-between p-4 rounded-lg bg-black/50 border border-white/5 hover:border-red-500/20 transition-smooth">
                         <div className="flex items-center gap-4">
                           <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
@@ -269,62 +324,72 @@ const Results = () => {
                           </div>
                         </div>
                       </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
 
             <TabsContent value="championships" className="space-y-6">
               <div className="grid gap-6">
-                {tournamentHistory.map((tournament, index) => (
-                  <Card key={index} className="bg-black border-white/10 hover:border-red-500/30 transition-smooth">
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-white font-primary">{tournament.name}</CardTitle>
-                        <Badge className="bg-red-500 text-white">Championship</Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid md:grid-cols-2 gap-6">
-                        <div>
-                          <div className="space-y-3">
-                            <div className="flex items-center gap-3">
-                              <Crown className="h-5 w-5 text-red-500" />
-                              <div>
-                                <div className="font-bold text-white">Winner</div>
-                                <div className="text-white/70">{tournament.winner}</div>
-                              </div>
-                            </div>
-                            
-                            <div className="flex items-center gap-3">
-                              <Medal className="h-5 w-5 text-red-400" />
-                              <div>
-                                <div className="font-bold text-white">Runner-up</div>
-                                <div className="text-white/70">{tournament.runnerUp}</div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-2 text-white/70">
-                            <Calendar className="h-4 w-4" />
-                            <span>{tournament.date}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-white/70">
-                            <Trophy className="h-4 w-4" />
-                            <span>{tournament.location}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-white/70">
-                            <Users className="h-4 w-4" />
-                            <span>{tournament.participants} participants</span>
-                          </div>
-                        </div>
-                      </div>
+                {championships.length === 0 ? (
+                  <Card className="bg-black border-white/10">
+                    <CardContent className="text-center py-8">
+                      <Trophy className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <p className="text-white/70">No championships data available</p>
                     </CardContent>
                   </Card>
-                ))}
+                ) : (
+                  championships.map((tournament, index) => (
+                    <Card key={index} className="bg-black border-white/10 hover:border-red-500/30 transition-smooth">
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-white font-primary">{tournament.name}</CardTitle>
+                          <Badge className="bg-red-500 text-white">Championship</Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid md:grid-cols-2 gap-6">
+                          <div>
+                            <div className="space-y-3">
+                              <div className="flex items-center gap-3">
+                                <Crown className="h-5 w-5 text-red-500" />
+                                <div>
+                                  <div className="font-bold text-white">Winner</div>
+                                  <div className="text-white/70">{tournament.winner}</div>
+                                </div>
+                              </div>
+                              
+                              <div className="flex items-center gap-3">
+                                <Medal className="h-5 w-5 text-red-400" />
+                                <div>
+                                  <div className="font-bold text-white">Runner-up</div>
+                                  <div className="text-white/70">{tournament.runner_up}</div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-2 text-white/70">
+                              <Calendar className="h-4 w-4" />
+                              <span>{new Date(tournament.date).toLocaleDateString()}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-white/70">
+                              <Trophy className="h-4 w-4" />
+                              <span>{tournament.location}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-white/70">
+                              <Users className="h-4 w-4" />
+                              <span>{tournament.participants} participants</span>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
               </div>
             </TabsContent>
           </Tabs>

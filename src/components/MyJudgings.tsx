@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from '@/components/ui/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Gavel, MessageSquare, FileText, Lock, Eye } from 'lucide-react';
+import { BallotEntry } from './BallotEntry';
 
 interface JudgeAssignment {
   id: string;
@@ -18,6 +19,7 @@ interface JudgeAssignment {
   aff_participant: string;
   neg_participant: string;
   role: string;
+  ballot_id?: string;
   ballot_status?: string;
   ballot_submitted?: boolean;
   ballot_locked?: boolean;
@@ -27,6 +29,7 @@ export function MyJudgings() {
   const { user } = useAuth();
   const [assignments, setAssignments] = useState<JudgeAssignment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedPairing, setSelectedPairing] = useState<JudgeAssignment | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -57,7 +60,7 @@ export function MyJudgings() {
         return;
       }
 
-      // Fetch pairings where user is assigned as judge
+      // Fetch pairings where user is assigned as judge with ballot info
       const { data: pairingsData, error: pairingsError } = await supabase
         .from('pairings')
         .select(`
@@ -78,7 +81,8 @@ export function MyJudgings() {
           neg_registration:tournament_registrations!neg_registration_id(participant_name, participant_email),
           round:rounds(name),
           tournaments(name),
-          judge_profiles(name, email)
+          judge_profiles(name, email),
+          ballots(id, status, is_published)
         `)
         .eq('judge_id', judgeProfile.id)
         .order('created_at', { ascending: false });
@@ -86,19 +90,23 @@ export function MyJudgings() {
       if (pairingsError) throw pairingsError;
 
       // Transform pairings data to match JudgeAssignment interface
-      const assignments: JudgeAssignment[] = (pairingsData || []).map(pairing => ({
-        id: pairing.id,
-        tournament_name: pairing.tournaments?.name || 'Unknown Tournament',
-        round_name: pairing.round?.name || 'Unknown Round',
-        room: pairing.room || 'TBD',
-        scheduled_time: pairing.scheduled_time || undefined,
-        aff_participant: pairing.aff_registration?.participant_name || 'Unknown',
-        neg_participant: pairing.neg_registration?.participant_name || 'Unknown',
-        role: 'Judge',
-        ballot_status: 'draft', // This would come from ballots table in future
-        ballot_submitted: false, // This would come from ballots table in future
-        ballot_locked: false, // This would come from ballots table in future
-      }));
+      const assignments: JudgeAssignment[] = (pairingsData || []).map(pairing => {
+        const ballot = pairing.ballots?.[0]; // Get first ballot if exists
+        return {
+          id: pairing.id,
+          tournament_name: pairing.tournaments?.name || 'Unknown Tournament',
+          round_name: pairing.round?.name || 'Unknown Round',
+          room: pairing.room || 'TBD',
+          scheduled_time: pairing.scheduled_time || undefined,
+          aff_participant: pairing.aff_registration?.participant_name || 'Unknown',
+          neg_participant: pairing.neg_registration?.participant_name || 'Unknown',
+          role: 'Judge',
+          ballot_id: ballot?.id,
+          ballot_status: ballot?.status || 'none',
+          ballot_submitted: ballot?.status === 'submitted',
+          ballot_locked: ballot?.status === 'submitted',
+        };
+      });
 
       setAssignments(assignments);
     } catch (error: any) {
@@ -114,15 +122,11 @@ export function MyJudgings() {
   };
 
   const openBallot = (assignment: JudgeAssignment) => {
-    // In the future, this could navigate to a ballot entry form
-    // For now, show that the feature is being prepared
-    toast({
-      title: "Ballot Entry",
-      description: "Opening ballot entry form...",
-    });
-    
-    // TODO: Navigate to ballot entry page or open ballot entry modal
-    // This would integrate with the ballots table and ballot templates
+    setSelectedPairing(assignment);
+  };
+
+  const handleBallotSubmitted = () => {
+    fetchMyAssignments(); // Refresh assignments
   };
 
   if (loading) {
@@ -176,7 +180,8 @@ export function MyJudgings() {
                     </div>
                     <div className="flex gap-2">
                       <Badge variant={ballotSubmitted ? 'default' : 'secondary'}>
-                        {ballotSubmitted ? 'Ballot Submitted' : 'Ballot Pending'}
+                        {assignment.ballot_status === 'submitted' ? 'Ballot Submitted' : 
+                         assignment.ballot_status === 'draft' ? 'Draft Saved' : 'Ballot Pending'}
                       </Badge>
                       {ballotLocked && (
                         <Badge variant="destructive">
@@ -223,7 +228,7 @@ export function MyJudgings() {
                         onClick={() => openBallot(assignment)}
                       >
                         <FileText className="h-4 w-4 mr-2" />
-                        Enter Ballot
+                        {assignment.ballot_status === 'submitted' ? 'View Ballot' : 'Enter Ballot'}
                       </Button>
 
                       <Dialog>
@@ -253,6 +258,20 @@ export function MyJudgings() {
             );
           })}
         </div>
+      )}
+
+      {/* Ballot Entry Dialog */}
+      {selectedPairing && (
+        <BallotEntry
+          pairingId={selectedPairing.id}
+          tournamentName={selectedPairing.tournament_name}
+          roundName={selectedPairing.round_name}
+          affParticipant={selectedPairing.aff_participant}
+          negParticipant={selectedPairing.neg_participant}
+          isOpen={!!selectedPairing}
+          onClose={() => setSelectedPairing(null)}
+          onBallotSubmitted={handleBallotSubmitted}
+        />
       )}
     </div>
   );

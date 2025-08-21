@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/components/ui/use-toast';
-import { Gavel, Users, Trophy, Settings, Play, Lock, Unlock } from 'lucide-react';
+import { Gavel, Users, Trophy, Settings, Play, Lock, Unlock, RefreshCw, Send } from 'lucide-react';
 import { PairingGenerator } from './tabulation/PairingGenerator';
 import { ConstraintsManager } from './tabulation/ConstraintsManager';
 import { BracketsManager } from './tabulation/BracketsManager';
@@ -25,6 +25,7 @@ export function TabulationPlatform() {
   const [judges, setJudges] = useState<JudgeProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('pairings');
+  const [ballotLoading, setBallotLoading] = useState(false);
 
   useEffect(() => {
     fetchTournaments();
@@ -130,6 +131,56 @@ export function TabulationPlatform() {
     }
   };
 
+  const lockTournamentBallots = async () => {
+    if (!selectedTournament) return;
+    
+    setBallotLoading(true);
+    try {
+      const { data, error } = await supabase.rpc('admin_lock_ballots', {
+        _tournament_id: selectedTournament
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `Locked ${data || 0} ballots for this tournament`,
+      });
+    } catch (error: any) {
+      console.error('Error locking ballots:', error);
+      toast({
+        title: "Error", 
+        description: "Failed to lock ballots",
+        variant: "destructive",
+      });
+    } finally {
+      setBallotLoading(false);
+    }
+  };
+
+  const syncResultsFromBallots = async () => {
+    setBallotLoading(true);
+    try {
+      const { data, error } = await supabase.rpc('recompute_results_from_ballots');
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `Synced results from ${data || 0} tournaments with published ballots`,
+      });
+    } catch (error: any) {
+      console.error('Error syncing results:', error);
+      toast({
+        title: "Error",
+        description: "Failed to sync results from ballots", 
+        variant: "destructive",
+      });
+    } finally {
+      setBallotLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -218,6 +269,37 @@ export function TabulationPlatform() {
               </CardContent>
             </Card>
           </div>
+
+          {/* Admin Controls */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Ballot & Results Management</CardTitle>
+              <CardDescription>Admin controls for ballot submission and result syncing</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex gap-4">
+                <Button
+                  variant="outline"
+                  onClick={lockTournamentBallots}
+                  disabled={ballotLoading}
+                >
+                  <Send className="h-4 w-4 mr-2" />
+                  Lock All Ballots
+                </Button>
+                <Button
+                  variant="outline" 
+                  onClick={syncResultsFromBallots}
+                  disabled={ballotLoading}
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Sync Results
+                </Button>
+              </div>
+              <p className="text-sm text-muted-foreground mt-2">
+                Lock ballots to prevent further edits, and sync published ballots to public results tables.
+              </p>
+            </CardContent>
+          </Card>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <TabsList className="grid w-full grid-cols-4">
