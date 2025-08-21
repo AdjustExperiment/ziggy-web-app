@@ -25,6 +25,7 @@ import { ThemeProvider } from "@/components/ThemeProvider"
 import { Toaster } from "@/components/ui/toaster"
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import MyTournaments from '@/pages/MyTournaments';
+import TournamentLanding from '@/pages/TournamentLanding';
 import TournamentRounds from '@/pages/TournamentRounds';
 import TournamentMyMatch from '@/pages/TournamentMyMatch';
 import TournamentPostings from '@/pages/TournamentPostings';
@@ -44,6 +45,11 @@ function App() {
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/tournaments" element={<Tournaments />} />
+                <Route path="/tournaments/:tournamentId" element={
+                  <ProtectedRoute>
+                    <TournamentLanding />
+                  </ProtectedRoute>
+                } />
                 <Route path="/tournaments/:id/register" element={<TournamentRegistration />} />
                 <Route path="/tournament/:id/register" element={<TournamentRegistration />} />
                 <Route path="/results" element={<Results />} />

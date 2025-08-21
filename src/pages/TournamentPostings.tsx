@@ -3,10 +3,21 @@ import { useParams, Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Users, Clock, MapPin, Calendar, Trophy, Eye } from 'lucide-react';
+import { SpectateRequestManager } from '@/components/SpectateRequestManager';
+import { 
+  ArrowLeft, 
+  Users, 
+  Clock, 
+  MapPin, 
+  Calendar, 
+  Trophy, 
+  Eye,
+  FileText
+} from 'lucide-react';
 
 interface PairingWithDetails {
   id: string;
@@ -24,11 +35,13 @@ interface PairingWithDetails {
     id: string;
     participant_name: string;
     partner_name: string | null;
+    user_id: string;
   };
   neg_registration: {
     id: string;
     participant_name: string;
     partner_name: string | null;
+    user_id: string;
   };
   judge_profile: {
     id: string;
@@ -62,6 +75,7 @@ export default function TournamentPostings() {
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [rounds, setRounds] = useState<Round[]>([]);
   const [pairings, setPairings] = useState<PairingWithDetails[]>([]);
+  const [allPairings, setAllPairings] = useState<PairingWithDetails[]>([]);
   const [selectedRound, setSelectedRound] = useState<string>('all');
   const [loading, setLoading] = useState(true);
   const [userRegistrationId, setUserRegistrationId] = useState<string | null>(null);
@@ -106,8 +120,48 @@ export default function TournamentPostings() {
       if (roundsError) throw roundsError;
       setRounds(roundsData || []);
 
-      // Fetch pairings with all details
-      const { data: pairingsData, error: pairingsError } = await supabase
+      // Fetch user's pairings with all details
+      if (userRegistration) {
+        const { data: userPairingsData, error: userPairingsError } = await supabase
+          .from('pairings')
+          .select(`
+            *,
+            round:rounds (
+              id,
+              name,
+              round_number,
+              scheduled_date
+            ),
+            aff_registration:tournament_registrations!aff_registration_id (
+              id,
+              participant_name,
+              partner_name,
+              user_id
+            ),
+            neg_registration:tournament_registrations!neg_registration_id (
+              id,
+              participant_name,
+              partner_name,
+              user_id
+            ),
+            judge_profile:judge_profiles (
+              id,
+              name,
+              experience_level
+            )
+          `)
+          .eq('tournament_id', tournamentId)
+          .or(`aff_registration_id.eq.${userRegistration.id},neg_registration_id.eq.${userRegistration.id}`)
+          .eq('released', true)
+          .order('round_id')
+          .order('room');
+
+        if (userPairingsError) throw userPairingsError;
+        setPairings(userPairingsData || []);
+      }
+
+      // Fetch all pairings for spectate functionality
+      const { data: allPairingsData, error: allPairingsError } = await supabase
         .from('pairings')
         .select(`
           *,
@@ -120,12 +174,14 @@ export default function TournamentPostings() {
           aff_registration:tournament_registrations!aff_registration_id (
             id,
             participant_name,
-            partner_name
+            partner_name,
+            user_id
           ),
           neg_registration:tournament_registrations!neg_registration_id (
             id,
             participant_name,
-            partner_name
+            partner_name,
+            user_id
           ),
           judge_profile:judge_profiles (
             id,
@@ -138,8 +194,8 @@ export default function TournamentPostings() {
         .order('round_id')
         .order('room');
 
-      if (pairingsError) throw pairingsError;
-      setPairings(pairingsData || []);
+      if (allPairingsError) throw allPairingsError;
+      setAllPairings(allPairingsData || []);
 
     } catch (error) {
       console.error('Error fetching tournament data:', error);
@@ -264,238 +320,219 @@ export default function TournamentPostings() {
         </div>
       </div>
 
-      {/* Round Filter */}
-      {rounds.length > 1 && (
-        <div className="mb-6">
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant={selectedRound === 'all' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setSelectedRound('all')}
-            >
-              All Rounds
-            </Button>
-            {rounds.map(round => (
-              <Button
-                key={round.id}
-                variant={selectedRound === round.id ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setSelectedRound(round.id)}
-              >
-                {round.name}
-              </Button>
-            ))}
-          </div>
-        </div>
-      )}
+      <Tabs defaultValue="my-pairings" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="my-pairings" className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            My Pairings
+          </TabsTrigger>
+          <TabsTrigger value="spectate" className="flex items-center gap-2">
+            <Eye className="h-4 w-4" />
+            Spectate Rounds
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Pairings Display */}
-      {filteredPairings.length === 0 ? (
-        <Card>
-          <CardContent className="text-center py-8">
-            <Trophy className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h2 className="text-xl font-semibold mb-2">No Pairings Released</h2>
-            <p className="text-muted-foreground">
-              No pairings have been released for this tournament yet. Check back later or contact the tournament organizers.
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-6">
-          {selectedRound === 'all' ? (
-            // Group by rounds when showing all
-            groupedPairings.map(({ round, pairings: roundPairings }) => (
-              <div key={round.id} className="space-y-4">
-                <div className="flex items-center gap-3 border-b pb-3">
-                  <h2 className="text-2xl font-semibold">{round.name}</h2>
-                  <Badge variant="secondary">Round {round.round_number}</Badge>
-                  {round.scheduled_date && (
-                    <span className="flex items-center text-muted-foreground">
-                      <Calendar className="h-4 w-4 mr-1" />
-                      {new Date(round.scheduled_date).toLocaleDateString()}
-                    </span>
-                  )}
-                </div>
-                
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  {roundPairings.map((pairing) => (
-                    <Card 
-                      key={pairing.id} 
-                      className={`hover:shadow-lg transition-all ${isMyPairing(pairing) ? 'ring-2 ring-primary shadow-md' : ''}`}
-                    >
-                      <CardHeader className="pb-3">
-                        <div className="flex items-center justify-between">
-                          <CardTitle className="text-lg flex items-center gap-2">
-                            {pairing.room || 'TBD'}
-                            {isMyPairing(pairing) && (
-                              <Badge variant="default" className="text-xs">MY MATCH</Badge>
-                            )}
-                          </CardTitle>
-                          <Badge variant={getStatusColor(pairing.status)} className="text-xs">
-                            {pairing.status}
-                          </Badge>
-                        </div>
-                        {pairing.scheduled_time && (
-                          <CardDescription className="flex items-center">
-                            <Clock className="h-4 w-4 mr-1" />
-                            {new Date(pairing.scheduled_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </CardDescription>
-                        )}
-                      </CardHeader>
-
-                      <CardContent className="space-y-4">
-                        {/* Debaters */}
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-1">
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs font-medium text-muted-foreground uppercase">Affirmative</span>
-                              {pairing.aff_registration.id === userRegistrationId && (
-                                <Badge variant="outline" className="text-xs">You</Badge>
-                              )}
-                            </div>
-                            <p className="font-medium text-sm">{pairing.aff_registration.participant_name}</p>
-                            {pairing.aff_registration.partner_name && (
-                              <p className="text-sm text-muted-foreground">{pairing.aff_registration.partner_name}</p>
-                            )}
-                          </div>
-                          
-                          <div className="space-y-1">
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs font-medium text-muted-foreground uppercase">Negative</span>
-                              {pairing.neg_registration.id === userRegistrationId && (
-                                <Badge variant="outline" className="text-xs">You</Badge>
-                              )}
-                            </div>
-                            <p className="font-medium text-sm">{pairing.neg_registration.participant_name}</p>
-                            {pairing.neg_registration.partner_name && (
-                              <p className="text-sm text-muted-foreground">{pairing.neg_registration.partner_name}</p>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Judge */}
-                        <div className="pt-2 border-t">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-medium text-muted-foreground uppercase">Judge</span>
-                            {pairing.judge_profile && (
-                              <Badge variant={getJudgeExperienceColor(pairing.judge_profile.experience_level)} className="text-xs">
-                                {pairing.judge_profile.experience_level}
-                              </Badge>
-                            )}
-                          </div>
-                          <p className="font-medium text-sm mt-1">
-                            {pairing.judge_profile?.name || 'TBD'}
-                          </p>
-                        </div>
-
-                        {/* View Details Button */}
-                        {isMyPairing(pairing) && (
-                          <div className="pt-2 border-t">
-                            <Button asChild size="sm" className="w-full">
-                              <Link to={`/pairings/${pairing.id}`}>
-                                <Eye className="h-4 w-4 mr-2" />
-                                View Details & Chat
-                              </Link>
-                            </Button>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            ))
-          ) : (
-            // Show single round pairings
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {filteredPairings.map((pairing) => (
-                <Card 
-                  key={pairing.id} 
-                  className={`hover:shadow-lg transition-all ${isMyPairing(pairing) ? 'ring-2 ring-primary shadow-md' : ''}`}
+        <TabsContent value="my-pairings" className="space-y-6">
+          {/* Round Filter */}
+          {rounds.length > 1 && (
+            <div className="mb-6">
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant={selectedRound === 'all' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setSelectedRound('all')}
                 >
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        {pairing.room || 'TBD'}
-                        {isMyPairing(pairing) && (
-                          <Badge variant="default" className="text-xs">MY MATCH</Badge>
-                        )}
-                      </CardTitle>
-                      <Badge variant={getStatusColor(pairing.status)} className="text-xs">
-                        {pairing.status}
-                      </Badge>
-                    </div>
-                    {pairing.scheduled_time && (
-                      <CardDescription className="flex items-center">
-                        <Clock className="h-4 w-4 mr-1" />
-                        {new Date(pairing.scheduled_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </CardDescription>
-                    )}
-                  </CardHeader>
-
-                    <CardContent className="space-y-4">
-                      {/* Debaters */}
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-medium text-muted-foreground uppercase">Affirmative</span>
-                            {pairing.aff_registration.id === userRegistrationId && (
-                              <Badge variant="outline" className="text-xs">You</Badge>
-                            )}
-                          </div>
-                          <p className="font-medium text-sm">{pairing.aff_registration.participant_name}</p>
-                          {pairing.aff_registration.partner_name && (
-                            <p className="text-sm text-muted-foreground">{pairing.aff_registration.partner_name}</p>
-                          )}
-                        </div>
-                        
-                        <div className="space-y-1">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-medium text-muted-foreground uppercase">Negative</span>
-                            {pairing.neg_registration.id === userRegistrationId && (
-                              <Badge variant="outline" className="text-xs">You</Badge>
-                            )}
-                          </div>
-                          <p className="font-medium text-sm">{pairing.neg_registration.participant_name}</p>
-                          {pairing.neg_registration.partner_name && (
-                            <p className="text-sm text-muted-foreground">{pairing.neg_registration.partner_name}</p>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Judge */}
-                      <div className="pt-2 border-t">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-medium text-muted-foreground uppercase">Judge</span>
-                          {pairing.judge_profile && (
-                            <Badge variant={getJudgeExperienceColor(pairing.judge_profile.experience_level)} className="text-xs">
-                              {pairing.judge_profile.experience_level}
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="font-medium text-sm mt-1">
-                          {pairing.judge_profile?.name || 'TBD'}
-                        </p>
-                      </div>
-
-                      {/* View Details Button */}
-                      {isMyPairing(pairing) && (
-                        <div className="pt-2 border-t">
-                          <Button asChild size="sm" className="w-full">
-                            <Link to={`/pairings/${pairing.id}`}>
-                              <Eye className="h-4 w-4 mr-2" />
-                              View Details & Chat
-                            </Link>
-                          </Button>
-                        </div>
-                      )}
-                    </CardContent>
-                </Card>
-              ))}
+                  All Rounds
+                </Button>
+                {rounds.map(round => (
+                  <Button
+                    key={round.id}
+                    variant={selectedRound === round.id ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setSelectedRound(round.id)}
+                  >
+                    {round.name}
+                  </Button>
+                ))}
+              </div>
             </div>
           )}
-        </div>
-      )}
+
+          {/* Pairings Display */}
+          {!userRegistrationId ? (
+            <Card>
+              <CardContent className="text-center py-8">
+                <Trophy className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h2 className="text-xl font-semibold mb-2">Not Registered</h2>
+                <p className="text-muted-foreground mb-4">
+                  You are not registered for this tournament. Register to see your pairings.
+                </p>
+                <Button asChild>
+                  <Link to={`/tournaments/${tournament.id}/register`}>
+                    Register for Tournament
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          ) : filteredPairings.length === 0 ? (
+            <Card>
+              <CardContent className="text-center py-8">
+                <Trophy className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h2 className="text-xl font-semibold mb-2">No Pairings Released</h2>
+                <p className="text-muted-foreground">
+                  No pairings have been released for this tournament yet. Check back later or contact the tournament organizers.
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-6">
+              {selectedRound === 'all' ? (
+                // Group by rounds when showing all
+                groupedPairings.map(({ round, pairings: roundPairings }) => (
+                  <div key={round.id} className="space-y-4">
+                    <div className="flex items-center gap-3 border-b pb-3">
+                      <h2 className="text-2xl font-semibold">{round.name}</h2>
+                      <Badge variant="secondary">Round {round.round_number}</Badge>
+                      {round.scheduled_date && (
+                        <span className="flex items-center text-muted-foreground">
+                          <Calendar className="h-4 w-4 mr-1" />
+                          {new Date(round.scheduled_date).toLocaleDateString()}
+                        </span>
+                      )}
+                    </div>
+                    
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      {roundPairings.map((pairing) => (
+                        <PairingCard 
+                          key={pairing.id}
+                          pairing={pairing}
+                          isMyPairing={isMyPairing(pairing)}
+                          userRegistrationId={userRegistrationId}
+                          getStatusColor={getStatusColor}
+                          getJudgeExperienceColor={getJudgeExperienceColor}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                // Show single round pairings
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {filteredPairings.map((pairing) => (
+                    <PairingCard 
+                      key={pairing.id}
+                      pairing={pairing}
+                      isMyPairing={isMyPairing(pairing)}
+                      userRegistrationId={userRegistrationId}
+                      getStatusColor={getStatusColor}
+                      getJudgeExperienceColor={getJudgeExperienceColor}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="spectate" className="space-y-6">
+          <SpectateRequestManager 
+            tournamentId={tournamentId!} 
+            pairings={allPairings}
+          />
+        </TabsContent>
+      </Tabs>
     </div>
+  );
+}
+
+interface PairingCardProps {
+  pairing: PairingWithDetails;
+  isMyPairing: boolean;
+  userRegistrationId: string | null;
+  getStatusColor: (status: string) => string;
+  getJudgeExperienceColor: (level: string) => string;
+}
+
+function PairingCard({ pairing, isMyPairing, userRegistrationId, getStatusColor, getJudgeExperienceColor }: PairingCardProps) {
+  return (
+    <Card className={`hover:shadow-lg transition-all ${isMyPairing ? 'ring-2 ring-primary shadow-md' : ''}`}>
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-lg flex items-center gap-2">
+            {pairing.room || 'TBD'}
+            {isMyPairing && (
+              <Badge variant="default" className="text-xs">MY MATCH</Badge>
+            )}
+          </CardTitle>
+          <Badge variant={getStatusColor(pairing.status) as any} className="text-xs">
+            {pairing.status}
+          </Badge>
+        </div>
+        {pairing.scheduled_time && (
+          <CardDescription className="flex items-center">
+            <Clock className="h-4 w-4 mr-1" />
+            {new Date(pairing.scheduled_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </CardDescription>
+        )}
+      </CardHeader>
+
+      <CardContent className="space-y-4">
+        {/* Debaters */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-muted-foreground uppercase">Affirmative</span>
+              {pairing.aff_registration.id === userRegistrationId && (
+                <Badge variant="outline" className="text-xs">You</Badge>
+              )}
+            </div>
+            <p className="font-medium text-sm">{pairing.aff_registration.participant_name}</p>
+            {pairing.aff_registration.partner_name && (
+              <p className="text-sm text-muted-foreground">{pairing.aff_registration.partner_name}</p>
+            )}
+          </div>
+          
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-muted-foreground uppercase">Negative</span>
+              {pairing.neg_registration.id === userRegistrationId && (
+                <Badge variant="outline" className="text-xs">You</Badge>
+              )}
+            </div>
+            <p className="font-medium text-sm">{pairing.neg_registration.participant_name}</p>
+            {pairing.neg_registration.partner_name && (
+              <p className="text-sm text-muted-foreground">{pairing.neg_registration.partner_name}</p>
+            )}
+          </div>
+        </div>
+
+        {/* Judge */}
+        <div className="pt-2 border-t">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-muted-foreground uppercase">Judge</span>
+            {pairing.judge_profile && (
+              <Badge variant={getJudgeExperienceColor(pairing.judge_profile.experience_level) as any} className="text-xs">
+                {pairing.judge_profile.experience_level}
+              </Badge>
+            )}
+          </div>
+          <p className="font-medium text-sm mt-1">
+            {pairing.judge_profile?.name || 'TBD'}
+          </p>
+        </div>
+
+        {/* View Details Button */}
+        {isMyPairing && (
+          <div className="pt-2 border-t">
+            <Button asChild size="sm" className="w-full">
+              <Link to={`/pairings/${pairing.id}`}>
+                <Eye className="h-4 w-4 mr-2" />
+                View Details & Chat
+              </Link>
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

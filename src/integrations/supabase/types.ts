@@ -1081,6 +1081,42 @@ export type Database = {
         }
         Relationships: []
       }
+      spectate_requests: {
+        Row: {
+          aff_team_approval: boolean | null
+          created_at: string
+          id: string
+          neg_team_approval: boolean | null
+          pairing_id: string
+          request_reason: string | null
+          requester_user_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          aff_team_approval?: boolean | null
+          created_at?: string
+          id?: string
+          neg_team_approval?: boolean | null
+          pairing_id: string
+          request_reason?: string | null
+          requester_user_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          aff_team_approval?: boolean | null
+          created_at?: string
+          id?: string
+          neg_team_approval?: boolean | null
+          pairing_id?: string
+          request_reason?: string | null
+          requester_user_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       top_performers: {
         Row: {
           created_at: string
@@ -1111,6 +1147,45 @@ export type Database = {
           school?: string
           tournaments?: number
           win_rate?: number
+        }
+        Relationships: []
+      }
+      tournament_content: {
+        Row: {
+          announcements: Json | null
+          contact_info: string | null
+          created_at: string
+          description: string | null
+          id: string
+          rules: string | null
+          schedule_notes: string | null
+          sponsors: Json | null
+          tournament_id: string
+          updated_at: string
+        }
+        Insert: {
+          announcements?: Json | null
+          contact_info?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          rules?: string | null
+          schedule_notes?: string | null
+          sponsors?: Json | null
+          tournament_id: string
+          updated_at?: string
+        }
+        Update: {
+          announcements?: Json | null
+          contact_info?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          rules?: string | null
+          schedule_notes?: string | null
+          sponsors?: Json | null
+          tournament_id?: string
+          updated_at?: string
         }
         Relationships: []
       }

@@ -203,12 +203,12 @@ export default function MyTournaments() {
 
                 <div className="flex flex-col gap-2">
                   <div className="flex flex-col sm:flex-row gap-2">
-                    <Button variant="outline" size="sm" asChild className="flex-1 text-xs sm:text-sm">
-                      <Link to={`/tournaments/${registration.tournament.id}`}>
-                        <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                        <span className="hidden sm:inline">View </span>Tournament
-                      </Link>
-                    </Button>
+                  <Button variant="outline" size="sm" asChild className="flex-1 text-xs sm:text-sm">
+                    <Link to={`/tournaments/${registration.tournament.id}`}>
+                      <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                      <span className="hidden sm:inline">View </span>Tournament
+                    </Link>
+                  </Button>
                     
                     <Button variant="outline" size="sm" asChild className="flex-1 text-xs sm:text-sm">
                       <Link to={`/tournaments/${registration.tournament.id}/rounds`}>
