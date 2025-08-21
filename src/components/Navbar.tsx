@@ -9,11 +9,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/hooks/useAuth";
 
 const navigation = [
   { name: "Results", href: "/results" },
-  { name: "Teams", href: "/teams" },
   { name: "Blog", href: "/blog" },
+];
+
+const adminNavigation = [
+  { name: "Teams", href: "/teams" },
 ];
 
 const dashboardNavigation = [
@@ -32,6 +36,7 @@ export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [dashboardOpen, setDashboardOpen] = useState(false);
+  const { isAdmin } = useAuth();
 
   return (
     <nav className="sticky top-0 z-50 border-b bg-black backdrop-blur-lg border-white/10 animate-fade-in rounded-b-2xl">
@@ -105,6 +110,18 @@ export function Navbar() {
 
               {/* Regular Navigation Items */}
               {navigation.map((item) => (
+                <a
+                  key={item.name}
+                  href={item.href}
+                  className="text-white hover:text-red-500 transition-all duration-300 font-medium text-sm relative group"
+                >
+                  {item.name}
+                  <span className="absolute inset-x-0 -bottom-1 h-0.5 bg-red-500 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></span>
+                </a>
+              ))}
+              
+              {/* Admin Navigation Items */}
+              {isAdmin && adminNavigation.map((item) => (
                 <a
                   key={item.name}
                   href={item.href}
@@ -214,6 +231,18 @@ export function Navbar() {
               </div>
               {/* Main navigation items */}
               {navigation.map((item) => (
+                <a
+                  key={item.name}
+                  href={item.href}
+                  className="block px-4 py-3 text-white hover:text-red-500 transition-all duration-300 text-lg font-medium rounded-lg hover:bg-white/5 min-h-[44px] flex items-center font-secondary hover:translate-x-2"
+                  onClick={() => setIsOpen(false)}
+                >
+                  {item.name}
+                </a>
+              ))}
+              
+              {/* Admin navigation items */}
+              {isAdmin && adminNavigation.map((item) => (
                 <a
                   key={item.name}
                   href={item.href}
