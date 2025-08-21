@@ -138,3 +138,42 @@ export interface Tournament {
   status: string;
   // ... other existing fields
 }
+
+// New interfaces for Phase 4
+export interface ScheduleProposal {
+  id: string;
+  pairing_id: string;
+  proposer_user_id: string;
+  proposed_time: string | null;
+  proposed_room: string | null;
+  note: string | null;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  pairing?: Pairing;
+}
+
+export interface PairingJudgeAssignment {
+  id: string;
+  pairing_id: string;
+  judge_id: string;
+  role: string;
+  assigned_by: string | null;
+  created_at: string;
+  updated_at: string;
+  judge_profiles?: JudgeProfile;
+}
+
+export interface JudgeRequest {
+  id: string;
+  pairing_id: string;
+  judge_id: string;
+  requester_id: string;
+  request_reason: string | null;
+  admin_response: string | null;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  pairing?: Pairing;
+  judge_profiles?: JudgeProfile;
+}
