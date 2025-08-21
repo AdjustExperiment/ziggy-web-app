@@ -3,11 +3,12 @@ import { useAuth } from '@/hooks/useAuth';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { LogOut, FileText, Trophy, Settings, Users, CreditCard } from 'lucide-react';
+import { LogOut, FileText, Trophy, Settings, Users, CreditCard, Mail } from 'lucide-react';
 import { BlogManager } from '@/components/admin/BlogManager';
 import { ResultsManager } from '@/components/admin/ResultsManager';
 import { UserManager } from '@/components/admin/UserManager';
 import { PaymentManager } from '@/components/admin/PaymentManager';
+import { EmailManager } from '@/components/admin/EmailManager';
 import TournamentManager from '@/components/admin/TournamentManager';
 import { useNavigate } from 'react-router-dom';
 
@@ -42,7 +43,7 @@ export default function AdminDashboard() {
 
       <div className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <Settings className="h-4 w-4" />
               Overview
@@ -66,6 +67,10 @@ export default function AdminDashboard() {
             <TabsTrigger value="payments" className="flex items-center gap-2">
               <CreditCard className="h-4 w-4" />
               Payments
+            </TabsTrigger>
+            <TabsTrigger value="emails" className="flex items-center gap-2">
+              <Mail className="h-4 w-4" />
+              Emails
             </TabsTrigger>
           </TabsList>
 
@@ -148,6 +153,21 @@ export default function AdminDashboard() {
 
               <Card>
                 <CardHeader>
+                  <CardTitle>Email Management</CardTitle>
+                  <CardDescription>Configure automated emails and templates</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button 
+                    onClick={() => setActiveTab('emails')} 
+                    className="w-full"
+                  >
+                    Manage Emails
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
                   <CardTitle>System Settings</CardTitle>
                   <CardDescription>Configure platform settings</CardDescription>
                 </CardHeader>
@@ -181,6 +201,10 @@ export default function AdminDashboard() {
 
           <TabsContent value="payments" className="mt-6">
             <PaymentManager />
+          </TabsContent>
+
+          <TabsContent value="emails" className="mt-6">
+            <EmailManager />
           </TabsContent>
         </Tabs>
       </div>

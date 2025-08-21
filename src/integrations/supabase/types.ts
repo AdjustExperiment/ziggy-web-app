@@ -92,6 +92,97 @@ export type Database = {
         }
         Relationships: []
       }
+      email_logs: {
+        Row: {
+          attempt: number
+          created_at: string
+          email_type: string
+          error: string | null
+          id: string
+          registration_id: string
+          sent_at: string
+          status: string
+        }
+        Insert: {
+          attempt?: number
+          created_at?: string
+          email_type: string
+          error?: string | null
+          id?: string
+          registration_id: string
+          sent_at?: string
+          status?: string
+        }
+        Update: {
+          attempt?: number
+          created_at?: string
+          email_type?: string
+          error?: string | null
+          id?: string
+          registration_id?: string
+          sent_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_logs_registration_id_fkey"
+            columns: ["registration_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_registrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_templates: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          from_email: string | null
+          html: string
+          id: string
+          reply_to: string | null
+          subject: string
+          template_key: string
+          text: string | null
+          tournament_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          from_email?: string | null
+          html: string
+          id?: string
+          reply_to?: string | null
+          subject: string
+          template_key: string
+          text?: string | null
+          tournament_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          from_email?: string | null
+          html?: string
+          id?: string
+          reply_to?: string | null
+          subject?: string
+          template_key?: string
+          text?: string | null
+          tournament_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_templates_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -191,6 +282,56 @@ export type Database = {
         }
         Relationships: []
       }
+      tournament_email_settings: {
+        Row: {
+          created_at: string
+          from_email: string | null
+          id: string
+          reminder_initial_delay_minutes: number
+          reminder_max_count: number
+          reminder_repeat_minutes: number
+          reply_to: string | null
+          send_pending_reminders: boolean
+          send_success_email: boolean
+          tournament_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          from_email?: string | null
+          id?: string
+          reminder_initial_delay_minutes?: number
+          reminder_max_count?: number
+          reminder_repeat_minutes?: number
+          reply_to?: string | null
+          send_pending_reminders?: boolean
+          send_success_email?: boolean
+          tournament_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          from_email?: string | null
+          id?: string
+          reminder_initial_delay_minutes?: number
+          reminder_max_count?: number
+          reminder_repeat_minutes?: number
+          reply_to?: string | null
+          send_pending_reminders?: boolean
+          send_success_email?: boolean
+          tournament_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tournament_email_settings_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: true
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tournament_registrations: {
         Row: {
           additional_info: Json | null
@@ -199,13 +340,16 @@ export type Database = {
           dietary_requirements: string | null
           emergency_contact: string | null
           id: string
+          last_reminder_sent_at: string | null
           participant_email: string
           participant_name: string
           partner_name: string | null
           payment_id: string | null
           payment_status: string
           registration_date: string
+          reminder_count: number
           school_organization: string | null
+          success_email_sent_at: string | null
           tournament_id: string
           updated_at: string
           user_id: string | null
@@ -217,13 +361,16 @@ export type Database = {
           dietary_requirements?: string | null
           emergency_contact?: string | null
           id?: string
+          last_reminder_sent_at?: string | null
           participant_email: string
           participant_name: string
           partner_name?: string | null
           payment_id?: string | null
           payment_status?: string
           registration_date?: string
+          reminder_count?: number
           school_organization?: string | null
+          success_email_sent_at?: string | null
           tournament_id: string
           updated_at?: string
           user_id?: string | null
@@ -235,13 +382,16 @@ export type Database = {
           dietary_requirements?: string | null
           emergency_contact?: string | null
           id?: string
+          last_reminder_sent_at?: string | null
           participant_email?: string
           participant_name?: string
           partner_name?: string | null
           payment_id?: string | null
           payment_status?: string
           registration_date?: string
+          reminder_count?: number
           school_organization?: string | null
+          success_email_sent_at?: string | null
           tournament_id?: string
           updated_at?: string
           user_id?: string | null
