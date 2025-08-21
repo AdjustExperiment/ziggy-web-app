@@ -6,7 +6,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { ThemeToggle } from './ThemeToggle';
 import { NotificationsDropdown } from './admin/NotificationsDropdown';
 import { 
-  Trophy, 
   Calendar, 
   BarChart3, 
   FileText, 
@@ -14,7 +13,11 @@ import {
   User,
   Settings,
   LogOut,
-  Gavel
+  Trophy,
+  Info,
+  ChevronDown,
+  Home,
+  HelpCircle
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -37,8 +40,8 @@ export function Navbar() {
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-2">
-              <Trophy className="h-8 w-8 text-primary" />
-              <span className="text-xl font-bold">DebateHub</span>
+              <img src="/src/assets/debate-logo.svg" alt="Ziggy" className="h-8 w-8" />
+              <span className="text-xl font-bold">Ziggy Online Debate</span>
             </Link>
             
             <div className="ml-10 flex items-baseline space-x-4">
@@ -50,13 +53,47 @@ export function Navbar() {
                 <BarChart3 className="h-4 w-4" />
                 <span>Results</span>
               </Link>
+              
+              {/* About Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="flex items-center space-x-1 hover:text-primary transition-colors">
+                    <Info className="h-4 w-4" />
+                    <span>About</span>
+                    <ChevronDown className="h-3 w-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  <DropdownMenuItem asChild>
+                    <Link to="/about" className="flex items-center">
+                      <Info className="mr-2 h-4 w-4" />
+                      <span>About Us</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/features" className="flex items-center">
+                      <Trophy className="mr-2 h-4 w-4" />
+                      <span>Features</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/contact" className="flex items-center">
+                      <Users className="mr-2 h-4 w-4" />
+                      <span>Contact</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/faq" className="flex items-center">
+                      <HelpCircle className="mr-2 h-4 w-4" />
+                      <span>FAQ</span>
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
               <Link to="/blog" className="flex items-center space-x-1 hover:text-primary transition-colors">
                 <FileText className="h-4 w-4" />
                 <span>Blog</span>
-              </Link>
-              <Link to="/teams" className="flex items-center space-x-1 hover:text-primary transition-colors">
-                <Users className="h-4 w-4" />
-                <span>Teams</span>
               </Link>
             </div>
           </div>
@@ -68,30 +105,26 @@ export function Navbar() {
               <>
                 {isAdmin && <NotificationsDropdown />}
                 
+                {/* Dashboard Dropdown */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="flex items-center space-x-2">
-                      <User className="h-4 w-4" />
-                      <span>{displayName}</span>
+                    <Button variant="ghost" className="flex items-center space-x-1 hover:text-primary transition-colors">
+                      <BarChart3 className="h-4 w-4" />
+                      <span>Dashboard</span>
+                      <ChevronDown className="h-3 w-3" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuContent align="end">
                     <DropdownMenuItem asChild>
                       <Link to="/dashboard" className="flex items-center">
-                        <User className="mr-2 h-4 w-4" />
+                        <Home className="mr-2 h-4 w-4" />
                         <span>My Dashboard</span>
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link to="/my-pairings" className="flex items-center">
-                        <Gavel className="mr-2 h-4 w-4" />
-                        <span>My Pairings</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to="/account" className="flex items-center">
-                        <Settings className="mr-2 h-4 w-4" />
-                        <span>Account Settings</span>
+                      <Link to="/my-tournaments" className="flex items-center">
+                        <Trophy className="mr-2 h-4 w-4" />
+                        <span>My Tournaments</span>
                       </Link>
                     </DropdownMenuItem>
                     {isAdmin && (
@@ -102,6 +135,24 @@ export function Navbar() {
                         </Link>
                       </DropdownMenuItem>
                     )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                {/* User Account Dropdown */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="flex items-center space-x-2">
+                      <User className="h-4 w-4" />
+                      <span>{displayName}</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuItem asChild>
+                      <Link to="/account" className="flex items-center">
+                        <Settings className="mr-2 h-4 w-4" />
+                        <span>Account Settings</span>
+                      </Link>
+                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={signOut} className="flex items-center">
                       <LogOut className="mr-2 h-4 w-4" />

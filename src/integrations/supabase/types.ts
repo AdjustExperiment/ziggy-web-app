@@ -380,13 +380,91 @@ export type Database = {
         }
         Relationships: []
       }
+      pairings: {
+        Row: {
+          aff_registration_id: string
+          created_at: string
+          id: string
+          judge_id: string | null
+          neg_registration_id: string
+          result: Json | null
+          room: string | null
+          round_id: string
+          scheduled_time: string | null
+          status: string
+          tournament_id: string
+          updated_at: string
+        }
+        Insert: {
+          aff_registration_id: string
+          created_at?: string
+          id?: string
+          judge_id?: string | null
+          neg_registration_id: string
+          result?: Json | null
+          room?: string | null
+          round_id: string
+          scheduled_time?: string | null
+          status?: string
+          tournament_id: string
+          updated_at?: string
+        }
+        Update: {
+          aff_registration_id?: string
+          created_at?: string
+          id?: string
+          judge_id?: string | null
+          neg_registration_id?: string
+          result?: Json | null
+          room?: string | null
+          round_id?: string
+          scheduled_time?: string | null
+          status?: string
+          tournament_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pairings_aff_registration_id_fkey"
+            columns: ["aff_registration_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_registrations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pairings_neg_registration_id_fkey"
+            columns: ["neg_registration_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_registrations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pairings_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "rounds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pairings_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
           first_name: string | null
           id: string
           last_name: string | null
+          phone: string | null
+          region: string | null
           role: string
+          state: string | null
+          time_zone: string | null
           updated_at: string
           user_id: string
         }
@@ -395,7 +473,11 @@ export type Database = {
           first_name?: string | null
           id?: string
           last_name?: string | null
+          phone?: string | null
+          region?: string | null
           role?: string
+          state?: string | null
+          time_zone?: string | null
           updated_at?: string
           user_id: string
         }
@@ -404,7 +486,11 @@ export type Database = {
           first_name?: string | null
           id?: string
           last_name?: string | null
+          phone?: string | null
+          region?: string | null
           role?: string
+          state?: string | null
+          time_zone?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -445,6 +531,47 @@ export type Database = {
           tournament?: string
         }
         Relationships: []
+      }
+      rounds: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          round_number: number
+          scheduled_date: string | null
+          status: string
+          tournament_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          round_number: number
+          scheduled_date?: string | null
+          status?: string
+          tournament_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          round_number?: number
+          scheduled_date?: string | null
+          status?: string
+          tournament_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rounds_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       site_settings: {
         Row: {

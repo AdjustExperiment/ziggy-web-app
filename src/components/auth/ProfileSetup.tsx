@@ -56,15 +56,17 @@ export const ProfileSetup = ({ isModal = false, onComplete }: ProfileSetupProps)
     try {
       const { error } = await supabase
         .from('profiles')
-        .update({
+        .upsert({
+          user_id: profile?.user_id,
           first_name: formData.first_name,
           last_name: formData.last_name,
           state: formData.state,
           region: formData.region || null,
           time_zone: formData.time_zone,
           phone: formData.phone,
-        })
-        .eq('user_id', profile?.user_id);
+        }, {
+          onConflict: 'user_id'
+        });
 
       if (error) throw error;
 

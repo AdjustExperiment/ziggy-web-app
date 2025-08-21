@@ -24,7 +24,9 @@ import { AuthProvider } from '@/hooks/useAuth';
 import { ThemeProvider } from "@/components/ThemeProvider"
 import { Toaster } from "@/components/ui/toaster"
 import { ProtectedRoute } from '@/components/ProtectedRoute';
-import { MyPairings } from '@/components/MyPairings';
+import MyTournaments from '@/pages/MyTournaments';
+import TournamentRounds from '@/pages/TournamentRounds';
+import TournamentMyMatch from '@/pages/TournamentMyMatch';
 import { Navbar } from '@/components/Navbar';
 
 function App() {
@@ -50,11 +52,19 @@ function App() {
                     <Dashboard />
                   </ProtectedRoute>
                 } />
-                <Route path="/my-pairings" element={
+                <Route path="/my-tournaments" element={
                   <ProtectedRoute>
-                    <div className="container mx-auto px-4 py-8">
-                      <MyPairings />
-                    </div>
+                    <MyTournaments />
+                  </ProtectedRoute>
+                } />
+                <Route path="/tournaments/:tournamentId/rounds" element={
+                  <ProtectedRoute>
+                    <TournamentRounds />
+                  </ProtectedRoute>
+                } />
+                <Route path="/tournaments/:tournamentId/my-match" element={
+                  <ProtectedRoute>
+                    <TournamentMyMatch />
                   </ProtectedRoute>
                 } />
                 <Route path="/account" element={
