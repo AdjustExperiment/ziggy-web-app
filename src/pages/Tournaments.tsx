@@ -277,24 +277,21 @@ const Tournaments = () => {
 
                     {/* Sponsors Preview */}
                     {tournament.sponsors.length > 0 && (
-                      <div className="flex items-center gap-2 overflow-x-auto">
-                        <span className="text-xs text-muted whitespace-nowrap">Sponsored by:</span>
-                        <div className="flex items-center gap-2">
-                          {tournament.sponsors.slice(0, 3).map((sponsor, index) => (
-                            <div key={index} className="flex items-center gap-1 shrink-0">
+                      <div className="space-y-2">
+                        <span className="text-xs text-muted-foreground">Sponsored by:</span>
+                        <div className="flex flex-wrap gap-2">
+                          {tournament.sponsors.map((sponsor, index) => (
+                            <div key={index} className="flex items-center gap-1 bg-muted/30 rounded-full px-2 py-1">
                               {sponsor.logo_url ? (
                                 <img 
                                   src={sponsor.logo_url} 
                                   alt={sponsor.name} 
-                                  className="h-4 w-4 object-contain"
+                                  className="h-3 w-3 object-contain"
                                 />
                               ) : null}
                               <span className="text-xs text-muted-foreground">{sponsor.name}</span>
                             </div>
                           ))}
-                          {tournament.sponsors.length > 3 && (
-                            <span className="text-xs text-muted">+{tournament.sponsors.length - 3} more</span>
-                          )}
                         </div>
                       </div>
                     )}
@@ -315,7 +312,7 @@ const Tournaments = () => {
                       
                       <Button 
                         variant="outline" 
-                        className="border-border text-foreground hover:bg-muted"
+                        className="border-border text-foreground hover:bg-muted hover:text-foreground"
                         onClick={() => handleRegister(tournament.id)}
                       >
                         Learn More
