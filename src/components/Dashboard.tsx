@@ -44,8 +44,8 @@ export function Dashboard() {
       <div className="mx-auto max-w-7xl px-4 py-6 sm:py-8 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Tournament Analytics</h1>
-          <p className="mt-2 text-sm sm:text-base text-muted-foreground">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white">Tournament Analytics</h1>
+          <p className="mt-2 text-sm sm:text-base text-white/70">
             Comprehensive insights into debate tournament performance and engagement
           </p>
         </div>
@@ -91,7 +91,7 @@ export function Dashboard() {
           {/* Growth Chart */}
           <Card className="bg-gradient-card shadow-card">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-white">
                 <TrendingUp className="h-5 w-5 text-primary" />
                 Growth Trajectory
               </CardTitle>
@@ -100,13 +100,14 @@ export function Dashboard() {
               <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
                 <LineChart data={growthData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
-                  <YAxis stroke="hsl(var(--muted-foreground))" />
+                  <XAxis dataKey="month" stroke="white" />
+                  <YAxis stroke="white" />
                   <Tooltip
                     contentStyle={{
                       backgroundColor: "hsl(var(--card))",
                       border: "1px solid hsl(var(--border))",
                       borderRadius: "8px",
+                      color: "white"
                     }}
                   />
                   <Line
@@ -131,7 +132,7 @@ export function Dashboard() {
           {/* Tournament Distribution */}
           <Card className="bg-gradient-card shadow-card">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-white">
                 <Trophy className="h-5 w-5 text-primary" />
                 Tournament Categories
               </CardTitle>
@@ -157,6 +158,7 @@ export function Dashboard() {
                       backgroundColor: "hsl(var(--card))",
                       border: "1px solid hsl(var(--border))",
                       borderRadius: "8px",
+                      color: "white"
                     }}
                   />
                 </PieChart>
@@ -168,7 +170,7 @@ export function Dashboard() {
                       className="h-3 w-3 rounded-full"
                       style={{ backgroundColor: item.color }}
                     />
-                    <span className="text-sm text-muted-foreground">{item.name}</span>
+                    <span className="text-sm text-white/70">{item.name}</span>
                   </div>
                 ))}
               </div>
@@ -179,7 +181,7 @@ export function Dashboard() {
         {/* Recent Results */}
         <Card className="bg-gradient-card shadow-card">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-white">
               <Star className="h-5 w-5 text-primary" />
               Recent Tournament Results
             </CardTitle>
@@ -192,11 +194,11 @@ export function Dashboard() {
                   className="flex items-center justify-between p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-smooth"
                 >
                   <div className="space-y-1">
-                    <h4 className="font-medium text-foreground">{result.tournament}</h4>
-                    <p className="text-sm text-muted-foreground">{result.winner}</p>
+                    <h4 className="font-medium text-white">{result.tournament}</h4>
+                    <p className="text-sm text-white/70">{result.winner}</p>
                   </div>
                   <div className="text-right space-y-1">
-                    <Badge variant="outline" className="text-xs">
+                    <Badge variant="outline" className="text-xs text-white border-white/20">
                       <Calendar className="h-3 w-3 mr-1" />
                       {result.date}
                     </Badge>
