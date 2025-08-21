@@ -3,14 +3,16 @@ import { useAuth } from '@/hooks/useAuth';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { LogOut, FileText, Trophy, Settings, Users, CreditCard, Mail } from 'lucide-react';
+import { LogOut, FileText, Trophy, Settings, Users, CreditCard, Mail, Palette } from 'lucide-react';
 import { BlogManager } from '@/components/admin/BlogManager';
 import { ResultsManager } from '@/components/admin/ResultsManager';
 import { UserManager } from '@/components/admin/UserManager';
 import { PaymentManager } from '@/components/admin/PaymentManager';
 import { EmailManager } from '@/components/admin/EmailManager';
+import { SiteEditor } from '@/components/admin/SiteEditor';
 import TournamentManager from '@/components/admin/TournamentManager';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { FluidBlobBackground } from '@/components/FluidBlobBackground';
 
 export default function AdminDashboard() {
   const { user, profile, signOut } = useAuth();
@@ -44,8 +46,10 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="border-b">
+    <div className="min-h-screen bg-background relative">
+      <FluidBlobBackground intensity="subtle" variant="accent" />
+      
+      <div className="border-b border-border/50 bg-background/80 backdrop-blur-sm relative z-10">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div>
@@ -62,12 +66,16 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 relative z-10">
         <Tabs value={activeTab} onValueChange={handleTabChange}>
-          <TabsList className="grid w-full grid-cols-7">
+          <TabsList className="grid w-full grid-cols-8 bg-background/60 backdrop-blur-sm border-border/50">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <Settings className="h-4 w-4" />
               Overview
+            </TabsTrigger>
+            <TabsTrigger value="site-editor" className="flex items-center gap-2">
+              <Palette className="h-4 w-4" />
+              Site Editor
             </TabsTrigger>
             <TabsTrigger value="tournaments" className="flex items-center gap-2">
               <Trophy className="h-4 w-4" />
@@ -75,7 +83,7 @@ export default function AdminDashboard() {
             </TabsTrigger>
             <TabsTrigger value="blog" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
-              Blog Posts
+              Blog
             </TabsTrigger>
             <TabsTrigger value="results" className="flex items-center gap-2">
               <Trophy className="h-4 w-4" />
@@ -97,7 +105,22 @@ export default function AdminDashboard() {
 
           <TabsContent value="overview" className="mt-6">
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              <Card>
+              <Card className="bg-card/60 backdrop-blur-sm border-border/50">
+                <CardHeader>
+                  <CardTitle>Site Editor</CardTitle>
+                  <CardDescription>Customize website design and content</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button 
+                    onClick={() => handleTabChange('site-editor')} 
+                    className="w-full"
+                  >
+                    Edit Website
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-card/60 backdrop-blur-sm border-border/50">
                 <CardHeader>
                   <CardTitle>Tournaments</CardTitle>
                   <CardDescription>Create and manage tournaments</CardDescription>
@@ -112,7 +135,7 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="bg-card/60 backdrop-blur-sm border-border/50">
                 <CardHeader>
                   <CardTitle>Blog Posts</CardTitle>
                   <CardDescription>Manage your blog content</CardDescription>
@@ -127,7 +150,7 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="bg-card/60 backdrop-blur-sm border-border/50">
                 <CardHeader>
                   <CardTitle>Tournament Results</CardTitle>
                   <CardDescription>Update competition results</CardDescription>
@@ -142,7 +165,7 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="bg-card/60 backdrop-blur-sm border-border/50">
                 <CardHeader>
                   <CardTitle>User Management</CardTitle>
                   <CardDescription>Create and manage user accounts</CardDescription>
@@ -157,7 +180,7 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="bg-card/60 backdrop-blur-sm border-border/50">
                 <CardHeader>
                   <CardTitle>Payment Management</CardTitle>
                   <CardDescription>Monitor payments and configure handlers</CardDescription>
@@ -172,7 +195,7 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="bg-card/60 backdrop-blur-sm border-border/50">
                 <CardHeader>
                   <CardTitle>Email Management</CardTitle>
                   <CardDescription>Configure automated emails and templates</CardDescription>
@@ -187,7 +210,7 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="bg-card/60 backdrop-blur-sm border-border/50">
                 <CardHeader>
                   <CardTitle>System Settings</CardTitle>
                   <CardDescription>Configure platform settings</CardDescription>
@@ -202,6 +225,10 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          <TabsContent value="site-editor" className="mt-6">
+            <SiteEditor />
           </TabsContent>
 
           <TabsContent value="tournaments" className="mt-6">

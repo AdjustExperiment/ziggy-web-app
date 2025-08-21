@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { BackgroundFX } from "@/components/BackgroundFX";
+import { FluidBlobBackground } from "@/components/FluidBlobBackground";
 import { AuthProvider } from "@/hooks/useAuth";
 import { useAutomatedEmails } from "@/hooks/useAutomatedEmails";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -35,7 +36,7 @@ const AppContent = () => {
   
   return (
     <div className="min-h-screen text-foreground">
-      <BackgroundFX />
+      <FluidBlobBackground intensity="subtle" variant="primary" />
       <div className="relative z-10">
         <Navbar />
       <Routes>

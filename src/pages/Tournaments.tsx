@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,9 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Users, Clock, Trophy, Search, Filter, ExternalLink } from "lucide-react";
+import { Calendar, Users, Clock, Trophy, Search, Filter, ExternalLink, Grid3X3, List } from "lucide-react";
 import { format } from "date-fns";
 import TournamentInfo from "@/components/TournamentInfo";
+import { FluidBlobBackground } from "@/components/FluidBlobBackground";
 
 interface Sponsor {
   name: string;
@@ -43,7 +43,15 @@ const Tournaments = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [formatFilter, setFormatFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => {
+    return (localStorage.getItem('tournament-view-mode') as 'grid' | 'list') || 'grid';
+  });
   const navigate = useNavigate();
+
+  // Persist view mode preference
+  useEffect(() => {
+    localStorage.setItem('tournament-view-mode', viewMode);
+  }, [viewMode]);
 
   useEffect(() => {
     fetchTournaments();
@@ -92,9 +100,11 @@ const Tournaments = () => {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen relative">
+      <FluidBlobBackground intensity="medium" variant="primary" />
+      
       {/* Header */}
-      <section className="bg-background py-16">
+      <section className="bg-background py-16 relative z-10">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h1 className="text-4xl font-bold text-foreground mb-4 font-primary">
@@ -109,62 +119,80 @@ const Tournaments = () => {
       </section>
 
       {/* Filters */}
-      <section className="py-8 bg-muted/20 border-b border-border">
+      <section className="py-8 bg-background/80 backdrop-blur-sm border-b border-border/50 relative z-10">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row gap-4 items-center">
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Search tournaments..."
-                className="pl-10 bg-background border-border text-foreground placeholder:text-muted-foreground"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+            <div className="flex flex-col md:flex-row gap-4 items-center flex-1">
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Search tournaments..."
+                  className="pl-10 bg-background/70 backdrop-blur-sm border-border text-foreground placeholder:text-muted-foreground"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              
+              <div className="flex gap-4">
+                <Select value={formatFilter} onValueChange={setFormatFilter}>
+                  <SelectTrigger className="w-40 bg-background/70 backdrop-blur-sm border-border text-foreground">
+                    <SelectValue placeholder="Format" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border-border">
+                    <SelectItem value="all" className="text-foreground hover:bg-muted">All Formats</SelectItem>
+                    <SelectItem value="Policy Debate" className="text-foreground hover:bg-muted">Policy Debate</SelectItem>
+                    <SelectItem value="Parliamentary" className="text-foreground hover:bg-muted">Parliamentary</SelectItem>
+                    <SelectItem value="Public Forum" className="text-foreground hover:bg-muted">Public Forum</SelectItem>
+                    <SelectItem value="British Parliamentary" className="text-foreground hover:bg-muted">British Parliamentary</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-40 bg-background/70 backdrop-blur-sm border-border text-foreground">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border-border">
+                    <SelectItem value="all" className="text-foreground hover:bg-muted">All Status</SelectItem>
+                    <SelectItem value="Registration Open" className="text-foreground hover:bg-muted">Registration Open</SelectItem>
+                    <SelectItem value="Registration Closed" className="text-foreground hover:bg-muted">Registration Closed</SelectItem>
+                    <SelectItem value="Ongoing" className="text-foreground hover:bg-muted">Ongoing</SelectItem>
+                    <SelectItem value="Planning Phase" className="text-foreground hover:bg-muted">Planning Phase</SelectItem>
+                    <SelectItem value="Completed" className="text-foreground hover:bg-muted">Completed</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Button variant="outline" className="border-border text-foreground hover:bg-primary hover:border-primary hover:text-primary-foreground">
+                  <Filter className="h-4 w-4 mr-2" />
+                  More Filters
+                </Button>
+              </div>
             </div>
-            
-            <div className="flex gap-4">
-              <Select value={formatFilter} onValueChange={setFormatFilter}>
-                <SelectTrigger className="w-40 bg-background border-border text-foreground">
-                  <SelectValue placeholder="Format" />
-                </SelectTrigger>
-                <SelectContent className="bg-background border-border">
-                  <SelectItem value="all" className="text-foreground hover:bg-muted">All Formats</SelectItem>
-                  <SelectItem value="Policy Debate" className="text-foreground hover:bg-muted">Policy Debate</SelectItem>
-                  <SelectItem value="Parliamentary" className="text-foreground hover:bg-muted">Parliamentary</SelectItem>
-                  <SelectItem value="Public Forum" className="text-foreground hover:bg-muted">Public Forum</SelectItem>
-                  <SelectItem value="British Parliamentary" className="text-foreground hover:bg-muted">British Parliamentary</SelectItem>
-                </SelectContent>
-              </Select>
 
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-40 bg-background border-border text-foreground">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent className="bg-background border-border">
-                  <SelectItem value="all" className="text-foreground hover:bg-muted">All Status</SelectItem>
-                  <SelectItem value="Registration Open" className="text-foreground hover:bg-muted">Registration Open</SelectItem>
-                  <SelectItem value="Registration Closed" className="text-foreground hover:bg-muted">Registration Closed</SelectItem>
-                  <SelectItem value="Ongoing" className="text-foreground hover:bg-muted">Ongoing</SelectItem>
-                  <SelectItem value="Planning Phase" className="text-foreground hover:bg-muted">Planning Phase</SelectItem>
-                  <SelectItem value="Completed" className="text-foreground hover:bg-muted">Completed</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Button variant="outline" className="border-border text-foreground hover:bg-primary hover:border-primary hover:text-primary-foreground">
-                <Filter className="h-4 w-4 mr-2" />
-                More Filters
+            {/* View Mode Toggle */}
+            <div className="flex gap-2 bg-muted/50 backdrop-blur-sm rounded-lg p-1 border border-border/50">
+              <Button
+                variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('grid')}
+                className="h-8 px-3"
+              >
+                <Grid3X3 className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === 'list' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('list')}
+                className="h-8 px-3"
+              >
+                <List className="h-4 w-4" />
               </Button>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Tournament Grid */}
-      <section className="py-12 bg-background relative">
-        {/* Section gradient blobs */}
-        <div className="absolute top-20 left-10 w-[400px] h-[400px] bg-gradient-radial from-primary/8 via-primary/4 to-transparent rounded-full blur-3xl animate-orb-1 motion-reduce:animate-none" />
-        <div className="absolute bottom-10 right-20 w-[350px] h-[350px] bg-gradient-radial from-primary-glow/6 via-primary-glow/3 to-transparent rounded-full blur-2xl animate-orb-2 motion-reduce:animate-none" />
-        
+      {/* Tournament Grid/List */}
+      <section className="py-12 bg-background relative z-10">        
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           {loading ? (
             <div className="text-center py-12">
@@ -178,10 +206,10 @@ const Tournaments = () => {
               <p className="text-muted-foreground">Try adjusting your search criteria</p>
             </div>
           ) : (
-            <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-1">
+            <div className={`grid gap-6 ${viewMode === 'grid' ? 'md:grid-cols-2 lg:grid-cols-3' : 'md:grid-cols-1 lg:grid-cols-1'}`}>
               {filteredTournaments.map((tournament) => (
-                <Card key={tournament.id} className="bg-card border-border hover:border-primary/30 transition-smooth group">
-                  <CardHeader>
+                <Card key={tournament.id} className={`bg-card/80 backdrop-blur-sm border-border/50 hover:border-primary/30 hover:bg-card/90 transition-smooth group ${viewMode === 'list' ? 'md:flex md:flex-row' : ''}`}>
+                  <CardHeader className={viewMode === 'list' ? 'md:flex-none md:w-1/3' : ''}>
                     <div className="flex justify-between items-start mb-2">
                       <Badge 
                         variant={tournament.registration_open ? 'default' : 'secondary'}
@@ -206,7 +234,7 @@ const Tournaments = () => {
                     </div>
                   </CardHeader>
                   
-                  <CardContent className="space-y-4">
+                  <CardContent className={`space-y-4 ${viewMode === 'list' ? 'md:flex-1' : ''}`}>
                     <div className="space-y-3">
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <Calendar className="h-4 w-4" />
@@ -238,7 +266,7 @@ const Tournaments = () => {
 
                     {/* Prize Items Preview */}
                     {tournament.prize_items.length > 0 && (
-                      <div className="bg-gradient-to-r from-primary/10 to-transparent p-3 rounded-lg">
+                      <div className="bg-primary/10 p-3 rounded-lg">
                         <div className="text-sm text-muted-foreground mb-1">Additional Prizes:</div>
                         <div className="text-xs text-muted-foreground">
                           {tournament.prize_items.slice(0, 2).join(', ')}
@@ -302,22 +330,25 @@ const Tournaments = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 bg-gradient-hero">
+      <section className="py-16 bg-background relative z-10">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold text-white mb-4 font-primary">
-            Host Your Own Tournament
-          </h2>
-          <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
-            Ready to organize a debate tournament? Our platform provides all the tools 
-            you need for successful tournament management.
-          </p>
-          
-          <Button 
-            size="lg" 
-            className="bg-white text-black hover:bg-white/90 shadow-glow text-lg px-8 py-6"
-          >
-            Create Tournament
-          </Button>
+          <div className="bg-card/60 backdrop-blur-sm border border-border/50 rounded-2xl p-12">
+            <h2 className="text-3xl font-bold text-foreground mb-4 font-primary">
+              Host Your Own Tournament
+            </h2>
+            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+              Ready to organize a debate tournament? Our platform provides all the tools 
+              you need for successful tournament management.
+            </p>
+            
+            <Button 
+              size="lg" 
+              variant="hero"
+              className="text-lg px-8 py-6"
+            >
+              Create Tournament
+            </Button>
+          </div>
         </div>
       </section>
     </div>
