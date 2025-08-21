@@ -61,6 +61,7 @@ export function Hero() {
                 variant="outline" 
                 size="lg"
                 className="border-border text-foreground hover:bg-accent text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-6 min-h-[44px] sm:min-h-[56px] transition-all duration-300 hover:scale-105 backdrop-blur-sm"
+                onClick={() => window.location.href = '/login'}
               >
                 Members Page
               </Button>
