@@ -19,11 +19,14 @@ import {
 } from "@/components/ui/navigation-menu";
 
 const navigation = [
-  { name: "Dashboard", href: "/dashboard" },
-  { name: "Tournaments", href: "/tournaments" },
   { name: "Results", href: "/results" },
-  { name: "Analytics", href: "/analytics" },
   { name: "Teams", href: "/teams" },
+  { name: "Blog", href: "/blog" },
+];
+
+const dashboardNavigation = [
+  { name: "Dashboard", href: "/dashboard" },
+  { name: "Analytics", href: "/analytics" },
 ];
 
 const aboutNavigation = [
@@ -69,6 +72,22 @@ export function Navbar() {
                     ))}
                   </NavigationMenuContent>
                 </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger className="bg-transparent text-white hover:text-red-500 transition-smooth font-medium text-sm xl:text-base data-[state=open]:text-red-500">
+                    Dashboard <ChevronDown className="ml-1 h-3 w-3" />
+                  </NavigationMenuTrigger>
+                  <NavigationMenuContent className="bg-black border-white/20 p-2 min-w-[200px] z-50">
+                    {dashboardNavigation.map((item) => (
+                      <NavigationMenuLink
+                        key={item.name}
+                        href={item.href}
+                        className="block px-4 py-2 text-white hover:text-red-500 hover:bg-white/10 rounded transition-smooth text-sm"
+                      >
+                        {item.name}
+                      </NavigationMenuLink>
+                    ))}
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
               </NavigationMenuList>
             </NavigationMenu>
             {navigation.map((item) => (
@@ -87,19 +106,23 @@ export function Navbar() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/70" />
               <Input
-                placeholder="Search tournaments..."
-                className="w-48 xl:w-64 pl-10 bg-black/50 border-white/20 text-white placeholder:text-white/70 text-sm"
+                placeholder="Search..."
+                className="w-48 xl:w-64 pl-10 bg-black/50 border-white/20 text-white placeholder:text-white/70 text-sm font-secondary"
               />
             </div>
             
-            <Button variant="outline" size="sm" className="border-red-500/50 text-red-500 hover:bg-red-500 hover:text-white hover:border-red-500 text-sm">
+            <Button size="sm" className="bg-red-500 text-white hover:bg-red-600 border-red-500 text-sm font-secondary">
+              Sign Up
+            </Button>
+            
+            <Button variant="outline" size="sm" className="border-red-500/50 text-red-500 hover:bg-red-500 hover:text-white hover:border-red-500 text-sm font-secondary">
               <ExternalLink className="h-4 w-4 mr-2" />
               <span className="hidden xl:inline">Platform</span>
             </Button>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="text-white hover:text-red-500 hover:bg-white/10 text-sm">
+                <Button variant="ghost" size="sm" className="text-white hover:text-red-500 hover:bg-white/10 text-sm font-secondary">
                   <User className="h-4 w-4 mr-2" />
                   Login
                 </Button>
@@ -144,12 +167,26 @@ export function Navbar() {
             <div className="px-4 py-4 space-y-4">
               {/* About dropdown items */}
               <div className="space-y-2">
-                <div className="px-4 py-2 text-red-500 font-medium text-sm">About</div>
+                <div className="px-4 py-2 text-red-500 font-medium text-sm font-secondary">About</div>
                 {aboutNavigation.map((item) => (
                   <a
                     key={item.name}
                     href={item.href}
-                    className="block px-8 py-2 text-white hover:text-red-500 transition-smooth text-base rounded-lg hover:bg-white/5 min-h-[44px] flex items-center"
+                    className="block px-8 py-2 text-white hover:text-red-500 transition-smooth text-base rounded-lg hover:bg-white/5 min-h-[44px] flex items-center font-secondary"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    {item.name}
+                  </a>
+                ))}
+              </div>
+              {/* Dashboard dropdown items */}
+              <div className="space-y-2">
+                <div className="px-4 py-2 text-red-500 font-medium text-sm font-secondary">Dashboard</div>
+                {dashboardNavigation.map((item) => (
+                  <a
+                    key={item.name}
+                    href={item.href}
+                    className="block px-8 py-2 text-white hover:text-red-500 transition-smooth text-base rounded-lg hover:bg-white/5 min-h-[44px] flex items-center font-secondary"
                     onClick={() => setIsOpen(false)}
                   >
                     {item.name}
@@ -161,7 +198,7 @@ export function Navbar() {
                 <a
                   key={item.name}
                   href={item.href}
-                  className="block px-4 py-3 text-white hover:text-red-500 transition-smooth text-lg font-medium rounded-lg hover:bg-white/5 min-h-[44px] flex items-center"
+                  className="block px-4 py-3 text-white hover:text-red-500 transition-smooth text-lg font-medium rounded-lg hover:bg-white/5 min-h-[44px] flex items-center font-secondary"
                   onClick={() => setIsOpen(false)}
                 >
                   {item.name}
@@ -171,15 +208,20 @@ export function Navbar() {
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-white/70" />
                   <Input 
-                    placeholder="Search tournaments..." 
-                    className="w-full pl-10 py-3 bg-black/50 border-white/20 text-white placeholder:text-white/70 text-base min-h-[44px]" 
+                    placeholder="Search..." 
+                    className="w-full pl-10 py-3 bg-black/50 border-white/20 text-white placeholder:text-white/70 text-base min-h-[44px] font-secondary" 
                   />
                 </div>
               </div>
               <div className="px-4 space-y-3">
                 <Button 
+                  className="w-full bg-red-500 text-white hover:bg-red-600 py-3 text-base min-h-[44px] font-secondary"
+                >
+                  Sign Up
+                </Button>
+                <Button 
                   variant="outline" 
-                  className="w-full border-red-500/50 text-red-500 hover:bg-red-500 hover:text-white hover:border-red-500 py-3 text-base min-h-[44px]"
+                  className="w-full border-red-500/50 text-red-500 hover:bg-red-500 hover:text-white hover:border-red-500 py-3 text-base min-h-[44px] font-secondary"
                 >
                   <ExternalLink className="h-5 w-5 mr-2" />
                   Platform
@@ -187,7 +229,7 @@ export function Navbar() {
                 <div className="space-y-2">
                   <Button 
                     variant="ghost" 
-                    className="w-full text-white hover:text-red-500 hover:bg-white/10 py-3 text-base min-h-[44px] justify-start"
+                    className="w-full text-white hover:text-red-500 hover:bg-white/10 py-3 text-base min-h-[44px] justify-start font-secondary"
                     onClick={() => { window.location.href = '/login?type=team'; setIsOpen(false); }}
                   >
                     <User className="h-5 w-5 mr-2" />
@@ -195,7 +237,7 @@ export function Navbar() {
                   </Button>
                   <Button 
                     variant="ghost" 
-                    className="w-full text-white hover:text-red-500 hover:bg-white/10 py-3 text-base min-h-[44px] justify-start"
+                    className="w-full text-white hover:text-red-500 hover:bg-white/10 py-3 text-base min-h-[44px] justify-start font-secondary"
                     onClick={() => { window.location.href = '/login?type=individual'; setIsOpen(false); }}
                   >
                     <User className="h-5 w-5 mr-2" />
@@ -203,7 +245,7 @@ export function Navbar() {
                   </Button>
                   <Button 
                     variant="ghost" 
-                    className="w-full text-white hover:text-red-500 hover:bg-white/10 py-3 text-base min-h-[44px] justify-start"
+                    className="w-full text-white hover:text-red-500 hover:bg-white/10 py-3 text-base min-h-[44px] justify-start font-secondary"
                     onClick={() => { window.location.href = '/login?type=admin'; setIsOpen(false); }}
                   >
                     <User className="h-5 w-5 mr-2" />

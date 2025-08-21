@@ -20,7 +20,7 @@ export default {
 		extend: {
 			fontFamily: {
 				'primary': ['Unbounded', 'sans-serif'],
-				'secondary': ['Helvetica Neue', 'Arial', 'sans-serif'],
+				'secondary': ['Neue Machina', 'Helvetica Neue', 'Arial', 'sans-serif'],
 			},
 			colors: {
 				border: 'hsl(var(--border))',

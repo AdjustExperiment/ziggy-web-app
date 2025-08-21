@@ -17,6 +17,7 @@ import About from "./pages/About";
 import Features from "./pages/Features";
 import Contact from "./pages/Contact";
 import Testimonials from "./pages/Testimonials";
+import Blog from "./pages/Blog";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +38,7 @@ const App = () => (
             <Route path="/features" element={<Features />} />
             <Route path="/testimonials" element={<Testimonials />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/blog" element={<Blog />} />
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/teams" element={<Teams />} />
             <Route path="/login" element={<Login />} />
