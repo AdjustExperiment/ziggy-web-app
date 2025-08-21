@@ -24,7 +24,7 @@ import Login from "./pages/Login";
 import SignUpPage from "./pages/SignUpPage";
 import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/AdminDashboard";
-import { UserAccount } from "./pages/UserAccount";
+import UserAccount from "./pages/UserAccount";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();

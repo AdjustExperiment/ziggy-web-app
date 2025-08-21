@@ -91,19 +91,9 @@ export const TournamentCompetitorsManager = () => {
     if (!selectedTournament) return;
 
     try {
-      // Use raw SQL query to work around missing types
-      const { data, error } = await supabase.rpc('get_tournament_competitors', {
-        tournament_id: selectedTournament
-      });
-
-      if (error) {
-        // Fallback if function doesn't exist - direct query
-        console.log('Function not found, competitors will be empty for now');
-        setCompetitors([]);
-        return;
-      }
-      
-      setCompetitors(data || []);
+      // Use direct table query since tournament_competitors table doesn't exist yet
+      console.log('Tournament competitors functionality pending database migration');
+      setCompetitors([]);
     } catch (error) {
       console.error('Error fetching competitors:', error);
       setCompetitors([]);
@@ -189,20 +179,13 @@ export const TournamentCompetitorsManager = () => {
         ? [editingCompetitor.id, competitorData.competitor_type, JSON.stringify(competitorData.participant_names), competitorData.team_name, competitorData.status, competitorData.seed, competitorData.registration_id]
         : [competitorData.tournament_id, competitorData.competitor_type, JSON.stringify(competitorData.participant_names), competitorData.team_name, competitorData.status, competitorData.seed, competitorData.registration_id];
 
-      const { error } = await supabase.rpc('execute_sql', { query, params });
-
-      if (error) {
-        console.log('Database operation will be available once types are updated');
-        toast({ 
-          title: 'Info', 
-          description: 'Competitor management will be available once database types are updated.' 
-        });
-      } else {
-        toast({ 
-          title: 'Success', 
-          description: editingCompetitor ? 'Competitor updated successfully.' : 'Competitor added successfully.' 
-        });
-      }
+      // Placeholder for tournament competitors creation
+      console.log('Create competitor functionality pending database migration:', formData);
+      
+      toast({ 
+        title: 'Info', 
+        description: 'Competitor management will be available once database types are updated.' 
+      });
 
       setDialogOpen(false);
       resetForm();
@@ -220,17 +203,13 @@ export const TournamentCompetitorsManager = () => {
     if (!confirm('Are you sure you want to delete this competitor?')) return;
 
     try {
-      const { error } = await supabase.rpc('execute_sql', {
-        query: 'DELETE FROM tournament_competitors WHERE id = $1',
-        params: [competitorId]
+      // Placeholder for tournament competitors deletion
+      console.log('Delete competitor functionality pending database migration:', competitorId);
+      
+      toast({
+        title: 'Info',
+        description: 'Delete functionality will be available once database setup is complete.',
       });
-
-      if (error) {
-        console.log('Delete operation will be available once types are updated');
-      } else {
-        toast({ title: 'Success', description: 'Competitor deleted successfully.' });
-        fetchCompetitors();
-      }
     } catch (error) {
       console.error('Error deleting competitor:', error);
       toast({
