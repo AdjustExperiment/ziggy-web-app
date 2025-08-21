@@ -29,6 +29,7 @@ import TournamentRounds from '@/pages/TournamentRounds';
 import TournamentMyMatch from '@/pages/TournamentMyMatch';
 import TournamentPostings from '@/pages/TournamentPostings';
 import PairingDetail from '@/pages/PairingDetail';
+import JudgeDashboard from '@/pages/JudgeDashboard';
 import { Navbar } from '@/components/Navbar';
 
 function App() {
@@ -78,6 +79,11 @@ function App() {
                 <Route path="/pairings/:pairingId" element={
                   <ProtectedRoute>
                     <PairingDetail />
+                  </ProtectedRoute>
+                } />
+                <Route path="/judge-dashboard" element={
+                  <ProtectedRoute>
+                    <JudgeDashboard />
                   </ProtectedRoute>
                 } />
                 <Route path="/account" element={

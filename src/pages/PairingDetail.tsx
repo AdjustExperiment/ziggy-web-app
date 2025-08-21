@@ -8,10 +8,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, MessageSquare, Upload, Download, Users, Clock, MapPin, Calendar, Mail, Phone, Gavel, FileText, Send, X, Eye } from 'lucide-react';
+import { ArrowLeft, MessageSquare, Upload, Download, Users, Clock, MapPin, Calendar, Mail, Phone, Gavel, FileText, Send, X, Eye, UserCheck, Trophy } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import JudgeRequestModal from '@/components/JudgeRequestModal';
 
 interface PairingDetailData {
   id: string;
@@ -91,6 +92,7 @@ export default function PairingDetail() {
   const [sendingMessage, setSendingMessage] = useState(false);
   const [uploadingFile, setUploadingFile] = useState(false);
   const [userSide, setUserSide] = useState<'aff' | 'neg' | null>(null);
+  const [showJudgeRequest, setShowJudgeRequest] = useState(false);
 
   useEffect(() => {
     if (pairingId && user) {

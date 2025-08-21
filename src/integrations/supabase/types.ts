@@ -475,6 +475,78 @@ export type Database = {
           },
         ]
       }
+      judge_availability: {
+        Row: {
+          available_dates: Json
+          created_at: string
+          id: string
+          judge_profile_id: string
+          max_rounds_per_day: number | null
+          special_requirements: string | null
+          time_preferences: Json
+          tournament_id: string
+          updated_at: string
+        }
+        Insert: {
+          available_dates?: Json
+          created_at?: string
+          id?: string
+          judge_profile_id: string
+          max_rounds_per_day?: number | null
+          special_requirements?: string | null
+          time_preferences?: Json
+          tournament_id: string
+          updated_at?: string
+        }
+        Update: {
+          available_dates?: Json
+          created_at?: string
+          id?: string
+          judge_profile_id?: string
+          max_rounds_per_day?: number | null
+          special_requirements?: string | null
+          time_preferences?: Json
+          tournament_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      judge_notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          judge_profile_id: string
+          message: string
+          pairing_id: string | null
+          title: string
+          tournament_id: string | null
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          judge_profile_id: string
+          message: string
+          pairing_id?: string | null
+          title: string
+          tournament_id?: string | null
+          type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          judge_profile_id?: string
+          message?: string
+          pairing_id?: string | null
+          title?: string
+          tournament_id?: string | null
+          type?: string
+        }
+        Relationships: []
+      }
       judge_profiles: {
         Row: {
           availability: Json
@@ -517,6 +589,42 @@ export type Database = {
           specializations?: string[]
           updated_at?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      judge_requests: {
+        Row: {
+          admin_response: string | null
+          created_at: string
+          id: string
+          judge_id: string
+          pairing_id: string
+          request_reason: string | null
+          requester_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_response?: string | null
+          created_at?: string
+          id?: string
+          judge_id: string
+          pairing_id: string
+          request_reason?: string | null
+          requester_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_response?: string | null
+          created_at?: string
+          id?: string
+          judge_id?: string
+          pairing_id?: string
+          request_reason?: string | null
+          requester_id?: string
+          status?: string
+          updated_at?: string
         }
         Relationships: []
       }
