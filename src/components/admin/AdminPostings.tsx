@@ -18,6 +18,8 @@ import {
   Lock
 } from 'lucide-react';
 import { Pairing, JudgeProfile } from '@/types/database';
+import { useRealtimeNotifications } from '@/hooks/useRealtimeNotifications';
+import { resolveJudgeRequest, finalizeScheduleProposal } from '@/utils/adminActions';
 
 interface AdminPostingsProps {
   tournamentId: string;
@@ -25,8 +27,7 @@ interface AdminPostingsProps {
   onUpdate: () => void;
 }
 
-// Simplified interfaces for data that may not exist in database yet
-interface SimpleJudgeRequest {
+interface JudgeRequest {
   id: string;
   pairing_id: string;
   judge_id: string;
@@ -38,7 +39,7 @@ interface SimpleJudgeRequest {
   updated_at: string;
 }
 
-interface SimpleScheduleProposal {
+interface ScheduleProposal {
   id: string;
   pairing_id: string;
   proposer_user_id: string;
@@ -52,10 +53,13 @@ interface SimpleScheduleProposal {
 
 export function AdminPostings({ tournamentId, judges, onUpdate }: AdminPostingsProps) {
   const [pairings, setPairings] = useState<Pairing[]>([]);
-  const [judgeRequests, setJudgeRequests] = useState<SimpleJudgeRequest[]>([]);
-  const [scheduleProposals, setScheduleProposals] = useState<SimpleScheduleProposal[]>([]);
+  const [judgeRequests, setJudgeRequests] = useState<JudgeRequest[]>([]);
+  const [scheduleProposals, setScheduleProposals] = useState<ScheduleProposal[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>('all');
+
+  // Use realtime notifications
+  const { counts, refreshCounts } = useRealtimeNotifications({ tournamentId });
 
   useEffect(() => {
     if (tournamentId) {
@@ -83,10 +87,42 @@ export function AdminPostings({ tournamentId, judges, onUpdate }: AdminPostingsP
 
       if (pairingsError) throw pairingsError;
 
-      // For now, since the new tables don't exist in types, we'll skip these queries
-      // and just set empty arrays. This prevents TypeScript errors.
-      setJudgeRequests([]);
-      setScheduleProposals([]);
+      // Fetch judge requests for this tournament
+      const tournamentPairingIds = (pairingsData || []).map(p => p.id);
+      
+      if (tournamentPairingIds.length > 0) {
+        const { data: requestsData, error: requestsError } = await supabase
+          .from('judge_requests')
+          .select('*')
+          .in('pairing_id', tournamentPairingIds)
+          .eq('status', 'pending')
+          .order('created_at', { ascending: false });
+
+        if (requestsError) {
+          console.warn('Error fetching judge requests:', requestsError);
+          setJudgeRequests([]);
+        } else {
+          setJudgeRequests(requestsData || []);
+        }
+
+        // Fetch schedule proposals for this tournament
+        const { data: proposalsData, error: proposalsError } = await supabase
+          .from('schedule_proposals')
+          .select('*')
+          .in('pairing_id', tournamentPairingIds)
+          .eq('status', 'pending')
+          .order('created_at', { ascending: false });
+
+        if (proposalsError) {
+          console.warn('Error fetching schedule proposals:', proposalsError);
+          setScheduleProposals([]);
+        } else {
+          setScheduleProposals(proposalsData || []);
+        }
+      } else {
+        setJudgeRequests([]);
+        setScheduleProposals([]);
+      }
 
       setPairings(pairingsData || []);
     } catch (error: any) {
@@ -157,14 +193,17 @@ export function AdminPostings({ tournamentId, judges, onUpdate }: AdminPostingsP
     }
   };
 
-  const resolveJudgeRequest = async (requestId: string, action: 'approve' | 'reject') => {
+  const handleResolveJudgeRequest = async (requestId: string, action: 'approve' | 'reject') => {
     try {
-      // For now, just show a message since the RPC function doesn't exist in types yet
+      await resolveJudgeRequest(requestId, action);
       toast({
-        title: "Info",
-        description: "Judge request resolution will be available once the database is updated",
-        variant: "default",
+        title: "Success",
+        description: `Judge request ${action}d successfully`,
       });
+      
+      fetchPostingsData();
+      refreshCounts();
+      onUpdate();
     } catch (error: any) {
       console.error('Error resolving judge request:', error);
       toast({
@@ -175,14 +214,17 @@ export function AdminPostings({ tournamentId, judges, onUpdate }: AdminPostingsP
     }
   };
 
-  const finalizeScheduleProposal = async (proposalId: string, action: 'approve' | 'reject') => {
+  const handleFinalizeScheduleProposal = async (proposalId: string, action: 'approve' | 'reject') => {
     try {
-      // For now, just show a message since the RPC function doesn't exist in types yet
+      await finalizeScheduleProposal(proposalId, action);
       toast({
-        title: "Info",
-        description: "Schedule proposal finalization will be available once the database is updated",
-        variant: "default",
+        title: "Success",
+        description: `Schedule proposal ${action}d successfully`,
       });
+      
+      fetchPostingsData();
+      refreshCounts();
+      onUpdate();
     } catch (error: any) {
       console.error('Error finalizing schedule proposal:', error);
       toast({
@@ -267,10 +309,28 @@ export function AdminPostings({ tournamentId, judges, onUpdate }: AdminPostingsP
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Issues ({totalIssues})</SelectItem>
-              <SelectItem value="missing_judges">Missing Judges ({pairings.filter(p => !p.judge_id).length})</SelectItem>
-              <SelectItem value="unscheduled">Unscheduled ({pairings.filter(p => !p.scheduled_time || !p.room).length})</SelectItem>
-              <SelectItem value="judge_requests">Judge Requests ({judgeRequests.length})</SelectItem>
-              <SelectItem value="schedule_proposals">Schedule Proposals ({scheduleProposals.length})</SelectItem>
+              <SelectItem value="missing_judges">
+                Missing Judges ({pairings.filter(p => !p.judge_id).length})
+              </SelectItem>
+              <SelectItem value="unscheduled">
+                Unscheduled ({pairings.filter(p => !p.scheduled_time || !p.room).length})
+              </SelectItem>
+              <SelectItem value="judge_requests">
+                Judge Requests ({counts.pendingRequests})
+                {counts.pendingRequests > 0 && (
+                  <Badge variant="destructive" className="ml-2 text-xs">
+                    {counts.pendingRequests}
+                  </Badge>
+                )}
+              </SelectItem>
+              <SelectItem value="schedule_proposals">
+                Schedule Proposals ({counts.pendingProposals})
+                {counts.pendingProposals > 0 && (
+                  <Badge variant="destructive" className="ml-2 text-xs">
+                    {counts.pendingProposals}
+                  </Badge>
+                )}
+              </SelectItem>
             </SelectContent>
           </Select>
           <Button onClick={lockAllBallots} variant="outline">
@@ -313,7 +373,12 @@ export function AdminPostings({ tournamentId, judges, onUpdate }: AdminPostingsP
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Judge Requests</p>
-                <p className="text-2xl font-bold text-purple-600">{judgeRequests.length}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-2xl font-bold text-purple-600">{counts.pendingRequests}</p>
+                  {counts.pendingRequests > 0 && (
+                    <Badge variant="destructive" className="text-xs">New</Badge>
+                  )}
+                </div>
               </div>
               <Users className="h-4 w-4 text-muted-foreground" />
             </div>
@@ -324,7 +389,12 @@ export function AdminPostings({ tournamentId, judges, onUpdate }: AdminPostingsP
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Schedule Proposals</p>
-                <p className="text-2xl font-bold text-green-600">{scheduleProposals.length}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-2xl font-bold text-green-600">{counts.pendingProposals}</p>
+                  {counts.pendingProposals > 0 && (
+                    <Badge variant="destructive" className="text-xs">New</Badge>
+                  )}
+                </div>
               </div>
               <MapPin className="h-4 w-4 text-muted-foreground" />
             </div>
@@ -415,6 +485,11 @@ export function AdminPostings({ tournamentId, judges, onUpdate }: AdminPostingsP
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5 text-purple-500" />
               Pending Judge Requests
+              {counts.pendingRequests > 0 && (
+                <Badge variant="destructive" className="text-xs">
+                  {counts.pendingRequests} new
+                </Badge>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -443,7 +518,7 @@ export function AdminPostings({ tournamentId, judges, onUpdate }: AdminPostingsP
                     <div className="flex gap-2">
                       <Button
                         size="sm"
-                        onClick={() => resolveJudgeRequest(request.id, 'approve')}
+                        onClick={() => handleResolveJudgeRequest(request.id, 'approve')}
                       >
                         <CheckCircle className="h-4 w-4 mr-2" />
                         Approve
@@ -451,7 +526,7 @@ export function AdminPostings({ tournamentId, judges, onUpdate }: AdminPostingsP
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => resolveJudgeRequest(request.id, 'reject')}
+                        onClick={() => handleResolveJudgeRequest(request.id, 'reject')}
                       >
                         <XCircle className="h-4 w-4 mr-2" />
                         Reject
@@ -472,6 +547,11 @@ export function AdminPostings({ tournamentId, judges, onUpdate }: AdminPostingsP
             <CardTitle className="flex items-center gap-2">
               <MapPin className="h-5 w-5 text-green-500" />
               Pending Schedule Proposals
+              {counts.pendingProposals > 0 && (
+                <Badge variant="destructive" className="text-xs">
+                  {counts.pendingProposals} new
+                </Badge>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -505,7 +585,7 @@ export function AdminPostings({ tournamentId, judges, onUpdate }: AdminPostingsP
                     <div className="flex gap-2">
                       <Button
                         size="sm"
-                        onClick={() => finalizeScheduleProposal(proposal.id, 'approve')}
+                        onClick={() => handleFinalizeScheduleProposal(proposal.id, 'approve')}
                       >
                         <CheckCircle className="h-4 w-4 mr-2" />
                         Approve
@@ -513,7 +593,7 @@ export function AdminPostings({ tournamentId, judges, onUpdate }: AdminPostingsP
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => finalizeScheduleProposal(proposal.id, 'reject')}
+                        onClick={() => handleFinalizeScheduleProposal(proposal.id, 'reject')}
                       >
                         <XCircle className="h-4 w-4 mr-2" />
                         Reject

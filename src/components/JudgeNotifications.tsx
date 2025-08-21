@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -6,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Bell, Clock, Users, Gavel, CheckCircle, Eye } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useRealtimeNotifications } from '@/hooks/useRealtimeNotifications';
 
 interface JudgeNotification {
   id: string;
@@ -27,21 +29,11 @@ export default function JudgeNotifications({ judgeProfileId }: JudgeNotification
   const [notifications, setNotifications] = useState<JudgeNotification[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Use realtime notifications hook
+  const { counts } = useRealtimeNotifications({ judgeProfileId });
+
   useEffect(() => {
     fetchNotifications();
-    
-    // Set up realtime subscription for new notifications
-    const channel = supabase
-      .channel('judge_notifications')
-      .on('postgres_changes', 
-        { event: 'INSERT', schema: 'public', table: 'judge_notifications', filter: `judge_profile_id=eq.${judgeProfileId}` },
-        () => { fetchNotifications(); }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, [judgeProfileId]);
 
   const fetchNotifications = async () => {
@@ -115,9 +107,11 @@ export default function JudgeNotifications({ judgeProfileId }: JudgeNotification
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
+      case 'judge_assigned':
       case 'new_assignment':
         return <Gavel className="h-5 w-5 text-primary" />;
       case 'schedule_change':
+      case 'schedule_approved':
         return <Clock className="h-5 w-5 text-orange-500" />;
       case 'pairing_chat':
         return <Users className="h-5 w-5 text-blue-500" />;
@@ -130,15 +124,22 @@ export default function JudgeNotifications({ judgeProfileId }: JudgeNotification
 
   const getNotificationTypeColor = (type: string) => {
     switch (type) {
-      case 'new_assignment': return 'default';
-      case 'schedule_change': return 'secondary';
-      case 'pairing_chat': return 'outline';
-      case 'ballot_reminder': return 'destructive';
-      default: return 'secondary';
+      case 'judge_assigned':
+      case 'new_assignment': 
+        return 'default';
+      case 'schedule_change':
+      case 'schedule_approved': 
+        return 'secondary';
+      case 'pairing_chat': 
+        return 'outline';
+      case 'ballot_reminder': 
+        return 'destructive';
+      default: 
+        return 'secondary';
     }
   };
 
-  const unreadCount = notifications.filter(n => !n.is_read).length;
+  const unreadCount = counts.unreadJudgeNotifications;
 
   if (loading) {
     return (

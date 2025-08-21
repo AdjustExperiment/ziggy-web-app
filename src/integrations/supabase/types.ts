@@ -938,6 +938,50 @@ export type Database = {
           },
         ]
       }
+      schedule_proposals: {
+        Row: {
+          created_at: string
+          id: string
+          note: string | null
+          pairing_id: string
+          proposed_room: string | null
+          proposed_time: string | null
+          proposer_user_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          pairing_id: string
+          proposed_room?: string | null
+          proposed_time?: string | null
+          proposer_user_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          pairing_id?: string
+          proposed_room?: string | null
+          proposed_time?: string | null
+          proposer_user_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedule_proposals_pairing_id_fkey"
+            columns: ["pairing_id"]
+            isOneToOne: false
+            referencedRelation: "pairings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       site_settings: {
         Row: {
           accent_color: string
