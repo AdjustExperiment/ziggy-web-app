@@ -49,11 +49,6 @@ export function Navbar() {
             
             {/* Desktop Navigation */}
             <div className="hidden lg:flex ml-10 items-baseline space-x-4">
-              <Link to="/results" className="flex items-center space-x-1 hover:text-primary transition-colors">
-                <BarChart3 className="h-4 w-4" />
-                <span>Results</span>
-              </Link>
-              
               {/* About Dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -77,6 +72,12 @@ export function Navbar() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
+                    <Link to="/getting-started" className="flex items-center">
+                      <FileText className="mr-2 h-4 w-4" />
+                      <span>Getting Started</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
                     <Link to="/contact" className="flex items-center">
                       <Users className="mr-2 h-4 w-4" />
                       <span>Contact</span>
@@ -90,6 +91,11 @@ export function Navbar() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+
+              <Link to="/results" className="flex items-center space-x-1 hover:text-primary transition-colors">
+                <BarChart3 className="h-4 w-4" />
+                <span>Results</span>
+              </Link>
 
               <Link to="/blog" className="flex items-center space-x-1 hover:text-primary transition-colors">
                 <FileText className="h-4 w-4" />
