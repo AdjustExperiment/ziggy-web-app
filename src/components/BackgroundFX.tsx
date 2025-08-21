@@ -4,10 +4,14 @@ export function BackgroundFX() {
       {/* Main gradient background */}
       <div className="absolute inset-0 bg-gradient-subtle opacity-95" />
       
-      {/* Animated glow orbs */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-radial from-red-500/20 via-red-500/10 to-transparent rounded-full blur-3xl animate-float" />
-      <div className="absolute top-3/4 right-1/4 w-80 h-80 bg-gradient-radial from-red-600/15 via-red-600/8 to-transparent rounded-full blur-2xl animate-float animation-delay-1000" />
-      <div className="absolute top-1/2 left-3/4 w-64 h-64 bg-gradient-radial from-red-400/12 via-red-400/6 to-transparent rounded-full blur-xl animate-float animation-delay-2000" />
+      {/* Animated glow orbs using semantic tokens */}
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-radial from-primary/20 via-primary/10 to-transparent rounded-full blur-3xl animate-orb-1" />
+      <div className="absolute top-3/4 right-1/4 w-80 h-80 bg-gradient-radial from-primary-glow/15 via-primary-glow/8 to-transparent rounded-full blur-2xl animate-orb-2" />
+      <div className="absolute top-1/2 left-3/4 w-64 h-64 bg-gradient-radial from-primary/12 via-primary/6 to-transparent rounded-full blur-xl animate-orb-3" />
+      
+      {/* Additional floating elements */}
+      <div className="absolute top-10 right-1/3 w-48 h-48 bg-gradient-radial from-accent/8 via-accent/4 to-transparent rounded-full blur-2xl animate-float" />
+      <div className="absolute bottom-20 left-10 w-72 h-72 bg-gradient-radial from-primary/6 via-primary/3 to-transparent rounded-full blur-3xl animate-orb-1" />
       
       {/* Subtle noise texture overlay */}
       <div 

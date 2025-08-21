@@ -13,6 +13,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { useNavbarSearch } from "@/hooks/useNavbarSearch";
 import { supabase } from "@/integrations/supabase/client";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const navigation = [
   { name: "Results", href: "/results" },
@@ -96,8 +97,8 @@ export function Navbar() {
   }, [setShowResults]);
 
   return (
-    <nav className="sticky top-0 z-50 border-b bg-black backdrop-blur-lg border-white/10 animate-fade-in rounded-b-2xl overflow-x-hidden">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 bg-black rounded-b-2xl">
+    <nav className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur-lg border-border animate-fade-in rounded-b-2xl overflow-x-hidden">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 bg-background/80 rounded-b-2xl backdrop-blur-sm">
         <div className="flex h-24 items-center justify-between">
           {/* Logo */}
           <div className="flex items-center shrink-0">
@@ -118,19 +119,19 @@ export function Navbar() {
                 <DropdownMenuTrigger asChild>
                   <Button 
                     variant="ghost" 
-                    className="text-white hover:text-red-500 transition-all duration-300 font-medium text-sm flex items-center gap-2 hover:bg-white/5 relative group"
+                    className="text-foreground hover:text-primary transition-all duration-300 font-medium text-sm flex items-center gap-2 hover:bg-primary/10 relative group"
                   >
                     About 
                     <ChevronDown className={`h-3 w-3 transition-transform duration-300 ${aboutOpen ? 'rotate-180' : ''}`} />
-                    <span className="absolute inset-x-0 -bottom-1 h-0.5 bg-red-500 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></span>
+                    <span className="absolute inset-x-0 -bottom-1 h-0.5 bg-primary scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="bg-black border-red-500/30 backdrop-blur-lg min-w-[200px] animate-scale-in rounded-xl z-50">
+                <DropdownMenuContent className="bg-background/95 border-border backdrop-blur-lg min-w-[200px] animate-scale-in rounded-xl z-50">
                   {aboutNavigation.map((item) => (
                     <DropdownMenuItem key={item.name} asChild>
                       <a
                         href={item.href}
-                        className="block px-4 py-2 text-white hover:text-red-500 hover:bg-white/10 rounded-lg transition-all duration-300 text-sm"
+                        className="block px-4 py-2 text-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-all duration-300 text-sm"
                       >
                         {item.name}
                       </a>
@@ -144,19 +145,19 @@ export function Navbar() {
                 <DropdownMenuTrigger asChild>
                   <Button 
                     variant="ghost" 
-                    className="text-white hover:text-red-500 transition-all duration-300 font-medium text-sm flex items-center gap-2 hover:bg-white/5 relative group"
+                    className="text-foreground hover:text-primary transition-all duration-300 font-medium text-sm flex items-center gap-2 hover:bg-primary/10 relative group"
                   >
                     Dashboard 
                     <ChevronDown className={`h-3 w-3 transition-transform duration-300 ${dashboardOpen ? 'rotate-180' : ''}`} />
-                    <span className="absolute inset-x-0 -bottom-1 h-0.5 bg-red-500 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></span>
+                    <span className="absolute inset-x-0 -bottom-1 h-0.5 bg-primary scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="bg-black border-red-500/30 backdrop-blur-lg min-w-[200px] animate-scale-in rounded-xl z-50">
+                <DropdownMenuContent className="bg-background/95 border-border backdrop-blur-lg min-w-[200px] animate-scale-in rounded-xl z-50">
                   {dashboardNavigation.map((item) => (
                     <DropdownMenuItem key={item.name} asChild>
                       <a
                         href={item.href}
-                        className="block px-4 py-2 text-white hover:text-red-500 hover:bg-white/10 rounded-lg transition-all duration-300 text-sm"
+                        className="block px-4 py-2 text-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-all duration-300 text-sm"
                       >
                         {item.name}
                       </a>
@@ -170,10 +171,10 @@ export function Navbar() {
                 <a
                   key={item.name}
                   href={item.href}
-                  className="text-white hover:text-red-500 transition-all duration-300 font-medium text-sm relative group"
+                  className="text-foreground hover:text-primary transition-all duration-300 font-medium text-sm relative group"
                 >
                   {item.name}
-                  <span className="absolute inset-x-0 -bottom-1 h-0.5 bg-red-500 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></span>
+                  <span className="absolute inset-x-0 -bottom-1 h-0.5 bg-primary scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></span>
                 </a>
               ))}
               
@@ -182,10 +183,10 @@ export function Navbar() {
                 <a
                   key={item.name}
                   href={item.href}
-                  className="text-white hover:text-red-500 transition-all duration-300 font-medium text-sm relative group"
+                  className="text-foreground hover:text-primary transition-all duration-300 font-medium text-sm relative group"
                 >
                   {item.name}
-                  <span className="absolute inset-x-0 -bottom-1 h-0.5 bg-red-500 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></span>
+                  <span className="absolute inset-x-0 -bottom-1 h-0.5 bg-primary scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></span>
                 </a>
               ))}
             </div>
@@ -195,7 +196,7 @@ export function Navbar() {
           <div className="hidden lg:flex items-center space-x-4 flex-shrink-0">
             <div className="relative" ref={searchRef}>
               <div className="relative group">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/70 group-focus-within:text-primary transition-colors duration-300" />
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors duration-300" />
                 {isSearching && (
                   <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary animate-spin" />
                 )}
@@ -204,20 +205,20 @@ export function Navbar() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onFocus={() => searchTerm && setShowResults(true)}
-                  className="w-48 xl:w-64 pl-10 pr-10 bg-black/50 border-white/20 text-white placeholder:text-white/70 text-sm font-secondary focus:border-primary focus:ring-1 focus:ring-primary transition-all duration-300"
+                  className="w-48 xl:w-64 pl-10 pr-10 bg-background/50 border-border text-foreground placeholder:text-muted-foreground text-sm font-secondary focus:border-primary focus:ring-1 focus:ring-primary transition-all duration-300"
                 />
               </div>
               
               {/* Search Results Dropdown */}
               {showResults && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-black/95 border border-white/20 rounded-lg backdrop-blur-lg shadow-tournament z-[100] max-h-80 overflow-y-auto animate-scale-in">
+                <div className="absolute top-full left-0 right-0 mt-2 bg-background/95 border border-border rounded-lg backdrop-blur-lg shadow-tournament z-[100] max-h-80 overflow-y-auto animate-scale-in">
                   {results.length > 0 ? (
                     <div className="py-2">
                       {results.map((result) => (
                         <a
                           key={result.id}
                           href={result.url}
-                          className="block px-4 py-3 text-white hover:bg-white/10 hover:text-primary transition-all duration-300 border-b border-white/10 last:border-b-0"
+                          className="block px-4 py-3 text-foreground hover:bg-primary/10 hover:text-primary transition-all duration-300 border-b border-border last:border-b-0"
                           onClick={() => {
                             clearSearch();
                             setShowResults(false);
@@ -225,14 +226,14 @@ export function Navbar() {
                         >
                           <div className="font-medium text-sm">{result.title}</div>
                           {result.description && (
-                            <div className="text-xs text-white/70 mt-1">{result.description}</div>
+                            <div className="text-xs text-muted-foreground mt-1">{result.description}</div>
                           )}
                           <div className="text-xs text-primary/70 capitalize mt-1">{result.type}</div>
                         </a>
                       ))}
                     </div>
                   ) : (
-                    <div className="px-4 py-6 text-center text-white/70 text-sm">
+                    <div className="px-4 py-6 text-center text-muted-foreground text-sm">
                       No results found for "{searchTerm}"
                     </div>
                   )}
@@ -240,50 +241,45 @@ export function Navbar() {
               )}
             </div>
             
-            <Button 
-              onClick={goToOpenRegistration}
-              disabled={navigationLoading}
-              className="bg-red-500 text-white hover:bg-red-600 border-red-500 text-sm font-secondary transition-all duration-300 hover:scale-105 rounded-xl"
-            >
-              {navigationLoading ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Finding...
-                </>
-              ) : (
-                "Sign Up"
-              )}
-            </Button>
-            
             <a href="/tournaments">
-              <Button variant="outline" className="border-primary/50 text-primary hover:bg-primary hover:text-white hover:border-primary text-sm font-secondary transition-all duration-300 hover:scale-105 rounded-xl">
+              <Button 
+                className="bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-secondary transition-all duration-300 hover:scale-105 rounded-xl"
+              >
+                Sign Up for Tournament
+              </Button>
+            </a>
+            
+            <a href="https://tournament.ziggyonlinedebate.com" target="_blank" rel="noopener noreferrer">
+              <Button variant="outline" className="border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground hover:border-primary text-sm font-secondary transition-all duration-300 hover:scale-105 rounded-xl">
                 <ExternalLink className="h-4 w-4 mr-2" />
                 <span className="hidden xl:inline">Tournament App</span>
               </Button>
             </a>
 
+            <ThemeToggle />
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="text-white hover:text-primary hover:bg-white/10 text-sm font-secondary transition-all duration-300 hover:scale-105">
+                <Button variant="ghost" className="text-foreground hover:text-primary hover:bg-primary/10 text-sm font-secondary transition-all duration-300 hover:scale-105">
                   <User className="h-4 w-4 mr-2" />
                   Login
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-black/95 border-white/20 backdrop-blur-lg animate-scale-in">
+              <DropdownMenuContent align="end" className="bg-background/95 border-border backdrop-blur-lg animate-scale-in">
                 <DropdownMenuItem 
-                  className="text-white hover:text-primary hover:bg-white/10 cursor-pointer transition-all duration-300"
+                  className="text-foreground hover:text-primary hover:bg-primary/10 cursor-pointer transition-all duration-300"
                   onClick={() => window.location.href = '/login?type=team'}
                 >
                   Team Login
                 </DropdownMenuItem>
                 <DropdownMenuItem 
-                  className="text-white hover:text-primary hover:bg-white/10 cursor-pointer transition-all duration-300"
+                  className="text-foreground hover:text-primary hover:bg-primary/10 cursor-pointer transition-all duration-300"
                   onClick={() => window.location.href = '/login?type=individual'}
                 >
                   Individual Login
                 </DropdownMenuItem>
                 <DropdownMenuItem 
-                  className="text-white hover:text-primary hover:bg-white/10 cursor-pointer transition-all duration-300"
+                  className="text-foreground hover:text-primary hover:bg-primary/10 cursor-pointer transition-all duration-300"
                   onClick={() => window.location.href = '/login?type=admin'}
                 >
                   Admin Portal
@@ -296,7 +292,7 @@ export function Navbar() {
           <Button
             variant="ghost"
             size="sm"
-            className="lg:hidden text-white hover:text-primary min-h-[44px] min-w-[44px] transition-all duration-300 hover:scale-110"
+            className="lg:hidden text-foreground hover:text-primary min-h-[44px] min-w-[44px] transition-all duration-300 hover:scale-110"
             onClick={() => setIsOpen(!isOpen)}
           >
             {isOpen ? 
@@ -308,7 +304,7 @@ export function Navbar() {
 
         {/* Mobile Navigation */}
         {isOpen && (
-          <div className="lg:hidden border-t bg-black/95 backdrop-blur-sm border-white/10 animate-slide-in-right">
+          <div className="lg:hidden border-t bg-background/95 backdrop-blur-sm border-border animate-slide-in-right">
             <div className="px-4 py-4 space-y-4">
               {/* About dropdown items */}
               <div className="space-y-2">
@@ -317,7 +313,7 @@ export function Navbar() {
                   <a
                     key={item.name}
                     href={item.href}
-                    className="block px-8 py-2 text-white hover:text-primary transition-all duration-300 text-base rounded-lg hover:bg-white/5 min-h-[44px] flex items-center font-secondary hover:translate-x-2"
+                    className="block px-8 py-2 text-foreground hover:text-primary transition-all duration-300 text-base rounded-lg hover:bg-primary/5 min-h-[44px] flex items-center font-secondary hover:translate-x-2"
                     onClick={() => setIsOpen(false)}
                   >
                     {item.name}
@@ -331,7 +327,7 @@ export function Navbar() {
                   <a
                     key={item.name}
                     href={item.href}
-                    className="block px-8 py-2 text-white hover:text-primary transition-all duration-300 text-base rounded-lg hover:bg-white/5 min-h-[44px] flex items-center font-secondary hover:translate-x-2"
+                    className="block px-8 py-2 text-foreground hover:text-primary transition-all duration-300 text-base rounded-lg hover:bg-primary/5 min-h-[44px] flex items-center font-secondary hover:translate-x-2"
                     onClick={() => setIsOpen(false)}
                   >
                     {item.name}
@@ -343,7 +339,7 @@ export function Navbar() {
                 <a
                   key={item.name}
                   href={item.href}
-                  className="block px-4 py-3 text-white hover:text-primary transition-all duration-300 text-lg font-medium rounded-lg hover:bg-white/5 min-h-[44px] flex items-center font-secondary hover:translate-x-2"
+                  className="block px-4 py-3 text-foreground hover:text-primary transition-all duration-300 text-lg font-medium rounded-lg hover:bg-primary/5 min-h-[44px] flex items-center font-secondary hover:translate-x-2"
                   onClick={() => setIsOpen(false)}
                 >
                   {item.name}
@@ -355,7 +351,7 @@ export function Navbar() {
                 <a
                   key={item.name}
                   href={item.href}
-                  className="block px-4 py-3 text-white hover:text-primary transition-all duration-300 text-lg font-medium rounded-lg hover:bg-white/5 min-h-[44px] flex items-center font-secondary hover:translate-x-2"
+                  className="block px-4 py-3 text-foreground hover:text-primary transition-all duration-300 text-lg font-medium rounded-lg hover:bg-primary/5 min-h-[44px] flex items-center font-secondary hover:translate-x-2"
                   onClick={() => setIsOpen(false)}
                 >
                   {item.name}
@@ -363,34 +359,27 @@ export function Navbar() {
               ))}
               <div className="px-4 py-2">
                 <div className="relative group">
-                  <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-white/70 group-focus-within:text-primary transition-colors duration-300" />
+                  <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors duration-300" />
                   <Input 
                     placeholder="Search..." 
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 py-3 bg-black/50 border-white/20 text-white placeholder:text-white/70 text-base min-h-[44px] font-secondary focus:border-primary transition-all duration-300" 
+                    className="w-full pl-10 py-3 bg-background/50 border-border text-foreground placeholder:text-muted-foreground text-base min-h-[44px] font-secondary focus:border-primary transition-all duration-300" 
                   />
                 </div>
               </div>
               <div className="px-4 space-y-3">
-                <Button 
-                  onClick={goToOpenRegistration}
-                  disabled={navigationLoading}
-                  className="w-full bg-red-500 text-white hover:bg-red-600 py-3 text-base min-h-[44px] font-secondary transition-all duration-300 hover:scale-105"
-                >
-                  {navigationLoading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Finding...
-                    </>
-                  ) : (
-                    "Sign Up"
-                  )}
-                </Button>
                 <a href="/tournaments">
                   <Button 
+                    className="w-full bg-primary text-primary-foreground hover:bg-primary/90 py-3 text-base min-h-[44px] font-secondary transition-all duration-300 hover:scale-105"
+                  >
+                    Sign Up for Tournament
+                  </Button>
+                </a>
+                <a href="https://tournament.ziggyonlinedebate.com" target="_blank" rel="noopener noreferrer">
+                  <Button 
                     variant="outline" 
-                    className="w-full border-primary/50 text-primary hover:bg-primary hover:text-white hover:border-primary py-3 text-base min-h-[44px] font-secondary transition-all duration-300 hover:scale-105"
+                    className="w-full border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground hover:border-primary py-3 text-base min-h-[44px] font-secondary transition-all duration-300 hover:scale-105"
                   >
                     <ExternalLink className="h-5 w-5 mr-2" />
                     Tournament App
@@ -399,7 +388,7 @@ export function Navbar() {
                 <div className="space-y-2">
                   <Button 
                     variant="ghost" 
-                    className="w-full text-white hover:text-primary hover:bg-white/10 py-3 text-base min-h-[44px] justify-start font-secondary transition-all duration-300 hover:translate-x-2"
+                    className="w-full text-foreground hover:text-primary hover:bg-primary/10 py-3 text-base min-h-[44px] justify-start font-secondary transition-all duration-300 hover:translate-x-2"
                     onClick={() => { window.location.href = '/login?type=team'; setIsOpen(false); }}
                   >
                     <User className="h-5 w-5 mr-2" />
@@ -407,7 +396,7 @@ export function Navbar() {
                   </Button>
                   <Button 
                     variant="ghost" 
-                    className="w-full text-white hover:text-primary hover:bg-white/10 py-3 text-base min-h-[44px] justify-start font-secondary transition-all duration-300 hover:translate-x-2"
+                    className="w-full text-foreground hover:text-primary hover:bg-primary/10 py-3 text-base min-h-[44px] justify-start font-secondary transition-all duration-300 hover:translate-x-2"
                     onClick={() => { window.location.href = '/login?type=individual'; setIsOpen(false); }}
                   >
                     <User className="h-5 w-5 mr-2" />
@@ -415,7 +404,7 @@ export function Navbar() {
                   </Button>
                   <Button 
                     variant="ghost" 
-                    className="w-full text-white hover:text-primary hover:bg-white/10 py-3 text-base min-h-[44px] justify-start font-secondary transition-all duration-300 hover:translate-x-2"
+                    className="w-full text-foreground hover:text-primary hover:bg-primary/10 py-3 text-base min-h-[44px] justify-start font-secondary transition-all duration-300 hover:translate-x-2"
                     onClick={() => { window.location.href = '/login?type=admin'; setIsOpen(false); }}
                   >
                     <User className="h-5 w-5 mr-2" />

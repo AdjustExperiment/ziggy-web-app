@@ -72,7 +72,8 @@ export default {
 				'gradient-hero': 'var(--gradient-hero)',
 				'gradient-card': 'var(--gradient-card)',
 				'gradient-accent': 'var(--gradient-accent)',
-				'gradient-subtle': 'var(--gradient-subtle)'
+				'gradient-subtle': 'var(--gradient-subtle)',
+				'gradient-radial': 'radial-gradient(circle, var(--tw-gradient-stops))'
 			},
 			boxShadow: {
 				'tournament': 'var(--shadow-tournament)',
@@ -158,6 +159,20 @@ export default {
 				'float': {
 					'0%, 100%': { transform: 'translateY(0px)' },
 					'50%': { transform: 'translateY(-6px)' }
+				},
+				'orb-1': {
+					'0%, 100%': { transform: 'translate(0, 0) rotate(0deg) scale(1)' },
+					'33%': { transform: 'translate(30px, -30px) rotate(120deg) scale(1.1)' },
+					'66%': { transform: 'translate(-20px, 20px) rotate(240deg) scale(0.9)' }
+				},
+				'orb-2': {
+					'0%, 100%': { transform: 'translate(0, 0) rotate(0deg) scale(1)' },
+					'50%': { transform: 'translate(-40px, -20px) rotate(180deg) scale(1.2)' }
+				},
+				'orb-3': {
+					'0%, 100%': { transform: 'translate(0, 0) rotate(0deg) scale(1)' },
+					'25%': { transform: 'translate(20px, 30px) rotate(90deg) scale(0.8)' },
+					'75%': { transform: 'translate(-30px, -10px) rotate(270deg) scale(1.1)' }
 				}
 			},
 			animation: {
@@ -170,7 +185,10 @@ export default {
 				'slide-in-right': 'slide-in-right 0.3s ease-out',
 				'slide-out-right': 'slide-out-right 0.3s ease-out',
 				'glow-pulse': 'glow-pulse 2s ease-in-out infinite',
-				'float': 'float 3s ease-in-out infinite'
+				'float': 'float 3s ease-in-out infinite',
+				'orb-1': 'orb-1 20s ease-in-out infinite',
+				'orb-2': 'orb-2 25s ease-in-out infinite reverse',
+				'orb-3': 'orb-3 30s ease-in-out infinite'
 			}
 		}
 	},
