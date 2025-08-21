@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -24,10 +25,10 @@ const TournamentRegistration = () => {
   const [registering, setRegistering] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
   const [formData, setFormData] = useState({
-    team_name: '',
+    participant_name: '',
     partner_name: '',
     partner_email: '',
-    dietary_restrictions: '',
+    dietary_requirements: '',
     emergency_contact: '',
     emergency_phone: '',
     school_affiliation: '',
@@ -79,16 +80,18 @@ const TournamentRegistration = () => {
 
       if (data) {
         setIsRegistered(true);
+        // Extract data from additional_info JSONB field and main columns
+        const additionalInfo = data.additional_info as any || {};
         setFormData({
-          team_name: data.team_name || '',
-          partner_name: data.partner_name || '',
-          partner_email: data.partner_email || '',
-          dietary_restrictions: data.dietary_restrictions || '',
+          participant_name: data.participant_name || '',
+          partner_name: additionalInfo.partner_name || data.partner_name || '',
+          partner_email: additionalInfo.partner_email || '',
+          dietary_requirements: data.dietary_requirements || '',
           emergency_contact: data.emergency_contact || '',
-          emergency_phone: data.emergency_phone || '',
-          school_affiliation: data.school_affiliation || '',
-          experience_level: data.experience_level || '',
-          additional_notes: data.additional_notes || ''
+          emergency_phone: additionalInfo.emergency_phone || '',
+          school_affiliation: additionalInfo.school_affiliation || data.school_organization || '',
+          experience_level: additionalInfo.experience_level || '',
+          additional_notes: additionalInfo.additional_notes || ''
         });
       }
     } catch (error) {
@@ -121,12 +124,23 @@ const TournamentRegistration = () => {
     setRegistering(true);
 
     try {
+      // Prepare data according to actual database schema
       const registrationData = {
         tournament_id: id,
         user_id: user.id,
-        ...formData,
-        registration_status: 'pending',
-        payment_status: 'pending'
+        participant_name: formData.participant_name,
+        participant_email: user.email,
+        partner_name: formData.partner_name,
+        dietary_requirements: formData.dietary_requirements,
+        emergency_contact: formData.emergency_contact,
+        school_organization: formData.school_affiliation,
+        payment_status: 'pending',
+        additional_info: {
+          partner_email: formData.partner_email,
+          emergency_phone: formData.emergency_phone,
+          experience_level: formData.experience_level,
+          additional_notes: formData.additional_notes
+        }
       };
 
       if (isRegistered) {
@@ -164,6 +178,20 @@ const TournamentRegistration = () => {
     } finally {
       setRegistering(false);
     }
+  };
+
+  const handlePayPalPayment = async () => {
+    toast({
+      title: "PayPal Payment",
+      description: "PayPal payment integration coming soon",
+    });
+  };
+
+  const handleVenmoPayment = async () => {
+    toast({
+      title: "Venmo Payment", 
+      description: "Venmo payment integration coming soon",
+    });
   };
 
   if (loading) {
@@ -332,11 +360,11 @@ const TournamentRegistration = () => {
               ) : (
                 <form onSubmit={handleRegistration} className="space-y-4">
                   <div>
-                    <Label htmlFor="team_name">Team Name *</Label>
+                    <Label htmlFor="participant_name">Participant Name *</Label>
                     <Input
-                      id="team_name"
-                      value={formData.team_name}
-                      onChange={(e) => setFormData({...formData, team_name: e.target.value})}
+                      id="participant_name"
+                      value={formData.participant_name}
+                      onChange={(e) => setFormData({...formData, participant_name: e.target.value})}
                       required
                     />
                   </div>
@@ -402,11 +430,11 @@ const TournamentRegistration = () => {
                   </div>
                   
                   <div>
-                    <Label htmlFor="dietary_restrictions">Dietary Restrictions</Label>
+                    <Label htmlFor="dietary_requirements">Dietary Requirements</Label>
                     <Textarea
-                      id="dietary_restrictions"
-                      value={formData.dietary_restrictions}
-                      onChange={(e) => setFormData({...formData, dietary_restrictions: e.target.value})}
+                      id="dietary_requirements"
+                      value={formData.dietary_requirements}
+                      onChange={(e) => setFormData({...formData, dietary_requirements: e.target.value})}
                       rows={2}
                     />
                   </div>
@@ -442,8 +470,9 @@ const TournamentRegistration = () => {
                   <div>
                     <h4 className="font-medium mb-4">Payment</h4>
                     <PaymentButtons
-                      tournament={tournament}
                       amount={tournament.registration_fee}
+                      onPayPalPayment={handlePayPalPayment}
+                      onVenmoPayment={handleVenmoPayment}
                     />
                   </div>
                 </>
