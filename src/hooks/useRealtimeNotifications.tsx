@@ -48,36 +48,50 @@ export const useRealtimeNotifications = ({
 
       // Count pending judge requests for this tournament
       if (tournamentId) {
-        promises.push(
-          supabase
-            .from('judge_requests')
-            .select('id', { count: 'exact' })
-            .eq('status', 'pending')
-            .in('pairing_id', 
-              supabase
-                .from('pairings')
-                .select('id')
-                .eq('tournament_id', tournamentId)
-            )
-        );
+        // First get the pairing IDs for this tournament
+        const { data: pairings } = await supabase
+          .from('pairings')
+          .select('id')
+          .eq('tournament_id', tournamentId);
+        
+        const pairingIds = pairings?.map(p => p.id) || [];
+        
+        if (pairingIds.length > 0) {
+          promises.push(
+            supabase
+              .from('judge_requests')
+              .select('id', { count: 'exact' })
+              .eq('status', 'pending')
+              .in('pairing_id', pairingIds)
+          );
+        } else {
+          promises.push(Promise.resolve({ count: 0 }));
+        }
       } else {
         promises.push(Promise.resolve({ count: 0 }));
       }
 
       // Count pending schedule proposals for this tournament
       if (tournamentId) {
-        promises.push(
-          supabase
-            .from('schedule_proposals')
-            .select('id', { count: 'exact' })
-            .eq('status', 'pending')
-            .in('pairing_id',
-              supabase
-                .from('pairings')
-                .select('id')
-                .eq('tournament_id', tournamentId)
-            )
-        );
+        // First get the pairing IDs for this tournament
+        const { data: pairings } = await supabase
+          .from('pairings')
+          .select('id')
+          .eq('tournament_id', tournamentId);
+        
+        const pairingIds = pairings?.map(p => p.id) || [];
+        
+        if (pairingIds.length > 0) {
+          promises.push(
+            supabase
+              .from('schedule_proposals')
+              .select('id', { count: 'exact' })
+              .eq('status', 'pending')
+              .in('pairing_id', pairingIds)
+          );
+        } else {
+          promises.push(Promise.resolve({ count: 0 }));
+        }
       } else {
         promises.push(Promise.resolve({ count: 0 }));
       }
