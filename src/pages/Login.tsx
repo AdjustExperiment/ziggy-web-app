@@ -188,7 +188,7 @@ const Login = () => {
                       className="data-[state=active]:bg-red-500 data-[state=active]:text-white text-white/70"
                     >
                       <Users className="h-4 w-4 mr-2" />
-                      Team
+                      ZIP
                     </TabsTrigger>
                     <TabsTrigger 
                       value="individual" 
@@ -207,17 +207,22 @@ const Login = () => {
                   </TabsList>
 
                   <TabsContent value="team" className="space-y-4">
+                    <div className="text-center mb-4">
+                      <p className="text-sm text-white/70 mb-3">
+                        This login is for members of the <span className="text-red-500 font-medium">Ziggy Involvement Program</span>
+                      </p>
+                    </div>
                     <form onSubmit={handleSubmit} className="space-y-4">
                       {isSignUp && (
                         <div className="text-center mb-4">
                           <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20">
-                            Creating Team Account
+                            Creating ZIP Account
                           </Badge>
                         </div>
                       )}
                       
                       <div className="space-y-2">
-                        <Label htmlFor="team-email" className="text-white">Team Email</Label>
+                        <Label htmlFor="team-email" className="text-white">ZIP Email</Label>
                         <div className="relative">
                           <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/70" />
                           <Input
@@ -293,7 +298,7 @@ const Login = () => {
                         {formLoading ? (
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
                         ) : null}
-                        {isSignUp ? 'Create Team Account' : 'Sign In to Team Portal'}
+                        {isSignUp ? 'Create ZIP Account' : 'Sign In to ZIP Portal'}
                         <ArrowRight className="ml-2 h-4 w-4" />
                       </Button>
                       
