@@ -49,10 +49,6 @@ export function Navbar() {
             
             {/* Desktop Navigation */}
             <div className="hidden lg:flex ml-10 items-baseline space-x-4">
-              <Link to="/tournaments" className="flex items-center space-x-1 hover:text-primary transition-colors">
-                <Calendar className="h-4 w-4" />
-                <span>Tournaments</span>
-              </Link>
               <Link to="/results" className="flex items-center space-x-1 hover:text-primary transition-colors">
                 <BarChart3 className="h-4 w-4" />
                 <span>Results</span>
@@ -196,15 +192,6 @@ export function Navbar() {
         {isMobileMenuOpen && (
           <div className="lg:hidden border-t border-border">
             <div className="px-2 pt-2 pb-3 space-y-1">
-              <Link
-                to="/tournaments"
-                className="flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium hover:bg-muted"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <Calendar className="h-4 w-4" />
-                <span>Tournaments</span>
-              </Link>
-              
               <Link
                 to="/results"
                 className="flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium hover:bg-muted"
