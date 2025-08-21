@@ -69,50 +69,32 @@ export function SpectateRequestManager({ tournamentId, pairings }: SpectateReque
       const pairingIds = pairings.map(p => p.id);
       if (pairingIds.length === 0) return;
 
-      const { data, error } = await supabase
+      // First, get the spectate requests
+      const { data: requests, error } = await supabase
         .from('spectate_requests')
-        .select(`
-          *,
-          pairings!inner(
-            id,
-            scheduled_time,
-            room,
-            aff_registration_id,
-            neg_registration_id,
-            rounds!inner(name)
-          )
-        `)
+        .select('*')
         .eq('requester_user_id', user.id)
         .in('pairing_id', pairingIds)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      // Now we need to fetch the registration details separately
+      // Then get pairing details for each request
       const requestsWithDetails = await Promise.all(
-        (data || []).map(async (request) => {
-          const { data: affReg } = await supabase
-            .from('tournament_registrations')
-            .select('participant_name, user_id')
-            .eq('id', request.pairings.aff_registration_id)
-            .single();
-
-          const { data: negReg } = await supabase
-            .from('tournament_registrations')
-            .select('participant_name, user_id')
-            .eq('id', request.pairings.neg_registration_id)
-            .single();
-
+        (requests || []).map(async (request) => {
+          // Find the pairing from the props
+          const pairing = pairings.find(p => p.id === request.pairing_id);
+          
           return {
             ...request,
-            pairing: {
-              id: request.pairings.id,
-              aff_registration: affReg || { participant_name: 'Unknown', user_id: '' },
-              neg_registration: negReg || { participant_name: 'Unknown', user_id: '' },
-              scheduled_time: request.pairings.scheduled_time,
-              room: request.pairings.room,
-              round: { name: request.pairings.rounds?.name || 'Unknown Round' }
-            }
+            pairing: pairing ? {
+              id: pairing.id,
+              aff_registration: pairing.aff_registration,
+              neg_registration: pairing.neg_registration,
+              scheduled_time: pairing.scheduled_time,
+              room: pairing.room,
+              round: pairing.round
+            } : undefined
           };
         })
       );
@@ -130,60 +112,52 @@ export function SpectateRequestManager({ tournamentId, pairings }: SpectateReque
       const pairingIds = pairings.map(p => p.id);
       if (pairingIds.length === 0) return;
 
-      const { data, error } = await supabase
+      // Get spectate requests that need approval
+      const { data: requests, error } = await supabase
         .from('spectate_requests')
-        .select(`
-          *,
-          pairings!inner(
-            id,
-            scheduled_time,
-            room,
-            aff_registration_id,
-            neg_registration_id,
-            rounds!inner(name)
-          ),
-          profiles!requester_user_id(first_name, last_name)
-        `)
+        .select('*')
         .eq('status', 'pending')
         .in('pairing_id', pairingIds)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      // Fetch registration details and filter for user's pairings
-      const requestsWithDetails = await Promise.all(
-        (data || []).map(async (request) => {
-          const { data: affReg } = await supabase
-            .from('tournament_registrations')
-            .select('participant_name, user_id')
-            .eq('id', request.pairings.aff_registration_id)
-            .single();
+      // Get requester profiles
+      const requesterIds = [...new Set((requests || []).map(r => r.requester_user_id))];
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('user_id, first_name, last_name')
+        .in('user_id', requesterIds);
 
-          const { data: negReg } = await supabase
-            .from('tournament_registrations')
-            .select('participant_name, user_id')
-            .eq('id', request.pairings.neg_registration_id)
-            .single();
-
-          return {
-            ...request,
-            pairing: {
-              id: request.pairings.id,
-              aff_registration: affReg || { participant_name: 'Unknown', user_id: '' },
-              neg_registration: negReg || { participant_name: 'Unknown', user_id: '' },
-              scheduled_time: request.pairings.scheduled_time,
-              room: request.pairings.room,
-              round: { name: request.pairings.rounds?.name || 'Unknown Round' }
-            },
-            requester: request.profiles || { first_name: 'Unknown', last_name: 'User' }
-          };
-        })
-      );
+      // Combine requests with pairing and requester details
+      const requestsWithDetails = (requests || []).map(request => {
+        const pairing = pairings.find(p => p.id === request.pairing_id);
+        const requester = profiles?.find(p => p.user_id === request.requester_user_id);
+        
+        return {
+          ...request,
+          pairing: pairing ? {
+            id: pairing.id,
+            aff_registration: pairing.aff_registration,
+            neg_registration: pairing.neg_registration,
+            scheduled_time: pairing.scheduled_time,
+            room: pairing.room,
+            round: pairing.round
+          } : undefined,
+          requester: requester ? {
+            first_name: requester.first_name || 'Unknown',
+            last_name: requester.last_name || 'User'
+          } : { first_name: 'Unknown', last_name: 'User' }
+        };
+      });
 
       // Filter to only show requests for pairings where the current user is a participant
       const userPendingApprovals = requestsWithDetails.filter(request => {
-        return request.pairing?.aff_registration?.user_id === user.id || 
-               request.pairing?.neg_registration?.user_id === user.id;
+        const pairing = request.pairing;
+        return pairing && (
+          pairing.aff_registration?.user_id === user.id || 
+          pairing.neg_registration?.user_id === user.id
+        );
       });
 
       setPendingApprovals(userPendingApprovals);
@@ -236,13 +210,13 @@ export function SpectateRequestManager({ tournamentId, pairings }: SpectateReque
       setLoading(true);
 
       const request = pendingApprovals.find(r => r.id === requestId);
-      if (!request) return;
+      if (!request || !request.pairing) return;
 
       // Determine which team approval to update
       const updateData: any = {};
-      if (request.pairing?.aff_registration?.user_id === user.id) {
+      if (request.pairing.aff_registration?.user_id === user.id) {
         updateData.aff_team_approval = approved;
-      } else if (request.pairing?.neg_registration?.user_id === user.id) {
+      } else if (request.pairing.neg_registration?.user_id === user.id) {
         updateData.neg_team_approval = approved;
       }
 
@@ -400,12 +374,16 @@ export function SpectateRequestManager({ tournamentId, pairings }: SpectateReque
                         {request.requester?.first_name} {request.requester?.last_name} 
                         wants to spectate your match
                       </h4>
-                      <p className="text-sm text-muted-foreground">
-                        {request.pairing?.aff_registration.participant_name} vs {request.pairing?.neg_registration.participant_name}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {request.pairing?.round.name}
-                      </p>
+                      {request.pairing && (
+                        <>
+                          <p className="text-sm text-muted-foreground">
+                            {request.pairing.aff_registration.participant_name} vs {request.pairing.neg_registration.participant_name}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {request.pairing.round.name}
+                          </p>
+                        </>
+                      )}
                     </div>
                     {getStatusBadge(request)}
                   </div>
@@ -461,16 +439,20 @@ export function SpectateRequestManager({ tournamentId, pairings }: SpectateReque
                 <div key={request.id} className="border rounded-lg p-4">
                   <div className="flex items-start justify-between mb-2">
                     <div>
-                      <h4 className="font-medium">
-                        {request.pairing?.aff_registration.participant_name} vs {request.pairing?.neg_registration.participant_name}
-                      </h4>
-                      <p className="text-sm text-muted-foreground">
-                        {request.pairing?.round.name}
-                        {request.pairing?.scheduled_time && (
-                          <> • {new Date(request.pairing.scheduled_time).toLocaleString()}</>
-                        )}
-                        {request.pairing?.room && <> • {request.pairing.room}</>}
-                      </p>
+                      {request.pairing && (
+                        <>
+                          <h4 className="font-medium">
+                            {request.pairing.aff_registration.participant_name} vs {request.pairing.neg_registration.participant_name}
+                          </h4>
+                          <p className="text-sm text-muted-foreground">
+                            {request.pairing.round.name}
+                            {request.pairing.scheduled_time && (
+                              <> • {new Date(request.pairing.scheduled_time).toLocaleString()}</>
+                            )}
+                            {request.pairing.room && <> • {request.pairing.room}</>}
+                          </p>
+                        </>
+                      )}
                     </div>
                     {getStatusBadge(request)}
                   </div>
