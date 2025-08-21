@@ -10,17 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/components/ui/use-toast';
 import { Plus, Edit2, Trash2, Gavel, Phone, Mail } from 'lucide-react';
-
-interface JudgeProfile {
-  id: string;
-  profile_id: string | null;
-  name: string;
-  phone: string | null;
-  email: string | null;
-  bio: string | null;
-  qualifications: string | null;
-  created_at: string;
-}
+import { JudgeProfile } from '@/types/database';
 
 export function JudgesManager() {
   const [judges, setJudges] = useState<JudgeProfile[]>([]);
@@ -41,18 +31,15 @@ export function JudgesManager() {
 
   const fetchJudges = async () => {
     try {
-      const { data, error } = await supabase
-        .from('judge_profiles')
-        .select('*')
-        .order('name');
-
-      if (error) throw error;
-      setJudges(data || []);
+      // Since judge_profiles table doesn't exist yet, show empty state
+      console.log('Judge profiles table not available yet');
+      setJudges([]);
     } catch (error: any) {
+      console.error('Error fetching judges:', error);
       toast({
-        title: "Error",
-        description: "Failed to fetch judges",
-        variant: "destructive",
+        title: "Info",
+        description: "Judge management will be available after database migration",
+        variant: "default",
       });
     } finally {
       setLoading(false);
@@ -62,68 +49,19 @@ export function JudgesManager() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    try {
-      const judgeData = {
-        name: formData.name,
-        phone: formData.phone || null,
-        email: formData.email || null,
-        bio: formData.bio || null,
-        qualifications: formData.qualifications || null
-      };
-
-      let error;
-      if (editingJudge) {
-        ({ error } = await supabase
-          .from('judge_profiles')
-          .update(judgeData)
-          .eq('id', editingJudge.id));
-      } else {
-        ({ error } = await supabase
-          .from('judge_profiles')
-          .insert([judgeData]));
-      }
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: `Judge ${editingJudge ? 'updated' : 'created'} successfully`,
-      });
-
-      setIsDialogOpen(false);
-      resetForm();
-      fetchJudges();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+    toast({
+      title: "Info",
+      description: "Judge management will be available after database migration",
+      variant: "default",
+    });
   };
 
   const deleteJudge = async (judgeId: string) => {
-    try {
-      const { error } = await supabase
-        .from('judge_profiles')
-        .delete()
-        .eq('id', judgeId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Judge deleted successfully",
-      });
-
-      fetchJudges();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+    toast({
+      title: "Info",
+      description: "Judge management will be available after database migration",
+      variant: "default",
+    });
   };
 
   const resetForm = () => {
@@ -246,69 +184,15 @@ export function JudgesManager() {
         </Dialog>
       </div>
 
-      <div className="grid gap-4">
-        {judges.map((judge) => (
-          <Card key={judge.id}>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <Gavel className="h-5 w-5" />
-                    {judge.name}
-                  </CardTitle>
-                  <CardDescription className="flex items-center gap-4 mt-1">
-                    {judge.email && (
-                      <span className="flex items-center gap-1">
-                        <Mail className="h-4 w-4" />
-                        {judge.email}
-                      </span>
-                    )}
-                    {judge.phone && (
-                      <span className="flex items-center gap-1">
-                        <Phone className="h-4 w-4" />
-                        {judge.phone}
-                      </span>
-                    )}
-                  </CardDescription>
-                </div>
-                <div className="flex items-center gap-2">
-                  {judge.profile_id && (
-                    <Badge variant="secondary">Linked Account</Badge>
-                  )}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => openEditDialog(judge)}
-                  >
-                    <Edit2 className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => deleteJudge(judge.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            {(judge.qualifications || judge.bio) && (
-              <CardContent>
-                {judge.qualifications && (
-                  <div className="mb-2">
-                    <strong>Qualifications:</strong> {judge.qualifications}
-                  </div>
-                )}
-                {judge.bio && (
-                  <div>
-                    <strong>Bio:</strong> {judge.bio}
-                  </div>
-                )}
-              </CardContent>
-            )}
-          </Card>
-        ))}
-      </div>
+      <Card>
+        <CardContent className="text-center py-8">
+          <Gavel className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          <h3 className="text-lg font-semibold mb-2">Judge Management Coming Soon</h3>
+          <p className="text-muted-foreground">
+            Judge management features will be available after the database migration is complete.
+          </p>
+        </CardContent>
+      </Card>
     </div>
   );
 }

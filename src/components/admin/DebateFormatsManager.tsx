@@ -9,14 +9,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/components/ui/use-toast';
-import { Plus, Edit2, FileText } from 'lucide-react';
+import { Plus, Edit2, Trash2, MessageSquare } from 'lucide-react';
 import { DebateFormat } from '@/types/database';
 
 export function DebateFormatsManager() {
   const [formats, setFormats] = useState<DebateFormat[]>([]);
   const [loading, setLoading] = useState(true);
-  const [editingFormat, setEditingFormat] = useState<DebateFormat | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingFormat, setEditingFormat] = useState<DebateFormat | null>(null);
   const [formData, setFormData] = useState({
     key: '',
     name: '',
@@ -30,55 +30,16 @@ export function DebateFormatsManager() {
 
   const fetchFormats = async () => {
     try {
-      // Use raw SQL query until types are updated
-      const { data, error } = await supabase
-        .from('tournaments') // Use existing table temporarily
-        .select('*')
-        .limit(0); // Get no results, just test connection
-
-      if (error && !error.message.includes('relation "debate_formats" does not exist')) {
-        throw error;
-      }
-
-      // For now, show predefined formats until the table is accessible
-      const predefinedFormats: DebateFormat[] = [
-        {
-          id: '1',
-          key: 'lincoln_douglas',
-          name: 'Lincoln-Douglas',
-          description: 'One-on-one value debate format',
-          rules: {
-            speeches: ['AC', 'NC', '1AR', '1NR', '2AR'],
-            timings: { 'AC': 6, 'NC': 7, '1AR': 4, '1NR': 6, '2AR': 3 }
-          },
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        },
-        {
-          id: '2',
-          key: 'team_policy',
-          name: 'Team Policy',
-          description: 'Team-based policy debate format',
-          rules: {
-            speeches: ['1AC', '1NC', '2AC', '2NC', '1AR', '1NR', '2AR', '2NR'],
-            timings: { '1AC': 8, '1NC': 8, '2AC': 8, '2NC': 8, '1AR': 5, '1NR': 5, '2AR': 5, '2NR': 5 }
-          },
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }
-      ];
-
-      setFormats(predefinedFormats);
-    } catch (error: any) {
-      console.error('Error fetching formats:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch debate formats. Using default formats.",
-        variant: "destructive",
-      });
-      
-      // Set empty array on error
+      // Since debate_formats table doesn't exist yet, show empty state
+      console.log('Debate formats table not available yet');
       setFormats([]);
+    } catch (error: any) {
+      console.error('Error fetching debate formats:', error);
+      toast({
+        title: "Info",
+        description: "Debate format management will be available after database migration",
+        variant: "default",
+      });
     } finally {
       setLoading(false);
     }
@@ -89,7 +50,16 @@ export function DebateFormatsManager() {
     
     toast({
       title: "Info",
-      description: "Debate format management will be available once the database migration is complete.",
+      description: "Debate format management will be available after database migration",
+      variant: "default",
+    });
+  };
+
+  const deleteFormat = async (formatId: string) => {
+    toast({
+      title: "Info",
+      description: "Debate format management will be available after database migration",
+      variant: "default",
     });
   };
 
@@ -128,23 +98,23 @@ export function DebateFormatsManager() {
         <div>
           <h3 className="text-lg font-semibold">Debate Formats</h3>
           <p className="text-sm text-muted-foreground">
-            Manage available debate formats for tournaments
+            Manage available debate formats and their rules
           </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={openCreateDialog}>
               <Plus className="h-4 w-4 mr-2" />
-              Create Format
+              Add Format
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>
-                {editingFormat ? 'Edit Format' : 'Create New Format'}
+                {editingFormat ? 'Edit Debate Format' : 'Add New Debate Format'}
               </DialogTitle>
               <DialogDescription>
-                Define a debate format with rules and timing information
+                Define a new debate format with its rules and structure
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -155,29 +125,29 @@ export function DebateFormatsManager() {
                     id="key"
                     value={formData.key}
                     onChange={(e) => setFormData(prev => ({ ...prev, key: e.target.value }))}
-                    placeholder="e.g., lincoln_douglas"
+                    placeholder="e.g., british-parliamentary"
                     required
-                    disabled={!!editingFormat}
                   />
                 </div>
                 <div>
-                  <Label htmlFor="name">Display Name</Label>
+                  <Label htmlFor="name">Format Name</Label>
                   <Input
                     id="name"
                     value={formData.name}
                     onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder="e.g., Lincoln-Douglas"
+                    placeholder="e.g., British Parliamentary"
                     required
                   />
                 </div>
               </div>
               <div>
                 <Label htmlFor="description">Description</Label>
-                <Input
+                <Textarea
                   id="description"
                   value={formData.description}
                   onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Brief description of the format"
+                  placeholder="Brief description of the debate format"
+                  rows={3}
                 />
               </div>
               <div>
@@ -186,9 +156,8 @@ export function DebateFormatsManager() {
                   id="rules"
                   value={formData.rules}
                   onChange={(e) => setFormData(prev => ({ ...prev, rules: e.target.value }))}
-                  placeholder='{"speeches": ["AC", "NC"], "timings": {"AC": 6, "NC": 7}}'
+                  placeholder='{"rounds": 3, "speakers": 4, "time_limit": 7}'
                   rows={6}
-                  className="font-mono text-sm"
                 />
               </div>
               <div className="flex justify-end gap-2 pt-4">
@@ -196,7 +165,7 @@ export function DebateFormatsManager() {
                   Cancel
                 </Button>
                 <Button type="submit">
-                  {editingFormat ? 'Update' : 'Create'} Format
+                  {editingFormat ? 'Update' : 'Add'} Format
                 </Button>
               </div>
             </form>
@@ -204,40 +173,15 @@ export function DebateFormatsManager() {
         </Dialog>
       </div>
 
-      <div className="grid gap-4">
-        {formats.map((format) => (
-          <Card key={format.id}>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
-                    {format.name}
-                  </CardTitle>
-                  <CardDescription>{format.description}</CardDescription>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant="secondary">{format.key}</Badge>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => openEditDialog(format)}
-                  >
-                    <Edit2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            {format.rules && Object.keys(format.rules).length > 0 && (
-              <CardContent>
-                <pre className="bg-muted p-3 rounded text-sm overflow-x-auto">
-                  {JSON.stringify(format.rules, null, 2)}
-                </pre>
-              </CardContent>
-            )}
-          </Card>
-        ))}
-      </div>
+      <Card>
+        <CardContent className="text-center py-8">
+          <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          <h3 className="text-lg font-semibold mb-2">Debate Formats Coming Soon</h3>
+          <p className="text-muted-foreground">
+            Debate format management features will be available after the database migration is complete.
+          </p>
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -3,173 +3,100 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
 import { toast } from '@/components/ui/use-toast';
-import { Plus, Clock, Edit2, Trash2 } from 'lucide-react';
+import { Plus, Edit2, Trash2, Clock, Play, Pause } from 'lucide-react';
+import { Round } from '@/types/database';
 
 interface Tournament {
   id: string;
   name: string;
 }
 
-interface Round {
-  id: string;
-  tournament_id: string;
-  name: string;
-  sequence: number;
-  scheduled_at: string | null;
-  status: string;
-  created_at: string;
-}
-
 export function RoundsManager() {
-  const [tournaments, setTournaments] = useState<Tournament[]>([]);
-  const [selectedTournament, setSelectedTournament] = useState<string>('');
   const [rounds, setRounds] = useState<Round[]>([]);
+  const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingRound, setEditingRound] = useState<Round | null>(null);
   const [formData, setFormData] = useState({
+    tournament_id: '',
     name: '',
-    sequence: 1,
-    scheduled_at: '',
-    status: 'scheduled'
+    round_number: 1,
+    status: 'pending'
   });
 
   useEffect(() => {
-    fetchTournaments();
+    fetchData();
   }, []);
 
-  useEffect(() => {
-    if (selectedTournament) {
-      fetchRounds();
-    }
-  }, [selectedTournament]);
-
-  const fetchTournaments = async () => {
+  const fetchData = async () => {
     try {
-      const { data, error } = await supabase
+      // Fetch tournaments
+      const { data: tournamentsData, error: tournamentsError } = await supabase
         .from('tournaments')
         .select('id, name')
         .order('name');
 
-      if (error) throw error;
-      setTournaments(data || []);
+      if (tournamentsError) throw tournamentsError;
+      setTournaments(tournamentsData || []);
+
+      // Since rounds table doesn't exist yet, show empty state
+      console.log('Rounds table not available yet');
+      setRounds([]);
     } catch (error: any) {
+      console.error('Error fetching rounds:', error);
       toast({
-        title: "Error",
-        description: "Failed to fetch tournaments",
-        variant: "destructive",
+        title: "Info",
+        description: "Round management will be available after database migration",
+        variant: "default",
       });
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchRounds = async () => {
-    if (!selectedTournament) return;
-    
-    try {
-      const { data, error } = await supabase
-        .from('rounds')
-        .select('*')
-        .eq('tournament_id', selectedTournament)
-        .order('sequence');
-
-      if (error) throw error;
-      setRounds(data || []);
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: "Failed to fetch rounds",
-        variant: "destructive",
-      });
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedTournament) return;
-
-    try {
-      const roundData = {
-        tournament_id: selectedTournament,
-        name: formData.name,
-        sequence: formData.sequence,
-        scheduled_at: formData.scheduled_at || null,
-        status: formData.status
-      };
-
-      let error;
-      if (editingRound) {
-        ({ error } = await supabase
-          .from('rounds')
-          .update(roundData)
-          .eq('id', editingRound.id));
-      } else {
-        ({ error } = await supabase
-          .from('rounds')
-          .insert([roundData]));
-      }
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: `Round ${editingRound ? 'updated' : 'created'} successfully`,
-      });
-
-      setIsDialogOpen(false);
-      resetForm();
-      fetchRounds();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+    
+    toast({
+      title: "Info",
+      description: "Round management will be available after database migration",
+      variant: "default",
+    });
   };
 
   const deleteRound = async (roundId: string) => {
-    try {
-      const { error } = await supabase
-        .from('rounds')
-        .delete()
-        .eq('id', roundId);
+    toast({
+      title: "Info",
+      description: "Round management will be available after database migration",
+      variant: "default",
+    });
+  };
 
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Round deleted successfully",
-      });
-
-      fetchRounds();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+  const updateRoundStatus = async (roundId: string, status: string) => {
+    toast({
+      title: "Info",
+      description: "Round management will be available after database migration",
+      variant: "default",
+    });
   };
 
   const resetForm = () => {
-    setFormData({ name: '', sequence: 1, scheduled_at: '', status: 'scheduled' });
+    setFormData({ tournament_id: '', name: '', round_number: 1, status: 'pending' });
     setEditingRound(null);
   };
 
   const openEditDialog = (round: Round) => {
     setEditingRound(round);
     setFormData({
+      tournament_id: round.tournament_id,
       name: round.name,
-      sequence: round.sequence,
-      scheduled_at: round.scheduled_at ? round.scheduled_at.slice(0, 16) : '',
+      round_number: round.round_number,
       status: round.status
     });
     setIsDialogOpen(true);
@@ -177,8 +104,6 @@ export function RoundsManager() {
 
   const openCreateDialog = () => {
     resetForm();
-    const nextSequence = Math.max(...rounds.map(r => r.sequence), 0) + 1;
-    setFormData(prev => ({ ...prev, sequence: nextSequence }));
     setIsDialogOpen(true);
   };
 
@@ -192,155 +117,109 @@ export function RoundsManager() {
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-semibold">Round Management</h3>
+          <p className="text-sm text-muted-foreground">
+            Create and manage tournament rounds
+          </p>
+        </div>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={openCreateDialog}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Round
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>
+                {editingRound ? 'Edit Round' : 'Add New Round'}
+              </DialogTitle>
+              <DialogDescription>
+                Create or modify a tournament round
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <Label htmlFor="tournament">Tournament</Label>
+                <Select
+                  value={formData.tournament_id}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, tournament_id: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select tournament" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {tournaments.map((tournament) => (
+                      <SelectItem key={tournament.id} value={tournament.id}>
+                        {tournament.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="name">Round Name</Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="e.g., Preliminary Round 1"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="round_number">Round Number</Label>
+                  <Input
+                    id="round_number"
+                    type="number"
+                    min="1"
+                    value={formData.round_number}
+                    onChange={(e) => setFormData(prev => ({ ...prev, round_number: parseInt(e.target.value) }))}
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="status">Status</Label>
+                <Select
+                  value={formData.status}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex justify-end gap-2 pt-4">
+                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit">
+                  {editingRound ? 'Update' : 'Add'} Round
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
+
       <Card>
-        <CardHeader>
-          <CardTitle>Tournament Selection</CardTitle>
-          <CardDescription>Select a tournament to manage its rounds</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Select value={selectedTournament} onValueChange={setSelectedTournament}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select a tournament" />
-            </SelectTrigger>
-            <SelectContent>
-              {tournaments.map(tournament => (
-                <SelectItem key={tournament.id} value={tournament.id}>
-                  {tournament.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <CardContent className="text-center py-8">
+          <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          <h3 className="text-lg font-semibold mb-2">Round Management Coming Soon</h3>
+          <p className="text-muted-foreground">
+            Round management features will be available after the database migration is complete.
+          </p>
         </CardContent>
       </Card>
-
-      {selectedTournament && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-semibold">Rounds Management</h3>
-              <p className="text-sm text-muted-foreground">
-                Create and manage tournament rounds
-              </p>
-            </div>
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button onClick={openCreateDialog}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Round
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>
-                    {editingRound ? 'Edit Round' : 'Create New Round'}
-                  </DialogTitle>
-                  <DialogDescription>
-                    Configure round details and scheduling
-                  </DialogDescription>
-                </DialogHeader>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div>
-                    <Label htmlFor="name">Round Name</Label>
-                    <Input
-                      id="name"
-                      value={formData.name}
-                      onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                      placeholder="e.g., Round 1, Quarterfinals"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="sequence">Sequence</Label>
-                    <Input
-                      id="sequence"
-                      type="number"
-                      value={formData.sequence}
-                      onChange={(e) => setFormData(prev => ({ ...prev, sequence: parseInt(e.target.value) || 1 }))}
-                      min="1"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="scheduled_at">Scheduled Time (Optional)</Label>
-                    <Input
-                      id="scheduled_at"
-                      type="datetime-local"
-                      value={formData.scheduled_at}
-                      onChange={(e) => setFormData(prev => ({ ...prev, scheduled_at: e.target.value }))}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="status">Status</Label>
-                    <Select value={formData.status} onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="scheduled">Scheduled</SelectItem>
-                        <SelectItem value="in_progress">In Progress</SelectItem>
-                        <SelectItem value="completed">Completed</SelectItem>
-                        <SelectItem value="cancelled">Cancelled</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="flex justify-end gap-2 pt-4">
-                    <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button type="submit">
-                      {editingRound ? 'Update' : 'Create'} Round
-                    </Button>
-                  </div>
-                </form>
-              </DialogContent>
-            </Dialog>
-          </div>
-
-          <div className="grid gap-4">
-            {rounds.map((round) => (
-              <Card key={round.id}>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="flex items-center gap-2">
-                        <Clock className="h-5 w-5" />
-                        {round.name}
-                      </CardTitle>
-                      <CardDescription>
-                        Sequence: {round.sequence}
-                        {round.scheduled_at && (
-                          <span className="ml-2">
-                            • Scheduled: {new Date(round.scheduled_at).toLocaleString()}
-                          </span>
-                        )}
-                      </CardDescription>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant={round.status === 'completed' ? 'default' : 'secondary'}>
-                        {round.status}
-                      </Badge>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => openEditDialog(round)}
-                      >
-                        <Edit2 className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => deleteRound(round.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
