@@ -18,11 +18,16 @@ const Navbar = () => {
 
   const navItems = [
     { name: "Home", path: "/" },
-    { name: "About", path: "/about" },
     { name: "Tournaments", path: "/tournaments" },
     { name: "Results", path: "/results" },
+  ];
+
+  const aboutItems = [
+    { name: "About Us", path: "/about" },
     { name: "Features", path: "/features" },
     { name: "Contact", path: "/contact" },
+    { name: "FAQ", path: "/faq" },
+    { name: "Getting Started", path: "/getting-started" },
   ];
 
   const dashboardItems = [
@@ -37,6 +42,7 @@ const Navbar = () => {
   };
 
   const isDashboardActive = dashboardItems.some(item => isActive(item.path));
+  const isAboutActive = aboutItems.some(item => isActive(item.path));
 
   const handleSignOut = async () => {
     await signOut();
@@ -71,6 +77,28 @@ const Navbar = () => {
                 {item.name}
               </Link>
             ))}
+            
+            {/* About Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className={`transition-colors hover:text-foreground/80 ${
+                  isAboutActive ? "text-foreground" : "text-foreground/60"
+                }`}>
+                  About
+                  <ChevronDown className="ml-1 h-3 w-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="z-50 bg-background border">
+                {aboutItems.map((item) => (
+                  <DropdownMenuItem key={item.name} asChild>
+                    <Link to={item.path} className="cursor-pointer">
+                      {item.name}
+                    </Link>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            
             {/* Dashboard Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -133,6 +161,25 @@ const Navbar = () => {
                     {item.name}
                   </Link>
                 ))}
+                
+                {/* Mobile About Items */}
+                <div className="pt-2 space-y-2">
+                  <p className="text-sm font-medium text-foreground/80">About</p>
+                  {aboutItems.map((item) => (
+                    <Link
+                      key={item.name}
+                      to={item.path}
+                      onClick={() => setIsOpen(false)}
+                      className={`block pl-2 transition-colors hover:text-foreground/80 ${
+                        isActive(item.path) 
+                          ? "text-foreground" 
+                          : "text-foreground/60"
+                      }`}
+                    >
+                      {item.name}
+                    </Link>
+                  ))}
+                </div>
                 
                 {/* Mobile Dashboard Items */}
                 <div className="pt-2 space-y-2">
