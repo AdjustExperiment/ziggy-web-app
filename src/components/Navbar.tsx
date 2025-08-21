@@ -177,7 +177,7 @@ export function Navbar() {
                   <Link to="/login">Sign in</Link>
                 </Button>
                 <Button asChild>
-                  <Link to="/signup">Sign up</Link>
+                  <Link to="/tournaments">Sign up</Link>
                 </Button>
               </div>
             )}
@@ -283,7 +283,7 @@ export function Navbar() {
                       Sign in
                     </Button>
                   </Link>
-                  <Link to="/signup" onClick={() => setIsMobileMenuOpen(false)}>
+                  <Link to="/tournaments" onClick={() => setIsMobileMenuOpen(false)}>
                     <Button className="w-full justify-start">
                       Sign up
                     </Button>
