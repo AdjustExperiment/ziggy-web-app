@@ -10,6 +10,8 @@ import { Calendar, Users, Clock, Trophy, Search, Filter, ExternalLink, Grid3X3, 
 import { format } from "date-fns";
 import TournamentInfo from "@/components/TournamentInfo";
 import { FluidBlobBackground } from "@/components/FluidBlobBackground";
+import { TournamentCalendar } from "@/components/TournamentCalendar";
+import { TournamentCardCalendar } from "@/components/TournamentCardCalendar";
 
 interface Sponsor {
   name: string;
@@ -97,6 +99,10 @@ const Tournaments = () => {
 
   const handleRegister = (tournamentId: string) => {
     navigate(`/tournament/${tournamentId}/register`);
+  };
+
+  const handleTournamentSelect = (tournament: Tournament) => {
+    navigate(`/tournament/${tournament.id}/register`);
   };
 
   return (
@@ -235,8 +241,8 @@ const Tournaments = () => {
                   </CardHeader>
                   
                   <CardContent className={`space-y-4 ${viewMode === 'list' ? 'md:flex-1' : ''}`}>
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2 text-muted-foreground">
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 text-muted-foreground pt-2">
                         <Calendar className="h-4 w-4" />
                         <span>
                           {format(new Date(tournament.start_date), "MMM d")} - {format(new Date(tournament.end_date), "MMM d, yyyy")}
@@ -253,6 +259,13 @@ const Tournaments = () => {
                         <span>{tournament.location}</span>
                       </div>
                     </div>
+
+                    {/* Tournament Calendar Widget */}
+                    <TournamentCardCalendar 
+                      startDate={tournament.start_date}
+                      endDate={tournament.end_date}
+                      className="mb-4"
+                    />
 
                     {/* Tournament Information Preview */}
                     {tournament.tournament_info && (
@@ -323,6 +336,25 @@ const Tournaments = () => {
               ))}
             </div>
           )}
+        </div>
+      </section>
+
+      {/* Calendar View Section */}
+      <section className="py-16 bg-background relative z-10">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-foreground mb-4 font-primary">
+              Tournament Calendar
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              View all tournaments in a calendar format and find the perfect competition for your schedule.
+            </p>
+          </div>
+          
+          <TournamentCalendar 
+            tournaments={filteredTournaments}
+            onTournamentSelect={handleTournamentSelect}
+          />
         </div>
       </section>
 
