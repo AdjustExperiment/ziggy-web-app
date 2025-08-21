@@ -21,6 +21,7 @@ import Features from "./pages/Features";
 import Contact from "./pages/Contact";
 import Testimonials from "./pages/Testimonials";
 import Blog from "./pages/Blog";
+import FAQ from "./pages/FAQ";
 import AdminDashboard from "./pages/AdminDashboard";
 
 const queryClient = new QueryClient();
@@ -38,14 +39,29 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/about" element={<About />} />
-              <Route path="/dashboard" element={<Dashboard />} />
+              <Route 
+                path="/dashboard" 
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                } 
+              />
               <Route path="/tournaments" element={<Tournaments />} />
               <Route path="/results" element={<Results />} />
               <Route path="/features" element={<Features />} />
               <Route path="/testimonials" element={<Testimonials />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/blog" element={<Blog />} />
-              <Route path="/analytics" element={<Analytics />} />
+              <Route path="/faq" element={<FAQ />} />
+              <Route 
+                path="/analytics" 
+                element={
+                  <ProtectedRoute>
+                    <Analytics />
+                  </ProtectedRoute>
+                } 
+              />
               <Route 
                 path="/teams" 
                 element={

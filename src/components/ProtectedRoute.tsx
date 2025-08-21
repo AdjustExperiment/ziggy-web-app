@@ -22,7 +22,8 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
   }
 
   if (!user) {
-    return <Navigate to="/login?type=admin" state={{ from: location }} replace />;
+    const loginPath = requireAdmin ? "/login?type=admin" : "/login";
+    return <Navigate to={loginPath} state={{ from: location }} replace />;
   }
 
   if (requireAdmin && profile?.role !== 'admin') {

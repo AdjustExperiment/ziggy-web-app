@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Search, Menu, X, ExternalLink, User, ChevronDown } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Search, Menu, X, ExternalLink, User, ChevronDown, Loader2 } from "lucide-react";
 import debateLogo from "@/assets/debate-logo.svg";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/useAuth";
+import { useNavbarSearch } from "@/hooks/useNavbarSearch";
 
 const navigation = [
   { name: "Results", href: "/results" },
@@ -30,6 +31,7 @@ const aboutNavigation = [
   { name: "Features", href: "/features" },
   { name: "Testimonials", href: "/testimonials" },
   { name: "Contact", href: "/contact" },
+  { name: "FAQ", href: "/faq" },
 ];
 
 export function Navbar() {
@@ -37,18 +39,31 @@ export function Navbar() {
   const [aboutOpen, setAboutOpen] = useState(false);
   const [dashboardOpen, setDashboardOpen] = useState(false);
   const { isAdmin } = useAuth();
+  const { searchTerm, setSearchTerm, results, isSearching, showResults, clearSearch, setShowResults } = useNavbarSearch();
+  const searchRef = useRef<HTMLDivElement>(null);
+
+  // Close search results when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowResults(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [setShowResults]);
 
   return (
-    <nav className="sticky top-0 z-50 border-b bg-black backdrop-blur-lg border-white/10 animate-fade-in rounded-b-2xl">
+    <nav className="sticky top-0 z-50 border-b bg-black backdrop-blur-lg border-white/10 animate-fade-in rounded-b-2xl overflow-x-hidden">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 bg-black rounded-b-2xl">
-        <div className="flex h-32 items-center justify-between">
+        <div className="flex h-24 items-center justify-between">
           {/* Logo */}
           <div className="flex items-center shrink-0">
             <a href="/" className="hover:scale-105 transition-transform duration-300">
               <img 
                 src="/lovable-uploads/6e80f49d-b786-40a0-b14e-b90c43b076af.png" 
                 alt="Debate Champions Logo" 
-                className="h-28 sm:h-32 lg:h-36 w-auto object-contain border-2 border-white rounded-full" 
+                className="h-16 sm:h-18 lg:h-20 w-auto object-contain border-2 border-white rounded-full" 
               />
             </a>
           </div>
@@ -136,45 +151,86 @@ export function Navbar() {
 
           {/* Search & Actions */}
           <div className="hidden lg:flex items-center space-x-4 flex-shrink-0">
-            <div className="relative group">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/70 group-focus-within:text-red-500 transition-colors duration-300" />
-              <Input
-                placeholder="Search..."
-                className="w-48 xl:w-64 pl-10 bg-black/50 border-white/20 text-white placeholder:text-white/70 text-sm font-secondary focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all duration-300"
-              />
+            <div className="relative" ref={searchRef}>
+              <div className="relative group">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/70 group-focus-within:text-primary transition-colors duration-300" />
+                {isSearching && (
+                  <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary animate-spin" />
+                )}
+                <Input
+                  placeholder="Search..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onFocus={() => searchTerm && setShowResults(true)}
+                  className="w-48 xl:w-64 pl-10 pr-10 bg-black/50 border-white/20 text-white placeholder:text-white/70 text-sm font-secondary focus:border-primary focus:ring-1 focus:ring-primary transition-all duration-300"
+                />
+              </div>
+              
+              {/* Search Results Dropdown */}
+              {showResults && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-black/95 border border-white/20 rounded-lg backdrop-blur-lg shadow-tournament z-[100] max-h-80 overflow-y-auto animate-scale-in">
+                  {results.length > 0 ? (
+                    <div className="py-2">
+                      {results.map((result) => (
+                        <a
+                          key={result.id}
+                          href={result.url}
+                          className="block px-4 py-3 text-white hover:bg-white/10 hover:text-primary transition-all duration-300 border-b border-white/10 last:border-b-0"
+                          onClick={() => {
+                            clearSearch();
+                            setShowResults(false);
+                          }}
+                        >
+                          <div className="font-medium text-sm">{result.title}</div>
+                          {result.description && (
+                            <div className="text-xs text-white/70 mt-1">{result.description}</div>
+                          )}
+                          <div className="text-xs text-primary/70 capitalize mt-1">{result.type}</div>
+                        </a>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="px-4 py-6 text-center text-white/70 text-sm">
+                      No results found for "{searchTerm}"
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
             
             <Button className="bg-red-500 text-white hover:bg-red-600 border-red-500 text-sm font-secondary transition-all duration-300 hover:scale-105 rounded-xl">
               Sign Up
             </Button>
             
-            <Button variant="outline" className="border-red-500/50 text-red-500 hover:bg-red-500 hover:text-white hover:border-red-500 text-sm font-secondary transition-all duration-300 hover:scale-105 rounded-xl">
-              <ExternalLink className="h-4 w-4 mr-2" />
-              <span className="hidden xl:inline">Platform</span>
-            </Button>
+            <a href="/tournaments">
+              <Button variant="outline" className="border-primary/50 text-primary hover:bg-primary hover:text-white hover:border-primary text-sm font-secondary transition-all duration-300 hover:scale-105 rounded-xl">
+                <ExternalLink className="h-4 w-4 mr-2" />
+                <span className="hidden xl:inline">Tournament App</span>
+              </Button>
+            </a>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="text-white hover:text-red-500 hover:bg-white/10 text-sm font-secondary transition-all duration-300 hover:scale-105">
+                <Button variant="ghost" className="text-white hover:text-primary hover:bg-white/10 text-sm font-secondary transition-all duration-300 hover:scale-105">
                   <User className="h-4 w-4 mr-2" />
                   Login
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="bg-black/95 border-white/20 backdrop-blur-lg animate-scale-in">
                 <DropdownMenuItem 
-                  className="text-white hover:text-red-500 hover:bg-white/10 cursor-pointer transition-all duration-300"
+                  className="text-white hover:text-primary hover:bg-white/10 cursor-pointer transition-all duration-300"
                   onClick={() => window.location.href = '/login?type=team'}
                 >
                   Team Login
                 </DropdownMenuItem>
                 <DropdownMenuItem 
-                  className="text-white hover:text-red-500 hover:bg-white/10 cursor-pointer transition-all duration-300"
+                  className="text-white hover:text-primary hover:bg-white/10 cursor-pointer transition-all duration-300"
                   onClick={() => window.location.href = '/login?type=individual'}
                 >
                   Individual Login
                 </DropdownMenuItem>
                 <DropdownMenuItem 
-                  className="text-white hover:text-red-500 hover:bg-white/10 cursor-pointer transition-all duration-300"
+                  className="text-white hover:text-primary hover:bg-white/10 cursor-pointer transition-all duration-300"
                   onClick={() => window.location.href = '/login?type=admin'}
                 >
                   Admin Portal
@@ -187,7 +243,7 @@ export function Navbar() {
           <Button
             variant="ghost"
             size="sm"
-            className="lg:hidden text-white hover:text-red-500 min-h-[44px] min-w-[44px] transition-all duration-300 hover:scale-110"
+            className="lg:hidden text-white hover:text-primary min-h-[44px] min-w-[44px] transition-all duration-300 hover:scale-110"
             onClick={() => setIsOpen(!isOpen)}
           >
             {isOpen ? 
@@ -203,12 +259,12 @@ export function Navbar() {
             <div className="px-4 py-4 space-y-4">
               {/* About dropdown items */}
               <div className="space-y-2">
-                <div className="px-4 py-2 text-red-500 font-medium text-sm font-secondary">About</div>
+                <div className="px-4 py-2 text-primary font-medium text-sm font-secondary">About</div>
                 {aboutNavigation.map((item) => (
                   <a
                     key={item.name}
                     href={item.href}
-                    className="block px-8 py-2 text-white hover:text-red-500 transition-all duration-300 text-base rounded-lg hover:bg-white/5 min-h-[44px] flex items-center font-secondary hover:translate-x-2"
+                    className="block px-8 py-2 text-white hover:text-primary transition-all duration-300 text-base rounded-lg hover:bg-white/5 min-h-[44px] flex items-center font-secondary hover:translate-x-2"
                     onClick={() => setIsOpen(false)}
                   >
                     {item.name}
@@ -217,12 +273,12 @@ export function Navbar() {
               </div>
               {/* Dashboard dropdown items */}
               <div className="space-y-2">
-                <div className="px-4 py-2 text-red-500 font-medium text-sm font-secondary">Dashboard</div>
+                <div className="px-4 py-2 text-primary font-medium text-sm font-secondary">Dashboard</div>
                 {dashboardNavigation.map((item) => (
                   <a
                     key={item.name}
                     href={item.href}
-                    className="block px-8 py-2 text-white hover:text-red-500 transition-all duration-300 text-base rounded-lg hover:bg-white/5 min-h-[44px] flex items-center font-secondary hover:translate-x-2"
+                    className="block px-8 py-2 text-white hover:text-primary transition-all duration-300 text-base rounded-lg hover:bg-white/5 min-h-[44px] flex items-center font-secondary hover:translate-x-2"
                     onClick={() => setIsOpen(false)}
                   >
                     {item.name}
@@ -234,7 +290,7 @@ export function Navbar() {
                 <a
                   key={item.name}
                   href={item.href}
-                  className="block px-4 py-3 text-white hover:text-red-500 transition-all duration-300 text-lg font-medium rounded-lg hover:bg-white/5 min-h-[44px] flex items-center font-secondary hover:translate-x-2"
+                  className="block px-4 py-3 text-white hover:text-primary transition-all duration-300 text-lg font-medium rounded-lg hover:bg-white/5 min-h-[44px] flex items-center font-secondary hover:translate-x-2"
                   onClick={() => setIsOpen(false)}
                 >
                   {item.name}
@@ -246,7 +302,7 @@ export function Navbar() {
                 <a
                   key={item.name}
                   href={item.href}
-                  className="block px-4 py-3 text-white hover:text-red-500 transition-all duration-300 text-lg font-medium rounded-lg hover:bg-white/5 min-h-[44px] flex items-center font-secondary hover:translate-x-2"
+                  className="block px-4 py-3 text-white hover:text-primary transition-all duration-300 text-lg font-medium rounded-lg hover:bg-white/5 min-h-[44px] flex items-center font-secondary hover:translate-x-2"
                   onClick={() => setIsOpen(false)}
                 >
                   {item.name}
@@ -254,10 +310,12 @@ export function Navbar() {
               ))}
               <div className="px-4 py-2">
                 <div className="relative group">
-                  <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-white/70 group-focus-within:text-red-500 transition-colors duration-300" />
+                  <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-white/70 group-focus-within:text-primary transition-colors duration-300" />
                   <Input 
                     placeholder="Search..." 
-                    className="w-full pl-10 py-3 bg-black/50 border-white/20 text-white placeholder:text-white/70 text-base min-h-[44px] font-secondary focus:border-red-500 transition-all duration-300" 
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 py-3 bg-black/50 border-white/20 text-white placeholder:text-white/70 text-base min-h-[44px] font-secondary focus:border-primary transition-all duration-300" 
                   />
                 </div>
               </div>
@@ -267,17 +325,19 @@ export function Navbar() {
                 >
                   Sign Up
                 </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full border-red-500/50 text-red-500 hover:bg-red-500 hover:text-white hover:border-red-500 py-3 text-base min-h-[44px] font-secondary transition-all duration-300 hover:scale-105"
-                >
-                  <ExternalLink className="h-5 w-5 mr-2" />
-                  Platform
-                </Button>
+                <a href="/tournaments">
+                  <Button 
+                    variant="outline" 
+                    className="w-full border-primary/50 text-primary hover:bg-primary hover:text-white hover:border-primary py-3 text-base min-h-[44px] font-secondary transition-all duration-300 hover:scale-105"
+                  >
+                    <ExternalLink className="h-5 w-5 mr-2" />
+                    Tournament App
+                  </Button>
+                </a>
                 <div className="space-y-2">
                   <Button 
                     variant="ghost" 
-                    className="w-full text-white hover:text-red-500 hover:bg-white/10 py-3 text-base min-h-[44px] justify-start font-secondary transition-all duration-300 hover:translate-x-2"
+                    className="w-full text-white hover:text-primary hover:bg-white/10 py-3 text-base min-h-[44px] justify-start font-secondary transition-all duration-300 hover:translate-x-2"
                     onClick={() => { window.location.href = '/login?type=team'; setIsOpen(false); }}
                   >
                     <User className="h-5 w-5 mr-2" />
@@ -285,7 +345,7 @@ export function Navbar() {
                   </Button>
                   <Button 
                     variant="ghost" 
-                    className="w-full text-white hover:text-red-500 hover:bg-white/10 py-3 text-base min-h-[44px] justify-start font-secondary transition-all duration-300 hover:translate-x-2"
+                    className="w-full text-white hover:text-primary hover:bg-white/10 py-3 text-base min-h-[44px] justify-start font-secondary transition-all duration-300 hover:translate-x-2"
                     onClick={() => { window.location.href = '/login?type=individual'; setIsOpen(false); }}
                   >
                     <User className="h-5 w-5 mr-2" />
@@ -293,7 +353,7 @@ export function Navbar() {
                   </Button>
                   <Button 
                     variant="ghost" 
-                    className="w-full text-white hover:text-red-500 hover:bg-white/10 py-3 text-base min-h-[44px] justify-start font-secondary transition-all duration-300 hover:translate-x-2"
+                    className="w-full text-white hover:text-primary hover:bg-white/10 py-3 text-base min-h-[44px] justify-start font-secondary transition-all duration-300 hover:translate-x-2"
                     onClick={() => { window.location.href = '/login?type=admin'; setIsOpen(false); }}
                   >
                     <User className="h-5 w-5 mr-2" />
