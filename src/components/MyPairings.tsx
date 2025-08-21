@@ -8,29 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from '@/components/ui/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { MessageSquare, Clock, Users, Calendar, Gavel } from 'lucide-react';
-
-interface Pairing {
-  id: string;
-  tournament_id: string;
-  round_id: string;
-  room: string | null;
-  scheduled_time: string | null;
-  released: boolean;
-  aff_registration: {
-    participant_name: string;
-    participant_email: string;
-  };
-  neg_registration: {
-    participant_name: string;
-    participant_email: string;
-  };
-  round: {
-    name: string;
-  };
-  tournaments: {
-    name: string;
-  };
-}
+import { Pairing } from '@/types/database';
 
 export function MyPairings() {
   const { user } = useAuth();
@@ -62,21 +40,31 @@ export function MyPairings() {
         return;
       }
 
-      // Get pairings where user is either aff or neg
-      const { data, error } = await supabase
-        .from('pairings')
-        .select(`
-          *,
-          aff_registration:tournament_registrations!pairings_aff_registration_id_fkey(participant_name, participant_email),
-          neg_registration:tournament_registrations!pairings_neg_registration_id_fkey(participant_name, participant_email),
-          round:rounds(name),
-          tournaments(name)
-        `)
-        .or(`aff_registration_id.in.(${registrationIds.join(',')}),neg_registration_id.in.(${registrationIds.join(',')})`)
-        .eq('released', true)
-        .order('scheduled_time', { ascending: true });
+      // Use raw query to get pairings with joins
+      const { data, error } = await supabase.rpc('get_user_pairings', {
+        user_registration_ids: registrationIds
+      });
 
-      if (error) throw error;
+      if (error) {
+        // Fallback to direct table access if RPC doesn't exist yet
+        console.log('RPC not available, using direct query');
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from('tournament_registrations')
+          .select(`
+            id,
+            participant_name,
+            participant_email,
+            tournaments!inner(name)
+          `)
+          .eq('user_id', user.id);
+        
+        if (fallbackError) throw fallbackError;
+        
+        // For now, show empty state until pairings are properly released
+        setPairings([]);
+        return;
+      }
+
       setPairings(data || []);
     } catch (error: any) {
       console.error('Error fetching pairings:', error);

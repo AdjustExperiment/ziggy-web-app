@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Index from '@/pages/Index';
@@ -20,10 +21,11 @@ import Analytics from '@/pages/Analytics';
 import NotFound from '@/pages/NotFound';
 import TournamentRegistration from '@/pages/TournamentRegistration';
 import { AuthProvider } from '@/hooks/useAuth';
-import { ThemeProvider } from "@/components/theme-provider"
+import { ThemeProvider } from "@/components/ThemeProvider"
 import { Toaster } from "@/components/ui/toaster"
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { MyPairings } from '@/components/MyPairings';
+import { Navbar } from '@/components/Navbar';
 
 function App() {
   return (
