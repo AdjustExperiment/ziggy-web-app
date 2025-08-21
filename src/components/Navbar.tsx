@@ -56,11 +56,11 @@ const Navbar = () => {
           <Link to="/" className="mr-6 flex items-center space-x-2">
             <img 
               src="/lovable-uploads/01b9369b-8e9b-46ad-9d8f-b4a1802b17b8.png" 
-              alt="Championship Portal Logo" 
+                alt="Ziggy Online Debate Logo"
               className="h-8 w-8 rounded-full border-2 border-white" 
             />
             <span className="hidden font-bold sm:inline-block">
-              Championship Portal
+              Ziggy Online Debate
             </span>
           </Link>
           <nav className="flex items-center space-x-6 text-sm font-medium">
@@ -140,10 +140,10 @@ const Navbar = () => {
             >
               <img 
                 src="/lovable-uploads/01b9369b-8e9b-46ad-9d8f-b4a1802b17b8.png" 
-                alt="Championship Portal Logo" 
+                alt="Ziggy Online Debate Logo"
                 className="h-6 w-6 rounded-full border-2 border-white" 
               />
-              <span className="font-bold">Championship Portal</span>
+              <span className="font-bold">Ziggy Online Debate</span>
             </Link>
             <div className="my-4 h-[calc(100vh-8rem)] pb-10 pl-6">
               <div className="flex flex-col space-y-3">
@@ -260,10 +260,10 @@ const Navbar = () => {
             <Link to="/" className="flex items-center space-x-2 md:hidden">
               <img 
                 src="/lovable-uploads/01b9369b-8e9b-46ad-9d8f-b4a1802b17b8.png" 
-                alt="Championship Portal Logo" 
+                alt="Ziggy Online Debate Logo" 
                 className="h-6 w-6 rounded-full border-2 border-white" 
               />
-              <span className="font-bold">Championship Portal</span>
+              <span className="font-bold">Ziggy Online Debate</span>
             </Link>
           </div>
 
