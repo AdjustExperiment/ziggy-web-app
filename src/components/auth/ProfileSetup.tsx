@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -29,13 +31,15 @@ const TIME_ZONES = [
   { value: 'Pacific/Honolulu', label: 'Hawaii Time' },
 ];
 
+const EXPERIENCE_LEVELS = ['novice', 'intermediate', 'experienced', 'expert'];
+
 interface ProfileSetupProps {
   isModal?: boolean;
   onComplete?: () => void;
 }
 
 export const ProfileSetup = ({ isModal = false, onComplete }: ProfileSetupProps) => {
-  const { profile } = useAuth();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -47,6 +51,12 @@ export const ProfileSetup = ({ isModal = false, onComplete }: ProfileSetupProps)
     region: profile?.region || '',
     time_zone: profile?.time_zone || '',
     phone: profile?.phone || '',
+    account_type: profile?.role === 'judge' ? 'judge' : 'debater', // Default based on existing role
+    // Judge-specific fields
+    experience_level: 'novice',
+    bio: '',
+    qualifications: '',
+    email: user?.email || ''
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -54,21 +64,48 @@ export const ProfileSetup = ({ isModal = false, onComplete }: ProfileSetupProps)
     setLoading(true);
 
     try {
-      const { error } = await supabase
+      // Update or create the profile
+      const profileData = {
+        user_id: user?.id,
+        first_name: formData.first_name,
+        last_name: formData.last_name,
+        state: formData.state,
+        region: formData.region || null,
+        time_zone: formData.time_zone,
+        phone: formData.phone,
+        role: formData.account_type === 'judge' ? 'judge' : 'user'
+      };
+
+      const { error: profileError } = await supabase
         .from('profiles')
-        .upsert({
-          user_id: profile?.user_id,
-          first_name: formData.first_name,
-          last_name: formData.last_name,
-          state: formData.state,
-          region: formData.region || null,
-          time_zone: formData.time_zone,
-          phone: formData.phone,
-        }, {
+        .upsert(profileData, {
           onConflict: 'user_id'
         });
 
-      if (error) throw error;
+      if (profileError) throw profileError;
+
+      // If they chose judge, create a judge profile
+      if (formData.account_type === 'judge') {
+        const judgeProfileData = {
+          user_id: user?.id,
+          name: `${formData.first_name} ${formData.last_name}`,
+          email: formData.email,
+          phone: formData.phone,
+          experience_level: formData.experience_level,
+          bio: formData.bio || null,
+          qualifications: formData.qualifications || null,
+          specializations: [],
+          availability: {}
+        };
+
+        const { error: judgeError } = await supabase
+          .from('judge_profiles')
+          .upsert(judgeProfileData, {
+            onConflict: 'user_id'
+          });
+
+        if (judgeError) throw judgeError;
+      }
 
       toast({
         title: 'Profile Updated',
@@ -92,7 +129,7 @@ export const ProfileSetup = ({ isModal = false, onComplete }: ProfileSetupProps)
     }
   };
 
-  const isComplete = formData.first_name && formData.last_name && formData.state && formData.time_zone && formData.phone;
+  const isComplete = formData.first_name && formData.last_name && formData.state && formData.time_zone && formData.phone && formData.account_type;
 
   return (
     <Card className={!isModal ? 'max-w-2xl mx-auto' : ''}>
@@ -101,6 +138,26 @@ export const ProfileSetup = ({ isModal = false, onComplete }: ProfileSetupProps)
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Account Type Selection */}
+          <div className="space-y-3">
+            <Label>Account Type *</Label>
+            <RadioGroup
+              value={formData.account_type}
+              onValueChange={(value) => setFormData(prev => ({ ...prev, account_type: value }))}
+              className="flex gap-6"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="debater" id="debater" />
+                <Label htmlFor="debater">Debater/Competitor</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="judge" id="judge" />
+                <Label htmlFor="judge">Judge</Label>
+              </div>
+            </RadioGroup>
+          </div>
+
+          {/* Personal Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="first_name">First Name *</Label>
@@ -186,6 +243,54 @@ export const ProfileSetup = ({ isModal = false, onComplete }: ProfileSetupProps)
               />
             </div>
           </div>
+
+          {/* Judge-specific fields */}
+          {formData.account_type === 'judge' && (
+            <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
+              <h3 className="font-semibold">Judge Information</h3>
+              
+              <div>
+                <Label htmlFor="experience_level">Experience Level *</Label>
+                <Select
+                  value={formData.experience_level}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, experience_level: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {EXPERIENCE_LEVELS.map(level => (
+                      <SelectItem key={level} value={level}>
+                        {level.charAt(0).toUpperCase() + level.slice(1)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="qualifications">Qualifications</Label>
+                <Textarea
+                  id="qualifications"
+                  value={formData.qualifications}
+                  onChange={(e) => setFormData(prev => ({ ...prev, qualifications: e.target.value }))}
+                  placeholder="Your judging experience, certifications, etc."
+                  rows={3}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="bio">Biography</Label>
+                <Textarea
+                  id="bio"
+                  value={formData.bio}
+                  onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
+                  placeholder="Brief biography that competitors will see"
+                  rows={3}
+                />
+              </div>
+            </div>
+          )}
 
           <Button type="submit" disabled={loading || !isComplete} className="w-full">
             {loading ? 'Saving...' : 'Save Profile'}

@@ -11,9 +11,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { timezones } from '@/lib/timezones';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from '@/components/ui/use-toast';
 import PaymentButtons from '@/components/PaymentButtons';
 import { Registration } from '@/types/database';
+import { AlertCircle, CheckCircle, Info } from 'lucide-react';
 
 interface Tournament {
   id: string;
@@ -26,8 +28,7 @@ interface FormData {
   email: string;
   partnerName: string;
   partnerEmail: string;
-  judgeName: string;
-  judgePhone: string;
+  judgeEmail: string;
   emergencyContact: string;
   schoolOrganization: string;
   experienceLevel: string;
@@ -40,8 +41,7 @@ const initialFormData: FormData = {
   email: '',
   partnerName: '',
   partnerEmail: '',
-  judgeName: '',
-  judgePhone: '',
+  judgeEmail: '',
   emergencyContact: '',
   schoolOrganization: '',
   experienceLevel: '',
@@ -60,6 +60,10 @@ export default function TournamentRegistration() {
   const [registration, setRegistration] = useState<Registration | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [judgeValidation, setJudgeValidation] = useState<{
+    status: 'idle' | 'checking' | 'found' | 'not_found';
+    judgeProfile?: any;
+  }>({ status: 'idle' });
 
   useEffect(() => {
     const fetchTournament = async () => {
@@ -100,6 +104,36 @@ export default function TournamentRegistration() {
       ...prev,
       [name]: value
     }));
+
+    // Check judge email when it changes
+    if (name === 'judgeEmail' && value.includes('@')) {
+      checkJudgeEmail(value);
+    }
+  };
+
+  const checkJudgeEmail = async (email: string) => {
+    setJudgeValidation({ status: 'checking' });
+
+    try {
+      const { data, error } = await supabase
+        .from('judge_profiles')
+        .select('id, name, email')
+        .eq('email', email.toLowerCase())
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        throw error;
+      }
+
+      if (data) {
+        setJudgeValidation({ status: 'found', judgeProfile: data });
+      } else {
+        setJudgeValidation({ status: 'not_found' });
+      }
+    } catch (error) {
+      console.error('Error checking judge email:', error);
+      setJudgeValidation({ status: 'not_found' });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -113,18 +147,17 @@ export default function TournamentRegistration() {
         participant_email: formData.email,
         partner_name: formData.partnerName || null,
         partner_email: formData.partnerEmail || null,
-        judge_name: formData.judgeName || null,
-        judge_phone: formData.judgePhone || null,
         emergency_contact: formData.emergencyContact || null,
         school_organization: formData.schoolOrganization || null,
         additional_info: {
           experience_level: formData.experienceLevel,
           additional_notes: formData.additionalNotes,
-          timezone: formData.timezone
+          timezone: formData.timezone,
+          judge_email: formData.judgeEmail
         },
         payment_status: 'pending',
-        partnership_status: formData.partnerName ? 'with_partner' : 'individual',
-        user_id: user?.id || null
+        user_id: user?.id || null,
+        requested_judge_profile_id: judgeValidation.judgeProfile?.id || null
       };
 
       const { data, error } = await supabase
@@ -138,8 +171,7 @@ export default function TournamentRegistration() {
       // Transform the data to match Registration interface
       const transformedRegistration: Registration = {
         ...data,
-        judge_name: registrationData.judge_name,
-        partnership_status: registrationData.partnership_status || 'individual'
+        partnership_status: registrationData.partner_name ? 'with_partner' : 'individual'
       };
 
       setRegistration(transformedRegistration);
@@ -179,7 +211,6 @@ export default function TournamentRegistration() {
   const requestRefund = async () => {
     if (!registration || !user) return;
 
-    // Since refund_requests table doesn't exist yet, we'll just show a message
     toast({
       title: "Refund Request",
       description: "Refund requests will be available after database migration. Please contact support directly.",
@@ -273,29 +304,43 @@ export default function TournamentRegistration() {
 
           {/* Judge Information */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Judge Information (Required for Online Tournament)</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="judgeName">Judge Name *</Label>
-                <Input
-                  id="judgeName"
-                  value={formData.judgeName}
-                  onChange={(e) => handleInputChange('judgeName', e.target.value)}
-                  placeholder="Judge provided for online tournament"
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="judgePhone">Judge Phone Number *</Label>
-                <Input
-                  id="judgePhone"
-                  type="tel"
-                  value={formData.judgePhone}
-                  onChange={(e) => handleInputChange('judgePhone', e.target.value)}
-                  placeholder="(555) 123-4567"
-                  required
-                />
-              </div>
+            <h3 className="text-lg font-semibold">Judge Information (Required)</h3>
+            <div>
+              <Label htmlFor="judgeEmail">Judge Email *</Label>
+              <Input
+                id="judgeEmail"
+                type="email"
+                value={formData.judgeEmail}
+                onChange={(e) => handleInputChange('judgeEmail', e.target.value)}
+                placeholder="Email of the judge who will judge your rounds"
+                required
+              />
+              
+              {/* Judge validation feedback */}
+              {judgeValidation.status === 'checking' && (
+                <Alert className="mt-2">
+                  <Info className="h-4 w-4" />
+                  <AlertDescription>Checking judge email...</AlertDescription>
+                </Alert>
+              )}
+              
+              {judgeValidation.status === 'found' && (
+                <Alert className="mt-2">
+                  <CheckCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    Great! Found judge: {judgeValidation.judgeProfile?.name}. They will be notified of your registration.
+                  </AlertDescription>
+                </Alert>
+              )}
+              
+              {judgeValidation.status === 'not_found' && formData.judgeEmail && (
+                <Alert variant="destructive" className="mt-2">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    No judge account found with this email. Please ask your judge to create an account first, or double-check the email address.
+                  </AlertDescription>
+                </Alert>
+              )}
             </div>
           </div>
 
@@ -368,7 +413,11 @@ export default function TournamentRegistration() {
             </div>
           </div>
 
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
+          <Button 
+            type="submit" 
+            className="w-full" 
+            disabled={isSubmitting || judgeValidation.status === 'not_found'}
+          >
             {isSubmitting ? 'Submitting...' : 'Submit Registration'}
           </Button>
         </form>
@@ -394,7 +443,7 @@ export default function TournamentRegistration() {
               {registration.partner_name && (
                 <p><strong>Partner:</strong> {registration.partner_name}</p>
               )}
-              <p><strong>Judge:</strong> {registration.judge_name}</p>
+              <p><strong>Judge Email:</strong> {registration.additional_info?.judge_email}</p>
             </div>
           </div>
         )}
@@ -402,11 +451,9 @@ export default function TournamentRegistration() {
         <PaymentButtons 
           amount={tournament?.registration_fee || 0}
           onPayPalPayment={async () => {
-            // PayPal payment handler
             console.log('PayPal payment initiated');
           }}
           onVenmoPayment={async () => {
-            // Venmo payment handler
             console.log('Venmo payment initiated');
           }}
         />

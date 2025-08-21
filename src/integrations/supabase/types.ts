@@ -1221,6 +1221,7 @@ export type Database = {
           payment_status: string
           registration_date: string
           reminder_count: number
+          requested_judge_profile_id: string | null
           school_organization: string | null
           success_email_sent_at: string | null
           tournament_id: string
@@ -1242,6 +1243,7 @@ export type Database = {
           payment_status?: string
           registration_date?: string
           reminder_count?: number
+          requested_judge_profile_id?: string | null
           school_organization?: string | null
           success_email_sent_at?: string | null
           tournament_id: string
@@ -1263,6 +1265,7 @@ export type Database = {
           payment_status?: string
           registration_date?: string
           reminder_count?: number
+          requested_judge_profile_id?: string | null
           school_organization?: string | null
           success_email_sent_at?: string | null
           tournament_id?: string
@@ -1270,6 +1273,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "tournament_registrations_requested_judge_profile_id_fkey"
+            columns: ["requested_judge_profile_id"]
+            isOneToOne: false
+            referencedRelation: "judge_profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "tournament_registrations_tournament_id_fkey"
             columns: ["tournament_id"]
