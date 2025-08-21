@@ -765,7 +765,7 @@ export type Database = {
           success_email_sent_at: string | null
           tournament_id: string
           updated_at: string
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           additional_info?: Json | null
@@ -786,7 +786,7 @@ export type Database = {
           success_email_sent_at?: string | null
           tournament_id: string
           updated_at?: string
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           additional_info?: Json | null
@@ -807,7 +807,7 @@ export type Database = {
           success_email_sent_at?: string | null
           tournament_id?: string
           updated_at?: string
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: [
           {
