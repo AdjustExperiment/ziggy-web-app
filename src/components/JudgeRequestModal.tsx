@@ -52,7 +52,7 @@ export default function JudgeRequestModal({
   const fetchJudges = async () => {
     try {
       const { data, error } = await supabase
-        .from('judge_profiles_public')
+        .from('judge_profiles')
         .select('id, name, experience_level, qualifications, bio')
         .order('name');
 
