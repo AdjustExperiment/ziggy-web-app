@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,20 +5,26 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Calendar } from '@/components/ui/calendar';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { CalendarIcon, MapPin, Users, DollarSign, Trophy, Download, ArrowLeft } from 'lucide-react';
+import { CalendarIcon, MapPin, Users, DollarSign, Trophy, Download, ArrowLeft, ExternalLink } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from '@/components/ui/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import PaymentButtons from '@/components/PaymentButtons';
+import TournamentInfo from '@/components/TournamentInfo';
+
+interface Sponsor {
+  name: string;
+  link?: string;
+  logo_url?: string;
+}
 
 interface Tournament {
   id: string;
   name: string;
   description: string;
+  tournament_info: string;
   format: string;
   debate_style: string;
   start_date: string;
@@ -30,7 +35,9 @@ interface Tournament {
   current_participants: number;
   registration_fee: number;
   prize_pool: string;
-  sponsors: string[];
+  cash_prize_total: number;
+  prize_items: string[];
+  sponsors: Sponsor[];
   status: string;
   registration_open: boolean;
   registration_deadline: string;
@@ -88,8 +95,13 @@ const TournamentRegistration = () => {
       const transformedTournament = {
         ...data,
         sponsors: Array.isArray(data.sponsors) 
-          ? (data.sponsors as string[]).filter(s => typeof s === 'string')
+          ? data.sponsors.map((sponsor: any) => 
+              typeof sponsor === 'string' ? { name: sponsor } : sponsor
+            )
           : [],
+        prize_items: Array.isArray(data.prize_items) ? data.prize_items : [],
+        tournament_info: data.tournament_info || '',
+        cash_prize_total: data.cash_prize_total || 0,
         additional_info: data.additional_info || {}
       };
       
@@ -313,12 +325,27 @@ END:VCALENDAR`;
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Tournament Details */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Tournament Information Section */}
+            {tournament.tournament_info && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Trophy className="h-5 w-5" />
+                    Tournament Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <TournamentInfo tournamentInfo={tournament.tournament_info} />
+                </CardContent>
+              </Card>
+            )}
+
             {/* Basic Info */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Trophy className="h-5 w-5" />
-                  Tournament Information
+                  Event Details
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -377,12 +404,37 @@ END:VCALENDAR`;
                   </div>
                 </div>
                 
-                {tournament.prize_pool && (
+                {(tournament.prize_pool || tournament.cash_prize_total > 0 || tournament.prize_items.length > 0) && (
                   <>
                     <Separator />
                     <div>
-                      <p className="font-medium">Prize Pool</p>
-                      <p className="text-2xl font-bold text-primary">{tournament.prize_pool}</p>
+                      <p className="font-medium mb-3">Prizes</p>
+                      <div className="space-y-3">
+                        {tournament.prize_pool && (
+                          <div>
+                            <p className="text-sm font-medium text-muted-foreground">Total Prize Pool</p>
+                            <p className="text-2xl font-bold text-primary">{tournament.prize_pool}</p>
+                          </div>
+                        )}
+                        
+                        {tournament.cash_prize_total > 0 && (
+                          <div>
+                            <p className="text-sm font-medium text-muted-foreground">Cash Prizes</p>
+                            <p className="text-xl font-bold text-green-600">${tournament.cash_prize_total.toLocaleString()}</p>
+                          </div>
+                        )}
+                        
+                        {tournament.prize_items.length > 0 && (
+                          <div>
+                            <p className="text-sm font-medium text-muted-foreground mb-2">Additional Prizes & Services</p>
+                            <ul className="list-disc list-inside space-y-1 text-sm">
+                              {tournament.prize_items.map((item, index) => (
+                                <li key={index} className="text-muted-foreground">{item}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </>
                 )}
@@ -391,10 +443,33 @@ END:VCALENDAR`;
                   <>
                     <Separator />
                     <div>
-                      <p className="font-medium mb-2">Sponsors</p>
-                      <div className="flex flex-wrap gap-2">
+                      <p className="font-medium mb-3">Sponsors</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {tournament.sponsors.map((sponsor, index) => (
-                          <Badge key={index} variant="secondary">{sponsor}</Badge>
+                          <div key={index} className="flex items-center gap-3 p-2 border rounded-lg">
+                            {sponsor.logo_url && (
+                              <img 
+                                src={sponsor.logo_url} 
+                                alt={sponsor.name} 
+                                className="h-8 w-8 object-contain"
+                              />
+                            )}
+                            <div className="flex-1">
+                              {sponsor.link ? (
+                                <a 
+                                  href={sponsor.link} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="font-medium text-primary hover:underline flex items-center gap-1"
+                                >
+                                  {sponsor.name}
+                                  <ExternalLink className="h-3 w-3" />
+                                </a>
+                              ) : (
+                                <span className="font-medium">{sponsor.name}</span>
+                              )}
+                            </div>
+                          </div>
                         ))}
                       </div>
                     </div>
@@ -426,27 +501,6 @@ END:VCALENDAR`;
                     Export
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Tournament Calendar</CardTitle>
-                <CardDescription>
-                  Tournament runs from {format(new Date(tournament.start_date), "PPP")} to {format(new Date(tournament.end_date), "PPP")}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Calendar
-                  mode="range"
-                  defaultMonth={new Date(tournament.start_date)}
-                  selected={{
-                    from: new Date(tournament.start_date),
-                    to: new Date(tournament.end_date)
-                  }}
-                  className="rounded-md border w-fit mx-auto"
-                  disabled={{ before: new Date() }}
-                />
               </CardContent>
             </Card>
           </div>

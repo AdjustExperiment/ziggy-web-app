@@ -259,6 +259,7 @@ export type Database = {
       tournaments: {
         Row: {
           additional_info: Json | null
+          cash_prize_total: number | null
           created_at: string
           created_by: string | null
           current_participants: number
@@ -272,6 +273,7 @@ export type Database = {
           name: string
           payment_handler: string | null
           paypal_client_id: string | null
+          prize_items: string[] | null
           prize_pool: string | null
           registration_deadline: string | null
           registration_fee: number | null
@@ -279,11 +281,13 @@ export type Database = {
           sponsors: Json | null
           start_date: string
           status: string
+          tournament_info: string | null
           updated_at: string
           venue_details: string | null
         }
         Insert: {
           additional_info?: Json | null
+          cash_prize_total?: number | null
           created_at?: string
           created_by?: string | null
           current_participants?: number
@@ -297,6 +301,7 @@ export type Database = {
           name: string
           payment_handler?: string | null
           paypal_client_id?: string | null
+          prize_items?: string[] | null
           prize_pool?: string | null
           registration_deadline?: string | null
           registration_fee?: number | null
@@ -304,11 +309,13 @@ export type Database = {
           sponsors?: Json | null
           start_date: string
           status?: string
+          tournament_info?: string | null
           updated_at?: string
           venue_details?: string | null
         }
         Update: {
           additional_info?: Json | null
+          cash_prize_total?: number | null
           created_at?: string
           created_by?: string | null
           current_participants?: number
@@ -322,6 +329,7 @@ export type Database = {
           name?: string
           payment_handler?: string | null
           paypal_client_id?: string | null
+          prize_items?: string[] | null
           prize_pool?: string | null
           registration_deadline?: string | null
           registration_fee?: number | null
@@ -329,6 +337,7 @@ export type Database = {
           sponsors?: Json | null
           start_date?: string
           status?: string
+          tournament_info?: string | null
           updated_at?: string
           venue_details?: string | null
         }

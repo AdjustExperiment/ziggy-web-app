@@ -11,15 +11,28 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { CalendarIcon, Plus, Edit, Trash2, Users, DollarSign } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { CalendarIcon, Plus, Edit, Trash2, Users, DollarSign, Upload, X, Link, Image } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { toast } from '@/components/ui/use-toast';
+import DOMPurify from 'dompurify';
+import 'react-quill/dist/quill.snow.css';
+
+// Dynamic import for ReactQuill to avoid SSR issues
+const ReactQuill = React.lazy(() => import('react-quill'));
+
+interface Sponsor {
+  name: string;
+  link?: string;
+  logo_url?: string;
+}
 
 interface Tournament {
   id: string;
   name: string;
   description: string;
+  tournament_info: string;
   format: string;
   debate_style: string;
   start_date: string;
@@ -30,7 +43,9 @@ interface Tournament {
   current_participants: number;
   registration_fee: number;
   prize_pool: string;
-  sponsors: string[];
+  cash_prize_total: number;
+  prize_items: string[];
+  sponsors: Sponsor[];
   status: string;
   registration_open: boolean;
   registration_deadline: string;
@@ -44,9 +59,15 @@ const TournamentManager = () => {
   const [loading, setLoading] = useState(true);
   const [editingTournament, setEditingTournament] = useState<Tournament | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('basic');
+  const [newPrizeItem, setNewPrizeItem] = useState('');
+  const [newSponsor, setNewSponsor] = useState({ name: '', link: '', logo_url: '' });
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  
   const [formData, setFormData] = useState({
     name: '',
     description: '',
+    tournament_info: '',
     format: '',
     debate_style: '',
     start_date: new Date(),
@@ -56,7 +77,9 @@ const TournamentManager = () => {
     max_participants: 100,
     registration_fee: 30.00,
     prize_pool: '',
-    sponsors: '',
+    cash_prize_total: 0,
+    prize_items: [] as string[],
+    sponsors: [] as Sponsor[],
     status: 'Planning Phase',
     registration_open: false,
     registration_deadline: new Date(),
@@ -78,12 +101,16 @@ const TournamentManager = () => {
 
       if (error) throw error;
       
-      // Transform the data to match our interface
       const transformedData = data?.map(tournament => ({
         ...tournament,
         sponsors: Array.isArray(tournament.sponsors) 
-          ? (tournament.sponsors as string[]).filter(s => typeof s === 'string')
+          ? tournament.sponsors.map((sponsor: any) => 
+              typeof sponsor === 'string' ? { name: sponsor } : sponsor
+            )
           : [],
+        prize_items: Array.isArray(tournament.prize_items) ? tournament.prize_items : [],
+        tournament_info: tournament.tournament_info || '',
+        cash_prize_total: tournament.cash_prize_total || 0,
         additional_info: tournament.additional_info || {}
       })) || [];
       
@@ -103,6 +130,7 @@ const TournamentManager = () => {
     setFormData({
       name: '',
       description: '',
+      tournament_info: '',
       format: '',
       debate_style: '',
       start_date: new Date(),
@@ -112,7 +140,9 @@ const TournamentManager = () => {
       max_participants: 100,
       registration_fee: 30.00,
       prize_pool: '',
-      sponsors: '',
+      cash_prize_total: 0,
+      prize_items: [],
+      sponsors: [],
       status: 'Planning Phase',
       registration_open: false,
       registration_deadline: new Date(),
@@ -121,17 +151,99 @@ const TournamentManager = () => {
       additional_info: '{}'
     });
     setEditingTournament(null);
+    setActiveTab('basic');
+    setNewPrizeItem('');
+    setNewSponsor({ name: '', link: '', logo_url: '' });
+  };
+
+  const handleLogoUpload = async (file: File) => {
+    setUploadingLogo(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('sponsor-logos')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('sponsor-logos')
+        .getPublicUrl(filePath);
+
+      setNewSponsor(prev => ({ ...prev, logo_url: publicUrl }));
+      toast({ title: "Success", description: "Logo uploaded successfully" });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to upload logo",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+
+  const addSponsor = () => {
+    if (!newSponsor.name.trim()) return;
+    
+    setFormData(prev => ({
+      ...prev,
+      sponsors: [...prev.sponsors, { ...newSponsor }]
+    }));
+    
+    setNewSponsor({ name: '', link: '', logo_url: '' });
+  };
+
+  const removeSponsor = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      sponsors: prev.sponsors.filter((_, i) => i !== index)
+    }));
+  };
+
+  const addPrizeItem = () => {
+    if (!newPrizeItem.trim()) return;
+    
+    setFormData(prev => ({
+      ...prev,
+      prize_items: [...prev.prize_items, newPrizeItem.trim()]
+    }));
+    
+    setNewPrizeItem('');
+  };
+
+  const removePrizeItem = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      prize_items: prev.prize_items.filter((_, i) => i !== index)
+    }));
+  };
+
+  // Rich text editor modules configuration
+  const quillModules = {
+    toolbar: [
+      [{ 'header': [1, 2, 3, false] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+      [{ 'color': [] }, { 'background': [] }],
+      [{ 'align': [] }],
+      ['link'],
+      ['clean']
+    ],
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
-      const sponsorsArray = formData.sponsors.split(',').map(s => s.trim()).filter(s => s);
-      
       const tournamentData = {
         ...formData,
-        sponsors: sponsorsArray,
+        tournament_info: DOMPurify.sanitize(formData.tournament_info),
+        sponsors: formData.sponsors,
+        prize_items: formData.prize_items,
         start_date: format(formData.start_date, 'yyyy-MM-dd'),
         end_date: format(formData.end_date, 'yyyy-MM-dd'),
         registration_deadline: format(formData.registration_deadline, 'yyyy-MM-dd'),
@@ -172,6 +284,7 @@ const TournamentManager = () => {
     setFormData({
       name: tournament.name,
       description: tournament.description || '',
+      tournament_info: tournament.tournament_info || '',
       format: tournament.format,
       debate_style: tournament.debate_style || '',
       start_date: new Date(tournament.start_date),
@@ -181,7 +294,9 @@ const TournamentManager = () => {
       max_participants: tournament.max_participants,
       registration_fee: tournament.registration_fee,
       prize_pool: tournament.prize_pool || '',
-      sponsors: tournament.sponsors?.join(', ') || '',
+      cash_prize_total: tournament.cash_prize_total || 0,
+      prize_items: tournament.prize_items || [],
+      sponsors: tournament.sponsors || [],
       status: tournament.status,
       registration_open: tournament.registration_open,
       registration_deadline: new Date(tournament.registration_deadline),
@@ -258,7 +373,7 @@ const TournamentManager = () => {
             </Button>
           </DialogTrigger>
           
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
                 {editingTournament ? 'Edit Tournament' : 'Create New Tournament'}
@@ -268,231 +383,385 @@ const TournamentManager = () => {
               </DialogDescription>
             </DialogHeader>
             
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="name">Tournament Name *</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="format">Format *</Label>
-                  <Select value={formData.format} onValueChange={(value) => setFormData({...formData, format: value})}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select format" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Policy Debate">Policy Debate</SelectItem>
-                      <SelectItem value="Parliamentary">Parliamentary</SelectItem>
-                      <SelectItem value="Public Forum">Public Forum</SelectItem>
-                      <SelectItem value="British Parliamentary">British Parliamentary</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div>
-                  <Label htmlFor="debate_style">Debate Style</Label>
-                  <Input
-                    id="debate_style"
-                    value={formData.debate_style}
-                    onChange={(e) => setFormData({...formData, debate_style: e.target.value})}
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="location">Location *</Label>
-                  <Input
-                    id="location"
-                    value={formData.location}
-                    onChange={(e) => setFormData({...formData, location: e.target.value})}
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <Label>Start Date *</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" className="w-full justify-start text-left font-normal">
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {format(formData.start_date, "PPP")}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={formData.start_date}
-                        onSelect={(date) => date && setFormData({...formData, start_date: date})}
-                        className={cn("p-3 pointer-events-auto")}
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="basic">Basic Info</TabsTrigger>
+                <TabsTrigger value="content">Content</TabsTrigger>
+                <TabsTrigger value="prizes">Prizes</TabsTrigger>
+                <TabsTrigger value="sponsors">Sponsors</TabsTrigger>
+              </TabsList>
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <TabsContent value="basic" className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="name">Tournament Name *</Label>
+                      <Input
+                        id="name"
+                        value={formData.name}
+                        onChange={(e) => setFormData({...formData, name: e.target.value})}
+                        required
                       />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                
-                <div>
-                  <Label>End Date *</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" className="w-full justify-start text-left font-normal">
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {format(formData.end_date, "PPP")}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={formData.end_date}
-                        onSelect={(date) => date && setFormData({...formData, end_date: date})}
-                        className={cn("p-3 pointer-events-auto")}
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="format">Format *</Label>
+                      <Select value={formData.format} onValueChange={(value) => setFormData({...formData, format: value})}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select format" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Policy Debate">Policy Debate</SelectItem>
+                          <SelectItem value="Parliamentary">Parliamentary</SelectItem>
+                          <SelectItem value="Public Forum">Public Forum</SelectItem>
+                          <SelectItem value="British Parliamentary">British Parliamentary</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="debate_style">Debate Style</Label>
+                      <Input
+                        id="debate_style"
+                        value={formData.debate_style}
+                        onChange={(e) => setFormData({...formData, debate_style: e.target.value})}
                       />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                
-                <div>
-                  <Label htmlFor="max_participants">Max Participants *</Label>
-                  <Input
-                    id="max_participants"
-                    type="number"
-                    value={formData.max_participants}
-                    onChange={(e) => setFormData({...formData, max_participants: parseInt(e.target.value)})}
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="registration_fee">Registration Fee ($)</Label>
-                  <Input
-                    id="registration_fee"
-                    type="number"
-                    step="0.01"
-                    value={formData.registration_fee}
-                    onChange={(e) => setFormData({...formData, registration_fee: parseFloat(e.target.value)})}
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="prize_pool">Prize Pool</Label>
-                  <Input
-                    id="prize_pool"
-                    value={formData.prize_pool}
-                    onChange={(e) => setFormData({...formData, prize_pool: e.target.value})}
-                    placeholder="$50,000"
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="status">Status</Label>
-                  <Select value={formData.status} onValueChange={(value) => setFormData({...formData, status: value})}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Planning Phase">Planning Phase</SelectItem>
-                      <SelectItem value="Registration Open">Registration Open</SelectItem>
-                      <SelectItem value="Registration Closed">Registration Closed</SelectItem>
-                      <SelectItem value="Ongoing">Ongoing</SelectItem>
-                      <SelectItem value="Completed">Completed</SelectItem>
-                      <SelectItem value="Cancelled">Cancelled</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div>
-                  <Label>Registration Deadline</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" className="w-full justify-start text-left font-normal">
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {format(formData.registration_deadline, "PPP")}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={formData.registration_deadline}
-                        onSelect={(date) => date && setFormData({...formData, registration_deadline: date})}
-                        className={cn("p-3 pointer-events-auto")}
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="location">Location *</Label>
+                      <Input
+                        id="location"
+                        value={formData.location}
+                        onChange={(e) => setFormData({...formData, location: e.target.value})}
+                        required
                       />
-                    </PopoverContent>
-                  </Popover>
-                </div>
+                    </div>
+                    
+                    <div>
+                      <Label>Start Date *</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" className="w-full justify-start text-left font-normal">
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {format(formData.start_date, "PPP")}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <Calendar
+                            mode="single"
+                            selected={formData.start_date}
+                            onSelect={(date) => date && setFormData({...formData, start_date: date})}
+                            className={cn("p-3 pointer-events-auto")}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    
+                    <div>
+                      <Label>End Date *</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" className="w-full justify-start text-left font-normal">
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {format(formData.end_date, "PPP")}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <Calendar
+                            mode="single"
+                            selected={formData.end_date}
+                            onSelect={(date) => date && setFormData({...formData, end_date: date})}
+                            className={cn("p-3 pointer-events-auto")}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="max_participants">Max Participants *</Label>
+                      <Input
+                        id="max_participants"
+                        type="number"
+                        value={formData.max_participants}
+                        onChange={(e) => setFormData({...formData, max_participants: parseInt(e.target.value)})}
+                        required
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="registration_fee">Registration Fee ($)</Label>
+                      <Input
+                        id="registration_fee"
+                        type="number"
+                        step="0.01"
+                        value={formData.registration_fee}
+                        onChange={(e) => setFormData({...formData, registration_fee: parseFloat(e.target.value)})}
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="status">Status</Label>
+                      <Select value={formData.status} onValueChange={(value) => setFormData({...formData, status: value})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Planning Phase">Planning Phase</SelectItem>
+                          <SelectItem value="Registration Open">Registration Open</SelectItem>
+                          <SelectItem value="Registration Closed">Registration Closed</SelectItem>
+                          <SelectItem value="Ongoing">Ongoing</SelectItem>
+                          <SelectItem value="Completed">Completed</SelectItem>
+                          <SelectItem value="Cancelled">Cancelled</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div>
+                      <Label>Registration Deadline</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" className="w-full justify-start text-left font-normal">
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {format(formData.registration_deadline, "PPP")}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <Calendar
+                            mode="single"
+                            selected={formData.registration_deadline}
+                            onSelect={(date) => date && setFormData({...formData, registration_deadline: date})}
+                            className={cn("p-3 pointer-events-auto")}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="paypal_client_id">PayPal Client ID</Label>
+                      <Input
+                        id="paypal_client_id"
+                        value={formData.paypal_client_id}
+                        onChange={(e) => setFormData({...formData, paypal_client_id: e.target.value})}
+                        placeholder="For payment processing"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="venue_details">Venue Details</Label>
+                    <Textarea
+                      id="venue_details"
+                      value={formData.venue_details}
+                      onChange={(e) => setFormData({...formData, venue_details: e.target.value})}
+                      rows={2}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="registration_open"
+                      checked={formData.registration_open}
+                      onCheckedChange={(checked) => setFormData({...formData, registration_open: checked})}
+                    />
+                    <Label htmlFor="registration_open">Registration Open</Label>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="content" className="space-y-4">
+                  <div>
+                    <Label htmlFor="description">Brief Description</Label>
+                    <Textarea
+                      id="description"
+                      value={formData.description}
+                      onChange={(e) => setFormData({...formData, description: e.target.value})}
+                      rows={3}
+                      placeholder="Short description for tournament cards"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label>Tournament Information (Rich Text)</Label>
+                    <div className="border rounded-md">
+                      <React.Suspense fallback={<div className="p-4">Loading editor...</div>}>
+                        <ReactQuill
+                          theme="snow"
+                          value={formData.tournament_info}
+                          onChange={(value) => setFormData({...formData, tournament_info: value})}
+                          modules={quillModules}
+                          placeholder="Detailed tournament information, rules, schedule, etc."
+                          style={{ minHeight: '200px' }}
+                        />
+                      </React.Suspense>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="additional_info">Additional Info (JSON)</Label>
+                    <Textarea
+                      id="additional_info"
+                      value={formData.additional_info}
+                      onChange={(e) => setFormData({...formData, additional_info: e.target.value})}
+                      rows={3}
+                      placeholder='{"dress_code": "Business formal", "meals_provided": true}'
+                    />
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="prizes" className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="prize_pool">Prize Pool Description</Label>
+                      <Input
+                        id="prize_pool"
+                        value={formData.prize_pool}
+                        onChange={(e) => setFormData({...formData, prize_pool: e.target.value})}
+                        placeholder="e.g., $50,000 Total"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="cash_prize_total">Cash Prize Total ($)</Label>
+                      <Input
+                        id="cash_prize_total"
+                        type="number"
+                        step="0.01"
+                        value={formData.cash_prize_total}
+                        onChange={(e) => setFormData({...formData, cash_prize_total: parseFloat(e.target.value) || 0})}
+                        placeholder="0.00"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <Label>Prize Items & Services</Label>
+                    <div className="space-y-2">
+                      <div className="flex gap-2">
+                        <Input
+                          value={newPrizeItem}
+                          onChange={(e) => setNewPrizeItem(e.target.value)}
+                          placeholder="e.g., Scholarships, Coaching sessions, Trophies"
+                          onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addPrizeItem())}
+                        />
+                        <Button type="button" onClick={addPrizeItem}>
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      
+                      <div className="space-y-1 max-h-40 overflow-y-auto">
+                        {formData.prize_items.map((item, index) => (
+                          <div key={index} className="flex items-center justify-between bg-muted p-2 rounded">
+                            <span className="text-sm">{item}</span>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removePrizeItem(index)}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="sponsors" className="space-y-4">
+                  <div>
+                    <Label>Add New Sponsor</Label>
+                    <div className="space-y-3 p-4 border rounded-lg">
+                      <div>
+                        <Label htmlFor="sponsor_name">Sponsor Name *</Label>
+                        <Input
+                          id="sponsor_name"
+                          value={newSponsor.name}
+                          onChange={(e) => setNewSponsor(prev => ({ ...prev, name: e.target.value }))}
+                          placeholder="Harvard Law School"
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="sponsor_link">Website Link</Label>
+                        <Input
+                          id="sponsor_link"
+                          value={newSponsor.link}
+                          onChange={(e) => setNewSponsor(prev => ({ ...prev, link: e.target.value }))}
+                          placeholder="https://law.harvard.edu"
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label>Logo Upload</Label>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) handleLogoUpload(file);
+                            }}
+                            disabled={uploadingLogo}
+                          />
+                          {uploadingLogo && <div className="text-sm text-muted-foreground">Uploading...</div>}
+                        </div>
+                        {newSponsor.logo_url && (
+                          <div className="mt-2">
+                            <img src={newSponsor.logo_url} alt="Logo preview" className="h-12 object-contain" />
+                          </div>
+                        )}
+                      </div>
+                      
+                      <Button type="button" onClick={addSponsor} disabled={!newSponsor.name.trim()}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Sponsor
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <Label>Current Sponsors</Label>
+                    <div className="space-y-2 max-h-60 overflow-y-auto">
+                      {formData.sponsors.map((sponsor, index) => (
+                        <div key={index} className="flex items-center justify-between bg-muted p-3 rounded">
+                          <div className="flex items-center gap-3">
+                            {sponsor.logo_url && (
+                              <img src={sponsor.logo_url} alt={sponsor.name} className="h-8 object-contain" />
+                            )}
+                            <div>
+                              <div className="font-medium">{sponsor.name}</div>
+                              {sponsor.link && (
+                                <div className="text-xs text-muted-foreground flex items-center gap-1">
+                                  <Link className="h-3 w-3" />
+                                  {sponsor.link}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeSponsor(index)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </TabsContent>
                 
-                <div>
-                  <Label htmlFor="paypal_client_id">PayPal Client ID</Label>
-                  <Input
-                    id="paypal_client_id"
-                    value={formData.paypal_client_id}
-                    onChange={(e) => setFormData({...formData, paypal_client_id: e.target.value})}
-                    placeholder="For payment processing"
-                  />
+                <div className="flex justify-end space-x-2 pt-4">
+                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit">
+                    {editingTournament ? 'Update' : 'Create'} Tournament
+                  </Button>
                 </div>
-              </div>
-              
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData({...formData, description: e.target.value})}
-                  rows={3}
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="venue_details">Venue Details</Label>
-                <Textarea
-                  id="venue_details"
-                  value={formData.venue_details}
-                  onChange={(e) => setFormData({...formData, venue_details: e.target.value})}
-                  rows={2}
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="sponsors">Sponsors (comma-separated)</Label>
-                <Input
-                  id="sponsors"
-                  value={formData.sponsors}
-                  onChange={(e) => setFormData({...formData, sponsors: e.target.value})}
-                  placeholder="Harvard Law School, National Debate Association"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="additional_info">Additional Info (JSON)</Label>
-                <Textarea
-                  id="additional_info"
-                  value={formData.additional_info}
-                  onChange={(e) => setFormData({...formData, additional_info: e.target.value})}
-                  rows={3}
-                  placeholder='{"dress_code": "Business formal", "meals_provided": true}'
-                />
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="registration_open"
-                  checked={formData.registration_open}
-                  onCheckedChange={(checked) => setFormData({...formData, registration_open: checked})}
-                />
-                <Label htmlFor="registration_open">Registration Open</Label>
-              </div>
-              
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit">
-                  {editingTournament ? 'Update' : 'Create'} Tournament
-                </Button>
-              </div>
-            </form>
+              </form>
+            </Tabs>
           </DialogContent>
         </Dialog>
       </div>

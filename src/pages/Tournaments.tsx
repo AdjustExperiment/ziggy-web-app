@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,13 +7,21 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Users, Clock, Trophy, Search, Filter } from "lucide-react";
+import { Calendar, Users, Clock, Trophy, Search, Filter, ExternalLink } from "lucide-react";
 import { format } from "date-fns";
+import TournamentInfo from "@/components/TournamentInfo";
+
+interface Sponsor {
+  name: string;
+  link?: string;
+  logo_url?: string;
+}
 
 interface Tournament {
   id: string;
   name: string;
   description: string;
+  tournament_info: string;
   format: string;
   start_date: string;
   end_date: string;
@@ -21,6 +30,9 @@ interface Tournament {
   current_participants: number;
   registration_fee: number;
   prize_pool: string;
+  cash_prize_total: number;
+  prize_items: string[];
+  sponsors: Sponsor[];
   status: string;
   registration_open: boolean;
 }
@@ -46,10 +58,16 @@ const Tournaments = () => {
 
       if (error) throw error;
       
-      // Transform the data to match our interface
       const transformedData = data?.map(tournament => ({
         ...tournament,
-        sponsors: Array.isArray(tournament.sponsors) ? tournament.sponsors : []
+        sponsors: Array.isArray(tournament.sponsors) 
+          ? tournament.sponsors.map((sponsor: any) => 
+              typeof sponsor === 'string' ? { name: sponsor } : sponsor
+            )
+          : [],
+        prize_items: Array.isArray(tournament.prize_items) ? tournament.prize_items : [],
+        tournament_info: tournament.tournament_info || '',
+        cash_prize_total: tournament.cash_prize_total || 0
       })) || [];
       
       setTournaments(transformedData);
@@ -72,6 +90,7 @@ const Tournaments = () => {
   const handleRegister = (tournamentId: string) => {
     navigate(`/tournament/${tournamentId}/register`);
   };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -155,7 +174,7 @@ const Tournaments = () => {
               <p className="text-white/70">Try adjusting your search criteria</p>
             </div>
           ) : (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
+            <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-1">
               {filteredTournaments.map((tournament) => (
                 <Card key={tournament.id} className="bg-black border-white/10 hover:border-red-500/30 transition-smooth group">
                   <CardHeader>
@@ -168,7 +187,9 @@ const Tournaments = () => {
                       </Badge>
                       <div className="text-right">
                         <div className="text-sm text-white/70">Prize Pool</div>
-                        <div className="font-bold text-red-500">{tournament.prize_pool || 'TBD'}</div>
+                        <div className="font-bold text-red-500">
+                          {tournament.prize_pool || (tournament.cash_prize_total > 0 ? `$${tournament.cash_prize_total.toLocaleString()}` : 'TBD')}
+                        </div>
                       </div>
                     </div>
                     
@@ -181,7 +202,7 @@ const Tournaments = () => {
                     </div>
                   </CardHeader>
                   
-                  <CardContent>
+                  <CardContent className="space-y-4">
                     <div className="space-y-3">
                       <div className="flex items-center gap-2 text-white/70">
                         <Calendar className="h-4 w-4" />
@@ -199,29 +220,74 @@ const Tournaments = () => {
                         <Trophy className="h-4 w-4" />
                         <span>{tournament.location}</span>
                       </div>
-                      
-                      <div className="pt-4 flex gap-2">
-                        <Button 
-                          className="flex-1 bg-red-500 hover:bg-red-600 text-white"
-                          onClick={() => handleRegister(tournament.id)}
-                          disabled={!tournament.registration_open || tournament.current_participants >= tournament.max_participants}
-                        >
-                          {tournament.registration_open && tournament.current_participants < tournament.max_participants 
-                            ? `Register ($${tournament.registration_fee})` 
-                            : tournament.current_participants >= tournament.max_participants 
-                            ? 'Full' 
-                            : 'View Details'
-                          }
-                        </Button>
-                        
-                        <Button 
-                          variant="outline" 
-                          className="border-white/30 text-white hover:bg-white/10"
-                          onClick={() => handleRegister(tournament.id)}
-                        >
-                          Learn More
-                        </Button>
+                    </div>
+
+                    {/* Tournament Information Preview */}
+                    {tournament.tournament_info && (
+                      <div className="bg-white/5 p-3 rounded-lg">
+                        <TournamentInfo 
+                          tournamentInfo={tournament.tournament_info} 
+                          className="text-white/80 [&_h1]:text-white [&_h2]:text-white [&_h3]:text-white [&_strong]:text-white [&_a]:text-red-400 [&_a:hover]:text-red-300 line-clamp-3"
+                        />
                       </div>
+                    )}
+
+                    {/* Prize Items Preview */}
+                    {tournament.prize_items.length > 0 && (
+                      <div className="bg-gradient-to-r from-red-500/10 to-transparent p-3 rounded-lg">
+                        <div className="text-sm text-white/70 mb-1">Additional Prizes:</div>
+                        <div className="text-xs text-white/60">
+                          {tournament.prize_items.slice(0, 2).join(', ')}
+                          {tournament.prize_items.length > 2 && ` +${tournament.prize_items.length - 2} more`}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Sponsors Preview */}
+                    {tournament.sponsors.length > 0 && (
+                      <div className="flex items-center gap-2 overflow-x-auto">
+                        <span className="text-xs text-white/50 whitespace-nowrap">Sponsored by:</span>
+                        <div className="flex items-center gap-2">
+                          {tournament.sponsors.slice(0, 3).map((sponsor, index) => (
+                            <div key={index} className="flex items-center gap-1 shrink-0">
+                              {sponsor.logo_url ? (
+                                <img 
+                                  src={sponsor.logo_url} 
+                                  alt={sponsor.name} 
+                                  className="h-4 w-4 object-contain"
+                                />
+                              ) : null}
+                              <span className="text-xs text-white/60">{sponsor.name}</span>
+                            </div>
+                          ))}
+                          {tournament.sponsors.length > 3 && (
+                            <span className="text-xs text-white/40">+{tournament.sponsors.length - 3} more</span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    
+                    <div className="pt-4 flex gap-2">
+                      <Button 
+                        className="flex-1 bg-red-500 hover:bg-red-600 text-white"
+                        onClick={() => handleRegister(tournament.id)}
+                        disabled={!tournament.registration_open || tournament.current_participants >= tournament.max_participants}
+                      >
+                        {tournament.registration_open && tournament.current_participants < tournament.max_participants 
+                          ? `Register ($${tournament.registration_fee})` 
+                          : tournament.current_participants >= tournament.max_participants 
+                          ? 'Full' 
+                          : 'View Details'
+                        }
+                      </Button>
+                      
+                      <Button 
+                        variant="outline" 
+                        className="border-white/30 text-white hover:bg-white/10"
+                        onClick={() => handleRegister(tournament.id)}
+                      >
+                        Learn More
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
