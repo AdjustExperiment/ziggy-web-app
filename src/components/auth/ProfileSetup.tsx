@@ -51,7 +51,7 @@ export const ProfileSetup = ({ isModal = false, onComplete }: ProfileSetupProps)
     region: profile?.region || '',
     time_zone: profile?.time_zone || '',
     phone: profile?.phone || '',
-    account_type: profile?.role === 'judge' ? 'judge' : 'debater', // Default based on existing role
+    account_type: 'debater', // Default to debater for existing users
     // Judge-specific fields
     experience_level: 'novice',
     bio: '',

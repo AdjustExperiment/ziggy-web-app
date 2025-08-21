@@ -79,12 +79,25 @@ export function TabulationDashboard({
       // Fetch registrations
       const { data: registrationsData, error: registrationsError } = await supabase
         .from('tournament_registrations')
-        .select('*')
+        .select(`
+          *,
+          judge_profiles:requested_judge_profile_id (
+            name
+          )
+        `)
         .eq('tournament_id', selectedTournament)
         .order('participant_name');
 
       if (registrationsError) throw registrationsError;
-      setRegistrations(registrationsData as Registration[] || []);
+      
+      // Transform data to match Registration interface
+      const transformedRegistrations = registrationsData?.map(item => ({
+        ...item,
+        judge_name: item.judge_profiles?.name || null,
+        partnership_status: item.partner_name ? 'with_partner' : 'individual'
+      })) || [];
+      
+      setRegistrations(transformedRegistrations as Registration[]);
     } catch (error: any) {
       console.error('Error fetching tournament data:', error);
       toast({

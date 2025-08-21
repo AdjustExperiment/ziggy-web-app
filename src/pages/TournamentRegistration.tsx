@@ -171,6 +171,7 @@ export default function TournamentRegistration() {
       // Transform the data to match Registration interface
       const transformedRegistration: Registration = {
         ...data,
+        judge_name: judgeValidation.judgeProfile?.name || null,
         partnership_status: registrationData.partner_name ? 'with_partner' : 'individual'
       };
 

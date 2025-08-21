@@ -97,12 +97,25 @@ export function PairingsManager() {
     try {
       const { data, error } = await supabase
         .from('tournament_registrations')
-        .select('*')
+        .select(`
+          *,
+          judge_profiles:requested_judge_profile_id (
+            name
+          )
+        `)
         .eq('tournament_id', selectedTournament)
         .order('participant_name');
 
       if (error) throw error;
-      setRegistrations(data as Registration[] || []);
+      
+      // Transform data to match Registration interface
+      const transformedData = data?.map(item => ({
+        ...item,
+        judge_name: item.judge_profiles?.name || null,
+        partnership_status: item.partner_name ? 'with_partner' : 'individual'
+      })) || [];
+      
+      setRegistrations(transformedData as Registration[]);
     } catch (error: any) {
       console.error('Error fetching registrations:', error);
     }
