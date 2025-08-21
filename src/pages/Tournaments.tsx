@@ -256,13 +256,13 @@ const Tournaments = () => {
                   </CardHeader>
                   
                   <CardContent className={`space-y-4 ${viewMode === 'list' ? 'md:flex-1' : ''} pt-0`}>
-                    <div className="grid grid-cols-1 gap-3">                       
-                      <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                    <div className="flex flex-wrap items-center gap-4 mt-3 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-2">
                         <Users className="h-4 w-4 flex-shrink-0" />
-                        <span>{tournament.current_participants} / {tournament.max_participants} participants</span>
+                        <span className="whitespace-nowrap">{tournament.current_participants} / {tournament.max_participants} participants</span>
                       </div>
                       
-                      <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                      <div className="flex items-center gap-2">
                         <Trophy className="h-4 w-4 flex-shrink-0" />
                         <span>{tournament.location}</span>
                       </div>
