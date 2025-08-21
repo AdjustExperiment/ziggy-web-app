@@ -10,8 +10,6 @@ import { Badge } from "@/components/ui/badge";
 import { User, Lock, Mail, Users, Shield, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { ScreenWipe } from "@/components/ScreenWipe";
-import debateLogo from "@/assets/debate-logo.svg";
 
 const Login = () => {
   const [searchParams] = useSearchParams();
@@ -28,11 +26,6 @@ const Login = () => {
     return ["team", "individual", "admin"].includes(typeParam || "") ? typeParam || "team" : "team";
   });
   
-  // Wipe animation state
-  const [isWiping, setIsWiping] = useState(false);
-  const [customRedirectActive, setCustomRedirectActive] = useState(false);
-  const [postLoginTarget, setPostLoginTarget] = useState<string | null>(null);
-  
   // Form state
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -45,9 +38,9 @@ const Login = () => {
     }
   }, [searchParams]);
 
-  // Redirect if already authenticated (but not during custom wipe flow)
+  // Redirect if already authenticated
   useEffect(() => {
-    if (!loading && user && !customRedirectActive) {
+    if (!loading && user) {
       if (loginType === 'admin' && isAdmin) {
         navigate('/admin');
       } else if (loginType === 'admin' && !isAdmin) {
@@ -61,26 +54,7 @@ const Login = () => {
         navigate(from);
       }
     }
-  }, [user, isAdmin, loading, navigate, location, loginType, toast, customRedirectActive]);
-
-  // Compute post-login target after successful authentication
-  useEffect(() => {
-    if (!loading && user && customRedirectActive && !postLoginTarget) {
-      if (loginType === 'admin' && isAdmin) {
-        setPostLoginTarget('/admin');
-      } else if (loginType === 'admin' && !isAdmin) {
-        toast({
-          title: 'Access Denied',
-          description: 'You do not have admin privileges.',
-          variant: 'destructive',
-        });
-        setPostLoginTarget(location.state?.from?.pathname || '/');
-      } else {
-        const from = location.state?.from?.pathname || '/';
-        setPostLoginTarget(from);
-      }
-    }
-  }, [user, isAdmin, loading, loginType, customRedirectActive, postLoginTarget, toast, location]);
+  }, [user, isAdmin, loading, navigate, location, loginType, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -121,10 +95,6 @@ const Login = () => {
             description: error.message,
             variant: 'destructive',
           });
-        } else {
-          // Successful sign in - trigger wipe animation
-          setCustomRedirectActive(true);
-          setIsWiping(true);
         }
       }
     } catch (error) {
@@ -532,17 +502,6 @@ const Login = () => {
           </div>
         </div>
       </div>
-      
-      {/* Screen Wipe Animation */}
-      <ScreenWipe 
-        show={isWiping} 
-        logoSrc={debateLogo} 
-        onComplete={() => {
-          if (postLoginTarget) {
-            navigate(postLoginTarget, { replace: true });
-          }
-        }} 
-      />
     </div>
   );
 };
