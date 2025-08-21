@@ -10,7 +10,6 @@ import { Calendar, Users, Clock, Trophy, Search, Filter, ExternalLink, Grid3X3, 
 import { format } from "date-fns";
 import TournamentInfo from "@/components/TournamentInfo";
 import { FluidBlobBackground } from "@/components/FluidBlobBackground";
-import { TournamentCalendar } from "@/components/TournamentCalendar";
 import { TournamentCardCalendar } from "@/components/TournamentCardCalendar";
 
 interface Sponsor {
@@ -99,10 +98,6 @@ const Tournaments = () => {
 
   const handleRegister = (tournamentId: string) => {
     navigate(`/tournament/${tournamentId}/register`);
-  };
-
-  const handleTournamentSelect = (tournament: Tournament) => {
-    navigate(`/tournament/${tournament.id}/register`);
   };
 
   return (
@@ -336,25 +331,6 @@ const Tournaments = () => {
               ))}
             </div>
           )}
-        </div>
-      </section>
-
-      {/* Calendar View Section */}
-      <section className="py-16 bg-background relative z-10">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-foreground mb-4 font-primary">
-              Tournament Calendar
-            </h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              View all tournaments in a calendar format and find the perfect competition for your schedule.
-            </p>
-          </div>
-          
-          <TournamentCalendar 
-            tournaments={filteredTournaments}
-            onTournamentSelect={handleTournamentSelect}
-          />
         </div>
       </section>
 
