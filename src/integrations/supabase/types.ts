@@ -704,6 +704,47 @@ export type Database = {
           },
         ]
       }
+      tournament_payment_settings: {
+        Row: {
+          created_at: string
+          id: string
+          payment_handler: string | null
+          paypal_button_html: string | null
+          paypal_client_id: string | null
+          tournament_id: string
+          updated_at: string
+          venmo_button_html: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          payment_handler?: string | null
+          paypal_button_html?: string | null
+          paypal_client_id?: string | null
+          tournament_id: string
+          updated_at?: string
+          venmo_button_html?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          payment_handler?: string | null
+          paypal_button_html?: string | null
+          paypal_client_id?: string | null
+          tournament_id?: string
+          updated_at?: string
+          venmo_button_html?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tournament_payment_settings_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: true
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tournament_registrations: {
         Row: {
           additional_info: Json | null
@@ -794,9 +835,6 @@ export type Database = {
           location: string
           max_participants: number
           name: string
-          payment_handler: string | null
-          paypal_button_html: string | null
-          paypal_client_id: string | null
           prize_items: string[] | null
           prize_pool: string | null
           registration_deadline: string | null
@@ -811,7 +849,6 @@ export type Database = {
           status: string
           tournament_info: string | null
           updated_at: string
-          venmo_button_html: string | null
           venue_details: string | null
         }
         Insert: {
@@ -829,9 +866,6 @@ export type Database = {
           location: string
           max_participants?: number
           name: string
-          payment_handler?: string | null
-          paypal_button_html?: string | null
-          paypal_client_id?: string | null
           prize_items?: string[] | null
           prize_pool?: string | null
           registration_deadline?: string | null
@@ -846,7 +880,6 @@ export type Database = {
           status?: string
           tournament_info?: string | null
           updated_at?: string
-          venmo_button_html?: string | null
           venue_details?: string | null
         }
         Update: {
@@ -864,9 +897,6 @@ export type Database = {
           location?: string
           max_participants?: number
           name?: string
-          payment_handler?: string | null
-          paypal_button_html?: string | null
-          paypal_client_id?: string | null
           prize_items?: string[] | null
           prize_pool?: string | null
           registration_deadline?: string | null
@@ -881,7 +911,6 @@ export type Database = {
           status?: string
           tournament_info?: string | null
           updated_at?: string
-          venmo_button_html?: string | null
           venue_details?: string | null
         }
         Relationships: []

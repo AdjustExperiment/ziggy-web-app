@@ -52,10 +52,6 @@ interface Tournament {
   status: string;
   registration_open: boolean;
   registration_deadline: string;
-  payment_handler: string;
-  paypal_client_id: string;
-  paypal_button_html: string;
-  venmo_button_html: string;
   additional_info: any;
   // Calendar customization fields
   round_schedule_type: string;
@@ -63,6 +59,11 @@ interface Tournament {
   round_count: number;
   rounds_config: any[];
   auto_schedule_rounds: boolean;
+  // Payment settings (from separate table)
+  payment_handler?: string;
+  paypal_client_id?: string;
+  paypal_button_html?: string;
+  venmo_button_html?: string;
 }
 
 const TournamentManager = () => {
@@ -115,7 +116,15 @@ const TournamentManager = () => {
     try {
       const { data, error } = await supabase
         .from('tournaments')
-        .select('*')
+        .select(`
+          *,
+          tournament_payment_settings (
+            payment_handler,
+            paypal_client_id,
+            paypal_button_html,
+            venmo_button_html
+          )
+        `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -130,8 +139,11 @@ const TournamentManager = () => {
         prize_items: Array.isArray(tournament.prize_items) ? tournament.prize_items : [],
         tournament_info: tournament.tournament_info || '',
         cash_prize_total: tournament.cash_prize_total || 0,
-        paypal_button_html: (tournament as any).paypal_button_html || '',
-        venmo_button_html: (tournament as any).venmo_button_html || '',
+        // Payment settings from separate table
+        payment_handler: tournament.tournament_payment_settings?.payment_handler || 'paypal',
+        paypal_client_id: tournament.tournament_payment_settings?.paypal_client_id || '',
+        paypal_button_html: tournament.tournament_payment_settings?.paypal_button_html || '',
+        venmo_button_html: tournament.tournament_payment_settings?.venmo_button_html || '',
         additional_info: tournament.additional_info || {},
         // Calendar fields with defaults
         round_schedule_type: tournament.round_schedule_type || 'custom',
@@ -293,10 +305,6 @@ const TournamentManager = () => {
         status: formData.status,
         registration_open: formData.registration_open,
         registration_deadline: format(formData.registration_deadline, 'yyyy-MM-dd'),
-        payment_handler: formData.payment_handler,
-        paypal_client_id: formData.paypal_client_id,
-        paypal_button_html: formData.paypal_button_html,
-        venmo_button_html: formData.venmo_button_html,
         additional_info: JSON.parse(formData.additional_info || '{}'),
         // Calendar customization fields
         round_schedule_type: formData.round_schedule_type,
@@ -306,20 +314,55 @@ const TournamentManager = () => {
         auto_schedule_rounds: formData.auto_schedule_rounds,
       };
 
+      // Payment settings data for separate table
+      const paymentData = {
+        payment_handler: formData.payment_handler,
+        paypal_client_id: formData.paypal_client_id,
+        paypal_button_html: formData.paypal_button_html,
+        venmo_button_html: formData.venmo_button_html,
+      };
+
       if (editingTournament) {
+        // Update tournament
         const { error } = await supabase
           .from('tournaments')
           .update(tournamentData)
           .eq('id', editingTournament.id);
         
         if (error) throw error;
+
+        // Upsert payment settings
+        const { error: paymentError } = await supabase
+          .from('tournament_payment_settings')
+          .upsert({
+            tournament_id: editingTournament.id,
+            ...paymentData,
+          });
+        
+        if (paymentError) throw paymentError;
         toast({ title: "Success", description: "Tournament updated successfully" });
       } else {
-        const { error } = await supabase
+        // Create tournament
+        const { data: newTournament, error } = await supabase
           .from('tournaments')
-          .insert(tournamentData);
+          .insert(tournamentData)
+          .select()
+          .single();
         
         if (error) throw error;
+
+        // Create payment settings for new tournament
+        if (newTournament) {
+          const { error: paymentError } = await supabase
+            .from('tournament_payment_settings')
+            .insert({
+              tournament_id: newTournament.id,
+              ...paymentData,
+            });
+          
+          if (paymentError) throw paymentError;
+        }
+        
         toast({ title: "Success", description: "Tournament created successfully" });
       }
 
