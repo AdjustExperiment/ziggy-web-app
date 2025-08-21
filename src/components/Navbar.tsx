@@ -43,7 +43,7 @@ export function Navbar() {
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-2">
-              <img src="/src/assets/debate-logo.svg" alt="Ziggy" className="h-8 w-8" />
+              <img src="/lovable-uploads/760b99f2-12c5-4e29-8b02-5d93d41f41a9.png" alt="Ziggy" className="h-8 w-8 rounded-full border-2 border-white" />
               <span className="text-lg sm:text-xl font-bold">Ziggy Online Debate</span>
             </Link>
             
