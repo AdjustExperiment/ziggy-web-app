@@ -2,16 +2,19 @@ export function BackgroundFX() {
   return (
     <div className="fixed inset-0 -z-10 pointer-events-none overflow-hidden">
       {/* Main gradient background */}
-      <div className="absolute inset-0 bg-gradient-subtle opacity-95" />
+      <div className="absolute inset-0 bg-gradient-subtle opacity-90" />
       
-      {/* Animated glow orbs using semantic tokens */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-radial from-primary/20 via-primary/10 to-transparent rounded-full blur-3xl animate-orb-1" />
-      <div className="absolute top-3/4 right-1/4 w-80 h-80 bg-gradient-radial from-primary-glow/15 via-primary-glow/8 to-transparent rounded-full blur-2xl animate-orb-2" />
-      <div className="absolute top-1/2 left-3/4 w-64 h-64 bg-gradient-radial from-primary/12 via-primary/6 to-transparent rounded-full blur-xl animate-orb-3" />
+      {/* Animated glow orbs using semantic tokens - increased sizes and opacity */}
+      <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-gradient-radial from-primary/30 via-primary/15 to-transparent rounded-full blur-3xl animate-orb-1 motion-reduce:animate-none" />
+      <div className="absolute top-3/4 right-1/4 w-[450px] h-[450px] bg-gradient-radial from-primary-glow/25 via-primary-glow/12 to-transparent rounded-full blur-2xl animate-orb-2 motion-reduce:animate-none" />
+      <div className="absolute top-1/2 left-3/4 w-[400px] h-[400px] bg-gradient-radial from-primary/20 via-primary/10 to-transparent rounded-full blur-xl animate-orb-3 motion-reduce:animate-none" />
       
       {/* Additional floating elements */}
-      <div className="absolute top-10 right-1/3 w-48 h-48 bg-gradient-radial from-accent/8 via-accent/4 to-transparent rounded-full blur-2xl animate-float" />
-      <div className="absolute bottom-20 left-10 w-72 h-72 bg-gradient-radial from-primary/6 via-primary/3 to-transparent rounded-full blur-3xl animate-orb-1" />
+      <div className="absolute top-10 right-1/3 w-[350px] h-[350px] bg-gradient-radial from-accent/15 via-accent/8 to-transparent rounded-full blur-2xl animate-float motion-reduce:animate-none" />
+      <div className="absolute bottom-20 left-10 w-[500px] h-[500px] bg-gradient-radial from-primary/12 via-primary/6 to-transparent rounded-full blur-3xl animate-orb-1 motion-reduce:animate-none" />
+      
+      {/* Extra floating blob */}
+      <div className="absolute top-1/3 right-1/5 w-[300px] h-[300px] bg-gradient-radial from-primary-glow/18 via-primary-glow/9 to-transparent rounded-full blur-2xl animate-orb-2 motion-reduce:animate-none" />
       
       {/* Subtle noise texture overlay */}
       <div 

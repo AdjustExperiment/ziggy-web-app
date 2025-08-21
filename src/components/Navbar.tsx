@@ -245,7 +245,7 @@ export function Navbar() {
               <Button 
                 className="bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-secondary transition-all duration-300 hover:scale-105 rounded-xl"
               >
-                Sign Up for Tournament
+                Sign Up
               </Button>
             </a>
             
@@ -373,7 +373,7 @@ export function Navbar() {
                   <Button 
                     className="w-full bg-primary text-primary-foreground hover:bg-primary/90 py-3 text-base min-h-[44px] font-secondary transition-all duration-300 hover:scale-105"
                   >
-                    Sign Up for Tournament
+                    Sign Up
                   </Button>
                 </a>
                 <a href="https://tournament.ziggyonlinedebate.com" target="_blank" rel="noopener noreferrer">

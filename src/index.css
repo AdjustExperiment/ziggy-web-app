@@ -61,11 +61,11 @@ All colors MUST be HSL.
     );
     --gradient-subtle: linear-gradient(
       180deg, 
-      hsl(0 0% 8%) 0%, 
-      hsl(355 20% 10%) 25%, 
-      hsl(355 30% 12%) 50%, 
-      hsl(355 25% 15%) 75%, 
-      hsl(0 0% 5%) 100%
+      hsl(0 0% 95%) 0%, 
+      hsl(355 15% 90%) 25%, 
+      hsl(355 25% 88%) 50%, 
+      hsl(355 20% 85%) 75%, 
+      hsl(0 0% 92%) 100%
     );
 
     /* Advanced Shadows */
