@@ -42,7 +42,7 @@ export function Navbar() {
             <img 
               src="/lovable-uploads/bb7e942b-4006-461c-b9ed-9bdde6f1500c.png" 
               alt="Debate Champions Logo" 
-              className="h-8 sm:h-10 w-auto rounded-full hover:scale-105 transition-transform duration-300" 
+              className="h-8 sm:h-10 w-auto object-contain hover:scale-105 transition-transform duration-300" 
             />
           </div>
 
