@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
+import { BackgroundFX } from "@/components/BackgroundFX";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import SignUpPage from "./pages/SignUpPage";
@@ -28,6 +29,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <div className="min-h-screen">
+          <BackgroundFX />
           <Navbar />
           <Routes>
             <Route path="/" element={<Index />} />
