@@ -202,9 +202,9 @@ const Index = () => {
               variant="outline" 
               size="lg"
               className="border-white/30 text-white hover:bg-white/10 text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-6 min-h-[44px] sm:min-h-[56px] transition-all duration-300 hover:scale-105 backdrop-blur-sm"
-              onClick={() => window.location.href = '/dashboard'}
+              onClick={() => window.location.href = '/contact'}
             >
-              View Dashboard
+              Contact
             </Button>
           </div>
         </div>
