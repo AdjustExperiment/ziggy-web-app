@@ -34,15 +34,15 @@ export function Navbar() {
   const [dashboardOpen, setDashboardOpen] = useState(false);
 
   return (
-    <nav className="sticky top-0 z-50 border-b bg-black/95 backdrop-blur-lg border-white/10 animate-fade-in">
+    <nav className="sticky top-0 z-50 border-b bg-black/95 backdrop-blur-lg border-white/10 animate-fade-in rounded-b-2xl">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
+        <div className="flex h-20 items-center justify-between">
           {/* Logo */}
           <div className="flex items-center">
             <img 
               src="/lovable-uploads/bb7e942b-4006-461c-b9ed-9bdde6f1500c.png" 
               alt="Debate Champions Logo" 
-              className="h-8 sm:h-10 w-auto object-contain hover:scale-105 transition-transform duration-300" 
+              className="h-12 sm:h-16 w-auto object-contain rounded-lg hover:scale-105 transition-transform duration-300" 
             />
           </div>
 
@@ -61,12 +61,12 @@ export function Navbar() {
                     <span className="absolute inset-x-0 -bottom-1 h-0.5 bg-red-500 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="bg-black/95 border-white/20 backdrop-blur-lg min-w-[200px] animate-scale-in">
+                <DropdownMenuContent className="bg-black/95 border-white/20 backdrop-blur-lg min-w-[200px] animate-scale-in rounded-xl z-50">
                   {aboutNavigation.map((item) => (
                     <DropdownMenuItem key={item.name} asChild>
                       <a
                         href={item.href}
-                        className="block px-4 py-2 text-white hover:text-red-500 hover:bg-white/10 rounded transition-all duration-300 text-sm"
+                        className="block px-4 py-2 text-white hover:text-red-500 hover:bg-white/10 rounded-lg transition-all duration-300 text-sm"
                       >
                         {item.name}
                       </a>
@@ -87,12 +87,12 @@ export function Navbar() {
                     <span className="absolute inset-x-0 -bottom-1 h-0.5 bg-red-500 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="bg-black/95 border-white/20 backdrop-blur-lg min-w-[200px] animate-scale-in">
+                <DropdownMenuContent className="bg-black/95 border-white/20 backdrop-blur-lg min-w-[200px] animate-scale-in rounded-xl z-50">
                   {dashboardNavigation.map((item) => (
                     <DropdownMenuItem key={item.name} asChild>
                       <a
                         href={item.href}
-                        className="block px-4 py-2 text-white hover:text-red-500 hover:bg-white/10 rounded transition-all duration-300 text-sm"
+                        className="block px-4 py-2 text-white hover:text-red-500 hover:bg-white/10 rounded-lg transition-all duration-300 text-sm"
                       >
                         {item.name}
                       </a>
@@ -125,11 +125,11 @@ export function Navbar() {
               />
             </div>
             
-            <Button className="bg-red-500 text-white hover:bg-red-600 border-red-500 text-sm font-secondary transition-all duration-300 hover:scale-105">
+            <Button className="bg-red-500 text-white hover:bg-red-600 border-red-500 text-sm font-secondary transition-all duration-300 hover:scale-105 rounded-xl">
               Sign Up
             </Button>
             
-            <Button variant="outline" className="border-red-500/50 text-red-500 hover:bg-red-500 hover:text-white hover:border-red-500 text-sm font-secondary transition-all duration-300 hover:scale-105">
+            <Button variant="outline" className="border-red-500/50 text-red-500 hover:bg-red-500 hover:text-white hover:border-red-500 text-sm font-secondary transition-all duration-300 hover:scale-105 rounded-xl">
               <ExternalLink className="h-4 w-4 mr-2" />
               <span className="hidden xl:inline">Platform</span>
             </Button>

@@ -85,22 +85,22 @@ export function Hero() {
 
           {/* Right Image */}
           <div className="relative order-first lg:order-last">
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-2xl" />
-            <img
-              src={heroImage}
-              alt="Professional debate tournament"
-              className="rounded-2xl shadow-tournament w-full h-[300px] sm:h-[400px] lg:h-[500px] xl:h-[600px] object-cover"
-            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-3xl" />
+              <img
+                src={heroImage}
+                alt="Professional debate tournament"
+                className="rounded-3xl shadow-tournament w-full h-[300px] sm:h-[400px] lg:h-[500px] xl:h-[600px] object-cover"
+              />
             
             {/* Floating Stats Cards */}
-            <div className="absolute top-2 sm:top-4 right-2 sm:right-4 bg-white/90 backdrop-blur-sm rounded-lg p-2 sm:p-4 shadow-card">
+            <div className="absolute top-2 sm:top-4 right-2 sm:right-4 bg-white/90 backdrop-blur-sm rounded-2xl p-2 sm:p-4 shadow-card">
               <div className="flex items-center gap-1 sm:gap-2">
                 <Users className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
                 <span className="text-xs sm:text-sm font-medium">Live: 1,342</span>
               </div>
             </div>
             
-            <div className="absolute bottom-2 sm:bottom-4 left-2 sm:left-4 bg-white/90 backdrop-blur-sm rounded-lg p-2 sm:p-4 shadow-card">
+            <div className="absolute bottom-2 sm:bottom-4 left-2 sm:left-4 bg-white/90 backdrop-blur-sm rounded-2xl p-2 sm:p-4 shadow-card">
               <div className="flex items-center gap-1 sm:gap-2">
                 <Target className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
                 <span className="text-xs sm:text-sm font-medium">Win Rate: 78.5%</span>
