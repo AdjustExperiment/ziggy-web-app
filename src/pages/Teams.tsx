@@ -306,19 +306,19 @@ const Teams = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
-                      <Button className="w-full justify-start bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20">
+                      <Button className="w-full justify-start bg-red-500/10 hover:bg-red-500 text-white hover:text-white border border-red-500/20">
                         <Calendar className="h-4 w-4 mr-2" />
                         Schedule Practice
                       </Button>
-                      <Button className="w-full justify-start bg-green-500/10 hover:bg-green-500/20 text-green-500 border border-green-500/20">
+                      <Button className="w-full justify-start bg-green-500/10 hover:bg-green-500 text-white hover:text-white border border-green-500/20">
                         <Users className="h-4 w-4 mr-2" />
                         Team Meeting
                       </Button>
-                      <Button className="w-full justify-start bg-blue-500/10 hover:bg-blue-500/20 text-blue-500 border border-blue-500/20">
+                      <Button className="w-full justify-start bg-blue-500/10 hover:bg-blue-500 text-white hover:text-white border border-blue-500/20">
                         <Trophy className="h-4 w-4 mr-2" />
                         Register Tournament
                       </Button>
-                      <Button className="w-full justify-start bg-purple-500/10 hover:bg-purple-500/20 text-purple-500 border border-purple-500/20">
+                      <Button className="w-full justify-start bg-purple-500/10 hover:bg-purple-500 text-white hover:text-white border border-purple-500/20">
                         <Target className="h-4 w-4 mr-2" />
                         Strategy Session
                       </Button>

@@ -108,7 +108,7 @@ export default function Blog() {
                   className={`${
                     category === "All" 
                       ? "bg-red-500 hover:bg-red-600 text-white" 
-                      : "border-red-500/50 text-red-400 hover:bg-red-500/20"
+                      : "border-red-500/50 text-white hover:bg-red-500 hover:text-white"
                   } font-secondary`}
                 >
                   {category}
@@ -225,7 +225,7 @@ export default function Blog() {
                 <Button variant="ghost" className="text-red-400 hover:text-red-300 hover:bg-red-500/10 font-secondary p-2">
                   <Share2 className="h-4 w-4" />
                 </Button>
-                <Button className="bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white border-red-500/30 font-secondary">
+                <Button className="bg-red-500/10 hover:bg-red-500 text-white hover:text-white border-red-500/30 font-secondary">
                   Read More <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </CardFooter>
