@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -133,8 +134,8 @@ export default function TournamentRegistration() {
       // Transform the data to match Registration interface
       const transformedRegistration: Registration = {
         ...data,
-        judge_name: data.judge_name || null,
-        partnership_status: data.partnership_status || 'individual'
+        judge_name: registrationData.judge_name,
+        partnership_status: registrationData.partnership_status || 'individual'
       };
 
       setRegistration(transformedRegistration);
