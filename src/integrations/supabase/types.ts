@@ -343,6 +343,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      make_admin_by_email: {
+        Args: { target_email: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

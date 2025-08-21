@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,6 +14,7 @@ import { CalendarIcon, MapPin, Users, DollarSign, Trophy, Download, ArrowLeft } 
 import { format } from 'date-fns';
 import { toast } from '@/components/ui/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import PaymentButtons from '@/components/PaymentButtons';
 
 interface Tournament {
   id: string;
@@ -45,6 +47,8 @@ const TournamentRegistration = () => {
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [showPayment, setShowPayment] = useState(false);
+  const [registrationId, setRegistrationId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     participant_name: '',
     participant_email: '',
@@ -82,7 +86,6 @@ const TournamentRegistration = () => {
 
       if (error) throw error;
       
-      // Transform the data to match our interface
       const transformedTournament = {
         ...data,
         sponsors: Array.isArray(data.sponsors) 
@@ -111,7 +114,6 @@ const TournamentRegistration = () => {
     setSubmitting(true);
     
     try {
-      // Create registration record
       const { data: registration, error: regError } = await supabase
         .from('tournament_registrations')
         .insert([{
@@ -130,11 +132,11 @@ const TournamentRegistration = () => {
 
       if (regError) throw regError;
 
-      // Process PayPal payment
+      setRegistrationId(registration.id);
+
       if (tournament.registration_fee > 0) {
-        await processPayPalPayment(registration.id, tournament.registration_fee);
+        setShowPayment(true);
       } else {
-        // Free registration
         await supabase
           .from('tournament_registrations')
           .update({ payment_status: 'completed' })
@@ -158,20 +160,18 @@ const TournamentRegistration = () => {
     }
   };
 
-  const processPayPalPayment = async (registrationId: string, amount: number) => {
-    // In a real implementation, you would integrate with PayPal SDK
-    // For demo purposes, we'll simulate the payment process
+  const handlePayPalPayment = async () => {
+    if (!registrationId || !tournament) return;
     
-    const confirmPayment = confirm(`Process payment of $${amount} via PayPal?`);
+    const confirmPayment = confirm(`Process payment of $${tournament.registration_fee} via PayPal?`);
     
     if (confirmPayment) {
       try {
-        // Simulate PayPal payment success
         await supabase
           .from('tournament_registrations')
           .update({ 
             payment_status: 'completed',
-            payment_id: `pp_${Date.now()}_${registrationId.slice(0, 8)}`
+            payment_id: `paypal_${Date.now()}_${registrationId.slice(0, 8)}`
           })
           .eq('id', registrationId);
         
@@ -182,16 +182,43 @@ const TournamentRegistration = () => {
         
         navigate('/tournaments');
       } catch (error: any) {
-        throw new Error('Payment processing failed');
+        toast({
+          title: "Payment Failed",
+          description: "Please try again",
+          variant: "destructive",
+        });
       }
-    } else {
-      // Delete the registration if payment is cancelled
-      await supabase
-        .from('tournament_registrations')
-        .delete()
-        .eq('id', registrationId);
-      
-      throw new Error('Payment cancelled');
+    }
+  };
+
+  const handleVenmoPayment = async () => {
+    if (!registrationId || !tournament) return;
+    
+    const confirmPayment = confirm(`Process payment of $${tournament.registration_fee} via Venmo?`);
+    
+    if (confirmPayment) {
+      try {
+        await supabase
+          .from('tournament_registrations')
+          .update({ 
+            payment_status: 'completed',
+            payment_id: `venmo_${Date.now()}_${registrationId.slice(0, 8)}`
+          })
+          .eq('id', registrationId);
+        
+        toast({
+          title: "Payment Successful!",
+          description: "Your tournament registration is complete.",
+        });
+        
+        navigate('/tournaments');
+      } catch (error: any) {
+        toast({
+          title: "Payment Failed",
+          description: "Please try again",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -201,7 +228,6 @@ const TournamentRegistration = () => {
     const startDate = new Date(tournament.start_date);
     const endDate = new Date(tournament.end_date);
     
-    // Format dates for ICS
     const formatDate = (date: Date) => {
       return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
     };
@@ -255,7 +281,6 @@ END:VCALENDAR`;
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <section className="bg-black py-12">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
           <Button
@@ -380,7 +405,6 @@ END:VCALENDAR`;
               </CardContent>
             </Card>
 
-            {/* Calendar Export */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -407,7 +431,6 @@ END:VCALENDAR`;
               </CardContent>
             </Card>
 
-            {/* Visual Calendar */}
             <Card>
               <CardHeader>
                 <CardTitle>Tournament Calendar</CardTitle>
@@ -430,120 +453,136 @@ END:VCALENDAR`;
             </Card>
           </div>
 
-          {/* Registration Form */}
+          {/* Registration Form or Payment */}
           <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Register for Tournament</CardTitle>
-                <CardDescription>
-                  {isRegistrationClosed 
-                    ? "Registration is currently closed"
-                    : "Fill out the form below to register"
-                  }
-                </CardDescription>
-              </CardHeader>
-              
-              {isRegistrationClosed ? (
-                <CardContent>
-                  <div className="text-center p-6">
-                    <Badge variant="destructive" className="mb-4">Registration Closed</Badge>
-                    <p className="text-muted-foreground">
-                      {tournament.current_participants >= tournament.max_participants 
-                        ? "Tournament is full"
-                        : `Registration deadline was ${format(new Date(tournament.registration_deadline), "PPP")}`
-                      }
-                    </p>
-                  </div>
-                </CardContent>
-              ) : (
-                <CardContent>
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                      <Label htmlFor="participant_name">Full Name *</Label>
-                      <Input
-                        id="participant_name"
-                        value={formData.participant_name}
-                        onChange={(e) => setFormData({...formData, participant_name: e.target.value})}
-                        required
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="participant_email">Email Address *</Label>
-                      <Input
-                        id="participant_email"
-                        type="email"
-                        value={formData.participant_email}
-                        onChange={(e) => setFormData({...formData, participant_email: e.target.value})}
-                        required
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="school_organization">School/Organization</Label>
-                      <Input
-                        id="school_organization"
-                        value={formData.school_organization}
-                        onChange={(e) => setFormData({...formData, school_organization: e.target.value})}
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="partner_name">Partner Name (if applicable)</Label>
-                      <Input
-                        id="partner_name"
-                        value={formData.partner_name}
-                        onChange={(e) => setFormData({...formData, partner_name: e.target.value})}
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="dietary_requirements">Dietary Requirements</Label>
-                      <Textarea
-                        id="dietary_requirements"
-                        value={formData.dietary_requirements}
-                        onChange={(e) => setFormData({...formData, dietary_requirements: e.target.value})}
-                        rows={2}
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="emergency_contact">Emergency Contact</Label>
-                      <Input
-                        id="emergency_contact"
-                        value={formData.emergency_contact}
-                        onChange={(e) => setFormData({...formData, emergency_contact: e.target.value})}
-                        placeholder="Name and phone number"
-                      />
-                    </div>
-                    
-                    <Separator />
-                    
-                    <div className="bg-muted/50 p-4 rounded-lg">
-                      <div className="flex justify-between items-center mb-2">
-                        <span>Registration Fee:</span>
-                        <span className="font-bold">${tournament.registration_fee}</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        Payment will be processed via PayPal
+            {showPayment && tournament.registration_fee > 0 ? (
+              <PaymentButtons
+                amount={tournament.registration_fee}
+                onPayPalPayment={handlePayPalPayment}
+                onVenmoPayment={handleVenmoPayment}
+              />
+            ) : (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Register for Tournament</CardTitle>
+                  <CardDescription>
+                    {isRegistrationClosed 
+                      ? "Registration is currently closed"
+                      : "Fill out the form below to register"
+                    }
+                  </CardDescription>
+                </CardHeader>
+                
+                {isRegistrationClosed ? (
+                  <CardContent>
+                    <div className="text-center p-6">
+                      <Badge variant="destructive" className="mb-4">Registration Closed</Badge>
+                      <p className="text-muted-foreground">
+                        {tournament.current_participants >= tournament.max_participants 
+                          ? "Tournament is full"
+                          : `Registration deadline was ${format(new Date(tournament.registration_deadline), "PPP")}`
+                        }
                       </p>
                     </div>
-                    
-                    <Button 
-                      type="submit" 
-                      className="w-full"
-                      disabled={submitting}
-                    >
-                      {submitting ? 'Processing...' : `Pay $${tournament.registration_fee} & Register`}
-                    </Button>
-                    
-                    <p className="text-xs text-muted-foreground text-center">
-                      Registration deadline: {format(new Date(tournament.registration_deadline), "PPP")}
-                    </p>
-                  </form>
-                </CardContent>
-              )}
-            </Card>
+                  </CardContent>
+                ) : (
+                  <CardContent>
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                      <div>
+                        <Label htmlFor="participant_name">Full Name *</Label>
+                        <Input
+                          id="participant_name"
+                          value={formData.participant_name}
+                          onChange={(e) => setFormData({...formData, participant_name: e.target.value})}
+                          required
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="participant_email">Email Address *</Label>
+                        <Input
+                          id="participant_email"
+                          type="email"
+                          value={formData.participant_email}
+                          onChange={(e) => setFormData({...formData, participant_email: e.target.value})}
+                          required
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="school_organization">School/Organization</Label>
+                        <Input
+                          id="school_organization"
+                          value={formData.school_organization}
+                          onChange={(e) => setFormData({...formData, school_organization: e.target.value})}
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="partner_name">Partner Name (if applicable)</Label>
+                        <Input
+                          id="partner_name"
+                          value={formData.partner_name}
+                          onChange={(e) => setFormData({...formData, partner_name: e.target.value})}
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="dietary_requirements">Dietary Requirements</Label>
+                        <Textarea
+                          id="dietary_requirements"
+                          value={formData.dietary_requirements}
+                          onChange={(e) => setFormData({...formData, dietary_requirements: e.target.value})}
+                          rows={2}
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="emergency_contact">Emergency Contact</Label>
+                        <Input
+                          id="emergency_contact"
+                          value={formData.emergency_contact}
+                          onChange={(e) => setFormData({...formData, emergency_contact: e.target.value})}
+                          placeholder="Name and phone number"
+                        />
+                      </div>
+                      
+                      <Separator />
+                      
+                      <div className="bg-muted/50 p-4 rounded-lg">
+                        <div className="flex justify-between items-center mb-2">
+                          <span>Registration Fee:</span>
+                          <span className="font-bold">${tournament.registration_fee}</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {tournament.registration_fee > 0 
+                            ? "Payment options will be shown after registration" 
+                            : "Free registration"
+                          }
+                        </p>
+                      </div>
+                      
+                      <Button 
+                        type="submit" 
+                        className="w-full"
+                        disabled={submitting}
+                      >
+                        {submitting 
+                          ? 'Processing...' 
+                          : tournament.registration_fee > 0 
+                            ? 'Continue to Payment' 
+                            : 'Register Now'
+                        }
+                      </Button>
+                      
+                      <p className="text-xs text-muted-foreground text-center">
+                        Registration deadline: {format(new Date(tournament.registration_deadline), "PPP")}
+                      </p>
+                    </form>
+                  </CardContent>
+                )}
+              </Card>
+            )}
           </div>
         </div>
       </div>
