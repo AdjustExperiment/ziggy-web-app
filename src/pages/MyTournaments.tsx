@@ -148,7 +148,7 @@ export default function MyTournaments() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {registrations.map((registration) => (
             <Card key={registration.id} className="hover:shadow-lg transition-shadow">
               <CardHeader>
@@ -201,23 +201,23 @@ export default function MyTournaments() {
                   )}
                 </div>
 
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" asChild className="flex-1">
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Button variant="outline" size="sm" asChild className="flex-1 text-xs sm:text-sm">
                     <Link to={`/tournaments/${registration.tournament.id}`}>
-                      <Eye className="h-4 w-4 mr-1" />
-                      View Tournament
+                      <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                      <span className="hidden sm:inline">View </span>Tournament
                     </Link>
                   </Button>
                   
-                  <Button variant="outline" size="sm" asChild className="flex-1">
+                  <Button variant="outline" size="sm" asChild className="flex-1 text-xs sm:text-sm">
                     <Link to={`/tournaments/${registration.tournament.id}/rounds`}>
-                      <Clock className="h-4 w-4 mr-1" />
-                      View Rounds
+                      <Clock className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                      <span className="hidden sm:inline">View </span>Rounds
                     </Link>
                   </Button>
                 </div>
 
-                <Button size="sm" asChild className="w-full">
+                <Button size="sm" asChild className="w-full text-xs sm:text-sm">
                   <Link to={`/tournaments/${registration.tournament.id}/my-match`}>
                     View My Match
                   </Link>

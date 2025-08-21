@@ -121,9 +121,9 @@ const Tournaments = () => {
       {/* Filters */}
       <section className="py-8 bg-background/80 backdrop-blur-sm border-b border-border/50 relative z-10">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-            <div className="flex flex-col md:flex-row gap-4 items-center flex-1">
-              <div className="relative flex-1 max-w-md">
+          <div className="flex flex-col gap-4 items-stretch">
+            <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center flex-1">
+              <div className="relative flex-1 min-w-0">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   placeholder="Search tournaments..."
@@ -133,9 +133,9 @@ const Tournaments = () => {
                 />
               </div>
               
-              <div className="flex gap-4">
+              <div className="flex flex-wrap gap-2 sm:gap-4">
                 <Select value={formatFilter} onValueChange={setFormatFilter}>
-                  <SelectTrigger className="w-40 bg-background/70 backdrop-blur-sm border-border text-foreground">
+                  <SelectTrigger className="w-full sm:w-40 bg-background/70 backdrop-blur-sm border-border text-foreground">
                     <SelectValue placeholder="Format" />
                   </SelectTrigger>
                   <SelectContent className="bg-background border-border">
@@ -148,7 +148,7 @@ const Tournaments = () => {
                 </Select>
 
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-40 bg-background/70 backdrop-blur-sm border-border text-foreground">
+                  <SelectTrigger className="w-full sm:w-40 bg-background/70 backdrop-blur-sm border-border text-foreground">
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
                   <SelectContent className="bg-background border-border">
@@ -161,15 +161,15 @@ const Tournaments = () => {
                   </SelectContent>
                 </Select>
 
-                <Button variant="outline" className="border-border text-foreground hover:bg-primary hover:border-primary hover:text-primary-foreground">
+                <Button variant="outline" className="w-full sm:w-auto border-border text-foreground hover:bg-primary hover:border-primary hover:text-primary-foreground">
                   <Filter className="h-4 w-4 mr-2" />
-                  More Filters
+                  <span className="sm:inline">More Filters</span>
                 </Button>
               </div>
             </div>
 
             {/* View Mode Toggle */}
-            <div className="flex gap-2 bg-muted/50 backdrop-blur-sm rounded-lg p-1 border border-border/50">
+            <div className="flex gap-2 bg-muted/50 backdrop-blur-sm rounded-lg p-1 border border-border/50 self-center">
               <Button
                 variant={viewMode === 'grid' ? 'default' : 'ghost'}
                 size="sm"
@@ -206,10 +206,10 @@ const Tournaments = () => {
               <p className="text-muted-foreground">Try adjusting your search criteria</p>
             </div>
           ) : (
-            <div className={`grid gap-6 ${viewMode === 'grid' ? 'md:grid-cols-2 lg:grid-cols-3' : 'md:grid-cols-1 lg:grid-cols-1'}`}>
+            <div className={`grid gap-4 sm:gap-6 ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
               {filteredTournaments.map((tournament) => (
-                <Card key={tournament.id} className={`bg-card/80 backdrop-blur-sm border-border/50 hover:border-primary/30 hover:bg-card/90 transition-smooth group ${viewMode === 'list' ? 'md:flex md:flex-row' : ''}`}>
-                  <CardHeader className={`${viewMode === 'list' ? 'md:flex-none md:w-1/3' : ''} pb-4`}>
+                <Card key={tournament.id} className={`bg-card/80 backdrop-blur-sm border-border/50 hover:border-primary/30 hover:bg-card/90 transition-smooth group ${viewMode === 'list' ? 'lg:flex lg:flex-row' : ''}`}>
+                  <CardHeader className={`${viewMode === 'list' ? 'lg:flex-none lg:w-1/3' : ''} pb-4`}>
                     <div className="flex justify-between items-start mb-3">
                       <div className="flex items-center gap-3 flex-wrap">
                         <Badge 
@@ -255,7 +255,7 @@ const Tournaments = () => {
                     </div>
                   </CardHeader>
                   
-                  <CardContent className={`space-y-4 ${viewMode === 'list' ? 'md:flex-1' : ''} pt-0`}>
+                  <CardContent className={`space-y-3 sm:space-y-4 ${viewMode === 'list' ? 'lg:flex-1' : ''} pt-0`}>
                     <div className="flex flex-wrap items-center gap-4 mt-3 text-sm text-muted-foreground">
                       <div className="flex items-center gap-2">
                         <Users className="h-4 w-4 flex-shrink-0" />
@@ -310,9 +310,9 @@ const Tournaments = () => {
                       </div>
                     )}
                     
-                    <div className="pt-2 flex gap-2 border-t border-border/20">
+                    <div className="pt-2 flex flex-col sm:flex-row gap-2 border-t border-border/20">
                       <Button 
-                        className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
+                        className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground text-sm"
                         onClick={() => handleRegister(tournament.id)}
                         disabled={!tournament.registration_open || tournament.current_participants >= tournament.max_participants}
                       >
@@ -326,7 +326,7 @@ const Tournaments = () => {
                       
                       <Button 
                         variant="outline" 
-                        className="border-border text-foreground hover:bg-muted hover:text-foreground"
+                        className="border-border text-foreground hover:bg-muted hover:text-foreground text-sm"
                         onClick={() => handleRegister(tournament.id)}
                       >
                         Learn More

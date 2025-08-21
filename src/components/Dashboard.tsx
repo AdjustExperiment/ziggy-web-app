@@ -50,8 +50,8 @@ export function Dashboard() {
           </p>
         </div>
 
-        {/* KPI Cards */}
-        <div className="mb-6 sm:mb-8 grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+        {/* KPI Cards - Mobile First Responsive Grid */}
+        <div className="mb-6 sm:mb-8 grid gap-3 grid-cols-1 xs:grid-cols-2 md:grid-cols-4">
           <KPICard
             title="Total Participants"
             value="1,342"
@@ -86,8 +86,8 @@ export function Dashboard() {
           />
         </div>
 
-        {/* Charts Grid */}
-        <div className="mb-6 sm:mb-8 grid gap-4 sm:gap-6 grid-cols-1 xl:grid-cols-2">
+        {/* Charts Grid - Mobile First Responsive */}
+        <div className="mb-6 sm:mb-8 grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-2">
           {/* Growth Chart */}
           <Card className="bg-gradient-card shadow-card">
             <CardHeader>
@@ -96,8 +96,8 @@ export function Dashboard() {
                 Growth Trajectory
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-4 sm:p-6">
-              <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
+            <CardContent className="p-3 sm:p-4 lg:p-6">
+              <ResponsiveContainer width="100%" height={200} className="sm:h-[250px] lg:h-[300px]">
                 <LineChart data={growthData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="month" stroke="white" />
@@ -137,8 +137,8 @@ export function Dashboard() {
                 Tournament Categories
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-4 sm:p-6">
-              <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
+            <CardContent className="p-3 sm:p-4 lg:p-6">
+              <ResponsiveContainer width="100%" height={200} className="sm:h-[250px] lg:h-[300px]">
                 <PieChart>
                   <Pie
                     data={tournamentData}
@@ -163,14 +163,14 @@ export function Dashboard() {
                   />
                 </PieChart>
               </ResponsiveContainer>
-              <div className="mt-4 flex justify-center gap-4">
+              <div className="mt-4 flex flex-wrap justify-center gap-2 sm:gap-4">
                 {tournamentData.map((item, index) => (
-                  <div key={index} className="flex items-center gap-2">
+                  <div key={index} className="flex items-center gap-1 sm:gap-2">
                     <div
-                      className="h-3 w-3 rounded-full"
+                      className="h-2 w-2 sm:h-3 sm:w-3 rounded-full"
                       style={{ backgroundColor: item.color }}
                     />
-                    <span className="text-sm text-white/70">{item.name}</span>
+                    <span className="text-xs sm:text-sm text-white/70">{item.name}</span>
                   </div>
                 ))}
               </div>

@@ -18,6 +18,9 @@ export default {
 			}
 		},
 		extend: {
+			screens: {
+				'xs': '475px', // Custom mobile-first breakpoint for small devices
+			},
 			fontFamily: {
 				'primary': ['Unbounded', 'sans-serif'],
 				'secondary': ['Space Grotesk', 'sans-serif'],
