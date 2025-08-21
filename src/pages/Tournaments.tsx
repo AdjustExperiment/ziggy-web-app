@@ -10,7 +10,6 @@ import { Calendar, Users, Clock, Trophy, Search, Filter, ExternalLink, Grid3X3, 
 import { format } from "date-fns";
 import TournamentInfo from "@/components/TournamentInfo";
 import { FluidBlobBackground } from "@/components/FluidBlobBackground";
-import { TournamentCardCalendar } from "@/components/TournamentCardCalendar";
 
 interface Sponsor {
   name: string;
@@ -212,12 +211,20 @@ const Tournaments = () => {
                 <Card key={tournament.id} className={`bg-card/80 backdrop-blur-sm border-border/50 hover:border-primary/30 hover:bg-card/90 transition-smooth group ${viewMode === 'list' ? 'md:flex md:flex-row' : ''}`}>
                   <CardHeader className={viewMode === 'list' ? 'md:flex-none md:w-1/3' : ''}>
                     <div className="flex justify-between items-start mb-2">
-                      <Badge 
-                        variant={tournament.registration_open ? 'default' : 'secondary'}
-                        className={tournament.registration_open ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}
-                      >
-                        {tournament.status}
-                      </Badge>
+                      <div className="flex items-center gap-4">
+                        <Badge 
+                          variant={tournament.registration_open ? 'default' : 'secondary'}
+                          className={tournament.registration_open ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}
+                        >
+                          {tournament.status}
+                        </Badge>
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Calendar className="h-4 w-4" />
+                          <span>
+                            {format(new Date(tournament.start_date), "MMM d")} - {format(new Date(tournament.end_date), "MMM d, yyyy")}
+                          </span>
+                        </div>
+                      </div>
                       <div className="text-right">
                         <div className="text-sm text-muted-foreground">Prize Pool</div>
                         <div className="font-bold text-primary">
@@ -236,14 +243,7 @@ const Tournaments = () => {
                   </CardHeader>
                   
                   <CardContent className={`space-y-4 ${viewMode === 'list' ? 'md:flex-1' : ''}`}>
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-2 text-muted-foreground pt-2">
-                        <Calendar className="h-4 w-4" />
-                        <span>
-                          {format(new Date(tournament.start_date), "MMM d")} - {format(new Date(tournament.end_date), "MMM d, yyyy")}
-                        </span>
-                      </div>
-                      
+                    <div className="space-y-4">                       
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <Users className="h-4 w-4" />
                         <span>{tournament.current_participants} / {tournament.max_participants} participants</span>
@@ -254,13 +254,6 @@ const Tournaments = () => {
                         <span>{tournament.location}</span>
                       </div>
                     </div>
-
-                    {/* Tournament Calendar Widget */}
-                    <TournamentCardCalendar 
-                      startDate={tournament.start_date}
-                      endDate={tournament.end_date}
-                      className="mb-4"
-                    />
 
                     {/* Tournament Information Preview */}
                     {tournament.tournament_info && (
