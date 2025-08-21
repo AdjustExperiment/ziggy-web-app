@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { RoundsManager } from './RoundsManager';
-import { PairingsManager } from './PairingsManager';
+import { TabulationPlatform } from './TabulationPlatform';
 import { JudgesManager } from './JudgesManager';
 import { BallotTemplatesManager } from './BallotTemplatesManager';
 import { BallotRevealSettings } from './BallotRevealSettings';
@@ -34,7 +34,7 @@ export function TabManager() {
           </TabsTrigger>
           <TabsTrigger value="pairings" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
-            Pairings
+            Tabulation
           </TabsTrigger>
           <TabsTrigger value="judges" className="flex items-center gap-2">
             <Gavel className="h-4 w-4" />
@@ -59,7 +59,7 @@ export function TabManager() {
         </TabsContent>
 
         <TabsContent value="pairings">
-          <PairingsManager />
+          <TabulationPlatform />
         </TabsContent>
 
         <TabsContent value="judges">

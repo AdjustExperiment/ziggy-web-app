@@ -15,7 +15,6 @@ import { Registration, JudgeProfile, Round } from '@/types/database';
 interface Tournament {
   id: string;
   name: string;
-  tab_settings: any;
 }
 
 export function TabulationPlatform() {
@@ -42,7 +41,7 @@ export function TabulationPlatform() {
     try {
       const { data, error } = await supabase
         .from('tournaments')
-        .select('id, name, tab_settings')
+        .select('id, name')
         .order('name');
 
       if (error) throw error;
@@ -110,7 +109,7 @@ export function TabulationPlatform() {
     try {
       const { error } = await supabase
         .from('rounds')
-        .update({ locked: !currentlyLocked })
+        .update({ status: currentlyLocked ? 'upcoming' : 'locked' })
         .eq('id', roundId);
 
       if (error) throw error;
@@ -212,7 +211,7 @@ export function TabulationPlatform() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Locked Rounds</p>
-                    <p className="text-2xl font-bold">{rounds.filter(r => r.locked).length}</p>
+                    <p className="text-2xl font-bold">{rounds.filter(r => r.status === 'locked').length}</p>
                   </div>
                   <Lock className="h-4 w-4 text-muted-foreground" />
                 </div>
