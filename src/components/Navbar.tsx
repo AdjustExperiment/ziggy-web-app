@@ -40,7 +40,7 @@ export function Navbar() {
           {/* Logo */}
           <div className="flex items-center shrink-0">
             <img 
-              src={debateLogo} 
+              src="/lovable-uploads/6e80f49d-b786-40a0-b14e-b90c43b076af.png" 
               alt="Debate Champions Logo" 
               className="h-28 sm:h-32 lg:h-36 w-auto object-contain hover:scale-105 transition-transform duration-300" 
             />
