@@ -18,6 +18,7 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { toast } from '@/components/ui/use-toast';
 import DOMPurify from 'dompurify';
+import TournamentCalendarConfig from './TournamentCalendarConfig';
 import 'react-quill/dist/quill.snow.css';
 
 // Dynamic import for ReactQuill to avoid SSR issues
@@ -56,6 +57,12 @@ interface Tournament {
   paypal_button_html: string;
   venmo_button_html: string;
   additional_info: any;
+  // Calendar customization fields
+  round_schedule_type: string;
+  round_interval_days: number;
+  round_count: number;
+  rounds_config: any[];
+  auto_schedule_rounds: boolean;
 }
 
 const TournamentManager = () => {
@@ -91,7 +98,13 @@ const TournamentManager = () => {
     paypal_client_id: '',
     paypal_button_html: '',
     venmo_button_html: '',
-    additional_info: '{}'
+    additional_info: '{}',
+    // Calendar customization fields
+    round_schedule_type: 'custom',
+    round_interval_days: 7,
+    round_count: 1,
+    rounds_config: [] as any[],
+    auto_schedule_rounds: false,
   });
 
   useEffect(() => {
@@ -119,7 +132,13 @@ const TournamentManager = () => {
         cash_prize_total: tournament.cash_prize_total || 0,
         paypal_button_html: (tournament as any).paypal_button_html || '',
         venmo_button_html: (tournament as any).venmo_button_html || '',
-        additional_info: tournament.additional_info || {}
+        additional_info: tournament.additional_info || {},
+        // Calendar fields with defaults
+        round_schedule_type: tournament.round_schedule_type || 'custom',
+        round_interval_days: tournament.round_interval_days || 7,
+        round_count: tournament.round_count || 1,
+        rounds_config: Array.isArray(tournament.rounds_config) ? tournament.rounds_config : [],
+        auto_schedule_rounds: tournament.auto_schedule_rounds || false,
       })) || [];
       
       setTournaments(transformedData);
@@ -158,7 +177,13 @@ const TournamentManager = () => {
       paypal_client_id: '',
       paypal_button_html: '',
       venmo_button_html: '',
-      additional_info: '{}'
+      additional_info: '{}',
+      // Calendar customization fields
+      round_schedule_type: 'custom',
+      round_interval_days: 7,
+      round_count: 1,
+      rounds_config: [],
+      auto_schedule_rounds: false,
     });
     setEditingTournament(null);
     setActiveTab('basic');
@@ -272,7 +297,13 @@ const TournamentManager = () => {
         paypal_client_id: formData.paypal_client_id,
         paypal_button_html: formData.paypal_button_html,
         venmo_button_html: formData.venmo_button_html,
-        additional_info: JSON.parse(formData.additional_info || '{}')
+        additional_info: JSON.parse(formData.additional_info || '{}'),
+        // Calendar customization fields
+        round_schedule_type: formData.round_schedule_type,
+        round_interval_days: formData.round_interval_days,
+        round_count: formData.round_count,
+        rounds_config: formData.rounds_config,
+        auto_schedule_rounds: formData.auto_schedule_rounds,
       };
 
       if (editingTournament) {
@@ -329,7 +360,13 @@ const TournamentManager = () => {
       paypal_client_id: tournament.paypal_client_id || '',
       paypal_button_html: tournament.paypal_button_html || '',
       venmo_button_html: tournament.venmo_button_html || '',
-      additional_info: JSON.stringify(tournament.additional_info || {}, null, 2)
+      additional_info: JSON.stringify(tournament.additional_info || {}, null, 2),
+      // Calendar customization fields
+      round_schedule_type: tournament.round_schedule_type || 'custom',
+      round_interval_days: tournament.round_interval_days || 7,
+      round_count: tournament.round_count || 1,
+      rounds_config: tournament.rounds_config || [],
+      auto_schedule_rounds: tournament.auto_schedule_rounds || false,
     });
     setIsDialogOpen(true);
   };
@@ -411,9 +448,10 @@ const TournamentManager = () => {
             </DialogHeader>
             
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-5">
+              <TabsList className="grid w-full grid-cols-6">
                 <TabsTrigger value="basic">Basic Info</TabsTrigger>
                 <TabsTrigger value="content">Content</TabsTrigger>
+                <TabsTrigger value="calendar">Calendar</TabsTrigger>
                 <TabsTrigger value="prizes">Prizes</TabsTrigger>
                 <TabsTrigger value="sponsors">Sponsors</TabsTrigger>
                 <TabsTrigger value="payments">Payments</TabsTrigger>
@@ -634,6 +672,19 @@ const TournamentManager = () => {
                       placeholder='{"dress_code": "Business formal", "meals_provided": true}'
                     />
                   </div>
+                </TabsContent>
+
+                <TabsContent value="calendar" className="space-y-4">
+                  <TournamentCalendarConfig
+                    startDate={formData.start_date}
+                    endDate={formData.end_date}
+                    roundScheduleType={formData.round_schedule_type}
+                    roundIntervalDays={formData.round_interval_days}
+                    roundCount={formData.round_count}
+                    roundsConfig={formData.rounds_config}
+                    autoScheduleRounds={formData.auto_schedule_rounds}
+                    onChange={(field, value) => setFormData({...formData, [field]: value})}
+                  />
                 </TabsContent>
 
                 <TabsContent value="prizes" className="space-y-4">

@@ -520,6 +520,7 @@ export type Database = {
       tournaments: {
         Row: {
           additional_info: Json | null
+          auto_schedule_rounds: boolean | null
           cash_prize_total: number | null
           created_at: string
           created_by: string | null
@@ -540,6 +541,10 @@ export type Database = {
           registration_deadline: string | null
           registration_fee: number | null
           registration_open: boolean | null
+          round_count: number | null
+          round_interval_days: number | null
+          round_schedule_type: string | null
+          rounds_config: Json | null
           sponsors: Json | null
           start_date: string
           status: string
@@ -550,6 +555,7 @@ export type Database = {
         }
         Insert: {
           additional_info?: Json | null
+          auto_schedule_rounds?: boolean | null
           cash_prize_total?: number | null
           created_at?: string
           created_by?: string | null
@@ -570,6 +576,10 @@ export type Database = {
           registration_deadline?: string | null
           registration_fee?: number | null
           registration_open?: boolean | null
+          round_count?: number | null
+          round_interval_days?: number | null
+          round_schedule_type?: string | null
+          rounds_config?: Json | null
           sponsors?: Json | null
           start_date: string
           status?: string
@@ -580,6 +590,7 @@ export type Database = {
         }
         Update: {
           additional_info?: Json | null
+          auto_schedule_rounds?: boolean | null
           cash_prize_total?: number | null
           created_at?: string
           created_by?: string | null
@@ -600,6 +611,10 @@ export type Database = {
           registration_deadline?: string | null
           registration_fee?: number | null
           registration_open?: boolean | null
+          round_count?: number | null
+          round_interval_days?: number | null
+          round_schedule_type?: string | null
+          rounds_config?: Json | null
           sponsors?: Json | null
           start_date?: string
           status?: string
