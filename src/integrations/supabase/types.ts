@@ -152,6 +152,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "ballots_judge_profile_id_fkey"
+            columns: ["judge_profile_id"]
+            isOneToOne: false
+            referencedRelation: "judge_profiles_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "ballots_pairing_id_fkey"
             columns: ["pairing_id"]
             isOneToOne: true
@@ -740,6 +747,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "pairing_judge_assignments_judge_profile_id_fkey"
+            columns: ["judge_profile_id"]
+            isOneToOne: false
+            referencedRelation: "judge_profiles_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "pairing_judge_assignments_pairing_id_fkey"
             columns: ["pairing_id"]
             isOneToOne: false
@@ -834,6 +848,13 @@ export type Database = {
             columns: ["judge_id"]
             isOneToOne: false
             referencedRelation: "judge_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pairings_judge_id_fkey"
+            columns: ["judge_id"]
+            isOneToOne: false
+            referencedRelation: "judge_profiles_public"
             referencedColumns: ["id"]
           },
           {
@@ -1356,6 +1377,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "tournament_registrations_requested_judge_profile_id_fkey"
+            columns: ["requested_judge_profile_id"]
+            isOneToOne: false
+            referencedRelation: "judge_profiles_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "tournament_registrations_tournament_id_fkey"
             columns: ["tournament_id"]
             isOneToOne: false
@@ -1465,7 +1493,36 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      judge_profiles_public: {
+        Row: {
+          bio: string | null
+          created_at: string | null
+          experience_level: string | null
+          id: string | null
+          name: string | null
+          qualifications: string | null
+          specializations: string[] | null
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string | null
+          experience_level?: string | null
+          id?: string | null
+          name?: string | null
+          qualifications?: string | null
+          specializations?: string[] | null
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string | null
+          experience_level?: string | null
+          id?: string | null
+          name?: string | null
+          qualifications?: string | null
+          specializations?: string[] | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       admin_lock_ballots: {
