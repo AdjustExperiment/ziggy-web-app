@@ -49,9 +49,9 @@ const Navbar = () => {
         <div className="mr-4 hidden md:flex">
           <Link to="/" className="mr-6 flex items-center space-x-2">
             <img 
-              src="/lovable-uploads/bb7e942b-4006-461c-b9ed-9bdde6f1500c.png" 
+              src="/lovable-uploads/01b9369b-8e9b-46ad-9d8f-b4a1802b17b8.png" 
               alt="Championship Portal Logo" 
-              className="h-8 w-8 rounded-full border-2 border-primary/20" 
+              className="h-8 w-8 rounded-full border-2 border-white" 
             />
             <span className="hidden font-bold sm:inline-block">
               Championship Portal
@@ -111,9 +111,9 @@ const Navbar = () => {
               onClick={() => setIsOpen(false)}
             >
               <img 
-                src="/lovable-uploads/bb7e942b-4006-461c-b9ed-9bdde6f1500c.png" 
+                src="/lovable-uploads/01b9369b-8e9b-46ad-9d8f-b4a1802b17b8.png" 
                 alt="Championship Portal Logo" 
-                className="h-6 w-6 rounded-full border-2 border-primary/20" 
+                className="h-6 w-6 rounded-full border-2 border-white" 
               />
               <span className="font-bold">Championship Portal</span>
             </Link>
@@ -212,9 +212,9 @@ const Navbar = () => {
           <div className="w-full flex-1 md:w-auto md:flex-none">
             <Link to="/" className="flex items-center space-x-2 md:hidden">
               <img 
-                src="/lovable-uploads/bb7e942b-4006-461c-b9ed-9bdde6f1500c.png" 
+                src="/lovable-uploads/01b9369b-8e9b-46ad-9d8f-b4a1802b17b8.png" 
                 alt="Championship Portal Logo" 
-                className="h-6 w-6 rounded-full border-2 border-primary/20" 
+                className="h-6 w-6 rounded-full border-2 border-white" 
               />
               <span className="font-bold">Championship Portal</span>
             </Link>
