@@ -275,8 +275,7 @@ END:VCALENDAR`;
   }
 
   const isRegistrationClosed = !tournament.registration_open || 
-    tournament.current_participants >= tournament.max_participants ||
-    (tournament.registration_deadline && new Date() > new Date(tournament.registration_deadline));
+    tournament.current_participants >= tournament.max_participants;
 
   return (
     <div className="min-h-screen bg-background">

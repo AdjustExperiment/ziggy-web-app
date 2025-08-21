@@ -55,7 +55,6 @@ export function Navbar() {
         .from('tournaments')
         .select('id')
         .eq('registration_open', true)
-        .gte('start_date', new Date().toISOString().split('T')[0]) // Future tournaments only
         .order('start_date', { ascending: true })
         .limit(1);
 
@@ -65,14 +64,13 @@ export function Navbar() {
           .from('tournaments')
           .select('id')
           .ilike('status', '%registration%open%')
-          .gte('start_date', new Date().toISOString().split('T')[0])
           .order('start_date', { ascending: true })
           .limit(1);
         tournaments = fallbackTournaments;
       }
 
       if (tournaments && tournaments.length > 0) {
-        navigate(`/tournament-registration/${tournaments[0].id}`);
+        navigate(`/tournament/${tournaments[0].id}/register`);
       } else {
         // No open tournaments, go to tournaments page
         navigate('/tournaments');
