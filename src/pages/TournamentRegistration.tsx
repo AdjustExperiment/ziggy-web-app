@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/components/ui/use-toast';
-import { PaymentButtons } from '@/components/PaymentButtons';
+import PaymentButtons from '@/components/PaymentButtons';
 
 interface Tournament {
   id: string;
@@ -396,9 +396,15 @@ export default function TournamentRegistration() {
         )}
         
         <PaymentButtons 
-          tournamentId={tournament?.id}
-          registrationFee={tournament?.registration_fee}
-          registrationId={registration?.id}
+          amount={tournament?.registration_fee || 0}
+          onPayPalPayment={async () => {
+            // PayPal payment handler
+            console.log('PayPal payment initiated');
+          }}
+          onVenmoPayment={async () => {
+            // Venmo payment handler
+            console.log('Venmo payment initiated');
+          }}
         />
 
         {registration?.payment_status === 'paid' && (
