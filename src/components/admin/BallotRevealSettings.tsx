@@ -29,21 +29,13 @@ export function BallotRevealSettings() {
 
   const fetchTournaments = async () => {
     try {
-      // Placeholder implementation - using existing tournaments table without ballot_reveal_mode
       const { data, error } = await supabase
         .from('tournaments')
-        .select('id, name, end_date, status')
+        .select('id, name, end_date, status, ballot_reveal_mode')
         .order('name');
 
       if (error) throw error;
-      
-      // Add placeholder ballot_reveal_mode for display
-      const tournamentsWithRevealMode = (data || []).map(tournament => ({
-        ...tournament,
-        ballot_reveal_mode: 'after_tournament' // Default placeholder
-      }));
-      
-      setTournaments(tournamentsWithRevealMode);
+      setTournaments(data || []);
     } catch (error: any) {
       console.error('Error fetching tournaments:', error);
       toast({
@@ -60,12 +52,19 @@ export function BallotRevealSettings() {
     try {
       setUpdating(tournamentId);
       
-      // Placeholder implementation
+      const { error } = await supabase
+        .from('tournaments')
+        .update({ ballot_reveal_mode: mode })
+        .eq('id', tournamentId);
+
+      if (error) throw error;
+
       toast({
-        title: "Feature Coming Soon",
-        description: "Ballot reveal mode settings will be available once the database setup is complete",
+        title: "Success",
+        description: "Ballot reveal mode updated successfully",
       });
 
+      fetchTournaments();
     } catch (error: any) {
       toast({
         title: "Error",
@@ -74,6 +73,25 @@ export function BallotRevealSettings() {
       });
     } finally {
       setUpdating('');
+    }
+  };
+
+  const publishDueBallots = async () => {
+    try {
+      const { data, error } = await supabase.rpc('publish_due_ballots');
+      
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `Published ${data || 0} ballots that were due for reveal`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to publish due ballots",
+        variant: "destructive",
+      });
     }
   };
 
@@ -120,11 +138,17 @@ export function BallotRevealSettings() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-semibold">Ballot Reveal Settings</h3>
-        <p className="text-muted-foreground">
-          Control when ballot results are revealed to competitors for each tournament
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-semibold">Ballot Reveal Settings</h3>
+          <p className="text-muted-foreground">
+            Control when ballot results are revealed to competitors for each tournament
+          </p>
+        </div>
+        <Button onClick={publishDueBallots} variant="outline">
+          <Clock className="h-4 w-4 mr-2" />
+          Publish Due Ballots
+        </Button>
       </div>
 
       <Card>
@@ -171,14 +195,14 @@ export function BallotRevealSettings() {
         <CardHeader>
           <CardTitle>Tournament Settings ({tournaments.length})</CardTitle>
           <CardDescription>
-            This feature is being set up and will be fully functional soon.
+            Configure ballot reveal settings for each tournament
           </CardDescription>
         </CardHeader>
         <CardContent>
           {tournaments.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <Eye className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p>No tournaments found. Tournament settings will appear here once available.</p>
+              <p>No tournaments found. Create tournaments to configure their ballot reveal settings.</p>
             </div>
           ) : (
             <Table>

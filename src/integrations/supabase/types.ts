@@ -62,6 +62,104 @@ export type Database = {
         }
         Relationships: []
       }
+      ballot_templates: {
+        Row: {
+          created_at: string
+          event_style: string
+          html: string | null
+          id: string
+          is_default: boolean
+          schema: Json
+          template_key: string
+          tournament_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          event_style: string
+          html?: string | null
+          id?: string
+          is_default?: boolean
+          schema?: Json
+          template_key: string
+          tournament_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          event_style?: string
+          html?: string | null
+          id?: string
+          is_default?: boolean
+          schema?: Json
+          template_key?: string
+          tournament_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ballot_templates_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ballots: {
+        Row: {
+          created_at: string
+          id: string
+          is_published: boolean
+          judge_profile_id: string
+          judge_user_id: string
+          pairing_id: string
+          payload: Json
+          revealed_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          judge_profile_id: string
+          judge_user_id: string
+          pairing_id: string
+          payload?: Json
+          revealed_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          judge_profile_id?: string
+          judge_user_id?: string
+          pairing_id?: string
+          payload?: Json
+          revealed_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ballots_judge_profile_id_fkey"
+            columns: ["judge_profile_id"]
+            isOneToOne: false
+            referencedRelation: "judge_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ballots_pairing_id_fkey"
+            columns: ["pairing_id"]
+            isOneToOne: true
+            referencedRelation: "pairings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       blog_posts: {
         Row: {
           author_id: string
@@ -137,6 +235,36 @@ export type Database = {
           participants?: number
           runner_up?: string
           winner?: string
+        }
+        Relationships: []
+      }
+      debate_formats: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          key: string
+          name: string
+          rules: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          key: string
+          name: string
+          rules?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          key?: string
+          name?: string
+          rules?: Json
+          updated_at?: string
         }
         Relationships: []
       }
@@ -347,6 +475,51 @@ export type Database = {
           },
         ]
       }
+      judge_profiles: {
+        Row: {
+          availability: Json
+          bio: string | null
+          created_at: string
+          email: string
+          experience_level: string
+          id: string
+          name: string
+          phone: string | null
+          qualifications: string | null
+          specializations: string[]
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          availability?: Json
+          bio?: string | null
+          created_at?: string
+          email: string
+          experience_level?: string
+          id?: string
+          name: string
+          phone?: string | null
+          qualifications?: string | null
+          specializations?: string[]
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          availability?: Json
+          bio?: string | null
+          created_at?: string
+          email?: string
+          experience_level?: string
+          id?: string
+          name?: string
+          phone?: string | null
+          qualifications?: string | null
+          specializations?: string[]
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       pages: {
         Row: {
           content: Json
@@ -387,6 +560,7 @@ export type Database = {
           id: string
           judge_id: string | null
           neg_registration_id: string
+          released: boolean
           result: Json | null
           room: string | null
           round_id: string
@@ -401,6 +575,7 @@ export type Database = {
           id?: string
           judge_id?: string | null
           neg_registration_id: string
+          released?: boolean
           result?: Json | null
           room?: string | null
           round_id: string
@@ -415,6 +590,7 @@ export type Database = {
           id?: string
           judge_id?: string | null
           neg_registration_id?: string
+          released?: boolean
           result?: Json | null
           room?: string | null
           round_id?: string
@@ -429,6 +605,13 @@ export type Database = {
             columns: ["aff_registration_id"]
             isOneToOne: false
             referencedRelation: "tournament_registrations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pairings_judge_id_fkey"
+            columns: ["judge_id"]
+            isOneToOne: false
+            referencedRelation: "judge_profiles"
             referencedColumns: ["id"]
           },
           {
@@ -507,6 +690,7 @@ export type Database = {
           position: string
           prize: string | null
           tournament: string
+          tournament_id: string | null
         }
         Insert: {
           created_at?: string
@@ -518,6 +702,7 @@ export type Database = {
           position: string
           prize?: string | null
           tournament: string
+          tournament_id?: string | null
         }
         Update: {
           created_at?: string
@@ -529,8 +714,17 @@ export type Database = {
           position?: string
           prize?: string | null
           tournament?: string
+          tournament_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "results_recent_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       rounds: {
         Row: {
@@ -823,6 +1017,7 @@ export type Database = {
         Row: {
           additional_info: Json | null
           auto_schedule_rounds: boolean | null
+          ballot_reveal_mode: string
           cash_prize_total: number | null
           created_at: string
           created_by: string | null
@@ -854,6 +1049,7 @@ export type Database = {
         Insert: {
           additional_info?: Json | null
           auto_schedule_rounds?: boolean | null
+          ballot_reveal_mode?: string
           cash_prize_total?: number | null
           created_at?: string
           created_by?: string | null
@@ -885,6 +1081,7 @@ export type Database = {
         Update: {
           additional_info?: Json | null
           auto_schedule_rounds?: boolean | null
+          ballot_reveal_mode?: string
           cash_prize_total?: number | null
           created_at?: string
           created_by?: string | null
@@ -920,12 +1117,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_submit_ballot: {
+        Args: { _pairing_id: string }
+        Returns: boolean
+      }
       is_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
       make_admin_by_email: {
         Args: { target_email: string }
+        Returns: boolean
+      }
+      publish_due_ballots: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      user_is_competitor_for_pairing: {
+        Args: { _pairing_id: string }
         Returns: boolean
       }
     }

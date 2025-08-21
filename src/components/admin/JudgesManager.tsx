@@ -6,8 +6,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from '@/components/ui/use-toast';
 import { Plus, Edit2, Trash2, Gavel, Phone, Mail } from 'lucide-react';
 import { JudgeProfile } from '@/types/database';
@@ -19,11 +21,14 @@ export function JudgesManager() {
   const [editingJudge, setEditingJudge] = useState<JudgeProfile | null>(null);
   const [formData, setFormData] = useState({
     name: '',
-    phone: '',
     email: '',
+    phone: '',
+    experience_level: 'novice',
     bio: '',
     qualifications: ''
   });
+
+  const experienceLevels = ['novice', 'intermediate', 'experienced', 'expert'];
 
   useEffect(() => {
     fetchJudges();
@@ -31,15 +36,19 @@ export function JudgesManager() {
 
   const fetchJudges = async () => {
     try {
-      // Since judge_profiles table doesn't exist yet, show empty state
-      console.log('Judge profiles table not available yet');
-      setJudges([]);
+      const { data, error } = await supabase
+        .from('judge_profiles')
+        .select('*')
+        .order('name');
+
+      if (error) throw error;
+      setJudges(data || []);
     } catch (error: any) {
       console.error('Error fetching judges:', error);
       toast({
-        title: "Info",
-        description: "Judge management will be available after database migration",
-        variant: "default",
+        title: "Error",
+        description: "Failed to fetch judges",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -49,23 +58,92 @@ export function JudgesManager() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    toast({
-      title: "Info",
-      description: "Judge management will be available after database migration",
-      variant: "default",
-    });
+    try {
+      const judgeData = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone || null,
+        experience_level: formData.experience_level,
+        bio: formData.bio || null,
+        qualifications: formData.qualifications || null,
+        specializations: [],
+        availability: {}
+      };
+
+      if (editingJudge) {
+        const { error } = await supabase
+          .from('judge_profiles')
+          .update(judgeData)
+          .eq('id', editingJudge.id);
+
+        if (error) throw error;
+
+        toast({
+          title: "Success",
+          description: "Judge updated successfully",
+        });
+      } else {
+        const { error } = await supabase
+          .from('judge_profiles')
+          .insert([judgeData]);
+
+        if (error) throw error;
+
+        toast({
+          title: "Success",
+          description: "Judge created successfully",
+        });
+      }
+
+      setIsDialogOpen(false);
+      resetForm();
+      fetchJudges();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save judge",
+        variant: "destructive",
+      });
+    }
   };
 
   const deleteJudge = async (judgeId: string) => {
-    toast({
-      title: "Info",
-      description: "Judge management will be available after database migration",
-      variant: "default",
-    });
+    if (!confirm('Are you sure you want to delete this judge?')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('judge_profiles')
+        .delete()
+        .eq('id', judgeId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Judge deleted successfully",
+      });
+
+      fetchJudges();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to delete judge",
+        variant: "destructive",
+      });
+    }
   };
 
   const resetForm = () => {
-    setFormData({ name: '', phone: '', email: '', bio: '', qualifications: '' });
+    setFormData({ 
+      name: '', 
+      email: '', 
+      phone: '', 
+      experience_level: 'novice', 
+      bio: '', 
+      qualifications: '' 
+    });
     setEditingJudge(null);
   };
 
@@ -73,8 +151,9 @@ export function JudgesManager() {
     setEditingJudge(judge);
     setFormData({
       name: judge.name,
+      email: judge.email,
       phone: judge.phone || '',
-      email: judge.email || '',
+      experience_level: judge.experience_level,
       bio: judge.bio || '',
       qualifications: judge.qualifications || ''
     });
@@ -139,17 +218,35 @@ export function JudgesManager() {
                     value={formData.email}
                     onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                     placeholder="judge@example.com"
+                    required
                   />
                 </div>
               </div>
-              <div>
-                <Label htmlFor="phone">Phone Number</Label>
-                <Input
-                  id="phone"
-                  value={formData.phone}
-                  onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                  placeholder="(555) 123-4567"
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="phone">Phone Number</Label>
+                  <Input
+                    id="phone"
+                    value={formData.phone}
+                    onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                    placeholder="(555) 123-4567"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="experience_level">Experience Level</Label>
+                  <Select value={formData.experience_level} onValueChange={(value) => setFormData(prev => ({ ...prev, experience_level: value }))}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {experienceLevels.map(level => (
+                        <SelectItem key={level} value={level}>
+                          {level.charAt(0).toUpperCase() + level.slice(1)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <div>
                 <Label htmlFor="qualifications">Qualifications</Label>
@@ -185,12 +282,81 @@ export function JudgesManager() {
       </div>
 
       <Card>
-        <CardContent className="text-center py-8">
-          <Gavel className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">Judge Management Coming Soon</h3>
-          <p className="text-muted-foreground">
-            Judge management features will be available after the database migration is complete.
-          </p>
+        <CardHeader>
+          <CardTitle>Judges ({judges.length})</CardTitle>
+          <CardDescription>
+            Manage judge profiles and their information
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {judges.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Gavel className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p>No judges found. Add your first judge to get started.</p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Contact</TableHead>
+                  <TableHead>Experience</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {judges.map((judge) => (
+                  <TableRow key={judge.id}>
+                    <TableCell>
+                      <div className="font-medium">{judge.name}</div>
+                      {judge.qualifications && (
+                        <div className="text-sm text-muted-foreground truncate max-w-xs">
+                          {judge.qualifications}
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1 text-sm">
+                        <Mail className="h-3 w-3" />
+                        {judge.email}
+                      </div>
+                      {judge.phone && (
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                          <Phone className="h-3 w-3" />
+                          {judge.phone}
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">
+                        {judge.experience_level.charAt(0).toUpperCase() + judge.experience_level.slice(1)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => openEditDialog(judge)}
+                        >
+                          <Edit2 className="h-4 w-4 mr-1" />
+                          Edit
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => deleteJudge(judge.id)}
+                        >
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          Delete
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>

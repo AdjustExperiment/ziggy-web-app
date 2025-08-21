@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from '@/components/ui/use-toast';
 import { Plus, Edit2, Trash2, MessageSquare } from 'lucide-react';
 import { DebateFormat } from '@/types/database';
@@ -30,15 +31,19 @@ export function DebateFormatsManager() {
 
   const fetchFormats = async () => {
     try {
-      // Since debate_formats table doesn't exist yet, show empty state
-      console.log('Debate formats table not available yet');
-      setFormats([]);
+      const { data, error } = await supabase
+        .from('debate_formats')
+        .select('*')
+        .order('name');
+
+      if (error) throw error;
+      setFormats(data || []);
     } catch (error: any) {
       console.error('Error fetching debate formats:', error);
       toast({
-        title: "Info",
-        description: "Debate format management will be available after database migration",
-        variant: "default",
+        title: "Error",
+        description: "Failed to fetch debate formats",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -48,19 +53,84 @@ export function DebateFormatsManager() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    toast({
-      title: "Info",
-      description: "Debate format management will be available after database migration",
-      variant: "default",
-    });
+    try {
+      let rules;
+      try {
+        rules = formData.rules ? JSON.parse(formData.rules) : {};
+      } catch {
+        throw new Error('Invalid JSON in rules field');
+      }
+
+      const formatData = {
+        key: formData.key,
+        name: formData.name,
+        description: formData.description || null,
+        rules
+      };
+
+      if (editingFormat) {
+        const { error } = await supabase
+          .from('debate_formats')
+          .update(formatData)
+          .eq('id', editingFormat.id);
+
+        if (error) throw error;
+
+        toast({
+          title: "Success",
+          description: "Debate format updated successfully",
+        });
+      } else {
+        const { error } = await supabase
+          .from('debate_formats')
+          .insert([formatData]);
+
+        if (error) throw error;
+
+        toast({
+          title: "Success",
+          description: "Debate format created successfully",
+        });
+      }
+
+      setIsDialogOpen(false);
+      resetForm();
+      fetchFormats();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save debate format",
+        variant: "destructive",
+      });
+    }
   };
 
   const deleteFormat = async (formatId: string) => {
-    toast({
-      title: "Info",
-      description: "Debate format management will be available after database migration",
-      variant: "default",
-    });
+    if (!confirm('Are you sure you want to delete this debate format?')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('debate_formats')
+        .delete()
+        .eq('id', formatId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Debate format deleted successfully",
+      });
+
+      fetchFormats();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to delete debate format",
+        variant: "destructive",
+      });
+    }
   };
 
   const resetForm = () => {
@@ -174,12 +244,67 @@ export function DebateFormatsManager() {
       </div>
 
       <Card>
-        <CardContent className="text-center py-8">
-          <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">Debate Formats Coming Soon</h3>
-          <p className="text-muted-foreground">
-            Debate format management features will be available after the database migration is complete.
-          </p>
+        <CardHeader>
+          <CardTitle>Available Formats ({formats.length})</CardTitle>
+          <CardDescription>
+            Debate formats that can be used in tournaments
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {formats.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p>No debate formats found. Add your first format to get started.</p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Format</TableHead>
+                  <TableHead>Key</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {formats.map((format) => (
+                  <TableRow key={format.id}>
+                    <TableCell>
+                      <div className="font-medium">{format.name}</div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{format.key}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="max-w-xs truncate">
+                        {format.description || 'No description'}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => openEditDialog(format)}
+                        >
+                          <Edit2 className="h-4 w-4 mr-1" />
+                          Edit
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => deleteFormat(format.id)}
+                        >
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          Delete
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>

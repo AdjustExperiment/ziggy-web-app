@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -12,18 +11,8 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { toast } from '@/components/ui/use-toast';
-import { Plus, Edit, Star, FileText } from 'lucide-react';
-
-interface BallotTemplate {
-  id: string;
-  tournament_id: string;
-  event_style: string;
-  template_key: string;
-  schema: any;
-  html: string;
-  is_default: boolean;
-  created_at: string;
-}
+import { Plus, Edit, Star, FileText, Trash2 } from 'lucide-react';
+import { BallotTemplate } from '@/types/database';
 
 interface Tournament {
   id: string;
@@ -88,9 +77,18 @@ export function BallotTemplatesManager() {
     try {
       setLoading(true);
       
-      // Placeholder implementation - the ballot_templates table doesn't exist in current types
-      // Show empty state until database setup is complete
-      setTemplates([]);
+      let query = supabase.from('ballot_templates').select('*');
+      
+      if (selectedTournament === 'global') {
+        query = query.is('tournament_id', null);
+      } else {
+        query = query.eq('tournament_id', selectedTournament);
+      }
+      
+      const { data, error } = await query.order('event_style');
+
+      if (error) throw error;
+      setTemplates(data || []);
       
     } catch (error: any) {
       console.error('Error fetching ballot templates:', error);
@@ -113,10 +111,24 @@ export function BallotTemplatesManager() {
         throw new Error('Invalid JSON in schema field');
       }
 
-      // Placeholder implementation
+      const templateData = {
+        tournament_id: selectedTournament === 'global' ? null : selectedTournament,
+        event_style: formData.event_style,
+        template_key: formData.template_key,
+        schema,
+        html: formData.html || null,
+        is_default: formData.is_default
+      };
+
+      const { error } = await supabase
+        .from('ballot_templates')
+        .insert([templateData]);
+
+      if (error) throw error;
+
       toast({
-        title: "Feature Coming Soon",
-        description: "Ballot template creation will be available once the database setup is complete",
+        title: "Success",
+        description: "Ballot template created successfully",
       });
 
       setIsCreateDialogOpen(false);
@@ -142,10 +154,24 @@ export function BallotTemplatesManager() {
         throw new Error('Invalid JSON in schema field');
       }
 
-      // Placeholder implementation
+      const templateData = {
+        event_style: formData.event_style,
+        template_key: formData.template_key,
+        schema,
+        html: formData.html || null,
+        is_default: formData.is_default
+      };
+
+      const { error } = await supabase
+        .from('ballot_templates')
+        .update(templateData)
+        .eq('id', editingTemplate.id);
+
+      if (error) throw error;
+
       toast({
-        title: "Feature Coming Soon",
-        description: "Ballot template updates will be available once the database setup is complete",
+        title: "Success",
+        description: "Ballot template updated successfully",
       });
 
       setIsEditDialogOpen(false);
@@ -161,12 +187,46 @@ export function BallotTemplatesManager() {
     }
   };
 
+  const deleteTemplate = async (templateId: string) => {
+    if (!confirm('Are you sure you want to delete this ballot template?')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('ballot_templates')
+        .delete()
+        .eq('id', templateId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Ballot template deleted successfully",
+      });
+
+      fetchTemplates();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to delete ballot template",
+        variant: "destructive",
+      });
+    }
+  };
+
   const toggleDefault = async (templateId: string, isDefault: boolean) => {
     try {
-      // Placeholder implementation
+      const { error } = await supabase
+        .from('ballot_templates')
+        .update({ is_default: isDefault })
+        .eq('id', templateId);
+
+      if (error) throw error;
+
       toast({
-        title: "Feature Coming Soon",
-        description: "Template default settings will be available once the database setup is complete",
+        title: "Success",
+        description: `Template ${isDefault ? 'set as' : 'removed as'} default`,
       });
 
       fetchTemplates();
@@ -346,14 +406,14 @@ export function BallotTemplatesManager() {
         <CardHeader>
           <CardTitle>Templates ({templates.length})</CardTitle>
           <CardDescription>
-            This feature is being set up and will be fully functional soon.
+            Ballot templates for the selected scope
           </CardDescription>
         </CardHeader>
         <CardContent>
           {templates.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p>No ballot templates found. Templates will appear here once the database setup is complete.</p>
+              <p>No ballot templates found. Create your first template to get started.</p>
             </div>
           ) : (
             <Table>
@@ -396,6 +456,14 @@ export function BallotTemplatesManager() {
                         >
                           <Edit className="h-4 w-4 mr-1" />
                           Edit
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => deleteTemplate(template.id)}
+                        >
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          Delete
                         </Button>
                       </div>
                     </TableCell>
