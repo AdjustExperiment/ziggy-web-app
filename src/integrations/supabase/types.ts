@@ -14,13 +14,192 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      blog_posts: {
+        Row: {
+          author_id: string
+          content: string | null
+          cover_image_url: string | null
+          created_at: string
+          excerpt: string | null
+          featured: boolean
+          id: string
+          slug: string
+          status: string
+          tags: string[] | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          content?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          excerpt?: string | null
+          featured?: boolean
+          id?: string
+          slug: string
+          status?: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          content?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          excerpt?: string | null
+          featured?: boolean
+          id?: string
+          slug?: string
+          status?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      championships: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          location: string
+          name: string
+          participants: number
+          runner_up: string
+          winner: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          location: string
+          name: string
+          participants: number
+          runner_up: string
+          winner: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          location?: string
+          name?: string
+          participants?: number
+          runner_up?: string
+          winner?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          first_name: string | null
+          id: string
+          last_name: string | null
+          role: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          role?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          role?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      results_recent: {
+        Row: {
+          created_at: string
+          date: string
+          format: string
+          id: string
+          participants: number
+          points: number
+          position: string
+          prize: string | null
+          tournament: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          format: string
+          id?: string
+          participants: number
+          points: number
+          position: string
+          prize?: string | null
+          tournament: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          format?: string
+          id?: string
+          participants?: number
+          points?: number
+          position?: string
+          prize?: string | null
+          tournament?: string
+        }
+        Relationships: []
+      }
+      top_performers: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          points: number
+          rank: number
+          school: string
+          tournaments: number
+          win_rate: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          points: number
+          rank: number
+          school: string
+          tournaments: number
+          win_rate: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          points?: number
+          rank?: number
+          school?: string
+          tournaments?: number
+          win_rate?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
