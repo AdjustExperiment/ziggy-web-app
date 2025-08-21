@@ -1,4 +1,5 @@
 
+
 // Temporary type definitions for new tables until Supabase types are regenerated
 export interface DebateFormat {
   id: string;
@@ -55,6 +56,8 @@ export interface JudgeProfile {
   experience_level: string;
   specializations: string[];
   availability: any;
+  bio: string | null;
+  qualifications: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -67,4 +70,29 @@ export interface RefundRequest {
   requested_at: string;
   processed_at: string | null;
   admin_notes: string | null;
+}
+
+// Updated Registration interface to match tournament_registrations table structure
+export interface Registration {
+  id: string;
+  tournament_id: string;
+  participant_name: string;
+  participant_email: string;
+  partner_name: string | null;
+  judge_name: string | null;
+  partnership_status: string | null;
+  payment_status: string;
+  additional_info: any;
+  amount_paid: number | null;
+  created_at: string;
+  dietary_requirements: string | null;
+  emergency_contact: string | null;
+  last_reminder_sent_at: string | null;
+  payment_id: string | null;
+  registration_date: string;
+  reminder_count: number;
+  school_organization: string | null;
+  success_email_sent_at: string | null;
+  updated_at: string;
+  user_id: string | null;
 }

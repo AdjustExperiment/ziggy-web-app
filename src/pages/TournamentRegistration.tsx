@@ -11,22 +11,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/components/ui/use-toast';
 import PaymentButtons from '@/components/PaymentButtons';
+import { Registration } from '@/types/database';
 
 interface Tournament {
   id: string;
   name: string;
   registration_fee: number;
-}
-
-interface Registration {
-  id: string;
-  tournament_id: string;
-  participant_name: string;
-  participant_email: string;
-  partner_name: string | null;
-  judge_name: string | null;
-  partnership_status: string;
-  payment_status: string;
 }
 
 interface FormData {
@@ -128,6 +118,7 @@ export default function TournamentRegistration() {
           additional_notes: formData.additionalNotes
         },
         payment_status: 'pending',
+        partnership_status: formData.partnerName ? 'with_partner' : 'individual',
         user_id: user?.id || null
       };
 
@@ -139,7 +130,14 @@ export default function TournamentRegistration() {
 
       if (error) throw error;
 
-      setRegistration(data);
+      // Transform the data to match Registration interface
+      const transformedRegistration: Registration = {
+        ...data,
+        judge_name: data.judge_name || null,
+        partnership_status: data.partnership_status || 'individual'
+      };
+
+      setRegistration(transformedRegistration);
 
       // Send registration email
       if (data) {
@@ -176,29 +174,12 @@ export default function TournamentRegistration() {
   const requestRefund = async () => {
     if (!registration || !user) return;
 
-    try {
-      const { error } = await supabase
-        .from('refund_requests')
-        .insert([{
-          registration_id: registration.id,
-          user_id: user.id,
-          reason: 'User requested refund',
-          status: 'pending'
-        }]);
-
-      if (error) throw error;
-
-      toast({
-        title: "Refund Requested",
-        description: "Your refund request has been submitted and will be reviewed by administrators.",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+    // Since refund_requests table doesn't exist yet, we'll just show a message
+    toast({
+      title: "Refund Request",
+      description: "Refund requests will be available after database migration. Please contact support directly.",
+      variant: "default",
+    });
   };
 
   if (loading) {
