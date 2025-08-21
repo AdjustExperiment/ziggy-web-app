@@ -14,6 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_notifications: {
+        Row: {
+          action_text: string | null
+          action_url: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          is_read: boolean
+          message: string
+          metadata: Json | null
+          priority: string
+          registration_id: string | null
+          title: string
+          tournament_id: string | null
+          type: string
+        }
+        Insert: {
+          action_text?: string | null
+          action_url?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_read?: boolean
+          message: string
+          metadata?: Json | null
+          priority?: string
+          registration_id?: string | null
+          title: string
+          tournament_id?: string | null
+          type: string
+        }
+        Update: {
+          action_text?: string | null
+          action_url?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_read?: boolean
+          message?: string
+          metadata?: Json | null
+          priority?: string
+          registration_id?: string | null
+          title?: string
+          tournament_id?: string | null
+          type?: string
+        }
+        Relationships: []
+      }
       blog_posts: {
         Row: {
           author_id: string
