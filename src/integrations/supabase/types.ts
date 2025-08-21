@@ -92,6 +92,36 @@ export type Database = {
         }
         Relationships: []
       }
+      email_api_keys: {
+        Row: {
+          api_key_name: string
+          created_at: string
+          id: string
+          is_active: boolean | null
+          provider: string
+          test_email: string | null
+          updated_at: string
+        }
+        Insert: {
+          api_key_name: string
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          provider: string
+          test_email?: string | null
+          updated_at?: string
+        }
+        Update: {
+          api_key_name?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          provider?: string
+          test_email?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       email_logs: {
         Row: {
           attempt: number
@@ -206,6 +236,62 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "email_templates_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_templates_enhanced: {
+        Row: {
+          created_at: string
+          enabled: boolean | null
+          from_email: string | null
+          html_content: string
+          id: string
+          images: Json | null
+          reply_to: string | null
+          subject: string
+          template_key: string
+          template_name: string
+          tournament_id: string | null
+          updated_at: string
+          variables: Json | null
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean | null
+          from_email?: string | null
+          html_content: string
+          id?: string
+          images?: Json | null
+          reply_to?: string | null
+          subject: string
+          template_key: string
+          template_name: string
+          tournament_id?: string | null
+          updated_at?: string
+          variables?: Json | null
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean | null
+          from_email?: string | null
+          html_content?: string
+          id?: string
+          images?: Json | null
+          reply_to?: string | null
+          subject?: string
+          template_key?: string
+          template_name?: string
+          tournament_id?: string | null
+          updated_at?: string
+          variables?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_templates_enhanced_tournament_id_fkey"
             columns: ["tournament_id"]
             isOneToOne: false
             referencedRelation: "tournaments"

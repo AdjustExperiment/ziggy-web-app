@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Mail, Settings, BarChart3, Send } from 'lucide-react';
 import { EmailProviderConfig } from './EmailProviderConfig';
+import { EnhancedEmailTemplateManager } from './EnhancedEmailTemplateManager';
 
 interface EmailTemplate {
   id: string;
@@ -232,6 +233,10 @@ export const EmailManager = () => {
             <Mail className="h-4 w-4" />
             Templates
           </TabsTrigger>
+          <TabsTrigger value="enhanced" className="flex items-center gap-2">
+            <Mail className="h-4 w-4" />
+            Enhanced Templates
+          </TabsTrigger>
           <TabsTrigger value="settings" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
             Settings
@@ -248,7 +253,7 @@ export const EmailManager = () => {
 
         <TabsContent value="templates" className="space-y-4">
           <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold">Email Templates</h3>
+            <h3 className="text-lg font-semibold">Basic Email Templates</h3>
             <Button onClick={() => setEditingTemplate({} as EmailTemplate)}>
               Create Template
             </Button>
@@ -373,6 +378,10 @@ export const EmailManager = () => {
               </CardContent>
             </Card>
           )}
+        </TabsContent>
+
+        <TabsContent value="enhanced" className="space-y-4">
+          <EnhancedEmailTemplateManager />
         </TabsContent>
 
         <TabsContent value="settings" className="space-y-4">
