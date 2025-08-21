@@ -48,24 +48,24 @@ All colors MUST be HSL.
     );
     --gradient-card: linear-gradient(
       145deg, 
-      hsl(0 0% 8%) 0%, 
-      hsl(355 20% 12%) 30%, 
-      hsl(355 40% 18%) 60%, 
-      hsl(355 20% 25%) 100%
+      hsl(var(--card)) 0%, 
+      hsl(var(--muted)) 30%, 
+      hsl(var(--card)) 60%, 
+      hsl(var(--muted)/0.8) 100%
     ); 
     --gradient-accent: linear-gradient(
       90deg, 
-      hsl(355 100% 45%) 0%, 
-      hsl(355 100% 55%) 50%, 
-      hsl(355 100% 65%) 100%
+      hsl(var(--primary)) 0%, 
+      hsl(var(--primary-glow)) 50%, 
+      hsl(var(--accent)) 100%
     );
     --gradient-subtle: linear-gradient(
       180deg, 
-      hsl(0 0% 95%) 0%, 
-      hsl(355 15% 90%) 25%, 
-      hsl(355 25% 88%) 50%, 
-      hsl(355 20% 85%) 75%, 
-      hsl(0 0% 92%) 100%
+      hsl(var(--background)) 0%, 
+      hsl(var(--muted)/0.3) 25%, 
+      hsl(var(--muted)/0.5) 50%, 
+      hsl(var(--muted)/0.3) 75%, 
+      hsl(var(--background)) 100%
     );
 
     /* Advanced Shadows */

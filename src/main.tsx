@@ -11,6 +11,7 @@ createRoot(document.getElementById("root")!).render(
       defaultTheme="dark"
       enableSystem
       disableTransitionOnChange
+      storageKey="ziggy-theme"
     >
       <App />
     </ThemeProvider>

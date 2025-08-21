@@ -34,9 +34,10 @@ const AppContent = () => {
   useAutomatedEmails(); // Hook to listen for registration updates
   
   return (
-    <div className="min-h-screen text-foreground">
+    <div className="min-h-screen bg-background text-foreground">
       <BackgroundFX />
-      <Navbar />
+      <div className="relative z-10">
+        <Navbar />
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/about" element={<About />} />
@@ -86,6 +87,7 @@ const AppContent = () => {
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>
+      </div>
     </div>
   );
 };

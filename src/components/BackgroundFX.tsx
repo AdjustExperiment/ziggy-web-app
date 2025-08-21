@@ -1,6 +1,6 @@
 export function BackgroundFX() {
   return (
-    <div className="fixed inset-0 -z-10 pointer-events-none overflow-hidden">
+    <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
       {/* Main gradient background */}
       <div className="absolute inset-0 bg-gradient-subtle opacity-90" />
       
