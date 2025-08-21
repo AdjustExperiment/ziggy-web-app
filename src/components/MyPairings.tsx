@@ -13,6 +13,7 @@ import { Pairing } from '@/types/database';
 export function MyPairings() {
   const { user } = useAuth();
   const [pairings, setPairings] = useState<Pairing[]>([]);
+  const [userRegistrationIds, setUserRegistrationIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -28,14 +29,49 @@ export function MyPairings() {
       // Get user's registrations first
       const { data: userRegistrations, error: regError } = await supabase
         .from('tournament_registrations')
-        .select('id, participant_name, participant_email, tournaments(name)')
+        .select('id')
         .eq('user_id', user.id);
 
       if (regError) throw regError;
 
-      // For now, show empty state since pairings table doesn't exist yet
-      console.log('User registrations:', userRegistrations);
-      setPairings([]);
+      if (!userRegistrations || userRegistrations.length === 0) {
+        setPairings([]);
+        return;
+      }
+
+      const registrationIds = userRegistrations.map(reg => reg.id);
+      setUserRegistrationIds(registrationIds);
+
+      // Fetch pairings where user is either AFF or NEG and pairing is released
+      const { data: pairingsData, error: pairingsError } = await supabase
+        .from('pairings')
+        .select(`
+          id,
+          tournament_id,
+          round_id,
+          aff_registration_id,
+          neg_registration_id,
+          judge_id,
+          room,
+          scheduled_time,
+          released,
+          status,
+          result,
+          created_at,
+          updated_at,
+          aff_registration:tournament_registrations!aff_registration_id(participant_name, participant_email),
+          neg_registration:tournament_registrations!neg_registration_id(participant_name, participant_email),
+          round:rounds(name),
+          tournaments(name),
+          judge_profiles(name, email)
+        `)
+        .or(`aff_registration_id.in.(${registrationIds.join(',')}),neg_registration_id.in.(${registrationIds.join(',')})`)
+        .eq('released', true)
+        .order('created_at', { ascending: false });
+
+      if (pairingsError) throw pairingsError;
+
+      setPairings(pairingsData || []);
     } catch (error: any) {
       console.error('Error fetching pairings:', error);
       toast({
@@ -65,15 +101,116 @@ export function MyPairings() {
         </p>
       </div>
 
-      <Card>
-        <CardContent className="text-center py-8">
-          <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">No Pairings Yet</h3>
-          <p className="text-muted-foreground">
-            Your debate pairings will appear here once they are released by tournament directors.
-          </p>
-        </CardContent>
-      </Card>
+      {pairings.length === 0 ? (
+        <Card>
+          <CardContent className="text-center py-8">
+            <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No Pairings Yet</h3>
+            <p className="text-muted-foreground">
+              Your debate pairings will appear here once they are released by tournament directors.
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-4">
+          {pairings.map((pairing) => {
+            const isAff = userRegistrationIds.includes(pairing.aff_registration_id);
+            const isNeg = userRegistrationIds.includes(pairing.neg_registration_id);
+            
+            return (
+              <Card key={pairing.id}>
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        <Gavel className="h-5 w-5" />
+                        {pairing.tournaments?.name} - {pairing.round?.name}
+                      </CardTitle>
+                      <CardDescription>
+                        Room: {pairing.room || 'TBD'} • 
+                        You are competing as: <Badge variant={isAff ? "outline" : "secondary"}>
+                          {isAff ? "AFF" : isNeg ? "NEG" : "Unknown"}
+                        </Badge>
+                      </CardDescription>
+                    </div>
+                    <Badge variant={pairing.status === 'completed' ? 'default' : 'secondary'}>
+                      {pairing.status}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-4">
+                    {/* Participants */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline">AFF</Badge>
+                          <span className="font-medium">{pairing.aff_registration?.participant_name}</span>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary">NEG</Badge>
+                          <span className="font-medium">{pairing.neg_registration?.participant_name}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Judge */}
+                    <div>
+                      <div className="text-sm text-muted-foreground">Judge:</div>
+                      <div className="font-medium">
+                        {pairing.judge_profiles?.name || 'TBD'}
+                      </div>
+                    </div>
+
+                    {/* Scheduled Time */}
+                    {pairing.scheduled_time && (
+                      <div>
+                        <div className="text-sm text-muted-foreground">Scheduled for:</div>
+                        <div className="font-medium">
+                          {new Date(pairing.scheduled_time).toLocaleString()}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Actions */}
+                    <div className="flex gap-2 flex-wrap">
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" size="sm">
+                            <MessageSquare className="h-4 w-4 mr-2" />
+                            Chat
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Pairing Chat</DialogTitle>
+                            <DialogDescription>
+                              Communicate with your opponent and judge about scheduling and logistics
+                            </DialogDescription>
+                          </DialogHeader>
+                          <div className="text-center py-8 text-muted-foreground">
+                            <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                            <p>Chat functionality is coming soon.</p>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+
+                      {pairing.status === 'completed' && (
+                        <Button variant="outline" size="sm">
+                          <Clock className="h-4 w-4 mr-2" />
+                          View Results
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

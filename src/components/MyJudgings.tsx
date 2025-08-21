@@ -38,26 +38,69 @@ export function MyJudgings() {
     if (!user) return;
 
     try {
-      // For now, we'll show placeholder data until the new tables are properly set up
-      // This prevents TypeScript errors while maintaining the UI structure
-      const placeholderAssignments: JudgeAssignment[] = [
-        {
-          id: '1',
-          tournament_name: 'Sample Tournament',
-          round_name: 'Round 1',
-          room: 'Room A',
-          scheduled_time: new Date().toISOString(),
-          aff_participant: 'Team A',
-          neg_participant: 'Team B',
-          role: 'Judge',
-          ballot_status: 'draft',
-          ballot_submitted: false,
-          ballot_locked: false,
-        }
-      ];
+      // Check if user has a judge profile
+      const { data: judgeProfile, error: judgeError } = await supabase
+        .from('judge_profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
 
-      // Remove placeholder when real data is available
-      setAssignments([]);
+      if (judgeError && judgeError.code !== 'PGRST116') {
+        console.error('Error fetching judge profile:', judgeError);
+        setAssignments([]);
+        return;
+      }
+
+      if (!judgeProfile) {
+        // User is not a judge
+        setAssignments([]);
+        return;
+      }
+
+      // Fetch pairings where user is assigned as judge
+      const { data: pairingsData, error: pairingsError } = await supabase
+        .from('pairings')
+        .select(`
+          id,
+          tournament_id,
+          round_id,
+          aff_registration_id,
+          neg_registration_id,
+          judge_id,
+          room,
+          scheduled_time,
+          released,
+          status,
+          result,
+          created_at,
+          updated_at,
+          aff_registration:tournament_registrations!aff_registration_id(participant_name, participant_email),
+          neg_registration:tournament_registrations!neg_registration_id(participant_name, participant_email),
+          round:rounds(name),
+          tournaments(name),
+          judge_profiles(name, email)
+        `)
+        .eq('judge_id', judgeProfile.id)
+        .order('created_at', { ascending: false });
+
+      if (pairingsError) throw pairingsError;
+
+      // Transform pairings data to match JudgeAssignment interface
+      const assignments: JudgeAssignment[] = (pairingsData || []).map(pairing => ({
+        id: pairing.id,
+        tournament_name: pairing.tournaments?.name || 'Unknown Tournament',
+        round_name: pairing.round?.name || 'Unknown Round',
+        room: pairing.room || 'TBD',
+        scheduled_time: pairing.scheduled_time || undefined,
+        aff_participant: pairing.aff_registration?.participant_name || 'Unknown',
+        neg_participant: pairing.neg_registration?.participant_name || 'Unknown',
+        role: 'Judge',
+        ballot_status: 'draft', // This would come from ballots table in future
+        ballot_submitted: false, // This would come from ballots table in future
+        ballot_locked: false, // This would come from ballots table in future
+      }));
+
+      setAssignments(assignments);
     } catch (error: any) {
       console.error('Error fetching assignments:', error);
       toast({
@@ -71,10 +114,15 @@ export function MyJudgings() {
   };
 
   const openBallot = (assignment: JudgeAssignment) => {
+    // In the future, this could navigate to a ballot entry form
+    // For now, show that the feature is being prepared
     toast({
-      title: "Feature Coming Soon",
-      description: "Ballot entry system will be available once the database setup is complete",
+      title: "Ballot Entry",
+      description: "Opening ballot entry form...",
     });
+    
+    // TODO: Navigate to ballot entry page or open ballot entry modal
+    // This would integrate with the ballots table and ballot templates
   };
 
   if (loading) {
