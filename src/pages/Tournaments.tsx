@@ -209,9 +209,9 @@ const Tournaments = () => {
             <div className={`grid gap-6 ${viewMode === 'grid' ? 'md:grid-cols-2 lg:grid-cols-3' : 'md:grid-cols-1 lg:grid-cols-1'}`}>
               {filteredTournaments.map((tournament) => (
                 <Card key={tournament.id} className={`bg-card/80 backdrop-blur-sm border-border/50 hover:border-primary/30 hover:bg-card/90 transition-smooth group ${viewMode === 'list' ? 'md:flex md:flex-row' : ''}`}>
-                  <CardHeader className={viewMode === 'list' ? 'md:flex-none md:w-1/3' : ''}>
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="flex items-center gap-4">
+                  <CardHeader className={`${viewMode === 'list' ? 'md:flex-none md:w-1/3' : ''} pb-4`}>
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex items-center gap-3 flex-wrap">
                         <Badge 
                           variant={
                             tournament.status === 'Registration Open' ? 'default' :
@@ -221,32 +221,32 @@ const Tournaments = () => {
                             'outline'
                           }
                           className={
-                            tournament.status === 'Registration Open' ? 'bg-green-600 hover:bg-green-700 text-white' :
-                            tournament.status === 'Ongoing' ? 'bg-blue-600 hover:bg-blue-700 text-white' :
-                            tournament.status === 'Completed' ? 'bg-gray-600 hover:bg-gray-700 text-white' :
-                            tournament.status === 'Registration Closed' ? 'bg-red-600 hover:bg-red-700 text-white' :
-                            tournament.status === 'Planning Phase' ? 'bg-yellow-600 hover:bg-yellow-700 text-white' :
+                            tournament.status === 'Registration Open' ? 'bg-green-600 hover:bg-green-700 text-white border-green-600' :
+                            tournament.status === 'Ongoing' ? 'bg-blue-600 hover:bg-blue-700 text-white border-blue-600' :
+                            tournament.status === 'Completed' ? 'bg-gray-600 hover:bg-gray-700 text-white border-gray-600' :
+                            tournament.status === 'Registration Closed' ? 'bg-red-600 hover:bg-red-700 text-white border-red-600' :
+                            tournament.status === 'Planning Phase' ? 'bg-yellow-600 hover:bg-yellow-700 text-white border-yellow-600' :
                             'bg-muted text-muted-foreground'
                           }
                         >
                           {tournament.status}
                         </Badge>
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <Calendar className="h-4 w-4" />
-                          <span>
+                        <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                          <Calendar className="h-4 w-4 flex-shrink-0" />
+                          <span className="whitespace-nowrap">
                             {format(new Date(tournament.start_date), "MMM d")} - {format(new Date(tournament.end_date), "MMM d, yyyy")}
                           </span>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="text-sm text-muted-foreground">Prize Pool</div>
-                        <div className="font-bold text-primary">
+                      <div className="text-right flex-shrink-0">
+                        <div className="text-xs text-muted-foreground">Prize Pool</div>
+                        <div className="font-bold text-primary text-sm">
                           {tournament.prize_pool || (tournament.cash_prize_total > 0 ? `$${tournament.cash_prize_total.toLocaleString()}` : 'TBD')}
                         </div>
                       </div>
                     </div>
                     
-                    <CardTitle className="text-xl text-foreground font-primary group-hover:text-primary transition-smooth">
+                    <CardTitle className="text-xl text-foreground font-primary group-hover:text-primary transition-smooth mb-2 leading-tight">
                       {tournament.name}
                     </CardTitle>
                     
@@ -255,34 +255,34 @@ const Tournaments = () => {
                     </div>
                   </CardHeader>
                   
-                  <CardContent className={`space-y-4 ${viewMode === 'list' ? 'md:flex-1' : ''}`}>
-                    <div className="space-y-4">                       
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <Users className="h-4 w-4" />
+                  <CardContent className={`space-y-4 ${viewMode === 'list' ? 'md:flex-1' : ''} pt-0`}>
+                    <div className="grid grid-cols-1 gap-3">                       
+                      <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                        <Users className="h-4 w-4 flex-shrink-0" />
                         <span>{tournament.current_participants} / {tournament.max_participants} participants</span>
                       </div>
                       
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <Trophy className="h-4 w-4" />
+                      <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                        <Trophy className="h-4 w-4 flex-shrink-0" />
                         <span>{tournament.location}</span>
                       </div>
                     </div>
 
                     {/* Tournament Information Preview */}
                     {tournament.tournament_info && (
-                      <div className="bg-muted/20 p-3 rounded-lg">
+                      <div className="bg-muted/20 p-3 rounded-lg border border-border/20">
                         <TournamentInfo 
                           tournamentInfo={tournament.tournament_info} 
-                          className="text-muted-foreground [&_h1]:text-foreground [&_h2]:text-foreground [&_h3]:text-foreground [&_strong]:text-foreground [&_a]:text-primary [&_a:hover]:text-primary/80 line-clamp-3"
+                          className="text-muted-foreground [&_h1]:text-foreground [&_h2]:text-foreground [&_h3]:text-foreground [&_strong]:text-foreground [&_a]:text-primary [&_a:hover]:text-primary/80 line-clamp-3 overflow-hidden"
                         />
                       </div>
                     )}
 
                     {/* Prize Items Preview */}
                     {tournament.prize_items.length > 0 && (
-                      <div className="bg-primary/10 p-3 rounded-lg">
-                        <div className="text-sm text-muted-foreground mb-1">Additional Prizes:</div>
-                        <div className="text-xs text-muted-foreground">
+                      <div className="bg-primary/10 p-3 rounded-lg border border-primary/20">
+                        <div className="text-sm text-muted-foreground mb-1 font-medium">Additional Prizes:</div>
+                        <div className="text-xs text-muted-foreground leading-relaxed">
                           {tournament.prize_items.slice(0, 2).join(', ')}
                           {tournament.prize_items.length > 2 && ` +${tournament.prize_items.length - 2} more`}
                         </div>
@@ -292,10 +292,10 @@ const Tournaments = () => {
                     {/* Sponsors Preview */}
                     {tournament.sponsors.length > 0 && (
                       <div className="space-y-2">
-                        <span className="text-xs text-muted-foreground">Sponsored by:</span>
+                        <span className="text-xs text-muted-foreground font-medium">Sponsored by:</span>
                         <div className="flex flex-wrap gap-2">
                           {tournament.sponsors.map((sponsor, index) => (
-                            <div key={index} className="flex items-center gap-1 bg-muted/30 rounded-full px-2 py-1">
+                            <div key={index} className="flex items-center gap-1 bg-muted/30 rounded-full px-2 py-1 border border-border/20">
                               {sponsor.logo_url ? (
                                 <img 
                                   src={sponsor.logo_url} 
@@ -310,7 +310,7 @@ const Tournaments = () => {
                       </div>
                     )}
                     
-                    <div className="pt-4 flex gap-2">
+                    <div className="pt-2 flex gap-2 border-t border-border/20">
                       <Button 
                         className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
                         onClick={() => handleRegister(tournament.id)}
