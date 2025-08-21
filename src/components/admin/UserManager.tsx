@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -32,7 +33,7 @@ interface UserFormData {
   state: string;
   region: string;
   user_type: string; // judge/parent/student/guest
-  school_organization: string;
+  club_organization: string; // Changed from school_organization
 }
 
 const STATES = [
@@ -66,7 +67,7 @@ export function UserManager() {
     state: '',
     region: '',
     user_type: 'Student',
-    school_organization: ''
+    club_organization: '' // Changed from school_organization
   });
 
   useEffect(() => {
@@ -109,7 +110,7 @@ export function UserManager() {
           state: formData.state,
           region: formData.region,
           user_type: formData.user_type,
-          school_organization: formData.school_organization
+          club_organization: formData.club_organization // Changed from school_organization
         }
       });
 
@@ -182,7 +183,7 @@ export function UserManager() {
       state: '',
       region: '',
       user_type: 'Student',
-      school_organization: ''
+      club_organization: '' // Changed from school_organization
     });
   };
 
@@ -349,12 +350,12 @@ export function UserManager() {
               </div>
               
               <div>
-                <Label htmlFor="school_organization">School/Organization</Label>
+                <Label htmlFor="club_organization">Club/Organization</Label>
                 <Input
-                  id="school_organization"
-                  value={formData.school_organization}
-                  onChange={(e) => setFormData({...formData, school_organization: e.target.value})}
-                  placeholder="School or organization name"
+                  id="club_organization"
+                  value={formData.club_organization}
+                  onChange={(e) => setFormData({...formData, club_organization: e.target.value})}
+                  placeholder="Club or organization name"
                 />
               </div>
             </div>
