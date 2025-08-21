@@ -213,6 +213,39 @@ export type Database = {
           },
         ]
       }
+      pages: {
+        Row: {
+          content: Json
+          created_at: string
+          id: string
+          is_published: boolean
+          page_key: string
+          title: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          content?: Json
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          page_key: string
+          title: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          page_key?: string
+          title?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -276,6 +309,54 @@ export type Database = {
           position?: string
           prize?: string | null
           tournament?: string
+        }
+        Relationships: []
+      }
+      site_settings: {
+        Row: {
+          accent_color: string
+          created_at: string
+          custom_css: string | null
+          dark_mode_enabled: boolean
+          id: string
+          is_published: boolean
+          primary_color: string
+          primary_font: string
+          secondary_font: string
+          site_description: string | null
+          site_title: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          accent_color?: string
+          created_at?: string
+          custom_css?: string | null
+          dark_mode_enabled?: boolean
+          id?: string
+          is_published?: boolean
+          primary_color?: string
+          primary_font?: string
+          secondary_font?: string
+          site_description?: string | null
+          site_title?: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          accent_color?: string
+          created_at?: string
+          custom_css?: string | null
+          dark_mode_enabled?: boolean
+          id?: string
+          is_published?: boolean
+          primary_color?: string
+          primary_font?: string
+          secondary_font?: string
+          site_description?: string | null
+          site_title?: string
+          updated_at?: string
+          version?: number
         }
         Relationships: []
       }
@@ -452,6 +533,7 @@ export type Database = {
           max_participants: number
           name: string
           payment_handler: string | null
+          paypal_button_html: string | null
           paypal_client_id: string | null
           prize_items: string[] | null
           prize_pool: string | null
@@ -463,6 +545,7 @@ export type Database = {
           status: string
           tournament_info: string | null
           updated_at: string
+          venmo_button_html: string | null
           venue_details: string | null
         }
         Insert: {
@@ -480,6 +563,7 @@ export type Database = {
           max_participants?: number
           name: string
           payment_handler?: string | null
+          paypal_button_html?: string | null
           paypal_client_id?: string | null
           prize_items?: string[] | null
           prize_pool?: string | null
@@ -491,6 +575,7 @@ export type Database = {
           status?: string
           tournament_info?: string | null
           updated_at?: string
+          venmo_button_html?: string | null
           venue_details?: string | null
         }
         Update: {
@@ -508,6 +593,7 @@ export type Database = {
           max_participants?: number
           name?: string
           payment_handler?: string | null
+          paypal_button_html?: string | null
           paypal_client_id?: string | null
           prize_items?: string[] | null
           prize_pool?: string | null
@@ -519,6 +605,7 @@ export type Database = {
           status?: string
           tournament_info?: string | null
           updated_at?: string
+          venmo_button_html?: string | null
           venue_details?: string | null
         }
         Relationships: []
