@@ -156,9 +156,11 @@ export interface ScheduleProposal {
 export interface PairingJudgeAssignment {
   id: string;
   pairing_id: string;
-  judge_id: string;
+  judge_profile_id: string;
   role: string;
+  status: string;
   assigned_by: string | null;
+  notes: string | null;
   created_at: string;
   updated_at: string;
   judge_profiles?: JudgeProfile;

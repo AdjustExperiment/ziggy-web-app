@@ -697,6 +697,57 @@ export type Database = {
         }
         Relationships: []
       }
+      pairing_judge_assignments: {
+        Row: {
+          assigned_by: string | null
+          created_at: string
+          id: string
+          judge_profile_id: string
+          notes: string | null
+          pairing_id: string
+          role: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_by?: string | null
+          created_at?: string
+          id?: string
+          judge_profile_id: string
+          notes?: string | null
+          pairing_id: string
+          role?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_by?: string | null
+          created_at?: string
+          id?: string
+          judge_profile_id?: string
+          notes?: string | null
+          pairing_id?: string
+          role?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pairing_judge_assignments_judge_profile_id_fkey"
+            columns: ["judge_profile_id"]
+            isOneToOne: false
+            referencedRelation: "judge_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pairing_judge_assignments_pairing_id_fkey"
+            columns: ["pairing_id"]
+            isOneToOne: false
+            referencedRelation: "pairings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pairing_messages: {
         Row: {
           created_at: string
