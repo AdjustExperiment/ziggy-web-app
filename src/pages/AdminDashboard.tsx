@@ -49,7 +49,7 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-background relative">
       <FluidBlobBackground intensity="subtle" variant="accent" />
       
-      <div className="border-b border-border/50 bg-background/80 backdrop-blur-sm relative z-10">
+      <div className="border-b border-border/50 bg-background/80 backdrop-blur-[2px] relative z-10">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div>
@@ -68,7 +68,7 @@ export default function AdminDashboard() {
 
       <div className="container mx-auto px-4 py-8 relative z-10">
         <Tabs value={activeTab} onValueChange={handleTabChange}>
-          <TabsList className="grid w-full grid-cols-8 bg-background/60 backdrop-blur-sm border-border/50">
+          <TabsList className="grid w-full grid-cols-8 bg-background/60 backdrop-blur-[2px] border-border/50">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <Settings className="h-4 w-4" />
               Overview
@@ -105,7 +105,7 @@ export default function AdminDashboard() {
 
           <TabsContent value="overview" className="mt-6">
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              <Card className="bg-card/60 backdrop-blur-sm border-border/50">
+              <Card className="bg-card/60 backdrop-blur-[1px] border-border/50">
                 <CardHeader>
                   <CardTitle>Site Editor</CardTitle>
                   <CardDescription>Customize website design and content</CardDescription>
@@ -120,7 +120,7 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
 
-              <Card className="bg-card/60 backdrop-blur-sm border-border/50">
+              <Card className="bg-card/60 backdrop-blur-[1px] border-border/50">
                 <CardHeader>
                   <CardTitle>Tournaments</CardTitle>
                   <CardDescription>Create and manage tournaments</CardDescription>
@@ -135,7 +135,7 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
 
-              <Card className="bg-card/60 backdrop-blur-sm border-border/50">
+              <Card className="bg-card/60 backdrop-blur-[1px] border-border/50">
                 <CardHeader>
                   <CardTitle>Blog Posts</CardTitle>
                   <CardDescription>Manage your blog content</CardDescription>
@@ -150,7 +150,7 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
 
-              <Card className="bg-card/60 backdrop-blur-sm border-border/50">
+              <Card className="bg-card/60 backdrop-blur-[1px] border-border/50">
                 <CardHeader>
                   <CardTitle>Tournament Results</CardTitle>
                   <CardDescription>Update competition results</CardDescription>
@@ -165,7 +165,7 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
 
-              <Card className="bg-card/60 backdrop-blur-sm border-border/50">
+              <Card className="bg-card/60 backdrop-blur-[1px] border-border/50">
                 <CardHeader>
                   <CardTitle>User Management</CardTitle>
                   <CardDescription>Create and manage user accounts</CardDescription>
@@ -180,7 +180,7 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
 
-              <Card className="bg-card/60 backdrop-blur-sm border-border/50">
+              <Card className="bg-card/60 backdrop-blur-[1px] border-border/50">
                 <CardHeader>
                   <CardTitle>Payment Management</CardTitle>
                   <CardDescription>Monitor payments and configure handlers</CardDescription>
@@ -195,7 +195,7 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
 
-              <Card className="bg-card/60 backdrop-blur-sm border-border/50">
+              <Card className="bg-card/60 backdrop-blur-[1px] border-border/50">
                 <CardHeader>
                   <CardTitle>Email Management</CardTitle>
                   <CardDescription>Configure automated emails and templates</CardDescription>
@@ -210,7 +210,7 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
 
-              <Card className="bg-card/60 backdrop-blur-sm border-border/50">
+              <Card className="bg-card/60 backdrop-blur-[1px] border-border/50">
                 <CardHeader>
                   <CardTitle>System Settings</CardTitle>
                   <CardDescription>Configure platform settings</CardDescription>

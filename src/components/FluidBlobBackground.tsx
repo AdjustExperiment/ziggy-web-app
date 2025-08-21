@@ -14,9 +14,9 @@ export const FluidBlobBackground: React.FC<FluidBlobBackgroundProps> = ({
 }) => {
   const getBlobStyles = () => {
     const intensityMap = {
-      subtle: { opacity: '0.03', blur: 'blur-3xl' },
-      medium: { opacity: '0.05', blur: 'blur-3xl' },
-      strong: { opacity: '0.08', blur: 'blur-2xl' }
+      subtle: { opacity: '0.06', blur: 'blur-2xl' },
+      medium: { opacity: '0.12', blur: 'blur-xl' },
+      strong: { opacity: '0.18', blur: 'blur-lg' }
     };
 
     const variantMap = {
