@@ -36,13 +36,13 @@ export function Navbar() {
   return (
     <nav className="sticky top-0 z-50 border-b bg-black/95 backdrop-blur-lg border-white/10 animate-fade-in rounded-b-2xl">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-24 items-center justify-between">
+        <div className="flex h-28 items-center justify-between">
           {/* Logo */}
           <div className="flex items-center">
             <img 
               src="/lovable-uploads/bb7e942b-4006-461c-b9ed-9bdde6f1500c.png" 
               alt="Debate Champions Logo" 
-              className="h-16 sm:h-20 w-auto object-contain rounded-lg hover:scale-105 transition-transform duration-300" 
+              className="h-20 sm:h-24 lg:h-28 w-auto object-contain rounded-lg hover:scale-105 transition-transform duration-300" 
             />
           </div>
 
