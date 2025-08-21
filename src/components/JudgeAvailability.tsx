@@ -99,15 +99,34 @@ export default function JudgeAvailability({ judgeProfileId }: JudgeAvailabilityP
         time_preferences: typeof item.time_preferences === 'object' && item.time_preferences !== null 
           ? item.time_preferences as { morning?: boolean; afternoon?: boolean; evening?: boolean; }
           : {},
-        tournament: item.tournament && typeof item.tournament === 'object' && !('error' in item.tournament) && item.tournament !== null
-          ? {
-              id: (item.tournament as any).id,
-              name: (item.tournament as any).name,
-              start_date: (item.tournament as any).start_date,
-              end_date: (item.tournament as any).end_date,
-              location: (item.tournament as any).location
-            }
-          : undefined
+        tournament: (() => {
+          const tournament = item.tournament;
+          // Check for null/undefined first
+          if (!tournament || tournament === null) {
+            return undefined;
+          }
+          
+          // Check if it's an object and not an error
+          if (typeof tournament !== 'object') {
+            return undefined;
+          }
+          
+          // Type assertion after null check - tournament is guaranteed to be non-null object here
+          const tournamentObj = tournament as Record<string, any>;
+          
+          // Check for error property
+          if ('error' in tournamentObj) {
+            return undefined;
+          }
+          
+          return {
+            id: tournamentObj.id,
+            name: tournamentObj.name,
+            start_date: tournamentObj.start_date,
+            end_date: tournamentObj.end_date,
+            location: tournamentObj.location
+          };
+        })()
       })));
     } catch (error) {
       console.error('Error fetching availabilities:', error);
