@@ -97,8 +97,8 @@ export function Navbar() {
   }, [setShowResults]);
 
   return (
-    <nav className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur-lg border-border animate-fade-in rounded-b-2xl overflow-x-hidden">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 bg-background/80 rounded-b-2xl backdrop-blur-sm">
+    <nav className="sticky top-0 z-50 border-b bg-background/20 backdrop-blur-xl border-border/30 animate-fade-in rounded-b-2xl overflow-x-hidden">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 bg-background/10 rounded-b-2xl backdrop-blur-lg">
         <div className="flex h-24 items-center justify-between">
           {/* Logo */}
           <div className="flex items-center shrink-0">

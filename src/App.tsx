@@ -34,7 +34,7 @@ const AppContent = () => {
   useAutomatedEmails(); // Hook to listen for registration updates
   
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen text-foreground">
       <BackgroundFX />
       <div className="relative z-10">
         <Navbar />

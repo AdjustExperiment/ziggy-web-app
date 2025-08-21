@@ -5,9 +5,9 @@ export function BackgroundFX() {
       <div className="absolute inset-0 bg-gradient-subtle opacity-90" />
       
       {/* Animated glow orbs using semantic tokens - increased sizes and opacity */}
-      <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-gradient-radial from-primary/30 via-primary/15 to-transparent rounded-full blur-3xl animate-orb-1 motion-reduce:animate-none" />
-      <div className="absolute top-3/4 right-1/4 w-[450px] h-[450px] bg-gradient-radial from-primary-glow/25 via-primary-glow/12 to-transparent rounded-full blur-2xl animate-orb-2 motion-reduce:animate-none" />
-      <div className="absolute top-1/2 left-3/4 w-[400px] h-[400px] bg-gradient-radial from-primary/20 via-primary/10 to-transparent rounded-full blur-xl animate-orb-3 motion-reduce:animate-none" />
+      <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-gradient-radial from-primary/40 via-primary/20 to-transparent rounded-full blur-3xl animate-orb-1 motion-reduce:animate-none" />
+      <div className="absolute top-3/4 right-1/4 w-[550px] h-[550px] bg-gradient-radial from-primary-glow/35 via-primary-glow/18 to-transparent rounded-full blur-2xl animate-orb-2 motion-reduce:animate-none" />
+      <div className="absolute top-1/2 left-3/4 w-[500px] h-[500px] bg-gradient-radial from-primary/30 via-primary/15 to-transparent rounded-full blur-xl animate-orb-3 motion-reduce:animate-none" />
       
       {/* Additional floating elements */}
       <div className="absolute top-10 right-1/3 w-[350px] h-[350px] bg-gradient-radial from-accent/15 via-accent/8 to-transparent rounded-full blur-2xl animate-float motion-reduce:animate-none" />

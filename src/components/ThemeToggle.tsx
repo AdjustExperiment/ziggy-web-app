@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
 export function ThemeToggle() {
-  const { theme, setTheme } = useTheme()
+  const { theme, setTheme, resolvedTheme } = useTheme()
   const [mounted, setMounted] = React.useState(false)
 
   React.useEffect(() => {
@@ -29,7 +29,7 @@ export function ThemeToggle() {
       )}
     >
       <div className="relative z-10 flex items-center justify-center">
-        {theme === "dark" ? (
+        {resolvedTheme === "dark" ? (
           <Sun className="h-5 w-5 transition-transform duration-300 hover:rotate-12" />
         ) : (
           <Moon className="h-5 w-5 transition-transform duration-300 hover:-rotate-12" />
@@ -42,10 +42,10 @@ export function ThemeToggle() {
           className={cn(
             "text-xs font-medium transition-all duration-300 opacity-0 hover:opacity-60",
             "text-primary blur-[2px] select-none",
-            theme === "dark" ? "animate-pulse" : ""
+            resolvedTheme === "dark" ? "animate-pulse" : ""
           )}
         >
-          {theme === "dark" ? "LIGHT" : "DARK"}
+          {resolvedTheme === "dark" ? "LIGHT" : "DARK"}
         </span>
       </div>
     </Button>
