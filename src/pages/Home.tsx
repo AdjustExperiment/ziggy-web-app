@@ -3,6 +3,7 @@ import { Hero } from "@/components/Hero";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { SectionFX } from "@/components/SectionFX";
 import { ArrowRight, Trophy, Users, BarChart3, Target, Zap, Shield, Globe, DollarSign, Clock, Award, Calendar, TrendingUp } from "lucide-react";
 
 const features = [
@@ -76,9 +77,10 @@ const Home = () => {
       
       {/* Features Section */}
       <section className="py-16 sm:py-20 lg:py-24 relative overflow-hidden">        
+        <SectionFX variant="default" intensity="low" />
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 sm:mb-16">
-            <Badge className="mb-4 bg-primary/10 text-primary border-primary/20 text-sm sm:text-base">
+            <Badge className="mb-4 bg-primary/10 text-primary border-border text-sm sm:text-base">
               <span className="inline-block w-2 h-2 bg-primary rounded-full mr-2"></span>
               Featured by the Cato Institute
             </Badge>
@@ -93,12 +95,12 @@ const Home = () => {
 
           <div className="grid gap-6 sm:gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {features.map((feature, index) => (
-              <Card key={index} className="bg-card border-border shadow-card hover:shadow-tournament transition-smooth group hover:border-primary/30">
+              <Card key={index} className="bg-gradient-card border-border/50 shadow-card hover:shadow-tournament transition-smooth group">
                 <CardHeader>
                   <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-4 group-hover:scale-110 transition-spring group-hover:bg-primary/20">
                     {feature.icon}
                   </div>
-                  <CardTitle className="text-xl font-primary text-foreground">{feature.title}</CardTitle>
+                  <CardTitle className="text-xl font-primary text-card-foreground">{feature.title}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground">{feature.description}</p>

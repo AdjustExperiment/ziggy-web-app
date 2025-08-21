@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { SectionFX } from "@/components/SectionFX";
 
 const testimonials = [
   {
@@ -32,56 +33,61 @@ const testimonials = [
 
 const Testimonials = () => {
   return (
-    <div className="min-h-screen bg-black">
-      {/* Hero Section */}
-      <section className="py-16 sm:py-20 lg:py-24 bg-gradient-hero">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
-          <Badge className="mb-6 bg-white/10 text-white border-white/20 hover:bg-white/20">
-            <span className="inline-block w-2 h-2 bg-white rounded-full mr-2"></span>
-            Real Success Stories
-          </Badge>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6 font-primary">
-            What Our Debaters Say
-          </h1>
-          <p className="text-lg sm:text-xl text-white/90 leading-relaxed max-w-3xl mx-auto font-secondary">
-            Real testimonials from competitors who have experienced success with Ziggy Online Debate. 
-            See how our platform has helped debaters improve their skills and achieve their goals.
-          </p>
-        </div>
-      </section>
-
-      {/* Testimonials Grid */}
-      <section className="py-16 bg-black">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {testimonials.map((testimonial, index) => (
-              <Card key={index} className={`bg-black/50 border-white/10 shadow-card hover:shadow-tournament transition-smooth hover:border-red-500/30 ${
-                testimonial.highlight ? 'lg:col-span-3 md:col-span-2' : ''
-              }`}>
-                <CardContent className="p-6">
-                  {testimonial.highlight && (
-                    <Badge className="bg-red-500/10 text-red-500 border-red-500/20 mb-4">
-                      {testimonial.highlight}
-                    </Badge>
-                  )}
-                  <blockquote className="text-white/80 mb-6 italic leading-relaxed">
-                    "{testimonial.quote}"
-                  </blockquote>
-                  <div className="flex items-center">
-                    <div className="h-10 w-10 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 font-bold text-sm mr-3">
-                      {testimonial.author.split(' ').map(n => n[0]).join('')}
-                    </div>
-                    <div>
-                      <p className="text-white font-medium">{testimonial.author}</p>
-                      <p className="text-white/70 text-sm capitalize">{testimonial.role}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+    <div className="min-h-screen bg-background relative">
+      <div className="relative">
+        <SectionFX variant="accent" intensity="medium" />
+        
+        {/* Hero Section */}
+        <section className="relative py-16 sm:py-20 lg:py-24 bg-gradient-hero">
+          <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center relative z-10">
+            <Badge className="mb-6 bg-primary/10 text-primary border-border hover:bg-primary/20">
+              <span className="inline-block w-2 h-2 bg-primary rounded-full mr-2"></span>
+              Real Success Stories
+            </Badge>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-6 font-primary">
+              What Our Debaters Say
+            </h1>
+            <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed max-w-3xl mx-auto font-secondary">
+              Real testimonials from competitors who have experienced success with Ziggy Online Debate. 
+              See how our platform has helped debaters improve their skills and achieve their goals.
+            </p>
           </div>
-        </div>
-      </section>
+        </section>
+
+        {/* Testimonials Grid */}
+        <section className="relative py-16">
+          <SectionFX variant="muted" intensity="low" />
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
+            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+              {testimonials.map((testimonial, index) => (
+                <Card key={index} className={`bg-gradient-card border-border/50 shadow-card hover:shadow-tournament transition-smooth ${
+                  testimonial.highlight ? 'lg:col-span-3 md:col-span-2' : ''
+                }`}>
+                  <CardContent className="p-6">
+                    {testimonial.highlight && (
+                      <Badge className="bg-primary/10 text-primary border-border mb-4">
+                        {testimonial.highlight}
+                      </Badge>
+                    )}
+                    <blockquote className="text-muted-foreground mb-6 italic leading-relaxed">
+                      "{testimonial.quote}"
+                    </blockquote>
+                    <div className="flex items-center">
+                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm mr-3">
+                        {testimonial.author.split(' ').map(n => n[0]).join('')}
+                      </div>
+                      <div>
+                        <p className="text-card-foreground font-medium">{testimonial.author}</p>
+                        <p className="text-muted-foreground text-sm capitalize">{testimonial.role}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+      </div>
     </div>
   );
 };

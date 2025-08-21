@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Globe, Target, DollarSign, Users, Shield, Clock, Award, Calendar, TrendingUp, BarChart3, Trophy, Zap } from "lucide-react";
+import { SectionFX } from "@/components/SectionFX";
 
 const features = [
   {
@@ -79,47 +80,52 @@ const features = [
 
 const Features = () => {
   return (
-    <div className="min-h-screen bg-black">
-      {/* Hero Section */}
-      <section className="py-16 sm:py-20 lg:py-24 bg-gradient-hero">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
-          <Badge className="mb-6 bg-white/10 text-white border-white/20 hover:bg-white/20">
-            <span className="inline-block w-2 h-2 bg-white rounded-full mr-2"></span>
-            12 Core Features
-          </Badge>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6 font-primary">
-            Ziggy Online Debate Features
-          </h1>
-          <p className="text-lg sm:text-xl text-white/90 leading-relaxed max-w-3xl mx-auto font-secondary">
-            Check out everything Ziggy has to offer! From national competition to advanced scheduling, 
-            we provide comprehensive tools for debaters worldwide.
-          </p>
-        </div>
-      </section>
-
-      {/* Features Grid */}
-      <section className="py-16 bg-black">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {features.map((feature, index) => (
-              <Card key={index} className="bg-black border-white/10 shadow-card hover:shadow-tournament transition-smooth group hover:border-red-500/30">
-                <CardHeader>
-                  <div className="h-16 w-16 rounded-lg bg-red-500/10 flex items-center justify-center text-red-500 mb-4 group-hover:scale-110 transition-spring group-hover:bg-red-500/20">
-                    {feature.icon}
-                  </div>
-                  <CardTitle className="text-xl font-primary text-white mb-2">{feature.title}</CardTitle>
-                  <Badge className="bg-red-500/10 text-red-500 border-red-500/20 text-xs w-fit">
-                    {feature.highlight}
-                  </Badge>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-white/70">{feature.description}</p>
-                </CardContent>
-              </Card>
-            ))}
+    <div className="min-h-screen bg-background relative">
+      <div className="relative">
+        <SectionFX variant="hero" intensity="medium" />
+        
+        {/* Hero Section */}
+        <section className="relative py-16 sm:py-20 lg:py-24 bg-gradient-hero">
+          <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center relative z-10">
+            <Badge className="mb-6 bg-primary/10 text-primary border-border hover:bg-primary/20">
+              <span className="inline-block w-2 h-2 bg-primary rounded-full mr-2"></span>
+              12 Core Features
+            </Badge>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-6 font-primary">
+              Ziggy Online Debate Features
+            </h1>
+            <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed max-w-3xl mx-auto font-secondary">
+              Check out everything Ziggy has to offer! From national competition to advanced scheduling, 
+              we provide comprehensive tools for debaters worldwide.
+            </p>
           </div>
-        </div>
-      </section>
+        </section>
+
+        {/* Features Grid */}
+        <section className="relative py-16">
+          <SectionFX variant="default" intensity="low" />
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
+            <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+              {features.map((feature, index) => (
+                <Card key={index} className="bg-gradient-card border-border/50 shadow-card hover:shadow-tournament transition-smooth group">
+                  <CardHeader>
+                    <div className="h-16 w-16 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-4 group-hover:scale-110 transition-spring group-hover:bg-primary/20">
+                      {feature.icon}
+                    </div>
+                    <CardTitle className="text-xl font-primary text-card-foreground mb-2">{feature.title}</CardTitle>
+                    <Badge className="bg-primary/10 text-primary border-border text-xs w-fit">
+                      {feature.highlight}
+                    </Badge>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground">{feature.description}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+      </div>
     </div>
   );
 };

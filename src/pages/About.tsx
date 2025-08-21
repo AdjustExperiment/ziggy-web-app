@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Trophy, Users, DollarSign, Calendar, Globe, Award, Shield, Clock, Zap, MessageSquare, TrendingUp, Star } from "lucide-react";
-import { BackgroundFX } from "@/components/BackgroundFX";
+import { SectionFX } from "@/components/SectionFX";
 
 const About = () => {
   const features = [
@@ -102,28 +102,20 @@ const About = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-black relative overflow-hidden">
-      <BackgroundFX />
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      <SectionFX variant="hero" intensity="medium" />
       
-      {/* Animated Background Elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-red-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute top-1/2 -left-32 w-64 h-64 bg-red-600/15 rounded-full blur-2xl animate-bounce"></div>
-        <div className="absolute bottom-20 right-1/4 w-48 h-48 bg-white/5 rounded-full blur-xl animate-pulse"></div>
-        <div className="absolute top-1/4 left-1/3 w-32 h-32 bg-red-400/20 rounded-full blur-2xl animate-ping"></div>
-      </div>
-
       {/* Hero Section */}
       <section className="relative py-16 sm:py-20 lg:py-24 bg-gradient-hero">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center relative z-10">
-          <Badge className="mb-6 bg-white/10 text-white border-white/20 hover:bg-white/20 animate-fade-in">
-            <span className="inline-block w-2 h-2 bg-red-500 rounded-full mr-2 animate-pulse"></span>
+          <Badge className="mb-6 bg-primary/10 text-primary border-border hover:bg-primary/20 animate-fade-in">
+            <span className="inline-block w-2 h-2 bg-primary rounded-full mr-2 animate-pulse"></span>
             Running Online Debate Tournaments Since 2011
           </Badge>
-          <h1 className="text-3xl sm:text-4xl lg:text-6xl font-bold text-white mb-6 font-primary animate-fade-in">
-            About <span className="text-red-500">Ziggy Online Debate™</span>
+          <h1 className="text-3xl sm:text-4xl lg:text-6xl font-bold text-foreground mb-6 font-primary animate-fade-in">
+            About <span className="text-primary">Ziggy Online Debate™</span>
           </h1>
-          <p className="text-lg sm:text-xl text-white/90 leading-relaxed max-w-3xl mx-auto font-secondary animate-fade-in">
+          <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed max-w-3xl mx-auto font-secondary animate-fade-in">
             A national online debate tournament for junior high, high school, and collegiate debaters. 
             We offer Team Policy, Lincoln-Douglas, Parliamentary, and Moot Court styles with 
             bespoke rules designed specifically for online tournaments.
