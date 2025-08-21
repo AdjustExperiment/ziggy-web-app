@@ -3,14 +3,16 @@ import { useAuth } from '@/hooks/useAuth';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { LogOut, FileText, Trophy, Settings, Users, CreditCard, Mail, Palette } from 'lucide-react';
+import { LogOut, FileText, Trophy, Settings, Users, CreditCard, Mail, Palette, Bell } from 'lucide-react';
 import { BlogManager } from '@/components/admin/BlogManager';
 import { ResultsManager } from '@/components/admin/ResultsManager';
 import { UserManager } from '@/components/admin/UserManager';
 import { PaymentManager } from '@/components/admin/PaymentManager';
 import { EmailManager } from '@/components/admin/EmailManager';
 import { SiteEditor } from '@/components/admin/SiteEditor';
+import { NotificationsManager } from '@/components/admin/NotificationsManager';
 import TournamentManager from '@/components/admin/TournamentManager';
+import { NotificationsDropdown } from '@/components/admin/NotificationsDropdown';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { FluidBlobBackground } from '@/components/FluidBlobBackground';
 
@@ -58,17 +60,20 @@ export default function AdminDashboard() {
                 Welcome back, {profile?.first_name || user?.email}
               </p>
             </div>
-            <Button variant="outline" onClick={handleSignOut} className="flex items-center gap-2">
-              <LogOut className="h-4 w-4" />
-              Sign Out
-            </Button>
+            <div className="flex items-center gap-3">
+              <NotificationsDropdown />
+              <Button variant="outline" onClick={handleSignOut} className="flex items-center gap-2">
+                <LogOut className="h-4 w-4" />
+                Sign Out
+              </Button>
+            </div>
           </div>
         </div>
       </div>
 
       <div className="container mx-auto px-4 py-8 relative z-10">
         <Tabs value={activeTab} onValueChange={handleTabChange}>
-          <TabsList className="grid w-full grid-cols-8 bg-background/60 backdrop-blur-[2px] border-border/50">
+          <TabsList className="grid w-full grid-cols-9 bg-background/60 backdrop-blur-[2px] border-border/50">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <Settings className="h-4 w-4" />
               Overview
@@ -100,6 +105,10 @@ export default function AdminDashboard() {
             <TabsTrigger value="emails" className="flex items-center gap-2">
               <Mail className="h-4 w-4" />
               Emails
+            </TabsTrigger>
+            <TabsTrigger value="notifications" className="flex items-center gap-2">
+              <Bell className="h-4 w-4" />
+              Notifications
             </TabsTrigger>
           </TabsList>
 
@@ -253,6 +262,10 @@ export default function AdminDashboard() {
 
           <TabsContent value="emails" className="mt-6">
             <EmailManager />
+          </TabsContent>
+
+          <TabsContent value="notifications" className="mt-6">
+            <NotificationsManager />
           </TabsContent>
         </Tabs>
       </div>
