@@ -7,12 +7,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { CalendarIcon, MapPin, Users, DollarSign, Trophy, Download, ArrowLeft, ExternalLink } from 'lucide-react';
+import { CalendarIcon, MapPin, Users, DollarSign, Trophy, Download, ArrowLeft, ExternalLink, CreditCard } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from '@/components/ui/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import PaymentButtons from '@/components/PaymentButtons';
 import TournamentInfo from '@/components/TournamentInfo';
+import DOMPurify from 'dompurify';
 
 interface Sponsor {
   name: string;
@@ -43,6 +44,8 @@ interface Tournament {
   registration_deadline: string;
   payment_handler: string;
   paypal_client_id: string;
+  paypal_button_html: string;
+  venmo_button_html: string;
   additional_info: any;
 }
 
@@ -102,6 +105,8 @@ const TournamentRegistration = () => {
         prize_items: Array.isArray(data.prize_items) ? data.prize_items : [],
         tournament_info: data.tournament_info || '',
         cash_prize_total: data.cash_prize_total || 0,
+        paypal_button_html: (data as any).paypal_button_html || '',
+        venmo_button_html: (data as any).venmo_button_html || '',
         additional_info: data.additional_info || {}
       };
       
@@ -508,11 +513,65 @@ END:VCALENDAR`;
           {/* Registration Form or Payment */}
           <div className="space-y-6">
             {showPayment && tournament.registration_fee > 0 ? (
-              <PaymentButtons
-                amount={tournament.registration_fee}
-                onPayPalPayment={handlePayPalPayment}
-                onVenmoPayment={handleVenmoPayment}
-              />
+              tournament.paypal_button_html || tournament.venmo_button_html ? (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <CreditCard className="h-5 w-5" />
+                      Payment Options
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="bg-muted/50 p-4 rounded-lg">
+                      <div className="text-center mb-4">
+                        <p className="text-sm text-muted-foreground">Registration Fee</p>
+                        <p className="text-2xl font-bold">${tournament.registration_fee.toFixed(2)}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      {tournament.paypal_button_html && (
+                        <div 
+                          className="w-full"
+                          dangerouslySetInnerHTML={{ 
+                            __html: DOMPurify.sanitize(tournament.paypal_button_html) 
+                          }} 
+                        />
+                      )}
+                      
+                      {tournament.paypal_button_html && tournament.venmo_button_html && (
+                        <div className="relative">
+                          <div className="absolute inset-0 flex items-center">
+                            <Separator className="w-full" />
+                          </div>
+                          <div className="relative flex justify-center text-xs uppercase">
+                            <span className="bg-background px-2 text-muted-foreground">or</span>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {tournament.venmo_button_html && (
+                        <div 
+                          className="w-full"
+                          dangerouslySetInnerHTML={{ 
+                            __html: DOMPurify.sanitize(tournament.venmo_button_html) 
+                          }} 
+                        />
+                      )}
+                    </div>
+                    
+                    <div className="text-xs text-muted-foreground text-center mt-4">
+                      Your payment information is secure and encrypted. Registration will be confirmed upon successful payment.
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <PaymentButtons
+                  amount={tournament.registration_fee}
+                  onPayPalPayment={handlePayPalPayment}
+                  onVenmoPayment={handleVenmoPayment}
+                />
+              )
             ) : (
               <Card>
                 <CardHeader>

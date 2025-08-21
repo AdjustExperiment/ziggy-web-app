@@ -34,7 +34,7 @@ interface PaymentHandler {
   active: boolean;
 }
 
-export function PaymentManager() {
+export function PaymentManager({ activeTab, setActiveTab }: { activeTab?: string; setActiveTab?: (tab: string) => void }) {
   const [transactions, setTransactions] = useState<PaymentTransaction[]>([]);
   const [handlers, setHandlers] = useState<PaymentHandler[]>([]);
   const [loading, setLoading] = useState(true);
@@ -467,6 +467,88 @@ export function PaymentManager() {
                 Advanced payment processing with Stripe Checkout
               </p>
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Custom Payment Button HTML */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Custom Payment Button HTML</CardTitle>
+          <CardDescription>
+            Configure custom PayPal and Venmo button HTML for each tournament
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="bg-muted/50 p-4 rounded-lg">
+            <h4 className="font-medium mb-2">How to Add Custom Payment Buttons</h4>
+            <div className="space-y-2 text-sm text-muted-foreground">
+              <p>
+                1. Navigate to the <strong>Tournaments</strong> tab above to manage individual tournaments
+              </p>
+              <p>
+                2. Edit a tournament and go to the <strong>Payments</strong> tab
+              </p>
+              <p>
+                3. Add your custom PayPal or Venmo button HTML in the respective fields
+              </p>
+              <p>
+                4. Preview your buttons and save - they'll automatically appear in tournament registration
+              </p>
+            </div>
+          </div>
+          
+          <Separator />
+          
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-3">
+              <h4 className="font-medium">PayPal Button HTML</h4>
+              <p className="text-sm text-muted-foreground">
+                Get your PayPal button HTML from your PayPal Business account
+              </p>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" asChild>
+                  <a 
+                    href="https://www.paypal.com/buttons/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    PayPal Button Generator
+                  </a>
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setActiveTab('tournaments')}>
+                  Go to Tournaments
+                </Button>
+              </div>
+            </div>
+            
+            <div className="space-y-3">
+              <h4 className="font-medium">Venmo Button HTML</h4>
+              <p className="text-sm text-muted-foreground">
+                Create custom Venmo payment buttons or links
+              </p>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" asChild>
+                  <a 
+                    href="https://help.venmo.com/hc/en-us/articles/210413477-Venmo-me-links"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Venmo Documentation
+                  </a>
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setActiveTab('tournaments')}>
+                  Go to Tournaments
+                </Button>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-yellow-50 border border-yellow-200 p-3 rounded-lg">
+            <p className="text-sm text-yellow-800">
+              <strong>Security Note:</strong> All custom HTML is automatically sanitized before display. 
+              Only safe HTML elements and attributes are allowed.
+            </p>
           </div>
         </CardContent>
       </Card>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -10,12 +10,33 @@ import { UserManager } from '@/components/admin/UserManager';
 import { PaymentManager } from '@/components/admin/PaymentManager';
 import { EmailManager } from '@/components/admin/EmailManager';
 import TournamentManager from '@/components/admin/TournamentManager';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 export default function AdminDashboard() {
   const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('overview');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(() => {
+    return searchParams.get('tab') || 'overview';
+  });
+
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab && tab !== activeTab) {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    const newParams = new URLSearchParams(searchParams);
+    if (tab === 'overview') {
+      newParams.delete('tab');
+    } else {
+      newParams.set('tab', tab);
+    }
+    setSearchParams(newParams);
+  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -42,7 +63,7 @@ export default function AdminDashboard() {
       </div>
 
       <div className="container mx-auto px-4 py-8">
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <Tabs value={activeTab} onValueChange={handleTabChange}>
           <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <Settings className="h-4 w-4" />
@@ -83,7 +104,7 @@ export default function AdminDashboard() {
                 </CardHeader>
                 <CardContent>
                   <Button 
-                    onClick={() => setActiveTab('tournaments')} 
+                    onClick={() => handleTabChange('tournaments')} 
                     className="w-full"
                   >
                     Manage Tournaments
@@ -98,7 +119,7 @@ export default function AdminDashboard() {
                 </CardHeader>
                 <CardContent>
                   <Button 
-                    onClick={() => setActiveTab('blog')} 
+                    onClick={() => handleTabChange('blog')} 
                     className="w-full"
                   >
                     Manage Blog
@@ -113,7 +134,7 @@ export default function AdminDashboard() {
                 </CardHeader>
                 <CardContent>
                   <Button 
-                    onClick={() => setActiveTab('results')} 
+                    onClick={() => handleTabChange('results')} 
                     className="w-full"
                   >
                     Manage Results
@@ -128,7 +149,7 @@ export default function AdminDashboard() {
                 </CardHeader>
                 <CardContent>
                   <Button 
-                    onClick={() => setActiveTab('users')} 
+                    onClick={() => handleTabChange('users')} 
                     className="w-full"
                   >
                     Manage Users
@@ -143,7 +164,7 @@ export default function AdminDashboard() {
                 </CardHeader>
                 <CardContent>
                   <Button 
-                    onClick={() => setActiveTab('payments')} 
+                    onClick={() => handleTabChange('payments')} 
                     className="w-full"
                   >
                     Manage Payments
@@ -158,7 +179,7 @@ export default function AdminDashboard() {
                 </CardHeader>
                 <CardContent>
                   <Button 
-                    onClick={() => setActiveTab('emails')} 
+                    onClick={() => handleTabChange('emails')} 
                     className="w-full"
                   >
                     Manage Emails
@@ -200,7 +221,7 @@ export default function AdminDashboard() {
           </TabsContent>
 
           <TabsContent value="payments" className="mt-6">
-            <PaymentManager />
+            <PaymentManager activeTab={activeTab} setActiveTab={handleTabChange} />
           </TabsContent>
 
           <TabsContent value="emails" className="mt-6">

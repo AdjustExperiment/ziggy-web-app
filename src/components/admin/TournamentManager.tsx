@@ -53,6 +53,8 @@ interface Tournament {
   registration_deadline: string;
   payment_handler: string;
   paypal_client_id: string;
+  paypal_button_html: string;
+  venmo_button_html: string;
   additional_info: any;
 }
 
@@ -87,6 +89,8 @@ const TournamentManager = () => {
     registration_deadline: new Date(),
     payment_handler: 'paypal',
     paypal_client_id: '',
+    paypal_button_html: '',
+    venmo_button_html: '',
     additional_info: '{}'
   });
 
@@ -113,6 +117,8 @@ const TournamentManager = () => {
         prize_items: Array.isArray(tournament.prize_items) ? tournament.prize_items : [],
         tournament_info: tournament.tournament_info || '',
         cash_prize_total: tournament.cash_prize_total || 0,
+        paypal_button_html: (tournament as any).paypal_button_html || '',
+        venmo_button_html: (tournament as any).venmo_button_html || '',
         additional_info: tournament.additional_info || {}
       })) || [];
       
@@ -150,6 +156,8 @@ const TournamentManager = () => {
       registration_deadline: new Date(),
       payment_handler: 'paypal',
       paypal_client_id: '',
+      paypal_button_html: '',
+      venmo_button_html: '',
       additional_info: '{}'
     });
     setEditingTournament(null);
@@ -262,6 +270,8 @@ const TournamentManager = () => {
         registration_deadline: format(formData.registration_deadline, 'yyyy-MM-dd'),
         payment_handler: formData.payment_handler,
         paypal_client_id: formData.paypal_client_id,
+        paypal_button_html: formData.paypal_button_html,
+        venmo_button_html: formData.venmo_button_html,
         additional_info: JSON.parse(formData.additional_info || '{}')
       };
 
@@ -317,6 +327,8 @@ const TournamentManager = () => {
       registration_deadline: new Date(tournament.registration_deadline),
       payment_handler: tournament.payment_handler || 'paypal',
       paypal_client_id: tournament.paypal_client_id || '',
+      paypal_button_html: tournament.paypal_button_html || '',
+      venmo_button_html: tournament.venmo_button_html || '',
       additional_info: JSON.stringify(tournament.additional_info || {}, null, 2)
     });
     setIsDialogOpen(true);
@@ -399,11 +411,12 @@ const TournamentManager = () => {
             </DialogHeader>
             
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="basic">Basic Info</TabsTrigger>
                 <TabsTrigger value="content">Content</TabsTrigger>
                 <TabsTrigger value="prizes">Prizes</TabsTrigger>
                 <TabsTrigger value="sponsors">Sponsors</TabsTrigger>
+                <TabsTrigger value="payments">Payments</TabsTrigger>
               </TabsList>
 
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -764,6 +777,93 @@ const TournamentManager = () => {
                         </div>
                       ))}
                     </div>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="payments" className="space-y-4">
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="paypal_button_html">PayPal Button HTML</Label>
+                      <Textarea
+                        id="paypal_button_html"
+                        value={formData.paypal_button_html}
+                        onChange={(e) => setFormData({...formData, paypal_button_html: e.target.value})}
+                        rows={6}
+                        placeholder="Paste your PayPal button HTML here (e.g., from PayPal Button Generator)"
+                        className="font-mono text-sm"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Get your PayPal button HTML from{' '}
+                        <a 
+                          href="https://www.paypal.com/buttons/" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline"
+                        >
+                          PayPal Button Generator
+                        </a>
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="venmo_button_html">Venmo Button HTML</Label>
+                      <Textarea
+                        id="venmo_button_html"
+                        value={formData.venmo_button_html}
+                        onChange={(e) => setFormData({...formData, venmo_button_html: e.target.value})}
+                        rows={6}
+                        placeholder="Paste your custom Venmo button HTML here"
+                        className="font-mono text-sm"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Create custom Venmo buttons or links. Learn more at{' '}
+                        <a 
+                          href="https://help.venmo.com/hc/en-us/articles/210413477-Venmo-me-links" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline"
+                        >
+                          Venmo Documentation
+                        </a>
+                      </p>
+                    </div>
+                    
+                    {(formData.paypal_button_html || formData.venmo_button_html) && (
+                      <div className="space-y-3">
+                        <Label>Preview</Label>
+                        <div className="border rounded-lg p-4 bg-muted/20">
+                          <p className="text-sm text-muted-foreground mb-3">Custom payment buttons preview:</p>
+                          <div className="space-y-3">
+                            {formData.paypal_button_html && (
+                              <div className="border rounded p-3">
+                                <p className="text-xs text-muted-foreground mb-2">PayPal Button:</p>
+                                <div 
+                                  dangerouslySetInnerHTML={{ 
+                                    __html: DOMPurify.sanitize(formData.paypal_button_html) 
+                                  }} 
+                                />
+                              </div>
+                            )}
+                            {formData.venmo_button_html && (
+                              <div className="border rounded p-3">
+                                <p className="text-xs text-muted-foreground mb-2">Venmo Button:</p>
+                                <div 
+                                  dangerouslySetInnerHTML={{ 
+                                    __html: DOMPurify.sanitize(formData.venmo_button_html) 
+                                  }} 
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="bg-yellow-50 border border-yellow-200 p-3 rounded-lg">
+                          <p className="text-xs text-yellow-800">
+                            <strong>Note:</strong> All HTML is automatically sanitized for security. 
+                            These custom buttons will replace the default payment buttons in tournament registration.
+                          </p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </TabsContent>
                 
