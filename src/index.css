@@ -38,10 +38,35 @@ All colors MUST be HSL.
     --ring: 355 100% 45%;
 
     /* Tournament Brand Gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(355 100% 45%), hsl(0 0% 8%));
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(355 20% 98%)); 
-    --gradient-accent: linear-gradient(90deg, hsl(355 100% 45%), hsl(355 100% 55%));
-    --gradient-subtle: linear-gradient(180deg, hsl(0 0% 98%), hsl(0 0% 95%));
+    --gradient-hero: linear-gradient(
+      135deg, 
+      hsl(0 0% 5%) 0%, 
+      hsl(355 40% 15%) 25%, 
+      hsl(355 60% 25%) 50%, 
+      hsl(355 80% 35%) 75%, 
+      hsl(355 85% 45%) 100%
+    );
+    --gradient-card: linear-gradient(
+      145deg, 
+      hsl(0 0% 8%) 0%, 
+      hsl(355 20% 12%) 30%, 
+      hsl(355 40% 18%) 60%, 
+      hsl(355 20% 25%) 100%
+    ); 
+    --gradient-accent: linear-gradient(
+      90deg, 
+      hsl(355 100% 45%) 0%, 
+      hsl(355 100% 55%) 50%, 
+      hsl(355 100% 65%) 100%
+    );
+    --gradient-subtle: linear-gradient(
+      180deg, 
+      hsl(0 0% 8%) 0%, 
+      hsl(355 20% 10%) 25%, 
+      hsl(355 30% 12%) 50%, 
+      hsl(355 25% 15%) 75%, 
+      hsl(0 0% 5%) 100%
+    );
 
     /* Advanced Shadows */
     --shadow-tournament: 0 20px 40px -10px hsl(355 100% 45% / 0.2);
@@ -102,10 +127,35 @@ All colors MUST be HSL.
     --ring: 355 100% 55%;
 
     /* Dark mode gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(355 100% 55%), hsl(0 0% 15%));
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 10%), hsl(355 20% 12%)); 
-    --gradient-accent: linear-gradient(90deg, hsl(355 100% 55%), hsl(355 100% 65%));
-    --gradient-subtle: linear-gradient(180deg, hsl(0 0% 8%), hsl(0 0% 12%));
+    --gradient-hero: linear-gradient(
+      135deg, 
+      hsl(0 0% 3%) 0%, 
+      hsl(355 50% 12%) 25%, 
+      hsl(355 70% 22%) 50%, 
+      hsl(355 90% 32%) 75%, 
+      hsl(355 95% 42%) 100%
+    );
+    --gradient-card: linear-gradient(
+      145deg, 
+      hsl(0 0% 5%) 0%, 
+      hsl(355 25% 8%) 30%, 
+      hsl(355 45% 15%) 60%, 
+      hsl(355 30% 20%) 100%
+    ); 
+    --gradient-accent: linear-gradient(
+      90deg, 
+      hsl(355 100% 55%) 0%, 
+      hsl(355 100% 65%) 50%, 
+      hsl(355 100% 75%) 100%
+    );
+    --gradient-subtle: linear-gradient(
+      180deg, 
+      hsl(0 0% 5%) 0%, 
+      hsl(355 25% 8%) 25%, 
+      hsl(355 35% 10%) 50%, 
+      hsl(355 30% 12%) 75%, 
+      hsl(0 0% 3%) 100%
+    );
 
     /* Dark mode shadows */
     --shadow-tournament: 0 20px 40px -10px hsl(355 100% 55% / 0.3);

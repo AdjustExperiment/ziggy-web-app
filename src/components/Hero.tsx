@@ -6,14 +6,30 @@ import heroImage from "@/assets/hero-debate.jpg";
 export function Hero() {
   return (
     <section className="relative overflow-hidden bg-gradient-hero">
-      <div className="absolute inset-0 bg-black/20" />
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0">
+        <div className="absolute inset-0 bg-black/10" />
+        
+        {/* Floating Particles */}
+        <div className="absolute top-10 left-10 w-32 h-32 bg-red-500/5 rounded-full blur-xl animate-float" style={{ animationDelay: '0s' }}></div>
+        <div className="absolute top-20 right-20 w-48 h-48 bg-red-400/8 rounded-full blur-2xl animate-float" style={{ animationDelay: '2s' }}></div>
+        <div className="absolute bottom-20 left-20 w-40 h-40 bg-red-600/6 rounded-full blur-xl animate-float" style={{ animationDelay: '4s' }}></div>
+        <div className="absolute bottom-10 right-10 w-56 h-56 bg-red-300/4 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }}></div>
+        
+        {/* Gradient Overlays */}
+        <div className="absolute inset-0 bg-gradient-to-br from-transparent via-red-900/5 to-black/20"></div>
+        <div className="absolute inset-0 bg-gradient-to-tl from-red-800/10 via-transparent to-black/15"></div>
+        
+        {/* Noise Texture */}
+        <div className="absolute inset-0 opacity-[0.015] bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8ZmlsdGVyIGlkPSJub2lzZSI+CiAgICA8ZmVUdXJidWxlbmNlIGJhc2VGcmVxdWVuY3k9IjAuOSIgbnVtT2N0YXZlcz0iMSIgc2VlZD0iMiIvPgogICAgPGZlQ29sb3JNYXRyaXggdmFsdWVzPSIwIDAgMCAwIDAgMCAwIDAgMCAwIDAgMCAwIDAgMCAwIDAgMCAxIDAiLz4KICA8L2ZpbHRlcj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWx0ZXI9InVybCgjbm9pc2UpIi8+Cjwvc3ZnPg==')]"></div>
+      </div>
       
       <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-32">
         <div className="grid gap-8 sm:gap-12 lg:grid-cols-2 lg:gap-16 items-center">
           {/* Left Content */}
           <div className="space-y-6 sm:space-y-8 text-center lg:text-left">
             <div className="space-y-4 sm:space-y-6">
-              <Badge className="bg-white/10 text-white border-white/20 hover:bg-white/20 text-sm sm:text-base">
+              <Badge className="bg-white/10 text-white border-white/20 hover:bg-white/20 text-sm sm:text-base backdrop-blur-sm">
                 <span className="inline-block w-2 h-2 bg-white rounded-full mr-2"></span>
                 Founded 2011 • $2.4M+ in Scholarships
               </Badge>
@@ -35,7 +51,7 @@ export function Hero() {
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start">
               <Button 
                 size="lg" 
-                className="bg-red-500 text-white hover:bg-red-600 shadow-glow text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-6 min-h-[44px] sm:min-h-[56px]"
+                className="bg-red-500 text-white hover:bg-red-600 shadow-glow text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-6 min-h-[44px] sm:min-h-[56px] transition-all duration-300 hover:scale-105"
               >
                 Sign Up Now
                 <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
@@ -44,7 +60,7 @@ export function Hero() {
               <Button 
                 variant="outline" 
                 size="lg"
-                className="border-white/30 text-white hover:bg-white/10 text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-6 min-h-[44px] sm:min-h-[56px]"
+                className="border-white/30 text-white hover:bg-white/10 text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-6 min-h-[44px] sm:min-h-[56px] transition-all duration-300 hover:scale-105 backdrop-blur-sm"
               >
                 Members Page
               </Button>

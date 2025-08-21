@@ -42,7 +42,7 @@ export function Navbar() {
             <img 
               src="/lovable-uploads/bb7e942b-4006-461c-b9ed-9bdde6f1500c.png" 
               alt="Debate Champions Logo" 
-              className="h-8 sm:h-10 w-auto rounded-full hover:scale-105 transition-transform duration-300 animate-float" 
+              className="h-8 sm:h-10 w-auto rounded-full hover:scale-105 transition-transform duration-300" 
             />
           </div>
 
@@ -125,7 +125,7 @@ export function Navbar() {
               />
             </div>
             
-            <Button className="bg-red-500 text-white hover:bg-red-600 border-red-500 text-sm font-secondary transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-red-500/25 animate-glow-pulse">
+            <Button className="bg-red-500 text-white hover:bg-red-600 border-red-500 text-sm font-secondary transition-all duration-300 hover:scale-105">
               Sign Up
             </Button>
             
@@ -232,7 +232,7 @@ export function Navbar() {
               </div>
               <div className="px-4 space-y-3">
                 <Button 
-                  className="w-full bg-red-500 text-white hover:bg-red-600 py-3 text-base min-h-[44px] font-secondary transition-all duration-300 hover:scale-105 animate-glow-pulse"
+                  className="w-full bg-red-500 text-white hover:bg-red-600 py-3 text-base min-h-[44px] font-secondary transition-all duration-300 hover:scale-105"
                 >
                   Sign Up
                 </Button>
