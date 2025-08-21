@@ -39,11 +39,13 @@ export function Navbar() {
         <div className="flex h-32 items-center justify-between">
           {/* Logo */}
           <div className="flex items-center shrink-0">
-            <img 
-              src="/lovable-uploads/6e80f49d-b786-40a0-b14e-b90c43b076af.png" 
-              alt="Debate Champions Logo" 
-              className="h-28 sm:h-32 lg:h-36 w-auto object-contain hover:scale-105 transition-transform duration-300" 
-            />
+            <a href="/" className="hover:scale-105 transition-transform duration-300">
+              <img 
+                src="/lovable-uploads/6e80f49d-b786-40a0-b14e-b90c43b076af.png" 
+                alt="Debate Champions Logo" 
+                className="h-28 sm:h-32 lg:h-36 w-auto object-contain border-2 border-white rounded-full" 
+              />
+            </a>
           </div>
 
           {/* Desktop Navigation */}
