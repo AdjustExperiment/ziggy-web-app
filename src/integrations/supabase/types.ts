@@ -133,6 +133,36 @@ export type Database = {
           },
         ]
       }
+      email_provider_settings: {
+        Row: {
+          created_at: string
+          from_email: string | null
+          id: string
+          provider: string
+          reply_to: string | null
+          singleton: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          from_email?: string | null
+          id?: string
+          provider?: string
+          reply_to?: string | null
+          singleton?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          from_email?: string | null
+          id?: string
+          provider?: string
+          reply_to?: string | null
+          singleton?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       email_templates: {
         Row: {
           created_at: string

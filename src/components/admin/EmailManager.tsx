@@ -13,6 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Mail, Settings, BarChart3, Send } from 'lucide-react';
+import { EmailProviderConfig } from './EmailProviderConfig';
 
 interface EmailTemplate {
   id: string;
@@ -57,7 +58,7 @@ export const EmailManager = () => {
   const [emailSettings, setEmailSettings] = useState<EmailSettings[]>([]);
   const [emailLogs, setEmailLogs] = useState<EmailLog[]>([]);
   const [selectedTournament, setSelectedTournament] = useState<string>('global');
-  const [activeTab, setActiveTab] = useState('templates');
+  const [activeTab, setActiveTab] = useState('provider');
   const [editingTemplate, setEditingTemplate] = useState<EmailTemplate | null>(null);
   const [editingSettings, setEditingSettings] = useState<EmailSettings | null>(null);
 
@@ -116,16 +117,28 @@ export const EmailManager = () => {
 
   const saveTemplate = async (template: Partial<EmailTemplate>) => {
     try {
+      // Ensure required fields are present
+      const templateData = {
+        template_key: template.template_key || '',
+        subject: template.subject || '',
+        html: template.html || '',
+        text: template.text,
+        from_email: template.from_email,
+        reply_to: template.reply_to,
+        enabled: template.enabled ?? true,
+        tournament_id: template.tournament_id
+      };
+
       if (editingTemplate?.id) {
         await supabase
           .from('email_templates')
-          .update(template)
+          .update(templateData)
           .eq('id', editingTemplate.id);
         toast({ title: "Success", description: "Template updated successfully" });
       } else {
         await supabase
           .from('email_templates')
-          .insert(template);
+          .insert(templateData);
         toast({ title: "Success", description: "Template created successfully" });
       }
       setEditingTemplate(null);
@@ -138,15 +151,27 @@ export const EmailManager = () => {
 
   const saveSettings = async (settings: Partial<EmailSettings>) => {
     try {
+      // Ensure required fields are present
+      const settingsData = {
+        tournament_id: settings.tournament_id || '',
+        send_success_email: settings.send_success_email ?? true,
+        send_pending_reminders: settings.send_pending_reminders ?? true,
+        reminder_initial_delay_minutes: settings.reminder_initial_delay_minutes ?? 60,
+        reminder_repeat_minutes: settings.reminder_repeat_minutes ?? 1440,
+        reminder_max_count: settings.reminder_max_count ?? 3,
+        from_email: settings.from_email,
+        reply_to: settings.reply_to
+      };
+
       if (editingSettings?.id) {
         await supabase
           .from('tournament_email_settings')
-          .update(settings)
+          .update(settingsData)
           .eq('id', editingSettings.id);
       } else {
         await supabase
           .from('tournament_email_settings')
-          .insert(settings);
+          .insert(settingsData);
       }
       toast({ title: "Success", description: "Settings saved successfully" });
       setEditingSettings(null);
@@ -199,6 +224,10 @@ export const EmailManager = () => {
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
+          <TabsTrigger value="provider" className="flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            Provider
+          </TabsTrigger>
           <TabsTrigger value="templates" className="flex items-center gap-2">
             <Mail className="h-4 w-4" />
             Templates
@@ -212,6 +241,10 @@ export const EmailManager = () => {
             Email Logs
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="provider" className="space-y-4">
+          <EmailProviderConfig />
+        </TabsContent>
 
         <TabsContent value="templates" className="space-y-4">
           <div className="flex justify-between items-center">
