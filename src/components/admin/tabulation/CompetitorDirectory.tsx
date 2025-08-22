@@ -91,7 +91,8 @@ export function CompetitorDirectory({ tournamentId, registrations }: CompetitorD
         }
 
         // Process ballots for speaker points and wins
-        pairing.ballots?.forEach((ballot: any) => {
+        const ballots = Array.isArray(pairing.ballots) ? pairing.ballots : [];
+        ballots.forEach((ballot: any) => {
           if (ballot.is_published && ballot.payload) {
             const winner = ballot.payload.winner;
             const affSpeaks = ballot.payload.aff_speaker_points || 0;

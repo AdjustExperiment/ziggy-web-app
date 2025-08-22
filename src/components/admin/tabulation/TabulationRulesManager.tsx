@@ -54,21 +54,10 @@ export function TabulationRulesManager({ tournamentId }: TabulationRulesManagerP
   const fetchSettings = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-      .from('tournament_tabulation_settings')
-        .select('*')
-        .eq('tournament_id', tournamentId)
-        .single();
-
-      if (error && error.code !== 'PGRST116') {
-        throw error;
-      }
-
-      if (data) {
-        setSettings(data);
-      }
+      // Temporarily use default settings until table is created
+      console.log('Using default tabulation settings for tournament:', tournamentId);
     } catch (error: any) {
-      console.error('Error fetching tabulation settings:', error);
+      console.error('Error fetching settings:', error);
     } finally {
       setLoading(false);
     }
@@ -77,18 +66,12 @@ export function TabulationRulesManager({ tournamentId }: TabulationRulesManagerP
   const saveSettings = async () => {
     setSaving(true);
     try {
-      const { error } = await supabase
-      .from('tournament_tabulation_settings')
-        .upsert({
-          ...settings,
-          tournament_id: tournamentId
-        });
-
-      if (error) throw error;
-
+      // Temporarily disabled until table is created
+      console.log('Saving tabulation settings (demo mode):', settings);
+      
       toast({
-        title: "Success",
-        description: "Tabulation rules saved successfully",
+        title: "Demo Mode",
+        description: "Tabulation rules saved (demo mode - database table pending)",
       });
     } catch (error: any) {
       console.error('Error saving settings:', error);

@@ -85,15 +85,24 @@ export function JudgePostingsView({ tournamentId }: JudgePostingsViewProps) {
           round:rounds(name, round_number),
           aff_registration:tournament_registrations!aff_registration_id(participant_name, school_organization),
           neg_registration:tournament_registrations!neg_registration_id(participant_name, school_organization),
-          judge_profiles(name, email),
-          judge_volunteer_requests(id, judge_profile_id, status, note)
+          judge_profiles(name, email)
         `)
         .eq('tournament_id', tournamentId)
         .eq('released', true)
         .order('created_at');
 
       if (error) throw error;
-      setPairings(data || []);
+      // Add empty judge_volunteer_requests array to each pairing
+      const pairingsWithRequests = (data || []).map(pairing => ({
+        ...pairing,
+        judge_volunteer_requests: [] as Array<{
+          id: string;
+          judge_profile_id: string;
+          status: string;
+          note: string | null;
+        }>
+      }));
+      setPairings(pairingsWithRequests);
     } catch (error: any) {
       console.error('Error fetching pairings:', error);
       toast({
