@@ -179,3 +179,31 @@ export interface JudgeRequest {
   pairing?: Pairing;
   judge_profiles?: JudgeProfile;
 }
+
+export interface TournamentTabulationSettings {
+  id: string;
+  tournament_id: string;
+  pairing_method: string;
+  avoid_rematches: boolean;
+  club_protect: boolean;
+  preserve_break_rounds: boolean;
+  prevent_bracket_breaks: boolean;
+  max_repeat_opponents: number;
+  side_balance_target: number;
+  speaker_points_method: string;
+  allow_judges_view_all_chat: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface JudgeVolunteerRequest {
+  id: string;
+  pairing_id: string;
+  judge_profile_id: string;
+  status: string;
+  note: string | null;
+  created_at: string;
+  updated_at: string;
+  pairing?: Pairing;
+  judge_profiles?: JudgeProfile;
+}

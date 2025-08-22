@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -12,6 +11,9 @@ import { BracketsManager } from './BracketsManager';
 import { StandingsView } from './StandingsView';
 import { AdminPostings } from '../AdminPostings';
 import { Registration, JudgeProfile, Round } from '@/types/database';
+import { CompetitorDirectory } from './CompetitorDirectory';
+import { TabulationRulesManager } from './TabulationRulesManager';
+import { JudgePostingsView } from './JudgePostingsView';
 
 interface Tournament {
   id: string;
@@ -33,7 +35,7 @@ export function TabulationDashboard({
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [judges, setJudges] = useState<JudgeProfile[]>([]);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('postings');
+  const [activeTab, setActiveTab] = useState('competitors');
   const [ballotLoading, setBallotLoading] = useState(false);
 
   useEffect(() => {
@@ -306,7 +308,19 @@ export function TabulationDashboard({
           </Card>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-7">
+              <TabsTrigger value="competitors" className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                Competitors
+              </TabsTrigger>
+              <TabsTrigger value="rules" className="flex items-center gap-2">
+                <Settings className="h-4 w-4" />
+                Rules
+              </TabsTrigger>
+              <TabsTrigger value="judge-postings" className="flex items-center gap-2">
+                <Gavel className="h-4 w-4" />
+                Judge View
+              </TabsTrigger>
               <TabsTrigger value="postings" className="flex items-center gap-2">
                 <Clipboard className="h-4 w-4" />
                 Postings
@@ -314,10 +328,6 @@ export function TabulationDashboard({
               <TabsTrigger value="pairings" className="flex items-center gap-2">
                 <Users className="h-4 w-4" />
                 Pairings
-              </TabsTrigger>
-              <TabsTrigger value="constraints" className="flex items-center gap-2">
-                <Settings className="h-4 w-4" />
-                Constraints
               </TabsTrigger>
               <TabsTrigger value="brackets" className="flex items-center gap-2">
                 <Trophy className="h-4 w-4" />
@@ -328,6 +338,21 @@ export function TabulationDashboard({
                 Standings
               </TabsTrigger>
             </TabsList>
+
+            <TabsContent value="competitors">
+              <CompetitorDirectory
+                tournamentId={selectedTournament}
+                registrations={registrations}
+              />
+            </TabsContent>
+
+            <TabsContent value="rules">
+              <TabulationRulesManager tournamentId={selectedTournament} />
+            </TabsContent>
+
+            <TabsContent value="judge-postings">
+              <JudgePostingsView tournamentId={selectedTournament} />
+            </TabsContent>
 
             <TabsContent value="postings">
               <AdminPostings
@@ -345,14 +370,6 @@ export function TabulationDashboard({
                 judges={judges}
                 onRoundsUpdate={fetchTournamentData}
                 onToggleRoundLock={toggleRoundLock}
-              />
-            </TabsContent>
-
-            <TabsContent value="constraints">
-              <ConstraintsManager
-                tournamentId={selectedTournament}
-                registrations={registrations}
-                judges={judges}
               />
             </TabsContent>
 
