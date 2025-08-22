@@ -27,6 +27,11 @@ export function TabulationPlatform() {
 
       if (error) throw error;
       setTournaments(data || []);
+      
+      // Auto-select first tournament for better UX
+      if (data && data.length > 0 && !selectedTournament) {
+        setSelectedTournament(data[0].id);
+      }
     } catch (error: any) {
       console.error('Error fetching tournaments:', error);
       toast({

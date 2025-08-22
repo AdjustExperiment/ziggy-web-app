@@ -32,7 +32,7 @@ export function TabulationDashboard({
   const [rounds, setRounds] = useState<Round[]>([]);
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [judges, setJudges] = useState<JudgeProfile[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('postings');
   const [ballotLoading, setBallotLoading] = useState(false);
 
@@ -185,7 +185,7 @@ export function TabulationDashboard({
     }
   };
 
-  if (loading) {
+  if (loading && selectedTournament) {
     return (
       <div className="flex items-center justify-center p-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
