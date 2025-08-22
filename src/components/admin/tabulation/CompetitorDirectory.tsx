@@ -107,10 +107,9 @@ export function CompetitorDirectory({ tournamentId, registrations }: CompetitorD
               negStats.totalSpeaks += negSpeaks;
               if (winner === 'neg') negStats.wins++;
               else if (winner === 'aff') negStats.losses++;
+            }
           }
-        }
-      });
-      }
+        });
       });
 
       setCompetitorStats(stats);
