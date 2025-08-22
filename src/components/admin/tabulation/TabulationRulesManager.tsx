@@ -55,7 +55,7 @@ export function TabulationRulesManager({ tournamentId }: TabulationRulesManagerP
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('tournament_tabulation_settings')
+      .from('tournament_tabulation_settings')
         .select('*')
         .eq('tournament_id', tournamentId)
         .single();
@@ -78,7 +78,7 @@ export function TabulationRulesManager({ tournamentId }: TabulationRulesManagerP
     setSaving(true);
     try {
       const { error } = await supabase
-        .from('tournament_tabulation_settings')
+      .from('tournament_tabulation_settings')
         .upsert({
           ...settings,
           tournament_id: tournamentId
