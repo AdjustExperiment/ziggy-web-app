@@ -9,6 +9,13 @@ import { TabulationPlatform } from '@/components/admin/TabulationPlatform';
 import { PaymentManager } from '@/components/admin/PaymentManager';
 import { JudgeApplicationManager } from '@/components/admin/JudgeApplicationManager';
 import { EnhancedJudgesManager } from '@/components/admin/EnhancedJudgesManager';
+import { UserManager } from '@/components/admin/UserManager';
+import { EnhancedEmailTemplateManager } from '@/components/admin/EnhancedEmailTemplateManager';
+import { NotificationsManager } from '@/components/admin/NotificationsManager';
+import { BlogManager } from '@/components/admin/BlogManager';
+import { SiteEditor } from '@/components/admin/SiteEditor';
+import { PromoCodesManager } from '@/components/admin/PromoCodesManager';
+import { StaffRevenueCalculator } from '@/components/admin/StaffRevenueCalculator';
 
 export default function AdminDashboard() {
   const { signOut, isAdmin } = useAuth();
@@ -34,6 +41,20 @@ export default function AdminDashboard() {
         return <JudgeApplicationManager />;
       case 'judges':
         return <EnhancedJudgesManager />;
+      case 'users':
+        return <UserManager />;
+      case 'emails':
+        return <EnhancedEmailTemplateManager />;
+      case 'notifications':
+        return <NotificationsManager />;
+      case 'blog':
+        return <BlogManager />;
+      case 'site':
+        return <SiteEditor />;
+      case 'promos':
+        return <PromoCodesManager />;
+      case 'staff':
+        return <StaffRevenueCalculator />;
       default:
         return <Dashboard />;
     }
@@ -47,12 +68,20 @@ export default function AdminDashboard() {
       </div>
 
       <Tabs defaultValue="dashboard" value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid grid-cols-5">
-          <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-          <TabsTrigger value="tournaments">Tournaments</TabsTrigger>
-          <TabsTrigger value="tabulation">Tabulation</TabsTrigger>
-          <TabsTrigger value="payments">Payments</TabsTrigger>
-          <TabsTrigger value="applications">Applications</TabsTrigger>
+        <TabsList className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-10 gap-1 h-auto p-1">
+          <TabsTrigger value="dashboard" className="text-xs">Dashboard</TabsTrigger>
+          <TabsTrigger value="tournaments" className="text-xs">Tournaments</TabsTrigger>
+          <TabsTrigger value="tabulation" className="text-xs">Tabulation</TabsTrigger>
+          <TabsTrigger value="payments" className="text-xs">Payments</TabsTrigger>
+          <TabsTrigger value="applications" className="text-xs">Applications</TabsTrigger>
+          <TabsTrigger value="judges" className="text-xs">Judges</TabsTrigger>
+          <TabsTrigger value="users" className="text-xs">Users</TabsTrigger>
+          <TabsTrigger value="emails" className="text-xs">Emails</TabsTrigger>
+          <TabsTrigger value="notifications" className="text-xs">Notifications</TabsTrigger>
+          <TabsTrigger value="blog" className="text-xs">Blog</TabsTrigger>
+          <TabsTrigger value="site" className="text-xs">Site Editor</TabsTrigger>
+          <TabsTrigger value="promos" className="text-xs">Promo Codes</TabsTrigger>
+          <TabsTrigger value="staff" className="text-xs">Staff Calc</TabsTrigger>
         </TabsList>
         <TabsContent value={activeTab}>
           {renderTabContent()}
