@@ -14,6 +14,8 @@ import { format } from "date-fns"
 import { CalendarIcon } from "lucide-react"
 import { Switch } from "@/components/ui/switch"
 import { toast } from '@/components/ui/use-toast';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import MultiJudgePanelManager from './MultiJudgePanelManager';
 
 interface Tournament {
   id: string;
@@ -40,16 +42,34 @@ export function TournamentManager() {
     opt_outs_enabled: false,
   });
   const [formats, setFormats] = useState<{ id: string; name: string }[]>([]);
+  const [tournaments, setTournaments] = useState<Tournament[]>([]);
+  const [selectedTournamentId, setSelectedTournamentId] = useState<string>('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchFormats();
+    fetchTournaments();
     if (tournamentId) {
       fetchTournamentData(tournamentId);
+      setSelectedTournamentId(tournamentId);
     } else {
       setLoading(false);
     }
   }, [tournamentId]);
+
+  const fetchTournaments = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('tournaments')
+        .select('id, name, description, start_date, end_date, location, status, opt_outs_enabled')
+        .order('name');
+
+      if (error) throw error;
+      setTournaments(data || []);
+    } catch (error: any) {
+      console.error('Error fetching tournaments:', error);
+    }
+  };
 
   const fetchFormats = async () => {
     try {
@@ -153,10 +173,54 @@ export function TournamentManager() {
   };
 
   return (
-    <div className="container mx-auto p-8">
-      <h1 className="text-2xl font-bold mb-4">{tournamentId ? 'Edit Tournament' : 'Create Tournament'}</h1>
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold">Tournament Manager</h2>
 
-      {loading ? (
+      {!tournamentId && tournaments.length > 0 && (
+        <div>
+          <Label htmlFor="tournament-select">Select Tournament to Manage</Label>
+          <Select value={selectedTournamentId} onValueChange={setSelectedTournamentId}>
+            <SelectTrigger>
+              <SelectValue placeholder="Choose a tournament..." />
+            </SelectTrigger>
+            <SelectContent>
+              {tournaments.map((tournament) => (
+                <SelectItem key={tournament.id} value={tournament.id}>
+                  {tournament.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      {(tournamentId || selectedTournamentId) ? (
+        <Tabs defaultValue="details" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="details">Tournament Details</TabsTrigger>
+            <TabsTrigger value="panels">Multi-Judge Panels</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="details">
+            {renderTournamentForm()}
+          </TabsContent>
+
+          <TabsContent value="panels">
+            <MultiJudgePanelManager tournamentId={tournamentId || selectedTournamentId} />
+          </TabsContent>
+        </Tabs>
+      ) : (
+        <div>
+          <h3 className="text-lg font-semibold mb-4">Create New Tournament</h3>
+          {renderTournamentForm()}
+        </div>
+      )}
+    </div>
+  );
+
+  function renderTournamentForm() {
+    return (
+      loading ? (
         <div className="flex items-center justify-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
@@ -184,8 +248,14 @@ export function TournamentManager() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="format">Debate Format (Optional)</Label>
-              <p className="text-sm text-muted-foreground">Format selection will be available after database migration.</p>
+              <Label htmlFor="location">Location</Label>
+              <Input
+                type="text"
+                id="location"
+                value={formData.location || ''}
+                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                required
+              />
             </div>
 
             <div className="space-y-2">
@@ -200,9 +270,6 @@ export function TournamentManager() {
                   Enable round opt-outs and extra round requests
                 </Label>
               </div>
-              <p className="text-xs text-muted-foreground">
-                When enabled, participants can opt out of specific rounds or request extra spots if available
-              </p>
             </div>
           </div>
 
@@ -272,16 +339,6 @@ export function TournamentManager() {
                 </PopoverContent>
               </Popover>
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="location">Location</Label>
-              <Input
-                type="text"
-                id="location"
-                value={formData.location || ''}
-                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-              />
-            </div>
           </div>
 
           <div>
@@ -290,7 +347,7 @@ export function TournamentManager() {
             </Button>
           </div>
         </form>
-      )}
-    </div>
-  );
+      )
+    );
+  }
 }
