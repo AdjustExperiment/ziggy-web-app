@@ -52,7 +52,7 @@ export const TournamentCompetitorsManager = () => {
     team_name: '',
     status: 'active',
     seed: '',
-    registration_id: ''
+    registration_id: 'none'
   });
 
   useEffect(() => {
@@ -124,7 +124,7 @@ export const TournamentCompetitorsManager = () => {
       team_name: '',
       status: 'active',
       seed: '',
-      registration_id: ''
+      registration_id: 'none'
     });
     setEditingCompetitor(null);
   };
@@ -138,7 +138,7 @@ export const TournamentCompetitorsManager = () => {
         team_name: competitor.team_name || '',
         status: competitor.status,
         seed: competitor.seed?.toString() || '',
-        registration_id: competitor.registration_id || ''
+        registration_id: competitor.registration_id || 'none'
       });
     } else {
       resetForm();
@@ -158,7 +158,7 @@ export const TournamentCompetitorsManager = () => {
         team_name: formData.team_name || null,
         status: formData.status,
         seed: formData.seed ? parseInt(formData.seed) : null,
-        registration_id: formData.registration_id || null
+        registration_id: formData.registration_id === 'none' ? null : formData.registration_id
       };
 
       // Use raw SQL insert for now
@@ -402,7 +402,7 @@ export const TournamentCompetitorsManager = () => {
                             <SelectValue placeholder="Select registration" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">No registration</SelectItem>
+                            <SelectItem value="none">No registration</SelectItem>
                             {registrations.map((reg) => (
                               <SelectItem key={reg.id} value={reg.id}>
                                 {reg.participant_name} {reg.partner_name && `& ${reg.partner_name}`}

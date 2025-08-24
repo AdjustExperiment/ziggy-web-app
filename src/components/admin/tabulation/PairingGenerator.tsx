@@ -200,7 +200,7 @@ export function PairingGenerator({
     try {
       const { error } = await supabase
         .from('pairings')
-        .update({ judge_id: judgeId || null })
+        .update({ judge_id: judgeId === 'none' ? null : judgeId })
         .eq('id', pairingId);
 
       if (error) throw error;
@@ -499,16 +499,16 @@ export function PairingGenerator({
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Select 
-                          value={pairing.judge_id || ''} 
-                          onValueChange={(value) => assignJudge(pairing.id, value)}
-                          disabled={selectedRoundData?.status === 'locked'}
-                        >
+                         <Select 
+                           value={pairing.judge_id || 'none'} 
+                           onValueChange={(value) => assignJudge(pairing.id, value)}
+                           disabled={selectedRoundData?.status === 'locked'}
+                         >
                           <SelectTrigger className="w-40">
                             <SelectValue placeholder="Assign judge" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">No judge assigned</SelectItem>
+                            <SelectItem value="none">No judge assigned</SelectItem>
                             {judges.map((judge) => (
                               <SelectItem key={judge.id} value={judge.id}>
                                 {judge.name}

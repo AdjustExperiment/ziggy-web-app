@@ -31,7 +31,7 @@ export function PairingsManager() {
   const [formData, setFormData] = useState({
     aff_registration_id: '',
     neg_registration_id: '',
-    judge_id: '',
+    judge_id: 'none',
     room: '',
     scheduled_time: ''
   });
@@ -182,7 +182,7 @@ export function PairingsManager() {
         round_id: selectedRound,
         aff_registration_id: formData.aff_registration_id,
         neg_registration_id: formData.neg_registration_id,
-        judge_id: formData.judge_id || null,
+        judge_id: formData.judge_id === 'none' ? null : formData.judge_id,
         room: formData.room || null,
         scheduled_time: formData.scheduled_time || null
       };
@@ -277,7 +277,7 @@ export function PairingsManager() {
     setFormData({
       aff_registration_id: '',
       neg_registration_id: '',
-      judge_id: '',
+      judge_id: 'none',
       room: '',
       scheduled_time: ''
     });
@@ -289,7 +289,7 @@ export function PairingsManager() {
     setFormData({
       aff_registration_id: pairing.aff_registration_id,
       neg_registration_id: pairing.neg_registration_id,
-      judge_id: pairing.judge_id || '',
+      judge_id: pairing.judge_id || 'none',
       room: pairing.room || '',
       scheduled_time: pairing.scheduled_time ? pairing.scheduled_time.slice(0, 16) : ''
     });
@@ -434,7 +434,7 @@ export function PairingsManager() {
                           <SelectValue placeholder="Select judge" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">No judge assigned</SelectItem>
+                          <SelectItem value="none">No judge assigned</SelectItem>
                           {judges.map(judge => (
                             <SelectItem key={judge.id} value={judge.id}>
                               {judge.name}

@@ -43,7 +43,7 @@ export function PromoCodesManager() {
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     code: '',
-    tournament_id: '',
+    tournament_id: 'all',
     discount_type: 'percent',
     discount_value: 0,
     max_redemptions: '',
@@ -99,7 +99,7 @@ export function PromoCodesManager() {
     try {
       const promoData = {
         code: formData.code.toUpperCase(),
-        tournament_id: formData.tournament_id || null,
+        tournament_id: formData.tournament_id === 'all' ? null : formData.tournament_id,
         discount_type: formData.discount_type,
         discount_value: formData.discount_value,
         max_redemptions: formData.max_redemptions ? parseInt(formData.max_redemptions) : null,
@@ -148,7 +148,7 @@ export function PromoCodesManager() {
   const resetForm = () => {
     setFormData({
       code: '',
-      tournament_id: '',
+      tournament_id: 'all',
       discount_type: 'percent',
       discount_value: 0,
       max_redemptions: '',
@@ -165,7 +165,7 @@ export function PromoCodesManager() {
     setEditingCode(promoCode);
     setFormData({
       code: promoCode.code,
-      tournament_id: promoCode.tournament_id || '',
+      tournament_id: promoCode.tournament_id || 'all',
       discount_type: promoCode.discount_type,
       discount_value: promoCode.discount_value,
       max_redemptions: promoCode.max_redemptions?.toString() || '',
@@ -254,7 +254,7 @@ export function PromoCodesManager() {
                       <SelectValue placeholder="All tournaments" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All tournaments</SelectItem>
+                      <SelectItem value="all">All tournaments</SelectItem>
                       {tournaments.map((tournament) => (
                         <SelectItem key={tournament.id} value={tournament.id}>
                           {tournament.name}
