@@ -9,7 +9,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { toast } from '@/components/ui/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 
-export function ProfileSetup() {
+interface ProfileSetupProps {
+  isModal?: boolean;
+  onComplete?: () => void;
+}
+
+export function ProfileSetup({ isModal = false, onComplete }: ProfileSetupProps = {}) {
   const { user, refreshUser } = useAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -48,6 +53,11 @@ export function ProfileSetup() {
 
       // Refresh user data
       await refreshUser();
+      
+      // Call onComplete if provided
+      if (onComplete) {
+        onComplete();
+      }
     } catch (error: any) {
       console.error('Error updating profile:', error);
       toast({

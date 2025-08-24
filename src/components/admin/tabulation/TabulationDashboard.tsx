@@ -1,70 +1,37 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Trophy, Settings, BarChart3, UserCheck, Calendar, CheckSquare } from 'lucide-react';
 import { CompetitorDirectory } from './CompetitorDirectory';
-import { PairingGenerator } from './PairingGenerator';
-import { StandingsView } from './StandingsView';
-import { BracketsManager } from './BracketsManager';
-import { TabulationRulesManager } from './TabulationRulesManager';
-import { ConstraintsManager } from './ConstraintsManager';
-import { JudgePostingsView } from './JudgePostingsView';
 import { ParticipationManager } from './ParticipationManager';
+import { TabulationRulesManager } from './TabulationRulesManager';
+import { JudgePostingsView } from './JudgePostingsView';
 
 interface TabulationDashboardProps {
   tournamentId: string;
 }
 
-export function TabulationDashboard({ tournamentId }: TabulationDashboardProps) {
-  return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Trophy className="h-6 w-6" />
-            Tournament Tabulation Dashboard
-          </CardTitle>
-          <CardDescription>
-            Manage all aspects of tournament tabulation including pairings, standings, and participation
-          </CardDescription>
-        </CardHeader>
-      </Card>
+export default function TabulationDashboard({ tournamentId }: TabulationDashboardProps) {
+  const [activeTab, setActiveTab] = useState('competitors');
 
-      <Tabs defaultValue="competitors" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8 gap-1">
-          <TabsTrigger value="competitors" className="flex items-center gap-1 text-xs">
-            <Users className="h-3 w-3" />
-            <span className="hidden sm:inline">Competitors</span>
-          </TabsTrigger>
-          <TabsTrigger value="pairings" className="flex items-center gap-1 text-xs">
-            <Calendar className="h-3 w-3" />
-            <span className="hidden sm:inline">Pairings</span>
-          </TabsTrigger>
-          <TabsTrigger value="participation" className="flex items-center gap-1 text-xs">
-            <UserCheck className="h-3 w-3" />
-            <span className="hidden sm:inline">Participation</span>
-          </TabsTrigger>
-          <TabsTrigger value="judges" className="flex items-center gap-1 text-xs">
-            <CheckSquare className="h-3 w-3" />
-            <span className="hidden sm:inline">Judges</span>
-          </TabsTrigger>
-          <TabsTrigger value="standings" className="flex items-center gap-1 text-xs">
-            <BarChart3 className="h-3 w-3" />
-            <span className="hidden sm:inline">Standings</span>
-          </TabsTrigger>
-          <TabsTrigger value="brackets" className="flex items-center gap-1 text-xs">
-            <Trophy className="h-3 w-3" />
-            <span className="hidden sm:inline">Brackets</span>
-          </TabsTrigger>
-          <TabsTrigger value="constraints" className="flex items-center gap-1 text-xs">
-            <Settings className="h-3 w-3" />
-            <span className="hidden sm:inline">Constraints</span>
-          </TabsTrigger>
-          <TabsTrigger value="rules" className="flex items-center gap-1 text-xs">
-            <Settings className="h-3 w-3" />
-            <span className="hidden sm:inline">Rules</span>
-          </TabsTrigger>
+  return (
+    <div className="container mx-auto p-6">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold mb-2">Tabulation Dashboard</h1>
+        <p className="text-muted-foreground">
+          Manage tournament participants, pairings, and standings.
+        </p>
+      </div>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="grid w-full grid-cols-8">
+          <TabsTrigger value="competitors">Competitors</TabsTrigger>
+          <TabsTrigger value="pairings">Pairings</TabsTrigger>
+          <TabsTrigger value="participation">Participation</TabsTrigger>
+          <TabsTrigger value="judges">Judges</TabsTrigger>
+          <TabsTrigger value="standings">Standings</TabsTrigger>
+          <TabsTrigger value="brackets">Brackets</TabsTrigger>
+          <TabsTrigger value="constraints">Constraints</TabsTrigger>
+          <TabsTrigger value="rules">Rules</TabsTrigger>
         </TabsList>
 
         <TabsContent value="competitors">
@@ -72,7 +39,15 @@ export function TabulationDashboard({ tournamentId }: TabulationDashboardProps) 
         </TabsContent>
 
         <TabsContent value="pairings">
-          <PairingGenerator tournamentId={tournamentId} />
+          <Card>
+            <CardHeader>
+              <CardTitle>Pairing Generator</CardTitle>
+              <CardDescription>Generate tournament pairings and manage rounds.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">Pairing generation will be available soon.</p>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="participation">
@@ -84,15 +59,39 @@ export function TabulationDashboard({ tournamentId }: TabulationDashboardProps) 
         </TabsContent>
 
         <TabsContent value="standings">
-          <StandingsView tournamentId={tournamentId} />
+          <Card>
+            <CardHeader>
+              <CardTitle>Standings View</CardTitle>
+              <CardDescription>View current tournament standings and rankings.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">Standings will be available after rounds are completed.</p>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="brackets">
-          <BracketsManager tournamentId={tournamentId} />
+          <Card>
+            <CardHeader>
+              <CardTitle>Brackets Manager</CardTitle>
+              <CardDescription>Manage tournament brackets and elimination rounds.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">Bracket management will be available soon.</p>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="constraints">
-          <ConstraintsManager tournamentId={tournamentId} />
+          <Card>
+            <CardHeader>
+              <CardTitle>Constraints Manager</CardTitle>
+              <CardDescription>Set up pairing constraints and preferences.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">Constraint management will be available soon.</p>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="rules">
