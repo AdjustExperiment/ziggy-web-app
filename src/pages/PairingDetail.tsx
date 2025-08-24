@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import JudgeRequestModal from '@/components/JudgeRequestModal';
+import EnhancedJudgeRequestModal from '@/components/EnhancedJudgeRequestModal';
 
 interface PairingDetailData {
   id: string;
