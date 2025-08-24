@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -5,131 +6,67 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
-import { 
-  Sparkles, 
-  Check, 
-  AlertTriangle, 
-  Info,
-  Eye
-} from 'lucide-react';
+import { Sparkles, Search, Save } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import type { Tables } from '@/integrations/supabase/types';
-
-type SitePage = Tables<'site_pages'>;
-type SiteBlock = Tables<'site_blocks'>;
+import type { SitePage, SiteBlock } from '@/types/website-builder';
 
 interface SEOOptimizerProps {
   page: SitePage;
   blocks: SiteBlock[];
-  onUpdate: (data: Partial<SitePage>) => void;
-}
-
-interface SEOAnalysis {
-  score: number;
-  issues: SEOIssue[];
-  suggestions: SEOSuggestion[];
-  keywords: string[];
-}
-
-interface SEOIssue {
-  type: 'error' | 'warning' | 'info';
-  message: string;
-  field?: string;
-}
-
-interface SEOSuggestion {
-  field: string;
-  current: string;
-  suggested: string;
-  reason: string;
+  onUpdate: (data: Partial<SitePage>) => Promise<void>;
 }
 
 export const SEOOptimizer = ({ page, blocks, onUpdate }: SEOOptimizerProps) => {
-  const seoData = page.seo as Record<string, any> || {};
-  
-  const [formData, setFormData] = useState({
-    meta_title: seoData.meta_title || page.title,
-    meta_description: seoData.meta_description || page.description || '',
-    focus_keyword: seoData.focus_keyword || '',
-    og_title: seoData.og_title || page.title,
-    og_description: seoData.og_description || page.description || '',
-    og_image: seoData.og_image || '',
-    twitter_title: seoData.twitter_title || page.title,
-    twitter_description: seoData.twitter_description || page.description || '',
-    twitter_image: seoData.twitter_image || ''
+  const [seoData, setSeoData] = useState({
+    title: page.seo?.title || page.title,
+    description: page.seo?.description || page.description || '',
+    keywords: page.seo?.keywords || '',
+    ogTitle: page.seo?.ogTitle || '',
+    ogDescription: page.seo?.ogDescription || '',
+    ogImage: page.seo?.ogImage || ''
   });
-
-  const [analysis, setAnalysis] = useState<SEOAnalysis | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [optimizing, setOptimizing] = useState(false);
+  const [analysis, setAnalysis] = useState<any>(null);
 
-  const analyzePage = async () => {
+  const runSEOAnalysis = async () => {
     setAnalyzing(true);
     try {
-      // Get page content for analysis
-      const pageContent = extractPageContent();
-      
       const { data, error } = await supabase.functions.invoke('analyze-seo', {
         body: {
-          page: {
-            title: page.title,
-            description: page.description,
-            slug: page.slug,
-            seo: formData
-          },
-          content: pageContent,
-          blocks: blocks.filter(b => b.visible)
+          page,
+          blocks,
+          seo: seoData
         }
       });
 
       if (error) throw error;
-
       setAnalysis(data.analysis);
-      
-      // Save analysis to database
-      await supabase
-        .from('ai_seo_analyses')
-        .insert([{
-          page_id: page.id,
-          model: 'gpt-4o-mini',
-          analysis: data.analysis
-        }]);
-
       toast.success('SEO analysis completed');
     } catch (error) {
-      console.error('Error analyzing SEO:', error);
-      toast.error('Failed to analyze SEO');
+      console.error('Error running SEO analysis:', error);
+      toast.error('Failed to run SEO analysis');
     } finally {
       setAnalyzing(false);
     }
   };
 
-  const optimizeWithAI = async () => {
+  const optimizeSEO = async () => {
     setOptimizing(true);
     try {
-      const pageContent = extractPageContent();
-      
       const { data, error } = await supabase.functions.invoke('optimize-seo', {
         body: {
-          page: {
-            title: page.title,
-            description: page.description,
-            slug: page.slug,
-            seo: formData
-          },
-          content: pageContent,
-          blocks: blocks.filter(b => b.visible),
-          focus_keyword: formData.focus_keyword
+          page,
+          blocks,
+          currentSeo: seoData
         }
       });
 
       if (error) throw error;
-
-      setFormData(data.optimized_seo);
-      setAnalysis(data.analysis);
-      toast.success('SEO optimized with AI');
+      
+      setSeoData(data.optimizedSeo);
+      toast.success('SEO optimization completed');
     } catch (error) {
       console.error('Error optimizing SEO:', error);
       toast.error('Failed to optimize SEO');
@@ -138,70 +75,46 @@ export const SEOOptimizer = ({ page, blocks, onUpdate }: SEOOptimizerProps) => {
     }
   };
 
-  const extractPageContent = () => {
-    return blocks
-      .filter(block => block.visible)
-      .map(block => {
-        const content = block.content as Record<string, any>;
-        switch (block.type) {
-          case 'hero':
-            return `${content.title} ${content.subtitle}`;
-          case 'heading':
-            return content.text;
-          case 'paragraph':
-            return content.text;
-          case 'image':
-            return content.alt;
-          case 'button':
-            return content.text;
-          default:
-            return '';
-        }
-      })
-      .filter(text => text)
-      .join(' ');
+  const saveSEO = async () => {
+    const updatedSeo = {
+      ...page.seo,
+      ...seoData,
+      lastOptimized: new Date().toISOString()
+    };
+
+    await onUpdate({ seo: updatedSeo });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onUpdate({ seo: formData });
-  };
-
-  const handleChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const applySuggestion = (suggestion: SEOSuggestion) => {
-    setFormData(prev => ({ ...prev, [suggestion.field]: suggestion.suggested }));
-    toast.success('Suggestion applied');
+  const getScoreColor = (score: number) => {
+    if (score >= 80) return 'text-green-600';
+    if (score >= 60) return 'text-yellow-600';
+    return 'text-red-600';
   };
 
   return (
     <div className="space-y-6">
-      {/* SEO Analysis */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex justify-between items-center">
             <div>
-              <CardTitle className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5" />
-                AI SEO Analysis
-              </CardTitle>
+              <CardTitle>SEO Optimization</CardTitle>
               <CardDescription>
-                Get AI-powered insights to improve your page's search engine optimization
+                Optimize your page for search engines with AI assistance
               </CardDescription>
             </div>
             <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={analyzePage}
+              <Button 
+                variant="outline" 
+                onClick={runSEOAnalysis}
                 disabled={analyzing}
+                className="flex items-center gap-2"
               >
+                <Search className="h-4 w-4" />
                 {analyzing ? 'Analyzing...' : 'Analyze SEO'}
               </Button>
-              <Button
-                onClick={optimizeWithAI}
-                disabled={optimizing || !formData.focus_keyword}
+              <Button 
+                onClick={optimizeSEO}
+                disabled={optimizing}
                 className="flex items-center gap-2"
               >
                 <Sparkles className="h-4 w-4" />
@@ -210,210 +123,134 @@ export const SEOOptimizer = ({ page, blocks, onUpdate }: SEOOptimizerProps) => {
             </div>
           </div>
         </CardHeader>
-        {analysis && (
-          <CardContent className="space-y-4">
-            <div className="flex items-center gap-4">
-              <div className="flex-1">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium">SEO Score</span>
-                  <span className="text-sm text-muted-foreground">{analysis.score}/100</span>
+        <CardContent className="space-y-4">
+          {analysis && (
+            <div className="mb-6 p-4 border rounded-lg">
+              <h3 className="font-medium mb-2">SEO Analysis Results</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                <div className="text-center">
+                  <div className={`text-2xl font-bold ${getScoreColor(analysis.overallScore)}`}>
+                    {analysis.overallScore}/100
+                  </div>
+                  <div className="text-sm text-muted-foreground">Overall Score</div>
                 </div>
-                <Progress value={analysis.score} className="h-2" />
-              </div>
-              <Badge variant={analysis.score >= 80 ? 'default' : analysis.score >= 60 ? 'secondary' : 'destructive'}>
-                {analysis.score >= 80 ? 'Good' : analysis.score >= 60 ? 'Fair' : 'Needs Work'}
-              </Badge>
-            </div>
-
-            {analysis.issues.length > 0 && (
-              <div className="space-y-2">
-                <h4 className="font-medium">Issues Found</h4>
-                {analysis.issues.map((issue, index) => (
-                  <div key={index} className="flex items-start gap-2 p-3 border rounded">
-                    {issue.type === 'error' && <AlertTriangle className="h-4 w-4 text-destructive mt-0.5" />}
-                    {issue.type === 'warning' && <AlertTriangle className="h-4 w-4 text-yellow-500 mt-0.5" />}
-                    {issue.type === 'info' && <Info className="h-4 w-4 text-blue-500 mt-0.5" />}
-                    <div className="flex-1">
-                      <p className="text-sm">{issue.message}</p>
-                      {issue.field && (
-                        <p className="text-xs text-muted-foreground">Field: {issue.field}</p>
-                      )}
-                    </div>
+                <div className="text-center">
+                  <div className={`text-2xl font-bold ${getScoreColor(analysis.titleScore)}`}>
+                    {analysis.titleScore}/100
                   </div>
-                ))}
-              </div>
-            )}
-
-            {analysis.suggestions.length > 0 && (
-              <div className="space-y-2">
-                <h4 className="font-medium">AI Suggestions</h4>
-                {analysis.suggestions.map((suggestion, index) => (
-                  <div key={index} className="p-3 border rounded space-y-2">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <p className="font-medium text-sm">{suggestion.field}</p>
-                        <p className="text-sm text-muted-foreground">{suggestion.reason}</p>
-                      </div>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => applySuggestion(suggestion)}
-                      >
-                        Apply
-                      </Button>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-xs text-muted-foreground">Current:</p>
-                      <p className="text-sm bg-muted p-2 rounded">{suggestion.current}</p>
-                      <p className="text-xs text-muted-foreground">Suggested:</p>
-                      <p className="text-sm bg-green-50 p-2 rounded border border-green-200">{suggestion.suggested}</p>
-                    </div>
+                  <div className="text-sm text-muted-foreground">Title</div>
+                </div>
+                <div className="text-center">
+                  <div className={`text-2xl font-bold ${getScoreColor(analysis.descriptionScore)}`}>
+                    {analysis.descriptionScore}/100
                   </div>
-                ))}
+                  <div className="text-sm text-muted-foreground">Description</div>
+                </div>
+                <div className="text-center">
+                  <div className={`text-2xl font-bold ${getScoreColor(analysis.keywordScore)}`}>
+                    {analysis.keywordScore}/100
+                  </div>
+                  <div className="text-sm text-muted-foreground">Keywords</div>
+                </div>
               </div>
-            )}
-          </CardContent>
-        )}
-      </Card>
-
-      {/* SEO Form */}
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Meta Tags</CardTitle>
-            <CardDescription>
-              Configure meta tags for search engines
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="focus-keyword">Focus Keyword</Label>
-              <Input
-                id="focus-keyword"
-                value={formData.focus_keyword}
-                onChange={(e) => handleChange('focus_keyword', e.target.value)}
-                placeholder="main keyword to optimize for"
-              />
-              <p className="text-xs text-muted-foreground">
-                The primary keyword you want this page to rank for
-              </p>
+              
+              {analysis.suggestions && analysis.suggestions.length > 0 && (
+                <div>
+                  <h4 className="font-medium mb-2">Suggestions</h4>
+                  <ul className="space-y-1">
+                    {analysis.suggestions.map((suggestion: string, index: number) => (
+                      <li key={index} className="text-sm text-muted-foreground flex items-start gap-2">
+                        <span className="text-yellow-500">•</span>
+                        {suggestion}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
+          )}
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="meta-title">Meta Title</Label>
+              <Label htmlFor="seo-title">SEO Title</Label>
               <Input
-                id="meta-title"
-                value={formData.meta_title}
-                onChange={(e) => handleChange('meta_title', e.target.value)}
+                id="seo-title"
+                value={seoData.title}
+                onChange={(e) => setSeoData({ ...seoData, title: e.target.value })}
                 placeholder="Page title for search engines"
               />
-              <p className="text-xs text-muted-foreground">
-                {formData.meta_title.length}/60 characters
-              </p>
+              <div className="text-xs text-muted-foreground">
+                {seoData.title.length}/60 characters (optimal: 50-60)
+              </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="meta-description">Meta Description</Label>
-              <Textarea
-                id="meta-description"
-                value={formData.meta_description}
-                onChange={(e) => handleChange('meta_description', e.target.value)}
-                placeholder="Brief description for search results"
-                rows={3}
-              />
-              <p className="text-xs text-muted-foreground">
-                {formData.meta_description.length}/160 characters
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Open Graph</CardTitle>
-            <CardDescription>
-              Social media sharing appearance
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="og-title">OG Title</Label>
+              <Label htmlFor="keywords">Keywords</Label>
               <Input
-                id="og-title"
-                value={formData.og_title}
-                onChange={(e) => handleChange('og_title', e.target.value)}
-                placeholder="Title for social media shares"
+                id="keywords"
+                value={seoData.keywords}
+                onChange={(e) => setSeoData({ ...seoData, keywords: e.target.value })}
+                placeholder="keyword1, keyword2, keyword3"
               />
             </div>
+          </div>
 
-            <div className="space-y-2">
+          <div className="space-y-2">
+            <Label htmlFor="seo-description">Meta Description</Label>
+            <Textarea
+              id="seo-description"
+              value={seoData.description}
+              onChange={(e) => setSeoData({ ...seoData, description: e.target.value })}
+              placeholder="Brief description for search results"
+              rows={3}
+            />
+            <div className="text-xs text-muted-foreground">
+              {seoData.description.length}/160 characters (optimal: 150-160)
+            </div>
+          </div>
+
+          <div className="border-t pt-4">
+            <h3 className="font-medium mb-4">Open Graph (Social Media)</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="og-title">OG Title</Label>
+                <Input
+                  id="og-title"
+                  value={seoData.ogTitle}
+                  onChange={(e) => setSeoData({ ...seoData, ogTitle: e.target.value })}
+                  placeholder="Title for social media sharing"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="og-image">OG Image URL</Label>
+                <Input
+                  id="og-image"
+                  value={seoData.ogImage}
+                  onChange={(e) => setSeoData({ ...seoData, ogImage: e.target.value })}
+                  placeholder="https://example.com/image.jpg"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2 mt-4">
               <Label htmlFor="og-description">OG Description</Label>
               <Textarea
                 id="og-description"
-                value={formData.og_description}
-                onChange={(e) => handleChange('og_description', e.target.value)}
-                placeholder="Description for social media shares"
-                rows={3}
+                value={seoData.ogDescription}
+                onChange={(e) => setSeoData({ ...seoData, ogDescription: e.target.value })}
+                placeholder="Description for social media sharing"
+                rows={2}
               />
             </div>
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="og-image">OG Image URL</Label>
-              <Input
-                id="og-image"
-                value={formData.og_image}
-                onChange={(e) => handleChange('og_image', e.target.value)}
-                placeholder="https://example.com/image.jpg"
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Twitter Cards</CardTitle>
-            <CardDescription>
-              Twitter-specific sharing settings
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="twitter-title">Twitter Title</Label>
-              <Input
-                id="twitter-title"
-                value={formData.twitter_title}
-                onChange={(e) => handleChange('twitter_title', e.target.value)}
-                placeholder="Title for Twitter shares"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="twitter-description">Twitter Description</Label>
-              <Textarea
-                id="twitter-description"
-                value={formData.twitter_description}
-                onChange={(e) => handleChange('twitter_description', e.target.value)}
-                placeholder="Description for Twitter shares"
-                rows={3}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="twitter-image">Twitter Image URL</Label>
-              <Input
-                id="twitter-image"
-                value={formData.twitter_image}
-                onChange={(e) => handleChange('twitter_image', e.target.value)}
-                placeholder="https://example.com/image.jpg"
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Button type="submit" className="w-full">
-          Save SEO Settings
-        </Button>
-      </form>
+          <Button onClick={saveSEO} className="flex items-center gap-2">
+            <Save className="h-4 w-4" />
+            Save SEO Settings
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 };
