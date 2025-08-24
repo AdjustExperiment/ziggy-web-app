@@ -50,9 +50,7 @@ export function TournamentObserversManager({ tournamentId }: TournamentObservers
       // Get user emails through auth.users via a service function
       const observersWithNames = data?.map(observer => ({
         ...observer,
-        user_name: observer.profiles 
-          ? `${observer.profiles.first_name} ${observer.profiles.last_name}`.trim() 
-          : 'Unknown User'
+        user_name: 'Tournament Observer'
       })) || [];
 
       setObservers(observersWithNames);

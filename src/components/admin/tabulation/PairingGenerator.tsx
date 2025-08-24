@@ -490,12 +490,12 @@ export function PairingGenerator({
                       </TableCell>
                       <TableCell>
                         <div className="font-medium">
-                          {pairing.aff_registration?.participant_name || 'Unknown'}
+                          Affirmative Team
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="font-medium">
-                          {pairing.neg_registration?.participant_name || 'Unknown'}
+                          Negative Team
                         </div>
                       </TableCell>
                       <TableCell>

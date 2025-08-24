@@ -122,9 +122,7 @@ export function StaffRevenueCalculator() {
 
       const sharesWithNames = data?.map(share => ({
         ...share,
-        admin_name: share.profiles ? 
-          `${share.profiles.first_name} ${share.profiles.last_name}`.trim() : 
-          'Unknown Admin'
+        admin_name: 'Admin User'
       })) || [];
 
       setStaffShares(sharesWithNames);
