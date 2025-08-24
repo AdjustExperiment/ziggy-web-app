@@ -46,15 +46,16 @@ export const WebsiteBuilder = () => {
   const loadPages = async () => {
     try {
       const { data, error } = await supabase
-        .from('site_pages' as any)
+        .from('site_pages')
         .select('*')
         .order('updated_at', { ascending: false });
 
       if (error) throw error;
-      setPages((data as SitePage[]) || []);
+      setPages(data || []);
     } catch (error) {
       console.error('Error loading pages:', error);
       toast.error('Failed to load pages');
+      setPages([]);
     } finally {
       setLoading(false);
     }
@@ -63,23 +64,24 @@ export const WebsiteBuilder = () => {
   const loadBlocks = async (pageId: string) => {
     try {
       const { data, error } = await supabase
-        .from('site_blocks' as any)
+        .from('site_blocks')
         .select('*')
         .eq('page_id', pageId)
         .order('position', { ascending: true });
 
       if (error) throw error;
-      setBlocks((data as SiteBlock[]) || []);
+      setBlocks(data || []);
     } catch (error) {
       console.error('Error loading blocks:', error);
       toast.error('Failed to load blocks');
+      setBlocks([]);
     }
   };
 
   const createPage = async () => {
     try {
       const { data, error } = await supabase
-        .from('site_pages' as any)
+        .from('site_pages')
         .insert([{
           slug: '/new-page',
           title: 'New Page',
@@ -91,10 +93,11 @@ export const WebsiteBuilder = () => {
         .single();
 
       if (error) throw error;
-      const newPage = data as SitePage;
-      setPages([newPage, ...pages]);
-      setSelectedPage(newPage);
-      toast.success('Page created successfully');
+      if (data) {
+        setPages([data, ...pages]);
+        setSelectedPage(data);
+        toast.success('Page created successfully');
+      }
     } catch (error) {
       console.error('Error creating page:', error);
       toast.error('Failed to create page');
@@ -107,7 +110,7 @@ export const WebsiteBuilder = () => {
     setSaving(true);
     try {
       const { data, error } = await supabase
-        .from('site_pages' as any)
+        .from('site_pages')
         .update(pageData)
         .eq('id', selectedPage.id)
         .select()
@@ -115,11 +118,12 @@ export const WebsiteBuilder = () => {
 
       if (error) throw error;
       
-      const updatedPage = data as SitePage;
-      const updatedPages = pages.map(p => p.id === selectedPage.id ? updatedPage : p);
-      setPages(updatedPages);
-      setSelectedPage(updatedPage);
-      toast.success('Page updated successfully');
+      if (data) {
+        const updatedPages = pages.map(p => p.id === selectedPage.id ? data : p);
+        setPages(updatedPages);
+        setSelectedPage(data);
+        toast.success('Page updated successfully');
+      }
     } catch (error) {
       console.error('Error updating page:', error);
       toast.error('Failed to update page');
@@ -136,7 +140,7 @@ export const WebsiteBuilder = () => {
       if (!page) throw new Error('Page not found');
 
       const pageBlocks = await supabase
-        .from('site_blocks' as any)
+        .from('site_blocks')
         .select('*')
         .eq('page_id', pageId)
         .order('position');
@@ -148,7 +152,7 @@ export const WebsiteBuilder = () => {
       };
 
       const { error: versionError } = await supabase
-        .from('site_page_versions' as any)
+        .from('site_page_versions')
         .insert([{
           page_id: pageId,
           snapshot
@@ -158,7 +162,7 @@ export const WebsiteBuilder = () => {
 
       // Update page status
       const { data, error } = await supabase
-        .from('site_pages' as any)
+        .from('site_pages')
         .update({ 
           status: 'published',
           published_at: new Date().toISOString()
@@ -169,14 +173,14 @@ export const WebsiteBuilder = () => {
 
       if (error) throw error;
       
-      const updatedPage = data as SitePage;
-      const updatedPages = pages.map(p => p.id === pageId ? updatedPage : p);
-      setPages(updatedPages);
-      if (selectedPage?.id === pageId) {
-        setSelectedPage(updatedPage);
+      if (data) {
+        const updatedPages = pages.map(p => p.id === pageId ? data : p);
+        setPages(updatedPages);
+        if (selectedPage?.id === pageId) {
+          setSelectedPage(data);
+        }
+        toast.success('Page published successfully');
       }
-      
-      toast.success('Page published successfully');
     } catch (error) {
       console.error('Error publishing page:', error);
       toast.error('Failed to publish page');
@@ -188,7 +192,7 @@ export const WebsiteBuilder = () => {
   const deletePage = async (pageId: string) => {
     try {
       const { error } = await supabase
-        .from('site_pages' as any)
+        .from('site_pages')
         .delete()
         .eq('id', pageId);
 

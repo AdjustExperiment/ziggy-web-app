@@ -38,7 +38,7 @@ export const BlockEditor = ({ pageId, blocks, onBlocksChange }: BlockEditorProps
   const addBlock = async (type: string) => {
     try {
       const { data, error } = await supabase
-        .from('site_blocks' as any)
+        .from('site_blocks')
         .insert([{
           page_id: pageId,
           type,
@@ -51,9 +51,10 @@ export const BlockEditor = ({ pageId, blocks, onBlocksChange }: BlockEditorProps
 
       if (error) throw error;
       
-      const newBlock = data as SiteBlock;
-      onBlocksChange([...blocks, newBlock]);
-      toast.success('Block added successfully');
+      if (data) {
+        onBlocksChange([...blocks, data]);
+        toast.success('Block added successfully');
+      }
     } catch (error) {
       console.error('Error adding block:', error);
       toast.error('Failed to add block');
@@ -63,7 +64,7 @@ export const BlockEditor = ({ pageId, blocks, onBlocksChange }: BlockEditorProps
   const updateBlock = async (blockId: string, updates: Partial<SiteBlock>) => {
     try {
       const { data, error } = await supabase
-        .from('site_blocks' as any)
+        .from('site_blocks')
         .update(updates)
         .eq('id', blockId)
         .select()
@@ -71,10 +72,11 @@ export const BlockEditor = ({ pageId, blocks, onBlocksChange }: BlockEditorProps
 
       if (error) throw error;
       
-      const updatedBlock = data as SiteBlock;
-      const updatedBlocks = blocks.map(b => b.id === blockId ? updatedBlock : b);
-      onBlocksChange(updatedBlocks);
-      toast.success('Block updated successfully');
+      if (data) {
+        const updatedBlocks = blocks.map(b => b.id === blockId ? data : b);
+        onBlocksChange(updatedBlocks);
+        toast.success('Block updated successfully');
+      }
     } catch (error) {
       console.error('Error updating block:', error);
       toast.error('Failed to update block');
@@ -84,7 +86,7 @@ export const BlockEditor = ({ pageId, blocks, onBlocksChange }: BlockEditorProps
   const deleteBlock = async (blockId: string) => {
     try {
       const { error } = await supabase
-        .from('site_blocks' as any)
+        .from('site_blocks')
         .delete()
         .eq('id', blockId);
 
@@ -115,7 +117,7 @@ export const BlockEditor = ({ pageId, blocks, onBlocksChange }: BlockEditorProps
       
       for (const update of updates) {
         await supabase
-          .from('site_blocks' as any)
+          .from('site_blocks')
           .update({ position: update.position })
           .eq('id', update.id);
       }
