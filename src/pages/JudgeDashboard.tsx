@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Gavel, Calendar, Bell, Users, Clock, CheckCircle, AlertCircle, Eye } from 'lucide-react';
 import { MyJudgings } from '@/components/MyJudgings';
 import JudgeAvailability from '@/components/JudgeAvailability';
+import WeeklyAvailabilityTab from '@/components/WeeklyAvailabilityTab';
 import JudgeNotifications from '@/components/JudgeNotifications';
 
 interface JudgeProfile {
@@ -18,6 +19,7 @@ interface JudgeProfile {
   experience_level: string;
   qualifications: string;
   bio: string;
+  availability?: any;
 }
 
 interface JudgeStats {
@@ -270,7 +272,7 @@ export default function JudgeDashboard() {
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="assignments" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="assignments" className="flex items-center gap-2">
             <Gavel className="h-4 w-4" />
             Assignments
@@ -278,6 +280,10 @@ export default function JudgeDashboard() {
           <TabsTrigger value="availability" className="flex items-center gap-2">
             <Calendar className="h-4 w-4" />
             Availability
+          </TabsTrigger>
+          <TabsTrigger value="weekly" className="flex items-center gap-2">
+            <Clock className="h-4 w-4" />
+            Weekly Schedule
           </TabsTrigger>
           <TabsTrigger value="notifications" className="flex items-center gap-2">
             <Bell className="h-4 w-4" />
@@ -295,6 +301,10 @@ export default function JudgeDashboard() {
 
         <TabsContent value="availability">
           <JudgeAvailability judgeProfileId={judgeProfile.id} />
+        </TabsContent>
+
+        <TabsContent value="weekly">
+          <WeeklyAvailabilityTab judgeProfile={judgeProfile} onUpdate={fetchJudgeProfile} />
         </TabsContent>
 
         <TabsContent value="notifications">

@@ -5,7 +5,7 @@ import { TournamentManager } from '@/components/admin/TournamentManager';
 import { TabulationPlatform } from '@/components/admin/TabulationPlatform';
 import { EmailManager } from '@/components/admin/EmailManager';
 import { PaymentManager } from '@/components/admin/PaymentManager';
-import { JudgesManager } from '@/components/admin/JudgesManager';
+import { EnhancedJudgesManager } from '@/components/EnhancedJudgesManager';
 import { UserManager } from '@/components/admin/UserManager';
 import { DebateFormatsManager } from '@/components/admin/DebateFormatsManager';
 import { BallotTemplatesManager } from '@/components/admin/BallotTemplatesManager';
@@ -56,7 +56,7 @@ export default function AdminDashboard() {
         </TabsContent>
         
         <TabsContent value="judges">
-          <JudgesManager />
+          <EnhancedJudgesManager />
         </TabsContent>
         
         <TabsContent value="users">

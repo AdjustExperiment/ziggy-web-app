@@ -141,53 +141,59 @@ export function UserManager() {
 
   const createUser = async () => {
     try {
-      // Create user in auth
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email: formData.email,
-        password: formData.password,
-        email_confirm: true,
-        user_metadata: {
-          first_name: formData.first_name,
-          last_name: formData.last_name,
-          role: formData.role
+      // Use admin-create-user edge function
+      const { data: result, error: functionError } = await supabase.functions.invoke('admin-create-user', {
+        body: {
+          email: formData.email,
+          password: formData.password,
+          firstName: formData.first_name,
+          lastName: formData.last_name,
+          role: formData.role,
+          phone: formData.phone || null,
+          state: formData.state || null,
+          region: formData.region || null,
+          timeZone: formData.time_zone || null
         }
       });
 
-      if (authError) throw authError;
+      if (functionError) throw functionError;
 
-      // Update profile with additional info
-      if (authData.user) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({
-            first_name: formData.first_name,
-            last_name: formData.last_name,
-            role: formData.role,
-            phone: formData.phone || null,
-            state: formData.state || null,
-            region: formData.region || null,
-            time_zone: formData.time_zone || null
-          })
-          .eq('user_id', authData.user.id);
+      // Create judge profile if role is judge
+      if (formData.role === 'judge' && result?.user?.id) {
+        const { error: judgeError } = await supabase
+          .from('judge_profiles')
+          .insert({
+            user_id: result.user.id,
+            name: formData.judge_name || `${formData.first_name} ${formData.last_name}`,
+            email: formData.judge_email || formData.email,
+            experience_level: formData.experience_level,
+            bio: formData.bio || null,
+            qualifications: formData.qualifications || null,
+            specializations: formData.specializations,
+            availability: {
+              monday: { morning: false, afternoon: false, evening: false },
+              tuesday: { morning: false, afternoon: false, evening: false },
+              wednesday: { morning: false, afternoon: false, evening: false },
+              thursday: { morning: false, afternoon: false, evening: false },
+              friday: { morning: false, afternoon: false, evening: false },
+              saturday: { morning: false, afternoon: false, evening: false },
+              sunday: { morning: false, afternoon: false, evening: false }
+            }
+          });
 
-        if (profileError) throw profileError;
+        if (judgeError) throw judgeError;
 
-        // Create judge profile if role is judge
-        if (formData.role === 'judge') {
-          const { error: judgeError } = await supabase
-            .from('judge_profiles')
-            .insert({
-              user_id: authData.user.id,
-              name: formData.judge_name || `${formData.first_name} ${formData.last_name}`,
-              email: formData.judge_email || formData.email,
-              experience_level: formData.experience_level,
-              bio: formData.bio || null,
-              qualifications: formData.qualifications || null,
-              specializations: formData.specializations
-            });
+        // Create welcome notification for judge
+        const { error: notificationError } = await supabase
+          .from('judge_notifications')
+          .insert({
+            judge_profile_id: result.user.id,
+            title: 'Welcome to the Judging Panel',
+            message: 'Please set your weekly availability in your Judge Dashboard to receive appropriate judging assignments.',
+            type: 'welcome'
+          });
 
-          if (judgeError) throw judgeError;
-        }
+        if (notificationError) console.warn('Failed to create welcome notification:', notificationError);
       }
 
       toast({

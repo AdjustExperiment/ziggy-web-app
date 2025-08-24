@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from '@/components/ui/use-toast';
+import WeeklyAvailabilityEditor from '@/components/WeeklyAvailabilityEditor';
 import { Plus, Edit2, Trash2, Gavel, Phone, Mail } from 'lucide-react';
 import { JudgeProfile } from '@/types/database';
 

@@ -16,6 +16,7 @@ import { Switch } from "@/components/ui/switch"
 import { toast } from '@/components/ui/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import MultiJudgePanelManager from './MultiJudgePanelManager';
+import { TournamentContentManager } from './TournamentContentManager';
 
 interface Tournament {
   id: string;
@@ -196,13 +197,22 @@ export function TournamentManager() {
 
       {(tournamentId || selectedTournamentId) ? (
         <Tabs defaultValue="details" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="details">Tournament Details</TabsTrigger>
+            <TabsTrigger value="content">Content</TabsTrigger>
             <TabsTrigger value="panels">Multi-Judge Panels</TabsTrigger>
           </TabsList>
 
           <TabsContent value="details">
             {renderTournamentForm()}
+          </TabsContent>
+
+          <TabsContent value="content">
+            <TournamentContentManager 
+              tournamentId={tournamentId || selectedTournamentId} 
+              content={null}
+              onContentUpdate={(content) => console.log('Content updated:', content)}
+            />
           </TabsContent>
 
           <TabsContent value="panels">
