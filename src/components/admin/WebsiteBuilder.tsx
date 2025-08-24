@@ -51,7 +51,14 @@ export const WebsiteBuilder = () => {
         .order('updated_at', { ascending: false });
 
       if (error) throw error;
-      setPages(data || []);
+      
+      // Type assertion to ensure status is properly typed
+      const typedPages: SitePage[] = (data || []).map(page => ({
+        ...page,
+        status: page.status as 'draft' | 'published'
+      }));
+      
+      setPages(typedPages);
     } catch (error) {
       console.error('Error loading pages:', error);
       toast.error('Failed to load pages');
@@ -94,8 +101,12 @@ export const WebsiteBuilder = () => {
 
       if (error) throw error;
       if (data) {
-        setPages([data, ...pages]);
-        setSelectedPage(data);
+        const typedPage: SitePage = {
+          ...data,
+          status: data.status as 'draft' | 'published'
+        };
+        setPages([typedPage, ...pages]);
+        setSelectedPage(typedPage);
         toast.success('Page created successfully');
       }
     } catch (error) {
@@ -119,9 +130,13 @@ export const WebsiteBuilder = () => {
       if (error) throw error;
       
       if (data) {
-        const updatedPages = pages.map(p => p.id === selectedPage.id ? data : p);
+        const typedPage: SitePage = {
+          ...data,
+          status: data.status as 'draft' | 'published'
+        };
+        const updatedPages = pages.map(p => p.id === selectedPage.id ? typedPage : p);
         setPages(updatedPages);
-        setSelectedPage(data);
+        setSelectedPage(typedPage);
         toast.success('Page updated successfully');
       }
     } catch (error) {
@@ -146,7 +161,17 @@ export const WebsiteBuilder = () => {
         .order('position');
 
       const snapshot = {
-        page,
+        page: {
+          id: page.id,
+          slug: page.slug,
+          title: page.title,
+          description: page.description,
+          status: page.status,
+          seo: page.seo,
+          published_at: page.published_at,
+          created_at: page.created_at,
+          updated_at: page.updated_at
+        },
         blocks: pageBlocks.data || [],
         published_at: new Date().toISOString()
       };
@@ -155,7 +180,7 @@ export const WebsiteBuilder = () => {
         .from('site_page_versions')
         .insert([{
           page_id: pageId,
-          snapshot
+          snapshot: snapshot as any
         }]);
 
       if (versionError) throw versionError;
@@ -174,10 +199,14 @@ export const WebsiteBuilder = () => {
       if (error) throw error;
       
       if (data) {
-        const updatedPages = pages.map(p => p.id === pageId ? data : p);
+        const typedPage: SitePage = {
+          ...data,
+          status: data.status as 'draft' | 'published'
+        };
+        const updatedPages = pages.map(p => p.id === pageId ? typedPage : p);
         setPages(updatedPages);
         if (selectedPage?.id === pageId) {
-          setSelectedPage(data);
+          setSelectedPage(typedPage);
         }
         toast.success('Page published successfully');
       }
