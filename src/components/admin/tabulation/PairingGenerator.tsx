@@ -3,56 +3,83 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from '@/components/ui/use-toast';
-import { Shuffle, Play, Lock, Unlock, Trash2, Settings } from 'lucide-react';
-import { generatePowerMatchPairings, calculateStandings, PairingConstraints, PairingOptions } from '@/utils/pairingAlgorithms';
-import { Registration, JudgeProfile, Round } from '@/types/database';
+import { 
+  Plus, 
+  Play, 
+  Lock, 
+  Unlock, 
+  Users, 
+  Calendar, 
+  MapPin, 
+  Shuffle,
+  Eye,
+  EyeOff
+} from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
 
 interface PairingGeneratorProps {
   tournamentId: string;
-  rounds: Round[];
-  registrations: Registration[];
-  judges: JudgeProfile[];
+  rounds: any[];
+  registrations: any[];
+  judges: any[];
   onRoundsUpdate: () => void;
   onToggleRoundLock: (roundId: string, locked: boolean) => void;
 }
 
-export function PairingGenerator({
-  tournamentId,
-  rounds,
-  registrations,
+interface Round {
+  id: string;
+  name: string;
+  round_number: number;
+  scheduled_date: string;
+  status: string;
+  tournament_id: string;
+}
+
+interface Pairing {
+  id: string;
+  round_id: string;
+  aff_registration_id: string;
+  neg_registration_id: string;
+  judge_id?: string;
+  room?: string;
+  scheduled_time?: string;
+  status: string;
+  released: boolean;
+}
+
+export function PairingGenerator({ 
+  tournamentId, 
+  rounds, 
+  registrations, 
   judges,
   onRoundsUpdate,
-  onToggleRoundLock
+  onToggleRoundLock 
 }: PairingGeneratorProps) {
+  const [pairings, setPairings] = useState<Pairing[]>([]);
   const [selectedRound, setSelectedRound] = useState<string>('');
-  const [pairingOptions, setPairingOptions] = useState<PairingOptions>({
-    method: 'high_high',
-    clubProtect: true,
-    avoidRematches: true
-  });
-  const [pairings, setPairings] = useState<any[]>([]);
+  const [isCreatingRound, setIsCreatingRound] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [constraints, setConstraints] = useState<PairingConstraints>({
-    teamConflicts: new Map(),
-    judgeTeamConflicts: new Map(),
-    judgeSchoolConflicts: new Map(),
-    avoidRematches: true,
-    clubProtect: true
+  const [newRound, setNewRound] = useState({
+    name: '',
+    scheduled_date: '',
+    round_number: rounds.length + 1
   });
 
   useEffect(() => {
     if (selectedRound) {
-      fetchRoundPairings();
-      loadConstraints();
+      fetchPairings();
     }
   }, [selectedRound]);
 
-  const fetchRoundPairings = async () => {
+  const fetchPairings = async () => {
     if (!selectedRound) return;
 
     try {
@@ -60,12 +87,12 @@ export function PairingGenerator({
         .from('pairings')
         .select(`
           *,
-          aff_registration:tournament_registrations!aff_registration_id(participant_name, school_organization),
-          neg_registration:tournament_registrations!neg_registration_id(participant_name, school_organization),
+          aff_registration:tournament_registrations!aff_registration_id(participant_name),
+          neg_registration:tournament_registrations!neg_registration_id(participant_name),
           judge_profiles(name)
         `)
         .eq('round_id', selectedRound)
-        .order('created_at');
+        .order('room');
 
       if (error) throw error;
       setPairings(data || []);
@@ -74,83 +101,91 @@ export function PairingGenerator({
     }
   };
 
-  const loadConstraints = async () => {
-    // Temporarily disable constraint loading until database types are updated
-    setConstraints({
-      teamConflicts: new Map(),
-      judgeTeamConflicts: new Map(),
-      judgeSchoolConflicts: new Map(),
-      avoidRematches: pairingOptions.avoidRematches,
-      clubProtect: pairingOptions.clubProtect
-    });
-  };
-
-  const generatePairings = async () => {
-    if (!selectedRound) {
-      toast({
-        title: "Error",
-        description: "Please select a round",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setLoading(true);
-    
+  const createRound = async () => {
     try {
-      // Get previous pairings for rematch avoidance
-      const { data: allPairings } = await supabase
-        .from('pairings')
-        .select('aff_registration_id, neg_registration_id')
-        .eq('tournament_id', tournamentId)
-        .neq('round_id', selectedRound);
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('rounds')
+        .insert([{
+          tournament_id: tournamentId,
+          name: newRound.name,
+          round_number: newRound.round_number,
+          scheduled_date: newRound.scheduled_date || null,
+          status: 'upcoming'
+        }])
+        .select()
+        .single();
 
-      const previousPairings = allPairings?.map(p => ({
-        aff: p.aff_registration_id,
-        neg: p.neg_registration_id
-      })) || [];
-
-      // Calculate current standings
-      const { data: existingPairings } = await supabase
-        .from('pairings')
-        .select('aff_registration_id, neg_registration_id, result')
-        .eq('tournament_id', tournamentId);
-
-      const standings = calculateStandings(registrations, existingPairings || []);
-
-      // Generate new pairings
-      const newPairings = generatePowerMatchPairings(
-        standings,
-        judges,
-        constraints,
-        pairingOptions,
-        previousPairings
-      );
-
-      // Insert pairings into database
-      const pairingInserts = newPairings.map(pairing => ({
-        tournament_id: tournamentId,
-        round_id: selectedRound,
-        aff_registration_id: pairing.affRegistrationId,
-        neg_registration_id: pairing.negRegistrationId,
-        judge_id: pairing.judgeId || null,
-        room: pairing.room || null
-      }));
-
-      const { error: insertError } = await supabase
-        .from('pairings')
-        .insert(pairingInserts);
-
-      if (insertError) throw insertError;
+      if (error) throw error;
 
       toast({
         title: "Success",
-        description: `Generated ${newPairings.length} pairings successfully`,
+        description: "Round created successfully",
       });
 
-      fetchRoundPairings();
+      setIsCreatingRound(false);
+      setNewRound({
+        name: '',
+        scheduled_date: '',
+        round_number: rounds.length + 2
+      });
+      onRoundsUpdate();
     } catch (error: any) {
-      console.error('Error generating pairings:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create round",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const generatePairings = async () => {
+    if (!selectedRound) return;
+
+    try {
+      setLoading(true);
+
+      // Simple random pairing algorithm
+      const availableRegistrations = [...registrations];
+      const newPairings = [];
+
+      // Shuffle registrations
+      for (let i = availableRegistrations.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [availableRegistrations[i], availableRegistrations[j]] = [availableRegistrations[j], availableRegistrations[i]];
+      }
+
+      // Create pairs
+      for (let i = 0; i < availableRegistrations.length - 1; i += 2) {
+        const aff = availableRegistrations[i];
+        const neg = availableRegistrations[i + 1];
+        
+        newPairings.push({
+          round_id: selectedRound,
+          tournament_id: tournamentId,
+          aff_registration_id: aff.id,
+          neg_registration_id: neg.id,
+          room: `Room ${Math.floor(i / 2) + 1}`,
+          status: 'scheduled',
+          released: false
+        });
+      }
+
+      const { error } = await supabase
+        .from('pairings')
+        .insert(newPairings);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `Generated ${newPairings.length} pairings`,
+      });
+
+      fetchPairings();
+    } catch (error: any) {
       toast({
         title: "Error",
         description: error.message || "Failed to generate pairings",
@@ -161,28 +196,75 @@ export function PairingGenerator({
     }
   };
 
-  const clearPairings = async () => {
+  const assignJudge = async (pairingId: string, judgeId: string) => {
+    try {
+      const { error } = await supabase
+        .from('pairings')
+        .update({ judge_id: judgeId || null })
+        .eq('id', pairingId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Judge assigned successfully",
+      });
+
+      fetchPairings();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to assign judge",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const togglePairingRelease = async (pairingId: string, released: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('pairings')
+        .update({ released: !released })
+        .eq('id', pairingId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `Pairing ${!released ? 'released' : 'hidden'}`,
+      });
+
+      fetchPairings();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to update pairing visibility",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const releaseAllPairings = async () => {
     if (!selectedRound) return;
 
     try {
       const { error } = await supabase
         .from('pairings')
-        .delete()
+        .update({ released: true })
         .eq('round_id', selectedRound);
 
       if (error) throw error;
 
       toast({
         title: "Success",
-        description: "Pairings cleared successfully",
+        description: "All pairings released to participants",
       });
 
-      fetchRoundPairings();
+      fetchPairings();
     } catch (error: any) {
-      console.error('Error clearing pairings:', error);
       toast({
         title: "Error",
-        description: "Failed to clear pairings",
+        description: "Failed to release pairings",
         variant: "destructive",
       });
     }
@@ -192,152 +274,288 @@ export function PairingGenerator({
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">Pairing Generator</h2>
+          <p className="text-muted-foreground">Create rounds and manage pairings for debates</p>
+        </div>
+
+        <div className="flex gap-2">
+          <Dialog open={isCreatingRound} onOpenChange={setIsCreatingRound}>
+            <DialogTrigger asChild>
+              <Button onClick={() => setIsCreatingRound(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Create Round
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create New Round</DialogTitle>
+                <DialogDescription>
+                  Create a new debate round for this tournament
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="round-name">Round Name</Label>
+                  <Input
+                    id="round-name"
+                    value={newRound.name}
+                    onChange={(e) => setNewRound({...newRound, name: e.target.value})}
+                    placeholder="e.g., Round 1, Quarterfinals"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="round-number">Round Number</Label>
+                  <Input
+                    id="round-number"
+                    type="number"
+                    value={newRound.round_number}
+                    onChange={(e) => setNewRound({...newRound, round_number: parseInt(e.target.value)})}
+                    min="1"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="scheduled-date">Scheduled Date (Optional)</Label>
+                  <Input
+                    id="scheduled-date"
+                    type="date"
+                    value={newRound.scheduled_date}
+                    onChange={(e) => setNewRound({...newRound, scheduled_date: e.target.value})}
+                  />
+                </div>
+              </div>
+              
+              <div className="flex gap-2 justify-end">
+                <Button variant="outline" onClick={() => setIsCreatingRound(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={createRound} disabled={loading || !newRound.name}>
+                  {loading ? 'Creating...' : 'Create Round'}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </div>
+
+      {/* Round Selection */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Shuffle className="h-5 w-5" />
-            Pairing Generator
-          </CardTitle>
-          <CardDescription>
-            Generate automated pairings using power-matching algorithms
-          </CardDescription>
+          <CardTitle>Round Management</CardTitle>
+          <CardDescription>Select a round to manage pairings</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>Round</Label>
-              <Select value={selectedRound} onValueChange={setSelectedRound}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select round" />
-                </SelectTrigger>
-                <SelectContent>
-                  {rounds.map(round => (
-                     <SelectItem key={round.id} value={round.id}>
-                       {round.name} {round.status === 'locked' && '🔒'}
-                     </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Pairing Method</Label>
-              <Select
-                value={pairingOptions.method}
-                onValueChange={(value: any) => setPairingOptions(prev => ({ ...prev, method: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="high_high">High-High</SelectItem>
-                  <SelectItem value="high_low">High-Low</SelectItem>
-                  <SelectItem value="random">Random</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <div>
+            <Label htmlFor="round-select">Select Round</Label>
+            <Select value={selectedRound} onValueChange={setSelectedRound}>
+              <SelectTrigger>
+                <SelectValue placeholder="Choose a round..." />
+              </SelectTrigger>
+              <SelectContent>
+                {rounds.map((round) => (
+                  <SelectItem key={round.id} value={round.id}>
+                    <div className="flex items-center gap-2">
+                      <span>{round.name}</span>
+                      <Badge variant={round.status === 'locked' ? 'destructive' : 'secondary'}>
+                        {round.status}
+                      </Badge>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="club-protect"
-                checked={pairingOptions.clubProtect}
-                onCheckedChange={(checked) => setPairingOptions(prev => ({ ...prev, clubProtect: checked }))}
-              />
-              <Label htmlFor="club-protect">Club Protect</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="avoid-rematches"
-                checked={pairingOptions.avoidRematches}
-                onCheckedChange={(checked) => setPairingOptions(prev => ({ ...prev, avoidRematches: checked }))}
-              />
-              <Label htmlFor="avoid-rematches">Avoid Rematches</Label>
-            </div>
-          </div>
+          {selectedRoundData && (
+            <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+              <div className="flex items-center gap-4">
+                <div>
+                  <div className="font-medium">{selectedRoundData.name}</div>
+                  <div className="text-sm text-muted-foreground">
+                    Round {selectedRoundData.round_number}
+                    {selectedRoundData.scheduled_date && (
+                      <> • {new Date(selectedRoundData.scheduled_date).toLocaleDateString()}</>
+                    )}
+                  </div>
+                </div>
+                
+                <Badge variant={selectedRoundData.status === 'locked' ? 'destructive' : 'secondary'}>
+                  {selectedRoundData.status === 'locked' ? (
+                    <>
+                      <Lock className="h-3 w-3 mr-1" />
+                      Locked
+                    </>
+                  ) : (
+                    <>
+                      <Unlock className="h-3 w-3 mr-1" />
+                      {selectedRoundData.status}
+                    </>
+                  )}
+                </Badge>
+              </div>
 
-          <div className="flex gap-2">
-            <Button
-              onClick={generatePairings}
-              disabled={!selectedRound || loading || selectedRoundData?.status === 'locked'}
-              className="flex-1"
-            >
-              {loading ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-              ) : (
-                <Play className="h-4 w-4 mr-2" />
-              )}
-              Generate Pairings
-            </Button>
-            <Button
-              variant="outline"
-              onClick={clearPairings}
-              disabled={!selectedRound || selectedRoundData?.status === 'locked'}
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Clear
-            </Button>
-            {selectedRoundData && (
-              <Button
-                variant="outline"
-                 onClick={() => onToggleRoundLock(selectedRound, selectedRoundData.status === 'locked')}
-               >
-                 {selectedRoundData.status === 'locked' ? (
-                  <Unlock className="h-4 w-4" />
-                ) : (
-                  <Lock className="h-4 w-4" />
+              <div className="flex gap-2">
+                {pairings.length === 0 && selectedRoundData.status !== 'locked' && (
+                  <Button
+                    onClick={generatePairings}
+                    disabled={loading || registrations.length < 2}
+                  >
+                    <Shuffle className="h-4 w-4 mr-2" />
+                    Generate Pairings
+                  </Button>
                 )}
-              </Button>
-            )}
-          </div>
+                
+                {pairings.length > 0 && (
+                  <Button
+                    onClick={releaseAllPairings}
+                    disabled={loading}
+                    variant="outline"
+                  >
+                    <Eye className="h-4 w-4 mr-2" />
+                    Release All
+                  </Button>
+                )}
+                
+                <Button
+                  onClick={() => onToggleRoundLock(selectedRoundData.id, selectedRoundData.status !== 'locked')}
+                  variant={selectedRoundData.status === 'locked' ? 'outline' : 'secondary'}
+                >
+                  {selectedRoundData.status === 'locked' ? (
+                    <>
+                      <Unlock className="h-4 w-4 mr-2" />
+                      Unlock Round
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="h-4 w-4 mr-2" />
+                      Lock Round
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
+      {/* Pairings Table */}
       {selectedRound && (
         <Card>
           <CardHeader>
-            <CardTitle>Current Pairings</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Pairings ({pairings.length})
+            </CardTitle>
             <CardDescription>
-              {pairings.length} pairings for {selectedRoundData?.name}
+              Manage debate pairings for the selected round
             </CardDescription>
           </CardHeader>
           <CardContent>
             {pairings.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-muted-foreground">No pairings generated yet</p>
+              <div className="text-center py-8 text-muted-foreground">
+                <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>No pairings generated for this round</p>
+                {registrations.length >= 2 && selectedRoundData?.status !== 'locked' && (
+                  <Button onClick={generatePairings} className="mt-4" disabled={loading}>
+                    <Shuffle className="h-4 w-4 mr-2" />
+                    Generate Pairings
+                  </Button>
+                )}
               </div>
             ) : (
-              <div className="space-y-4">
-                {pairings.map((pairing, index) => (
-                  <Card key={pairing.id} className="border-l-4 border-l-primary/20">
-                    <CardContent className="pt-4">
-                      <div className="grid grid-cols-3 gap-4">
-                        <div>
-                          <Badge variant="outline" className="mb-2">AFF</Badge>
-                          <p className="font-medium">{pairing.aff_registration?.participant_name}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {pairing.aff_registration?.school_organization || 'Independent'}
-                          </p>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Room</TableHead>
+                    <TableHead>Affirmative</TableHead>
+                    <TableHead>Negative</TableHead>
+                    <TableHead>Judge</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Visibility</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {pairings.map((pairing) => (
+                    <TableRow key={pairing.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <MapPin className="h-4 w-4 text-muted-foreground" />
+                          {pairing.room || 'TBD'}
                         </div>
-                        <div>
-                          <Badge variant="secondary" className="mb-2">NEG</Badge>
-                          <p className="font-medium">{pairing.neg_registration?.participant_name}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {pairing.neg_registration?.school_organization || 'Independent'}
-                          </p>
+                      </TableCell>
+                      <TableCell>
+                        <div className="font-medium">
+                          {pairing.aff_registration?.participant_name || 'Unknown'}
                         </div>
-                        <div>
-                          <Badge variant="outline" className="mb-2">Judge</Badge>
-                          <p className="font-medium">{pairing.judge_profiles?.name || 'TBD'}</p>
-                          <p className="text-sm text-muted-foreground">
-                            Room: {pairing.room || 'TBD'}
-                          </p>
+                      </TableCell>
+                      <TableCell>
+                        <div className="font-medium">
+                          {pairing.neg_registration?.participant_name || 'Unknown'}
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+                      </TableCell>
+                      <TableCell>
+                        <Select 
+                          value={pairing.judge_id || ''} 
+                          onValueChange={(value) => assignJudge(pairing.id, value)}
+                          disabled={selectedRoundData?.status === 'locked'}
+                        >
+                          <SelectTrigger className="w-40">
+                            <SelectValue placeholder="Assign judge" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="">No judge assigned</SelectItem>
+                            {judges.map((judge) => (
+                              <SelectItem key={judge.id} value={judge.id}>
+                                {judge.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={pairing.status === 'completed' ? 'default' : 'secondary'}>
+                          {pairing.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => togglePairingRelease(pairing.id, pairing.released)}
+                          disabled={selectedRoundData?.status === 'locked'}
+                        >
+                          {pairing.released ? (
+                            <>
+                              <Eye className="h-4 w-4 mr-1" />
+                              Visible
+                            </>
+                          ) : (
+                            <>
+                              <EyeOff className="h-4 w-4 mr-1" />
+                              Hidden
+                            </>
+                          )}
+                        </Button>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          {pairing.scheduled_time && (
+                            <Badge variant="outline" className="text-xs">
+                              <Calendar className="h-3 w-3 mr-1" />
+                              {new Date(pairing.scheduled_time).toLocaleTimeString()}
+                            </Badge>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             )}
           </CardContent>
         </Card>

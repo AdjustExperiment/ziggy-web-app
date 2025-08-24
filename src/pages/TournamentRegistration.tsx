@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -16,6 +15,8 @@ import { toast } from '@/components/ui/use-toast';
 import PaymentButtons from '@/components/PaymentButtons';
 import { Registration } from '@/types/database';
 import { AlertCircle, CheckCircle, Info } from 'lucide-react';
+import PromoCodeInput from '@/components/PromoCodeInput';
+import { Separator } from '@/components/ui/separator';
 
 interface Tournament {
   id: string;
@@ -64,6 +65,8 @@ export default function TournamentRegistration() {
     status: 'idle' | 'checking' | 'found' | 'not_found';
     judgeProfile?: any;
   }>({ status: 'idle' });
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [appliedPromoCode, setAppliedPromoCode] = useState('');
 
   useEffect(() => {
     const fetchTournament = async () => {
@@ -158,7 +161,9 @@ export default function TournamentRegistration() {
         },
         payment_status: 'pending',
         user_id: user?.id || null,
-        requested_judge_profile_id: judgeValidation.judgeProfile?.id || null
+        requested_judge_profile_id: judgeValidation.judgeProfile?.id || null,
+        amount_paid: Math.max(0, tournament?.registration_fee - discountAmount),
+        promo_code: appliedPromoCode || null
       };
 
       const { data, error } = await supabase
@@ -220,6 +225,11 @@ export default function TournamentRegistration() {
     });
   };
 
+  const handlePromoCodeDiscount = (discount: number, promoCode: string) => {
+    setDiscountAmount(discount);
+    setAppliedPromoCode(promoCode);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -241,6 +251,8 @@ export default function TournamentRegistration() {
       </div>
     );
   }
+
+  const finalAmount = Math.max(0, (tournament?.registration_fee || 0) - discountAmount);
 
   const renderRegistrationForm = () => (
     <Card>
@@ -346,6 +358,35 @@ export default function TournamentRegistration() {
             </div>
           </div>
 
+          {/* Promo Code Section */}
+          {tournament && (
+            <div className="space-y-4">
+              <PromoCodeInput
+                tournamentId={tournament.id}
+                originalAmount={tournament.registration_fee}
+                onDiscountApplied={handlePromoCodeDiscount}
+              />
+              
+              {discountAmount > 0 && (
+                <div className="bg-green-50 border border-green-200 p-4 rounded-lg">
+                  <div className="flex justify-between items-center">
+                    <span>Registration Fee:</span>
+                    <span>${tournament.registration_fee.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-green-600">
+                    <span>Promo Code Discount ({appliedPromoCode}):</span>
+                    <span>-${discountAmount.toFixed(2)}</span>
+                  </div>
+                  <Separator className="my-2" />
+                  <div className="flex justify-between items-center font-bold">
+                    <span>Final Amount:</span>
+                    <span>${finalAmount.toFixed(2)}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Additional Information */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Additional Information</h3>
@@ -432,7 +473,10 @@ export default function TournamentRegistration() {
       <CardHeader>
         <CardTitle>Complete Payment</CardTitle>
         <CardDescription>
-          Registration Fee: ${tournament?.registration_fee} - Complete payment to secure your spot
+          {discountAmount > 0 
+            ? `Final Amount: $${finalAmount} (${appliedPromoCode} discount applied)` 
+            : `Registration Fee: $${tournament?.registration_fee}`
+          } - Complete payment to secure your spot
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -451,12 +495,12 @@ export default function TournamentRegistration() {
         )}
         
         <PaymentButtons 
-          amount={tournament?.registration_fee || 0}
+          amount={finalAmount}
           onPayPalPayment={async () => {
-            console.log('PayPal payment initiated');
+            console.log('PayPal payment initiated for:', finalAmount);
           }}
           onVenmoPayment={async () => {
-            console.log('Venmo payment initiated');
+            console.log('Venmo payment initiated for:', finalAmount);
           }}
         />
 

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -17,6 +16,7 @@ import { toast } from '@/components/ui/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import MultiJudgePanelManager from './MultiJudgePanelManager';
 import { TournamentContentManager } from './TournamentContentManager';
+import { TournamentObserversManager } from './TournamentObserversManager';
 
 interface Tournament {
   id: string;
@@ -197,10 +197,11 @@ export function TournamentManager() {
 
       {(tournamentId || selectedTournamentId) ? (
         <Tabs defaultValue="details" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="details">Tournament Details</TabsTrigger>
             <TabsTrigger value="content">Content</TabsTrigger>
             <TabsTrigger value="panels">Multi-Judge Panels</TabsTrigger>
+            <TabsTrigger value="observers">Observers</TabsTrigger>
           </TabsList>
 
           <TabsContent value="details">
@@ -217,6 +218,10 @@ export function TournamentManager() {
 
           <TabsContent value="panels">
             <MultiJudgePanelManager tournamentId={tournamentId || selectedTournamentId} />
+          </TabsContent>
+
+          <TabsContent value="observers">
+            <TournamentObserversManager tournamentId={tournamentId || selectedTournamentId} />
           </TabsContent>
         </Tabs>
       ) : (

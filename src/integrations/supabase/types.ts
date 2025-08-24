@@ -70,6 +70,7 @@ export type Database = {
           id: string
           is_default: boolean
           schema: Json
+          supported_tags: string[]
           template_key: string
           tournament_id: string | null
           updated_at: string
@@ -81,6 +82,7 @@ export type Database = {
           id?: string
           is_default?: boolean
           schema?: Json
+          supported_tags?: string[]
           template_key: string
           tournament_id?: string | null
           updated_at?: string
@@ -92,6 +94,7 @@ export type Database = {
           id?: string
           is_default?: boolean
           schema?: Json
+          supported_tags?: string[]
           template_key?: string
           tournament_id?: string | null
           updated_at?: string
@@ -606,6 +609,7 @@ export type Database = {
           created_at: string
           email: string
           experience_level: string
+          experience_years: number
           id: string
           name: string
           phone: string | null
@@ -620,6 +624,7 @@ export type Database = {
           created_at?: string
           email: string
           experience_level?: string
+          experience_years?: number
           id?: string
           name: string
           phone?: string | null
@@ -634,6 +639,7 @@ export type Database = {
           created_at?: string
           email?: string
           experience_level?: string
+          experience_years?: number
           id?: string
           name?: string
           phone?: string | null
@@ -955,6 +961,117 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      promo_codes: {
+        Row: {
+          active: boolean
+          allowed_emails: string[]
+          allowed_user_ids: string[]
+          code: string
+          created_at: string
+          discount_type: string
+          discount_value: number
+          id: string
+          max_redemptions: number | null
+          per_user_limit: number
+          tournament_id: string | null
+          updated_at: string
+          valid_from: string | null
+          valid_to: string | null
+        }
+        Insert: {
+          active?: boolean
+          allowed_emails?: string[]
+          allowed_user_ids?: string[]
+          code: string
+          created_at?: string
+          discount_type: string
+          discount_value: number
+          id?: string
+          max_redemptions?: number | null
+          per_user_limit?: number
+          tournament_id?: string | null
+          updated_at?: string
+          valid_from?: string | null
+          valid_to?: string | null
+        }
+        Update: {
+          active?: boolean
+          allowed_emails?: string[]
+          allowed_user_ids?: string[]
+          code?: string
+          created_at?: string
+          discount_type?: string
+          discount_value?: number
+          id?: string
+          max_redemptions?: number | null
+          per_user_limit?: number
+          tournament_id?: string | null
+          updated_at?: string
+          valid_from?: string | null
+          valid_to?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promo_codes_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      promo_redemptions: {
+        Row: {
+          amount_discounted: number
+          created_at: string
+          id: string
+          promo_code_id: string
+          registration_id: string | null
+          tournament_id: string | null
+          user_id: string
+        }
+        Insert: {
+          amount_discounted: number
+          created_at?: string
+          id?: string
+          promo_code_id: string
+          registration_id?: string | null
+          tournament_id?: string | null
+          user_id: string
+        }
+        Update: {
+          amount_discounted?: number
+          created_at?: string
+          id?: string
+          promo_code_id?: string
+          registration_id?: string | null
+          tournament_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promo_redemptions_promo_code_id_fkey"
+            columns: ["promo_code_id"]
+            isOneToOne: false
+            referencedRelation: "promo_codes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promo_redemptions_registration_id_fkey"
+            columns: ["registration_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_registrations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promo_redemptions_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       results_recent: {
         Row: {
@@ -1343,6 +1460,35 @@ export type Database = {
           },
         ]
       }
+      tournament_observers: {
+        Row: {
+          created_at: string
+          id: string
+          tournament_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          tournament_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          tournament_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tournament_observers_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tournament_payment_settings: {
         Row: {
           created_at: string
@@ -1468,6 +1614,44 @@ export type Database = {
           },
         ]
       }
+      tournament_staff_shares: {
+        Row: {
+          active: boolean
+          admin_user_id: string
+          created_at: string
+          id: string
+          percentage: number
+          tournament_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          admin_user_id: string
+          created_at?: string
+          id?: string
+          percentage?: number
+          tournament_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          admin_user_id?: string
+          created_at?: string
+          id?: string
+          percentage?: number
+          tournament_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tournament_staff_shares_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tournaments: {
         Row: {
           additional_info: Json | null
@@ -1498,6 +1682,7 @@ export type Database = {
           sponsors: Json | null
           start_date: string
           status: string
+          supported_tags: string[]
           tournament_info: string | null
           updated_at: string
           venue_details: string | null
@@ -1531,6 +1716,7 @@ export type Database = {
           sponsors?: Json | null
           start_date: string
           status?: string
+          supported_tags?: string[]
           tournament_info?: string | null
           updated_at?: string
           venue_details?: string | null
@@ -1564,6 +1750,7 @@ export type Database = {
           sponsors?: Json | null
           start_date?: string
           status?: string
+          supported_tags?: string[]
           tournament_info?: string | null
           updated_at?: string
           venue_details?: string | null

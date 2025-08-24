@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -9,9 +10,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/components/ui/use-toast';
-import { CreditCard, Settings, DollarSign, TrendingUp, Download, RefreshCw } from 'lucide-react';
+import { CreditCard, Settings, DollarSign, TrendingUp, Download, RefreshCw, Calculator, Users as UsersIcon, Tag } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { PromoCodesManager } from './PromoCodesManager';
+import { StaffRevenueCalculator } from './StaffRevenueCalculator';
 
 interface PaymentTransaction {
   id: string;
@@ -104,12 +108,12 @@ export function PaymentManager({ activeTab, setActiveTab }: { activeTab?: string
       if (error) throw error;
 
       const totalRevenue = data
-        .filter(t => t.payment_status === 'completed')
+        .filter(t => t.payment_status === 'paid')
         .reduce((sum, t) => sum + (t.amount_paid || 0), 0);
 
       const totalTransactions = data.length;
       const pendingPayments = data.filter(t => t.payment_status === 'pending').length;
-      const successfulPayments = data.filter(t => t.payment_status === 'completed').length;
+      const successfulPayments = data.filter(t => t.payment_status === 'paid').length;
 
       setStats({
         totalRevenue,
@@ -190,7 +194,7 @@ export function PaymentManager({ activeTab, setActiveTab }: { activeTab?: string
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">Payment Management</h2>
-          <p className="text-muted-foreground">Monitor transactions and configure payment handlers</p>
+          <p className="text-muted-foreground">Monitor transactions, manage promo codes, and calculate staff revenue</p>
         </div>
         
         <div className="flex gap-2">
@@ -309,249 +313,282 @@ export function PaymentManager({ activeTab, setActiveTab }: { activeTab?: string
         </div>
       </div>
 
-      {/* Payment Statistics */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">${stats.totalRevenue.toLocaleString()}</div>
-          </CardContent>
-        </Card>
+      <Tabs defaultValue="transactions" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="transactions" className="flex items-center gap-2">
+            <CreditCard className="h-4 w-4" />
+            Transactions
+          </TabsTrigger>
+          <TabsTrigger value="promo-codes" className="flex items-center gap-2">
+            <Tag className="h-4 w-4" />
+            Promo Codes
+          </TabsTrigger>
+          <TabsTrigger value="staff-calculator" className="flex items-center gap-2">
+            <Calculator className="h-4 w-4" />
+            Staff Calculator
+          </TabsTrigger>
+          <TabsTrigger value="settings" className="flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            Settings
+          </TabsTrigger>
+        </TabsList>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Transactions</CardTitle>
-            <CreditCard className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalTransactions}</div>
-          </CardContent>
-        </Card>
+        <TabsContent value="transactions" className="space-y-6">
+          {/* Payment Statistics */}
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">${stats.totalRevenue.toLocaleString()}</div>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Successful Payments</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats.successfulPayments}</div>
-          </CardContent>
-        </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Transactions</CardTitle>
+                <CreditCard className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.totalTransactions}</div>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Payments</CardTitle>
-            <RefreshCw className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{stats.pendingPayments}</div>
-          </CardContent>
-        </Card>
-      </div>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Successful Payments</CardTitle>
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-green-600">{stats.successfulPayments}</div>
+              </CardContent>
+            </Card>
 
-      {/* Recent Transactions */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Recent Transactions</CardTitle>
-              <CardDescription>Latest payment transactions from tournament registrations</CardDescription>
-            </div>
-            <Button onClick={exportTransactions} variant="outline" className="flex items-center gap-2">
-              <Download className="h-4 w-4" />
-              Export CSV
-            </Button>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Pending Payments</CardTitle>
+                <RefreshCw className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-yellow-600">{stats.pendingPayments}</div>
+              </CardContent>
+            </Card>
           </div>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Tournament</TableHead>
-                <TableHead>Participant</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {transactions.map((transaction) => (
-                <TableRow key={transaction.id}>
-                  <TableCell>
-                    {new Date(transaction.registration_date).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>{transaction.tournaments?.name || 'N/A'}</TableCell>
-                  <TableCell>
-                    <div>
-                      <div>{transaction.participant_name}</div>
-                      <div className="text-sm text-muted-foreground">{transaction.participant_email}</div>
-                    </div>
-                  </TableCell>
-                  <TableCell>${transaction.amount_paid}</TableCell>
-                  <TableCell>
-                    <Badge 
-                      variant={
-                        transaction.payment_status === 'completed' ? 'default' :
-                        transaction.payment_status === 'pending' ? 'secondary' : 'destructive'
-                      }
-                    >
-                      {transaction.payment_status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      {transaction.payment_status === 'pending' && (
-                        <Button
-                          size="sm"
-                          onClick={() => updatePaymentStatus(transaction.id, 'completed')}
+
+          {/* Recent Transactions */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Recent Transactions</CardTitle>
+                  <CardDescription>Latest payment transactions from tournament registrations</CardDescription>
+                </div>
+                <Button onClick={exportTransactions} variant="outline" className="flex items-center gap-2">
+                  <Download className="h-4 w-4" />
+                  Export CSV
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Tournament</TableHead>
+                    <TableHead>Participant</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {transactions.map((transaction) => (
+                    <TableRow key={transaction.id}>
+                      <TableCell>
+                        {new Date(transaction.registration_date).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>{transaction.tournaments?.name || 'N/A'}</TableCell>
+                      <TableCell>
+                        <div>
+                          <div>{transaction.participant_name}</div>
+                          <div className="text-sm text-muted-foreground">{transaction.participant_email}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell>${transaction.amount_paid}</TableCell>
+                      <TableCell>
+                        <Badge 
+                          variant={
+                            transaction.payment_status === 'paid' ? 'default' :
+                            transaction.payment_status === 'pending' ? 'secondary' : 'destructive'
+                          }
                         >
-                          Mark Paid
-                        </Button>
-                      )}
-                      {transaction.payment_status === 'completed' && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => updatePaymentStatus(transaction.id, 'refunded')}
-                        >
-                          Refund
-                        </Button>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                          {transaction.payment_status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          {transaction.payment_status === 'pending' && (
+                            <Button
+                              size="sm"
+                              onClick={() => updatePaymentStatus(transaction.id, 'paid')}
+                            >
+                              Mark Paid
+                            </Button>
+                          )}
+                          {transaction.payment_status === 'paid' && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => updatePaymentStatus(transaction.id, 'refunded')}
+                            >
+                              Refund
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-      {/* Payment Handler Status */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Payment Handler Information</CardTitle>
-          <CardDescription>Current payment processing configuration</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="p-4 border rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="font-medium">PayPal</h4>
-                <Badge variant="outline">Available</Badge>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Standard PayPal checkout integration for secure payments
-              </p>
-            </div>
-            
-            <div className="p-4 border rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="font-medium">Venmo</h4>
-                <Badge variant="outline">Available</Badge>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Mobile-friendly Venmo integration for quick payments
-              </p>
-            </div>
-            
-            <div className="p-4 border rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="font-medium">Stripe</h4>
-                <Badge variant="secondary">Coming Soon</Badge>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Advanced payment processing with Stripe Checkout
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+        <TabsContent value="promo-codes">
+          <PromoCodesManager />
+        </TabsContent>
 
-      {/* Custom Payment Button HTML */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Custom Payment Button HTML</CardTitle>
-          <CardDescription>
-            Configure custom PayPal and Venmo button HTML for each tournament
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="bg-muted/50 p-4 rounded-lg">
-            <h4 className="font-medium mb-2">How to Add Custom Payment Buttons</h4>
-            <div className="space-y-2 text-sm text-muted-foreground">
-              <p>
-                1. Navigate to the <strong>Tournaments</strong> tab above to manage individual tournaments
-              </p>
-              <p>
-                2. Edit a tournament and go to the <strong>Payments</strong> tab
-              </p>
-              <p>
-                3. Add your custom PayPal or Venmo button HTML in the respective fields
-              </p>
-              <p>
-                4. Preview your buttons and save - they'll automatically appear in tournament registration
-              </p>
-            </div>
-          </div>
-          
-          <Separator />
-          
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-3">
-              <h4 className="font-medium">PayPal Button HTML</h4>
-              <p className="text-sm text-muted-foreground">
-                Get your PayPal button HTML from your PayPal Business account
-              </p>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" asChild>
-                  <a 
-                    href="https://www.paypal.com/buttons/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    PayPal Button Generator
-                  </a>
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => setActiveTab('tournaments')}>
-                  Go to Tournaments
-                </Button>
+        <TabsContent value="staff-calculator">
+          <StaffRevenueCalculator />
+        </TabsContent>
+
+        <TabsContent value="settings" className="space-y-6">
+          {/* Payment Handler Status */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Payment Handler Information</CardTitle>
+              <CardDescription>Current payment processing configuration</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-3">
+                <div className="p-4 border rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-medium">PayPal</h4>
+                    <Badge variant="outline">Available</Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Standard PayPal checkout integration for secure payments
+                  </p>
+                </div>
+                
+                <div className="p-4 border rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-medium">Venmo</h4>
+                    <Badge variant="outline">Available</Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Mobile-friendly Venmo integration for quick payments
+                  </p>
+                </div>
+                
+                <div className="p-4 border rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-medium">Stripe</h4>
+                    <Badge variant="secondary">Coming Soon</Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Advanced payment processing with Stripe Checkout
+                  </p>
+                </div>
               </div>
-            </div>
-            
-            <div className="space-y-3">
-              <h4 className="font-medium">Venmo Button HTML</h4>
-              <p className="text-sm text-muted-foreground">
-                Create custom Venmo payment buttons or links
-              </p>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" asChild>
-                  <a 
-                    href="https://help.venmo.com/hc/en-us/articles/210413477-Venmo-me-links"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Venmo Documentation
-                  </a>
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => setActiveTab('tournaments')}>
-                  Go to Tournaments
-                </Button>
+            </CardContent>
+          </Card>
+
+          {/* Custom Payment Button HTML */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Custom Payment Button HTML</CardTitle>
+              <CardDescription>
+                Configure custom PayPal and Venmo button HTML for each tournament
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-muted/50 p-4 rounded-lg">
+                <h4 className="font-medium mb-2">How to Add Custom Payment Buttons</h4>
+                <div className="space-y-2 text-sm text-muted-foreground">
+                  <p>
+                    1. Navigate to the <strong>Tournaments</strong> tab above to manage individual tournaments
+                  </p>
+                  <p>
+                    2. Edit a tournament and go to the <strong>Payments</strong> tab
+                  </p>
+                  <p>
+                    3. Add your custom PayPal or Venmo button HTML in the respective fields
+                  </p>
+                  <p>
+                    4. Preview your buttons and save - they'll automatically appear in tournament registration
+                  </p>
+                </div>
               </div>
-            </div>
-          </div>
-          
-          <div className="bg-yellow-50 border border-yellow-200 p-3 rounded-lg">
-            <p className="text-sm text-yellow-800">
-              <strong>Security Note:</strong> All custom HTML is automatically sanitized before display. 
-              Only safe HTML elements and attributes are allowed.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+              
+              <Separator />
+              
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-3">
+                  <h4 className="font-medium">PayPal Button HTML</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Get your PayPal button HTML from your PayPal Business account
+                  </p>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" asChild>
+                      <a 
+                        href="https://www.paypal.com/buttons/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        PayPal Button Generator
+                      </a>
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => setActiveTab && setActiveTab('tournaments')}>
+                      Go to Tournaments
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="space-y-3">
+                  <h4 className="font-medium">Venmo Button HTML</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Create custom Venmo payment buttons or links
+                  </p>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" asChild>
+                      <a 
+                        href="https://help.venmo.com/hc/en-us/articles/210413477-Venmo-me-links"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Venmo Documentation
+                      </a>
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => setActiveTab && setActiveTab('tournaments')}>
+                      Go to Tournaments
+                    </Button>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-yellow-50 border border-yellow-200 p-3 rounded-lg">
+                <p className="text-sm text-yellow-800">
+                  <strong>Security Note:</strong> All custom HTML is automatically sanitized before display. 
+                  Only safe HTML elements and attributes are allowed.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
