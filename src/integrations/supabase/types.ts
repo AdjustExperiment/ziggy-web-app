@@ -475,6 +475,58 @@ export type Database = {
           },
         ]
       }
+      extra_round_requests: {
+        Row: {
+          created_at: string
+          id: string
+          note: string | null
+          registration_id: string
+          round_id: string
+          status: string
+          tournament_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          registration_id: string
+          round_id: string
+          status?: string
+          tournament_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          registration_id?: string
+          round_id?: string
+          status?: string
+          tournament_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "extra_round_requests_registration_id_fkey"
+            columns: ["registration_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_registrations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "extra_round_requests_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "rounds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "extra_round_requests_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       judge_availability: {
         Row: {
           available_dates: Json
@@ -948,6 +1000,55 @@ export type Database = {
           },
         ]
       }
+      round_opt_outs: {
+        Row: {
+          created_at: string
+          id: string
+          reason: string | null
+          registration_id: string
+          round_id: string
+          tournament_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reason?: string | null
+          registration_id: string
+          round_id: string
+          tournament_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reason?: string | null
+          registration_id?: string
+          round_id?: string
+          tournament_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "round_opt_outs_registration_id_fkey"
+            columns: ["registration_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_registrations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "round_opt_outs_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "rounds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "round_opt_outs_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rounds: {
         Row: {
           created_at: string
@@ -1381,6 +1482,7 @@ export type Database = {
           location: string
           max_participants: number
           name: string
+          opt_outs_enabled: boolean
           prize_items: string[] | null
           prize_pool: string | null
           registration_deadline: string | null
@@ -1413,6 +1515,7 @@ export type Database = {
           location: string
           max_participants?: number
           name: string
+          opt_outs_enabled?: boolean
           prize_items?: string[] | null
           prize_pool?: string | null
           registration_deadline?: string | null
@@ -1445,6 +1548,7 @@ export type Database = {
           location?: string
           max_participants?: number
           name?: string
+          opt_outs_enabled?: boolean
           prize_items?: string[] | null
           prize_pool?: string | null
           registration_deadline?: string | null
