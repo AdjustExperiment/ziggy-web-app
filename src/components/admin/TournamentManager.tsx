@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -74,7 +75,7 @@ export function TournamentManager() {
     try {
       const { data, error } = await supabase
         .from('tournaments')
-        .select('*')
+        .select('id, name, description, format_id, start_date, end_date, location, status, opt_outs_enabled')
         .eq('id', id)
         .single();
 
@@ -103,11 +104,22 @@ export function TournamentManager() {
 
     try {
       setLoading(true);
+      const submitData = {
+        name: formData.name,
+        description: formData.description,
+        format_id: formData.format_id,
+        start_date: formData.start_date,
+        end_date: formData.end_date,
+        location: formData.location,
+        status: formData.status,
+        opt_outs_enabled: formData.opt_outs_enabled,
+      };
+
       if (tournamentId) {
         // Update existing tournament
         const { error } = await supabase
           .from('tournaments')
-          .update(formData)
+          .update(submitData)
           .eq('id', tournamentId);
 
         if (error) throw error;
@@ -119,15 +131,16 @@ export function TournamentManager() {
         // Create new tournament
         const { data, error } = await supabase
           .from('tournaments')
-          .insert([formData])
+          .insert([submitData])
           .select()
+          .single();
 
         if (error) throw error;
         toast({
           title: "Success",
           description: "Tournament created successfully",
         });
-        navigate(`/tournament/${data[0].id}`);
+        navigate(`/tournament/${data.id}`);
       }
     } catch (error: any) {
       console.error('Error saving tournament:', error);

@@ -919,6 +919,7 @@ export type Database = {
           last_name: string | null
           phone: string | null
           region: string | null
+          region_number: number | null
           role: string
           state: string | null
           time_zone: string | null
@@ -932,6 +933,7 @@ export type Database = {
           last_name?: string | null
           phone?: string | null
           region?: string | null
+          region_number?: number | null
           role?: string
           state?: string | null
           time_zone?: string | null
@@ -945,6 +947,7 @@ export type Database = {
           last_name?: string | null
           phone?: string | null
           region?: string | null
+          region_number?: number | null
           role?: string
           state?: string | null
           time_zone?: string | null

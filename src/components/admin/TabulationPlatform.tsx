@@ -52,11 +52,15 @@ export function TabulationPlatform() {
     );
   }
 
+  if (!selectedTournament) {
+    return (
+      <div className="text-center p-8">
+        <p className="text-muted-foreground">No tournaments available</p>
+      </div>
+    );
+  }
+
   return (
-    <TabulationDashboard
-      tournaments={tournaments}
-      selectedTournament={selectedTournament}
-      onTournamentChange={setSelectedTournament}
-    />
+    <TabulationDashboard tournamentId={selectedTournament} />
   );
 }

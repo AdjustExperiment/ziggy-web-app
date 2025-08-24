@@ -7,7 +7,16 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/use-toast';
 import { Mail, Phone, Search, Trophy, Users, MessageCircle } from 'lucide-react';
-import { Registration } from '@/types/database';
+
+interface Registration {
+  id: string;
+  participant_name: string;
+  participant_email: string;
+  school_organization: string | null;
+  partner_name: string | null;
+  payment_status: string;
+  emergency_contact: string | null;
+}
 
 interface CompetitorStats {
   totalSpeaks: number;
@@ -21,10 +30,10 @@ interface CompetitorStats {
 
 interface CompetitorDirectoryProps {
   tournamentId: string;
-  registrations: Registration[];
 }
 
-export function CompetitorDirectory({ tournamentId, registrations }: CompetitorDirectoryProps) {
+export function CompetitorDirectory({ tournamentId }: CompetitorDirectoryProps) {
+  const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [competitorStats, setCompetitorStats] = useState<Map<string, CompetitorStats>>(new Map());
   const [loading, setLoading] = useState(false);
@@ -36,29 +45,36 @@ export function CompetitorDirectory({ tournamentId, registrations }: CompetitorD
 
   useEffect(() => {
     if (tournamentId) {
+      fetchRegistrations();
       fetchCompetitorStats();
     }
   }, [tournamentId]);
 
+  const fetchRegistrations = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('tournament_registrations')
+        .select('id, participant_name, participant_email, school_organization, partner_name, payment_status, emergency_contact')
+        .eq('tournament_id', tournamentId);
+
+      if (error) throw error;
+      setRegistrations(data || []);
+    } catch (error: any) {
+      console.error('Error fetching registrations:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch registrations",
+        variant: "destructive",
+      });
+    }
+  };
+
   const fetchCompetitorStats = async () => {
     setLoading(true);
     try {
-      // Fetch all pairings and ballots for this tournament
-      const { data: pairings, error: pairingsError } = await supabase
-        .from('pairings')
-        .select(`
-          *,
-          ballots(*),
-          aff_registration:tournament_registrations!aff_registration_id(id, participant_name),
-          neg_registration:tournament_registrations!neg_registration_id(id, participant_name)
-        `)
-        .eq('tournament_id', tournamentId);
-
-      if (pairingsError) throw pairingsError;
-
+      // For now, we'll just initialize empty stats
+      // This will be expanded when we have proper pairing and ballot data
       const stats = new Map<string, CompetitorStats>();
-
-      // Initialize stats for all registrations
       registrations.forEach(reg => {
         stats.set(reg.id, {
           totalSpeaks: 0,
@@ -70,49 +86,6 @@ export function CompetitorDirectory({ tournamentId, registrations }: CompetitorD
           opponents: []
         });
       });
-
-      // Process pairings and ballots
-      pairings?.forEach(pairing => {
-        const affId = pairing.aff_registration_id;
-        const negId = pairing.neg_registration_id;
-
-        // Track opponents
-        const affStats = stats.get(affId);
-        const negStats = stats.get(negId);
-
-        if (affStats && pairing.neg_registration?.participant_name) {
-          affStats.opponents.push(pairing.neg_registration.participant_name);
-          affStats.affRounds++;
-        }
-
-        if (negStats && pairing.aff_registration?.participant_name) {
-          negStats.opponents.push(pairing.aff_registration.participant_name);
-          negStats.negRounds++;
-        }
-
-        // Process ballots for speaker points and wins
-        const ballots = Array.isArray(pairing.ballots) ? pairing.ballots : [];
-        ballots.forEach((ballot: any) => {
-          if (ballot.is_published && ballot.payload) {
-            const winner = ballot.payload.winner;
-            const affSpeaks = ballot.payload.aff_speaker_points || 0;
-            const negSpeaks = ballot.payload.neg_speaker_points || 0;
-
-            if (affStats) {
-              affStats.totalSpeaks += affSpeaks;
-              if (winner === 'aff') affStats.wins++;
-              else if (winner === 'neg') affStats.losses++;
-            }
-
-            if (negStats) {
-              negStats.totalSpeaks += negSpeaks;
-              if (winner === 'neg') negStats.wins++;
-              else if (winner === 'aff') negStats.losses++;
-            }
-          }
-        });
-      });
-
       setCompetitorStats(stats);
     } catch (error: any) {
       console.error('Error fetching competitor stats:', error);
