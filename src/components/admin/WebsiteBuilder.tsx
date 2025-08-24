@@ -3,10 +3,6 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { 
@@ -26,31 +22,10 @@ import { PageEditor } from './website-builder/PageEditor';
 import { BlockEditor } from './website-builder/BlockEditor';
 import { SEOOptimizer } from './website-builder/SEOOptimizer';
 import { PreviewRenderer } from './website-builder/PreviewRenderer';
+import type { Tables } from '@/integrations/supabase/types';
 
-interface SitePage {
-  id: string;
-  slug: string;
-  title: string;
-  description: string | null;
-  status: 'draft' | 'published';
-  seo: Record<string, any>;
-  canonical_url: string | null;
-  robots_noindex: boolean;
-  robots_nofollow: boolean;
-  published_at: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-interface SiteBlock {
-  id: string;
-  page_id: string;
-  parent_block_id: string | null;
-  type: string;
-  content: Record<string, any>;
-  position: number;
-  visible: boolean;
-}
+type SitePage = Tables<'site_pages'>;
+type SiteBlock = Tables<'site_blocks'>;
 
 export const WebsiteBuilder = () => {
   const [activeTab, setActiveTab] = useState('pages');

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,21 +15,10 @@ import {
   Eye
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import type { Tables } from '@/integrations/supabase/types';
 
-interface SitePage {
-  id: string;
-  slug: string;
-  title: string;
-  description: string | null;
-  seo: Record<string, any>;
-}
-
-interface SiteBlock {
-  id: string;
-  type: string;
-  content: Record<string, any>;
-  visible: boolean;
-}
+type SitePage = Tables<'site_pages'>;
+type SiteBlock = Tables<'site_blocks'>;
 
 interface SEOOptimizerProps {
   page: SitePage;
@@ -59,16 +47,18 @@ interface SEOSuggestion {
 }
 
 export const SEOOptimizer = ({ page, blocks, onUpdate }: SEOOptimizerProps) => {
-  const [seoData, setSeoData] = useState({
-    meta_title: page.seo.meta_title || page.title,
-    meta_description: page.seo.meta_description || page.description || '',
-    focus_keyword: page.seo.focus_keyword || '',
-    og_title: page.seo.og_title || page.title,
-    og_description: page.seo.og_description || page.description || '',
-    og_image: page.seo.og_image || '',
-    twitter_title: page.seo.twitter_title || page.title,
-    twitter_description: page.seo.twitter_description || page.description || '',
-    twitter_image: page.seo.twitter_image || ''
+  const seoData = page.seo as Record<string, any> || {};
+  
+  const [formData, setFormData] = useState({
+    meta_title: seoData.meta_title || page.title,
+    meta_description: seoData.meta_description || page.description || '',
+    focus_keyword: seoData.focus_keyword || '',
+    og_title: seoData.og_title || page.title,
+    og_description: seoData.og_description || page.description || '',
+    og_image: seoData.og_image || '',
+    twitter_title: seoData.twitter_title || page.title,
+    twitter_description: seoData.twitter_description || page.description || '',
+    twitter_image: seoData.twitter_image || ''
   });
 
   const [analysis, setAnalysis] = useState<SEOAnalysis | null>(null);
@@ -87,7 +77,7 @@ export const SEOOptimizer = ({ page, blocks, onUpdate }: SEOOptimizerProps) => {
             title: page.title,
             description: page.description,
             slug: page.slug,
-            seo: seoData
+            seo: formData
           },
           content: pageContent,
           blocks: blocks.filter(b => b.visible)
@@ -127,17 +117,17 @@ export const SEOOptimizer = ({ page, blocks, onUpdate }: SEOOptimizerProps) => {
             title: page.title,
             description: page.description,
             slug: page.slug,
-            seo: seoData
+            seo: formData
           },
           content: pageContent,
           blocks: blocks.filter(b => b.visible),
-          focus_keyword: seoData.focus_keyword
+          focus_keyword: formData.focus_keyword
         }
       });
 
       if (error) throw error;
 
-      setSeoData(data.optimized_seo);
+      setFormData(data.optimized_seo);
       setAnalysis(data.analysis);
       toast.success('SEO optimized with AI');
     } catch (error) {
@@ -152,17 +142,18 @@ export const SEOOptimizer = ({ page, blocks, onUpdate }: SEOOptimizerProps) => {
     return blocks
       .filter(block => block.visible)
       .map(block => {
+        const content = block.content as Record<string, any>;
         switch (block.type) {
           case 'hero':
-            return `${block.content.title} ${block.content.subtitle}`;
+            return `${content.title} ${content.subtitle}`;
           case 'heading':
-            return block.content.text;
+            return content.text;
           case 'paragraph':
-            return block.content.text;
+            return content.text;
           case 'image':
-            return block.content.alt;
+            return content.alt;
           case 'button':
-            return block.content.text;
+            return content.text;
           default:
             return '';
         }
@@ -173,15 +164,15 @@ export const SEOOptimizer = ({ page, blocks, onUpdate }: SEOOptimizerProps) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onUpdate({ seo: seoData });
+    onUpdate({ seo: formData });
   };
 
   const handleChange = (field: string, value: string) => {
-    setSeoData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   const applySuggestion = (suggestion: SEOSuggestion) => {
-    setSeoData(prev => ({ ...prev, [suggestion.field]: suggestion.suggested }));
+    setFormData(prev => ({ ...prev, [suggestion.field]: suggestion.suggested }));
     toast.success('Suggestion applied');
   };
 
@@ -210,7 +201,7 @@ export const SEOOptimizer = ({ page, blocks, onUpdate }: SEOOptimizerProps) => {
               </Button>
               <Button
                 onClick={optimizeWithAI}
-                disabled={optimizing || !seoData.focus_keyword}
+                disabled={optimizing || !formData.focus_keyword}
                 className="flex items-center gap-2"
               >
                 <Sparkles className="h-4 w-4" />
@@ -299,7 +290,7 @@ export const SEOOptimizer = ({ page, blocks, onUpdate }: SEOOptimizerProps) => {
               <Label htmlFor="focus-keyword">Focus Keyword</Label>
               <Input
                 id="focus-keyword"
-                value={seoData.focus_keyword}
+                value={formData.focus_keyword}
                 onChange={(e) => handleChange('focus_keyword', e.target.value)}
                 placeholder="main keyword to optimize for"
               />
@@ -312,12 +303,12 @@ export const SEOOptimizer = ({ page, blocks, onUpdate }: SEOOptimizerProps) => {
               <Label htmlFor="meta-title">Meta Title</Label>
               <Input
                 id="meta-title"
-                value={seoData.meta_title}
+                value={formData.meta_title}
                 onChange={(e) => handleChange('meta_title', e.target.value)}
                 placeholder="Page title for search engines"
               />
               <p className="text-xs text-muted-foreground">
-                {seoData.meta_title.length}/60 characters
+                {formData.meta_title.length}/60 characters
               </p>
             </div>
 
@@ -325,13 +316,13 @@ export const SEOOptimizer = ({ page, blocks, onUpdate }: SEOOptimizerProps) => {
               <Label htmlFor="meta-description">Meta Description</Label>
               <Textarea
                 id="meta-description"
-                value={seoData.meta_description}
+                value={formData.meta_description}
                 onChange={(e) => handleChange('meta_description', e.target.value)}
                 placeholder="Brief description for search results"
                 rows={3}
               />
               <p className="text-xs text-muted-foreground">
-                {seoData.meta_description.length}/160 characters
+                {formData.meta_description.length}/160 characters
               </p>
             </div>
           </CardContent>
@@ -349,7 +340,7 @@ export const SEOOptimizer = ({ page, blocks, onUpdate }: SEOOptimizerProps) => {
               <Label htmlFor="og-title">OG Title</Label>
               <Input
                 id="og-title"
-                value={seoData.og_title}
+                value={formData.og_title}
                 onChange={(e) => handleChange('og_title', e.target.value)}
                 placeholder="Title for social media shares"
               />
@@ -359,7 +350,7 @@ export const SEOOptimizer = ({ page, blocks, onUpdate }: SEOOptimizerProps) => {
               <Label htmlFor="og-description">OG Description</Label>
               <Textarea
                 id="og-description"
-                value={seoData.og_description}
+                value={formData.og_description}
                 onChange={(e) => handleChange('og_description', e.target.value)}
                 placeholder="Description for social media shares"
                 rows={3}
@@ -370,7 +361,7 @@ export const SEOOptimizer = ({ page, blocks, onUpdate }: SEOOptimizerProps) => {
               <Label htmlFor="og-image">OG Image URL</Label>
               <Input
                 id="og-image"
-                value={seoData.og_image}
+                value={formData.og_image}
                 onChange={(e) => handleChange('og_image', e.target.value)}
                 placeholder="https://example.com/image.jpg"
               />
@@ -390,7 +381,7 @@ export const SEOOptimizer = ({ page, blocks, onUpdate }: SEOOptimizerProps) => {
               <Label htmlFor="twitter-title">Twitter Title</Label>
               <Input
                 id="twitter-title"
-                value={seoData.twitter_title}
+                value={formData.twitter_title}
                 onChange={(e) => handleChange('twitter_title', e.target.value)}
                 placeholder="Title for Twitter shares"
               />
@@ -400,7 +391,7 @@ export const SEOOptimizer = ({ page, blocks, onUpdate }: SEOOptimizerProps) => {
               <Label htmlFor="twitter-description">Twitter Description</Label>
               <Textarea
                 id="twitter-description"
-                value={seoData.twitter_description}
+                value={formData.twitter_description}
                 onChange={(e) => handleChange('twitter_description', e.target.value)}
                 placeholder="Description for Twitter shares"
                 rows={3}
@@ -411,7 +402,7 @@ export const SEOOptimizer = ({ page, blocks, onUpdate }: SEOOptimizerProps) => {
               <Label htmlFor="twitter-image">Twitter Image URL</Label>
               <Input
                 id="twitter-image"
-                value={seoData.twitter_image}
+                value={formData.twitter_image}
                 onChange={(e) => handleChange('twitter_image', e.target.value)}
                 placeholder="https://example.com/image.jpg"
               />

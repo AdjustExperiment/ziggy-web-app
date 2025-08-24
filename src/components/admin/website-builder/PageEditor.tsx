@@ -7,18 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Save } from 'lucide-react';
+import type { Tables } from '@/integrations/supabase/types';
 
-interface SitePage {
-  id: string;
-  slug: string;
-  title: string;
-  description: string | null;
-  status: 'draft' | 'published';
-  seo: Record<string, any>;
-  canonical_url: string | null;
-  robots_noindex: boolean;
-  robots_nofollow: boolean;
-}
+type SitePage = Tables<'site_pages'>;
 
 interface PageEditorProps {
   page: SitePage;

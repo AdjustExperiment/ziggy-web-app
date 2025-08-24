@@ -1,21 +1,10 @@
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import type { Tables } from '@/integrations/supabase/types';
 
-interface SitePage {
-  id: string;
-  slug: string;
-  title: string;
-  description: string | null;
-  seo: Record<string, any>;
-}
-
-interface SiteBlock {
-  id: string;
-  type: string;
-  content: Record<string, any>;
-  visible: boolean;
-}
+type SitePage = Tables<'site_pages'>;
+type SiteBlock = Tables<'site_blocks'>;
 
 interface PreviewRendererProps {
   page: SitePage;
@@ -26,6 +15,8 @@ export const PreviewRenderer = ({ page, blocks }: PreviewRendererProps) => {
   const visibleBlocks = blocks.filter(block => block.visible);
 
   const renderBlock = (block: SiteBlock) => {
+    const content = block.content as Record<string, any>;
+    
     switch (block.type) {
       case 'hero':
         return (
@@ -33,28 +24,28 @@ export const PreviewRenderer = ({ page, blocks }: PreviewRendererProps) => {
             key={block.id} 
             className="relative min-h-[400px] flex items-center justify-center bg-gradient-to-br from-primary to-primary-foreground text-white"
             style={{
-              backgroundImage: block.content.backgroundImage ? `url(${block.content.backgroundImage})` : undefined,
+              backgroundImage: content.backgroundImage ? `url(${content.backgroundImage})` : undefined,
               backgroundSize: 'cover',
               backgroundPosition: 'center'
             }}
           >
             <div className="text-center space-y-4 max-w-2xl mx-auto px-4">
               <h1 className="text-4xl md:text-6xl font-bold">
-                {block.content.title}
+                {content.title}
               </h1>
-              {block.content.subtitle && (
+              {content.subtitle && (
                 <p className="text-lg md:text-xl opacity-90">
-                  {block.content.subtitle}
+                  {content.subtitle}
                 </p>
               )}
-              {block.content.ctaText && (
+              {content.ctaText && (
                 <Button 
                   size="lg"
-                  variant={block.content.backgroundImage ? 'secondary' : 'outline'}
+                  variant={content.backgroundImage ? 'secondary' : 'outline'}
                   asChild
                 >
-                  <a href={block.content.ctaUrl || '#'}>
-                    {block.content.ctaText}
+                  <a href={content.ctaUrl || '#'}>
+                    {content.ctaText}
                   </a>
                 </Button>
               )}
@@ -63,7 +54,7 @@ export const PreviewRenderer = ({ page, blocks }: PreviewRendererProps) => {
         );
 
       case 'heading':
-        const HeadingTag = block.content.level || 'h2';
+        const HeadingTag = content.level || 'h2';
         return (
           <div key={block.id} className="py-4">
             <HeadingTag 
@@ -72,11 +63,11 @@ export const PreviewRenderer = ({ page, blocks }: PreviewRendererProps) => {
                 HeadingTag === 'h2' ? 'text-3xl' :
                 HeadingTag === 'h3' ? 'text-2xl' : 'text-xl'
               } ${
-                block.content.alignment === 'center' ? 'text-center' :
-                block.content.alignment === 'right' ? 'text-right' : 'text-left'
+                content.alignment === 'center' ? 'text-center' :
+                content.alignment === 'right' ? 'text-right' : 'text-left'
               }`}
             >
-              {block.content.text}
+              {content.text}
             </HeadingTag>
           </div>
         );
@@ -85,10 +76,10 @@ export const PreviewRenderer = ({ page, blocks }: PreviewRendererProps) => {
         return (
           <div key={block.id} className="py-2">
             <p className={`leading-relaxed ${
-              block.content.alignment === 'center' ? 'text-center' :
-              block.content.alignment === 'right' ? 'text-right' : 'text-left'
+              content.alignment === 'center' ? 'text-center' :
+              content.alignment === 'right' ? 'text-right' : 'text-left'
             }`}>
-              {block.content.text}
+              {content.text}
             </p>
           </div>
         );
@@ -96,19 +87,19 @@ export const PreviewRenderer = ({ page, blocks }: PreviewRendererProps) => {
       case 'image':
         return (
           <div key={block.id} className={`py-4 ${
-            block.content.alignment === 'center' ? 'text-center' :
-            block.content.alignment === 'right' ? 'text-right' : 'text-left'
+            content.alignment === 'center' ? 'text-center' :
+            content.alignment === 'right' ? 'text-right' : 'text-left'
           }`}>
-            {block.content.src && (
+            {content.src && (
               <img
-                src={block.content.src}
-                alt={block.content.alt || ''}
+                src={content.src}
+                alt={content.alt || ''}
                 className="max-w-full h-auto rounded-lg"
               />
             )}
-            {block.content.caption && (
+            {content.caption && (
               <p className="text-sm text-muted-foreground mt-2">
-                {block.content.caption}
+                {content.caption}
               </p>
             )}
           </div>
@@ -117,16 +108,16 @@ export const PreviewRenderer = ({ page, blocks }: PreviewRendererProps) => {
       case 'button':
         return (
           <div key={block.id} className={`py-4 ${
-            block.content.alignment === 'center' ? 'text-center' :
-            block.content.alignment === 'right' ? 'text-right' : 'text-left'
+            content.alignment === 'center' ? 'text-center' :
+            content.alignment === 'right' ? 'text-right' : 'text-left'
           }`}>
             <Button
-              variant={block.content.variant === 'primary' ? 'default' : 
-                      block.content.variant === 'secondary' ? 'secondary' : 'outline'}
+              variant={content.variant === 'primary' ? 'default' : 
+                      content.variant === 'secondary' ? 'secondary' : 'outline'}
               asChild
             >
-              <a href={block.content.url || '#'}>
-                {block.content.text}
+              <a href={content.url || '#'}>
+                {content.text}
               </a>
             </Button>
           </div>
@@ -137,7 +128,7 @@ export const PreviewRenderer = ({ page, blocks }: PreviewRendererProps) => {
           <div 
             key={block.id} 
             className="py-4"
-            dangerouslySetInnerHTML={{ __html: block.content.html || '' }}
+            dangerouslySetInnerHTML={{ __html: content.html || '' }}
           />
         );
 
