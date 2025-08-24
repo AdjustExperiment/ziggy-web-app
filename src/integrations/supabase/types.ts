@@ -922,7 +922,11 @@ export type Database = {
           created_at: string
           first_name: string | null
           id: string
+          is_locked: boolean
           last_name: string | null
+          lock_reason: string | null
+          locked_by_user_id: string | null
+          locked_until: string | null
           phone: string | null
           region: string | null
           region_number: number | null
@@ -936,7 +940,11 @@ export type Database = {
           created_at?: string
           first_name?: string | null
           id?: string
+          is_locked?: boolean
           last_name?: string | null
+          lock_reason?: string | null
+          locked_by_user_id?: string | null
+          locked_until?: string | null
           phone?: string | null
           region?: string | null
           region_number?: number | null
@@ -950,7 +958,11 @@ export type Database = {
           created_at?: string
           first_name?: string | null
           id?: string
+          is_locked?: boolean
           last_name?: string | null
+          lock_reason?: string | null
+          locked_by_user_id?: string | null
+          locked_until?: string | null
           phone?: string | null
           region?: string | null
           region_number?: number | null
@@ -1253,6 +1265,87 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      security_audit_logs: {
+        Row: {
+          action: string
+          context: Json
+          created_at: string
+          id: string
+          ip: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          context?: Json
+          created_at?: string
+          id?: string
+          ip?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          context?: Json
+          created_at?: string
+          id?: string
+          ip?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      security_flags: {
+        Row: {
+          created_at: string
+          details: Json
+          id: string
+          raised_by_user_id: string | null
+          reason: string | null
+          related_user_id: string | null
+          resolution_note: string | null
+          resolved_at: string | null
+          resolved_by_user_id: string | null
+          severity: string
+          source_id: string | null
+          source_table: string | null
+          status: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          details?: Json
+          id?: string
+          raised_by_user_id?: string | null
+          reason?: string | null
+          related_user_id?: string | null
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by_user_id?: string | null
+          severity?: string
+          source_id?: string | null
+          source_table?: string | null
+          status?: string
+          type: string
+        }
+        Update: {
+          created_at?: string
+          details?: Json
+          id?: string
+          raised_by_user_id?: string | null
+          reason?: string | null
+          related_user_id?: string | null
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by_user_id?: string | null
+          severity?: string
+          source_id?: string | null
+          source_table?: string | null
+          status?: string
+          type?: string
+        }
+        Relationships: []
       }
       site_blocks: {
         Row: {
@@ -1886,8 +1979,16 @@ export type Database = {
         Args: { _pairing_id: string }
         Returns: boolean
       }
+      is_account_locked: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
       is_admin: {
         Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      lock_account: {
+        Args: { _reason?: string; _target_user_id: string; _until?: string }
         Returns: boolean
       }
       make_admin_by_email: {
@@ -1901,6 +2002,10 @@ export type Database = {
       recompute_results_from_ballots: {
         Args: Record<PropertyKey, never>
         Returns: number
+      }
+      unlock_account: {
+        Args: { _target_user_id: string }
+        Returns: boolean
       }
       user_is_competitor_for_pairing: {
         Args: { _pairing_id: string }
