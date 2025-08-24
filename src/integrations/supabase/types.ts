@@ -1254,6 +1254,122 @@ export type Database = {
           },
         ]
       }
+      site_blocks: {
+        Row: {
+          content: Json
+          created_at: string
+          id: string
+          page_id: string
+          parent_block_id: string | null
+          position: number
+          type: string
+          updated_at: string
+          visible: boolean
+        }
+        Insert: {
+          content?: Json
+          created_at?: string
+          id?: string
+          page_id: string
+          parent_block_id?: string | null
+          position?: number
+          type: string
+          updated_at?: string
+          visible?: boolean
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          id?: string
+          page_id?: string
+          parent_block_id?: string | null
+          position?: number
+          type?: string
+          updated_at?: string
+          visible?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "site_blocks_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "site_pages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "site_blocks_parent_block_id_fkey"
+            columns: ["parent_block_id"]
+            isOneToOne: false
+            referencedRelation: "site_blocks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      site_page_versions: {
+        Row: {
+          created_at: string
+          id: string
+          page_id: string
+          snapshot: Json
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          page_id: string
+          snapshot?: Json
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          page_id?: string
+          snapshot?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "site_page_versions_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "site_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      site_pages: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          published_at: string | null
+          seo: Json
+          slug: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          published_at?: string | null
+          seo?: Json
+          slug: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          published_at?: string | null
+          seo?: Json
+          slug?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       site_settings: {
         Row: {
           accent_color: string
