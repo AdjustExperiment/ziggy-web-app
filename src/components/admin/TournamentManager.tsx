@@ -19,7 +19,7 @@ interface Tournament {
   id: string;
   name: string;
   description: string | null;
-  format_id: string | null;
+  format: string | null;
   start_date: string | null;
   end_date: string | null;
   location: string | null;
@@ -34,7 +34,7 @@ export function TournamentManager() {
     id: '',
     name: '',
     description: null,
-    format_id: null,
+    format: null,
     start_date: null,
     end_date: null,
     location: null,
@@ -75,7 +75,7 @@ export function TournamentManager() {
     try {
       const { data, error } = await supabase
         .from('tournaments')
-        .select('id, name, description, format_id, start_date, end_date, location, status, opt_outs_enabled')
+        .select('id, name, description, format, start_date, end_date, location, status, opt_outs_enabled')
         .eq('id', id)
         .single();
 
@@ -107,7 +107,7 @@ export function TournamentManager() {
       const submitData = {
         name: formData.name,
         description: formData.description,
-        format_id: formData.format_id,
+        format: formData.format,
         start_date: formData.start_date,
         end_date: formData.end_date,
         location: formData.location,
@@ -131,7 +131,7 @@ export function TournamentManager() {
         // Create new tournament
         const { data, error } = await supabase
           .from('tournaments')
-          .insert([submitData])
+          .insert(submitData)
           .select()
           .single();
 
@@ -187,7 +187,7 @@ export function TournamentManager() {
 
             <div className="space-y-2">
               <Label htmlFor="format">Debate Format</Label>
-              <Select value={formData.format_id || undefined} onValueChange={(value) => setFormData({ ...formData, format_id: value })}>
+              <Select value={formData.format || undefined} onValueChange={(value) => setFormData({ ...formData, format: value })}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select a format" />
                 </SelectTrigger>
