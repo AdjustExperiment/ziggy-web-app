@@ -4,7 +4,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, Trophy, Settings, BarChart3, UserCheck, Calendar, CheckSquare } from 'lucide-react';
 import { CompetitorDirectory } from './CompetitorDirectory';
+import { PairingGenerator } from './PairingGenerator';
+import { StandingsView } from './StandingsView';
+import { BracketsManager } from './BracketsManager';
 import { TabulationRulesManager } from './TabulationRulesManager';
+import { ConstraintsManager } from './ConstraintsManager';
 import { JudgePostingsView } from './JudgePostingsView';
 import { ParticipationManager } from './ParticipationManager';
 
@@ -68,12 +72,7 @@ export function TabulationDashboard({ tournamentId }: TabulationDashboardProps) 
         </TabsContent>
 
         <TabsContent value="pairings">
-          <div className="space-y-6">
-            <div className="text-center py-12">
-              <h3 className="text-lg font-bold mb-2">Pairing Generator</h3>
-              <p className="text-muted-foreground">Generate tournament pairings here</p>
-            </div>
-          </div>
+          <PairingGenerator tournamentId={tournamentId} />
         </TabsContent>
 
         <TabsContent value="participation">
@@ -85,30 +84,15 @@ export function TabulationDashboard({ tournamentId }: TabulationDashboardProps) 
         </TabsContent>
 
         <TabsContent value="standings">
-          <div className="space-y-6">
-            <div className="text-center py-12">
-              <h3 className="text-lg font-bold mb-2">Tournament Standings</h3>
-              <p className="text-muted-foreground">View tournament standings here</p>
-            </div>
-          </div>
+          <StandingsView tournamentId={tournamentId} />
         </TabsContent>
 
         <TabsContent value="brackets">
-          <div className="space-y-6">
-            <div className="text-center py-12">
-              <h3 className="text-lg font-bold mb-2">Elimination Brackets</h3>
-              <p className="text-muted-foreground">Manage elimination brackets here</p>
-            </div>
-          </div>
+          <BracketsManager tournamentId={tournamentId} />
         </TabsContent>
 
         <TabsContent value="constraints">
-          <div className="space-y-6">
-            <div className="text-center py-12">
-              <h3 className="text-lg font-bold mb-2">Constraints Manager</h3>
-              <p className="text-muted-foreground">Manage pairing constraints here</p>
-            </div>
-          </div>
+          <ConstraintsManager tournamentId={tournamentId} />
         </TabsContent>
 
         <TabsContent value="rules">

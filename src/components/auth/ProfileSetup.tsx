@@ -9,12 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { toast } from '@/components/ui/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 
-interface ProfileSetupProps {
-  isModal?: boolean;
-  onComplete?: () => void;
-}
-
-export function ProfileSetup({ isModal = false, onComplete }: ProfileSetupProps = {}) {
+export function ProfileSetup() {
   const { user, refreshUser } = useAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -53,11 +48,6 @@ export function ProfileSetup({ isModal = false, onComplete }: ProfileSetupProps 
 
       // Refresh user data
       await refreshUser();
-      
-      // Call onComplete callback if provided
-      if (onComplete) {
-        onComplete();
-      }
     } catch (error: any) {
       console.error('Error updating profile:', error);
       toast({
@@ -71,7 +61,7 @@ export function ProfileSetup({ isModal = false, onComplete }: ProfileSetupProps 
   };
 
   return (
-    <div className={isModal ? "" : "container mx-auto max-w-md p-6"}>
+    <div className="container mx-auto max-w-md p-6">
       <Card>
         <CardHeader>
           <CardTitle>Complete Your Profile</CardTitle>

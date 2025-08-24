@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import AdminPanelTab from '@/components/admin/AdminPanelTab';
+import { AdminPanelTab } from '@/components/admin/AdminPanelTab';
 import { TournamentManager } from '@/components/admin/TournamentManager';
 import { TabulationPlatform } from '@/components/admin/TabulationPlatform';
 
@@ -20,7 +20,7 @@ export default function AdminDashboard() {
         </TabsList>
         
         <TabsContent value="overview">
-          <AdminPanelTab tournamentId="" />
+          <AdminPanelTab />
         </TabsContent>
         
         <TabsContent value="tournaments">
