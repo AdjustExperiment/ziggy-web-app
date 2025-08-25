@@ -221,15 +221,19 @@ export default function Rules() {
             <CardContent>
               <div className="grid gap-2 sm:grid-cols-2">
                 {rules.map((rule) => (
-                  <Button
-                    key={rule.number}
-                    variant="ghost"
-                    onClick={() => scrollToRule(rule.anchor)}
-                    className="justify-start text-left h-auto p-2 hover:bg-muted/50"
-                  >
-                    <span className="font-medium text-primary mr-2">{rule.number}.</span>
-                    <span className="text-sm">{rule.title}</span>
-                  </Button>
+                <Button
+                  key={rule.number}
+                  variant="ghost"
+                  onClick={() => scrollToRule(rule.anchor)}
+                  className="justify-start text-left h-auto p-2 hover:bg-muted/50"
+                  title={`${rule.number}. ${rule.title}`}
+                  aria-label={`Jump to rule ${rule.number}: ${rule.title}`}
+                >
+                  <div className="flex items-center w-full min-w-0">
+                    <span className="font-medium text-primary mr-2 shrink-0">{rule.number}.</span>
+                    <span className="text-sm truncate min-w-0">{rule.title}</span>
+                  </div>
+                </Button>
                 ))}
               </div>
             </CardContent>
