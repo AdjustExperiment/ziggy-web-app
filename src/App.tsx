@@ -1,6 +1,6 @@
 
 import React, { Suspense } from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { QueryProvider } from '@/providers/QueryProvider';
 import { OptimizedAuthProvider } from '@/hooks/useOptimizedAuth';
 import { ThemeProvider } from "@/components/ThemeProvider"
@@ -43,6 +43,7 @@ const TournamentPostings = React.lazy(() => import('@/pages/TournamentPostings')
 const PairingDetail = React.lazy(() => import('@/pages/PairingDetail'));
 const JudgeDashboard = React.lazy(() => import('@/pages/JudgeDashboard'));
 const Privacy = React.lazy(() => import('@/pages/Privacy'));
+const Rules = React.lazy(() => import('@/pages/Rules'));
 
 // Loading component for Suspense fallback
 const PageLoader = () => (
@@ -134,6 +135,8 @@ function App() {
                     <Route path="/testimonials" element={<Testimonials />} />
                     <Route path="/faq" element={<FAQ />} />
                     <Route path="/privacy" element={<Privacy />} />
+                    <Route path="/rules" element={<Rules />} />
+                    <Route path="/terms" element={<Navigate to="/rules" replace />} />
                     <Route path="/analytics" element={<Analytics />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>

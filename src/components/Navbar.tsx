@@ -20,7 +20,8 @@ import {
   Home,
   HelpCircle,
   Menu,
-  X
+  X,
+  ScrollText
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -92,6 +93,12 @@ export function Navbar() {
                     <Link to="/faq" className="flex items-center">
                       <HelpCircle className="mr-2 h-4 w-4" />
                       <span>FAQ</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/rules" className="flex items-center">
+                      <ScrollText className="mr-2 h-4 w-4" />
+                      <span>Rules</span>
                     </Link>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -228,6 +235,15 @@ export function Navbar() {
               >
                 <FileText className="h-4 w-4" />
                 <span>Blog</span>
+              </Link>
+
+              <Link
+                to="/rules"
+                className="flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium hover:bg-muted"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <ScrollText className="h-4 w-4" />
+                <span>Rules</span>
               </Link>
 
               {user ? (

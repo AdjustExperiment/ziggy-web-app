@@ -238,10 +238,10 @@ export function Footer() {
               Privacy Policy
             </Link>
             <Link 
-              to="/terms" 
+              to="/rules" 
               className="text-white/60 hover:text-red-400 text-sm transition-colors"
             >
-              Terms of Service
+              Rules
             </Link>
           </div>
         </div>
