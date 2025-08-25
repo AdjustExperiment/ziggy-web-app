@@ -39,8 +39,8 @@ export function Navbar() {
     : user?.email?.split('@')[0] || 'User';
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md">
-      <div className="absolute inset-0 bg-background/20 backdrop-blur-sm transform scale-110"></div>
+    <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-white/10 dark:bg-black/10 border-none">
+      <div className="absolute inset-0 backdrop-blur-xl bg-white/5 dark:bg-black/5"></div>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
