@@ -201,33 +201,21 @@ const About = () => {
             />
           </div>
           
-          <div className="grid gap-8 lg:grid-cols-2">
-            <Card className="bg-black border-red-500/30 shadow-elegant hover-scale">
-              <CardHeader>
-                <CardTitle className="text-xl font-bold text-white flex items-center gap-3">
-                  <Calendar className="h-6 w-6 text-red-500" />
-                  Scheduling & Matching
+          <div className="flex justify-center">
+            <Card className="bg-black border-red-500/30 shadow-elegant hover-scale max-w-2xl w-full">
+              <CardHeader className="text-center">
+                <CardTitle className="text-xl font-bold text-white flex items-center justify-center gap-3">
+                  <MessageSquare className="h-6 w-6 text-red-500" />
+                  Host Your Own Tournament
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="text-white/80 leading-relaxed">
-                  Debaters are matched against opponents once a week (Fall) or every two weeks (Spring). 
-                  Use the Ziggy Tournament Platform to communicate and schedule debate times that work for both teams.
+              <CardContent className="text-center">
+                <p className="text-white/80 leading-relaxed mb-4">
+                  Interested in hosting tournaments for your league, school, or debate format? 
+                  We'd love to help you bring the Ziggy experience to your community!
                 </p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-black border-red-500/30 shadow-elegant hover-scale">
-              <CardHeader>
-                <CardTitle className="text-xl font-bold text-white flex items-center gap-3">
-                  <Users className="h-6 w-6 text-red-500" />
-                  Judges & Platforms
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-white/80 leading-relaxed">
-                  Contact judges from our Judge List (parents, coaches, alumni) and compete using 
-                  Skype, Zoom, Discord, Google Meet, or FaceTime. Ballots are filled out instantly on our platform.
+                <p className="text-red-400 font-semibold">
+                  Contact us to discuss custom tournament hosting options.
                 </p>
               </CardContent>
             </Card>
