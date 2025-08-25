@@ -10,6 +10,7 @@ import {
   AccordionTrigger 
 } from '@/components/ui/accordion';
 import { ExternalLink, FileText, Calendar, ScrollText } from 'lucide-react';
+import JuniorRulesModal from '@/components/JuniorRulesModal';
 
 interface Rule {
   number: number;
@@ -193,14 +194,11 @@ export default function Rules() {
           
           <p className="text-lg text-muted-foreground mb-4 font-secondary">
             These are the official Rules of Ziggy Tournaments. For Junior Tournament specific rules, please{' '}
-            <a 
-              href="https://docs.google.com/document/d/1LcmnVSV0c2WCIuHDNHUh4ANapJite1dTAJLmSvRhtEc/edit?usp=sharing"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:text-primary/80 underline inline-flex items-center"
-            >
-              click here <ExternalLink className="ml-1 h-4 w-4" />
-            </a>
+            <JuniorRulesModal>
+              <button className="text-primary hover:text-primary/80 underline inline-flex items-center cursor-pointer">
+                click here <FileText className="ml-1 h-4 w-4" />
+              </button>
+            </JuniorRulesModal>
           </p>
           
           <Badge variant="outline" className="inline-flex items-center">
