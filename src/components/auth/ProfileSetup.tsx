@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/components/ui/use-toast';
-import { useAuth } from '@/hooks/useAuth';
+import { useOptimizedAuth } from '@/hooks/useOptimizedAuth';
 
 interface ProfileSetupProps {
   isModal?: boolean;
@@ -15,7 +15,7 @@ interface ProfileSetupProps {
 }
 
 export function ProfileSetup({ isModal = false, onComplete }: ProfileSetupProps = {}) {
-  const { user, refreshUser } = useAuth();
+  const { user, refreshUser } = useOptimizedAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     first_name: '',

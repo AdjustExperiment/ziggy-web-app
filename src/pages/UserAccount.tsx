@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useOptimizedAuth } from '@/hooks/useOptimizedAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -27,7 +27,7 @@ interface Registration {
 }
 
 export default function UserAccount() {
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading } = useOptimizedAuth();
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [loadingRegistrations, setLoadingRegistrations] = useState(true);
   const [showProfileSetup, setShowProfileSetup] = useState(false);

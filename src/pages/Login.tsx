@@ -8,14 +8,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { User, Lock, Mail, Users, Shield, Eye, EyeOff, ArrowRight } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
+import { useOptimizedAuth } from "@/hooks/useOptimizedAuth";
 import { useToast } from "@/hooks/use-toast";
 
 const Login = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { signIn, signUp, user, isAdmin, loading } = useAuth();
+  const { signIn, signUp, user, isAdmin, loading } = useOptimizedAuth();
   const { toast } = useToast();
   
   const [showPassword, setShowPassword] = useState(false);
