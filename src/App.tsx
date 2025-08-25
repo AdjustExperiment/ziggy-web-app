@@ -7,7 +7,11 @@ import { ThemeProvider } from "@/components/ThemeProvider"
 import { Toaster } from "@/components/ui/toaster"
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { Navbar } from '@/components/Navbar';
-import { PerformanceMonitor } from '@/components/PerformanceMonitor';
+
+// Conditionally load PerformanceMonitor only in development
+const PerformanceMonitor = import.meta.env.DEV 
+  ? React.lazy(() => import('@/components/PerformanceMonitor').then(module => ({ default: module.PerformanceMonitor })))
+  : null;
 
 // Lazy load all pages for better code splitting
 const Index = React.lazy(() => import('@/pages/Index'));
@@ -53,7 +57,11 @@ function App() {
             <Toaster />
             <div className="min-h-screen bg-background">
               <Navbar />
-              <PerformanceMonitor />
+              {import.meta.env.DEV && PerformanceMonitor && (
+                <Suspense fallback={null}>
+                  <PerformanceMonitor />
+                </Suspense>
+              )}
               <main>
                 <Suspense fallback={<PageLoader />}>
                   <Routes>

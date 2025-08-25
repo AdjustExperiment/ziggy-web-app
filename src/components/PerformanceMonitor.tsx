@@ -44,8 +44,8 @@ export function PerformanceMonitor() {
     }
   }, [metrics]);
 
-  // Only render in development
-  if (process.env.NODE_ENV !== 'development') return null;
+  // Only render in development mode
+  if (!import.meta.env.DEV) return null;
 
   return (
     <div className="fixed bottom-4 right-4 bg-black/80 text-white p-3 rounded-lg text-xs font-mono z-50">
