@@ -18,6 +18,8 @@ import { PromoCodesManager } from '@/components/admin/PromoCodesManager';
 import { StaffRevenueCalculator } from '@/components/admin/StaffRevenueCalculator';
 import { SecurityDashboard } from '@/components/admin/SecurityDashboard';
 
+import { FooterContentManager } from '@/components/admin/FooterContentManager';
+
 export default function AdminDashboard() {
   const { signOut, isAdmin } = useOptimizedAuth();
   const navigate = useNavigate();
@@ -45,6 +47,7 @@ export default function AdminDashboard() {
       promos: <PromoCodesManager />,
       staff: <StaffRevenueCalculator />,
       security: <SecurityDashboard />,
+      footer: <FooterContentManager />,
     };
 
     return components[activeTab as keyof typeof components] || <Dashboard />;
@@ -58,7 +61,7 @@ export default function AdminDashboard() {
       </div>
 
       <Tabs defaultValue="dashboard" value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-11 gap-1 h-auto p-1">
+        <TabsList className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-12 gap-1 h-auto p-1">
           <TabsTrigger value="dashboard" className="text-xs">Dashboard</TabsTrigger>
           <TabsTrigger value="tournaments" className="text-xs">Tournaments</TabsTrigger>
           <TabsTrigger value="tabulation" className="text-xs">Tabulation</TabsTrigger>
@@ -73,6 +76,7 @@ export default function AdminDashboard() {
           <TabsTrigger value="promos" className="text-xs">Promo Codes</TabsTrigger>
           <TabsTrigger value="staff" className="text-xs">Staff Calc</TabsTrigger>
           <TabsTrigger value="security" className="text-xs">Security</TabsTrigger>
+          <TabsTrigger value="footer" className="text-xs">Footer</TabsTrigger>
         </TabsList>
         <TabsContent value={activeTab}>
           {renderTabContent}

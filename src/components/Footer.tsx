@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { LazyImage } from '@/components/LazyImage';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   Facebook, 
   Twitter, 
@@ -15,7 +16,49 @@ import {
   ExternalLink
 } from 'lucide-react';
 
+interface FooterUpdate {
+  title: string;
+  content: string;
+  link_url: string;
+  link_text: string;
+}
+
 export function Footer() {
+  const [footerUpdate, setFooterUpdate] = useState<FooterUpdate>({
+    title: 'Latest Update',
+    content: 'Spring 2024 registration is now open! Join hundreds of debaters competing nationally.',
+    link_url: '/tournaments',
+    link_text: 'Register Now'
+  });
+
+  useEffect(() => {
+    loadFooterContent();
+    
+    // Listen for updates from the admin panel
+    const handleFooterUpdate = (event: CustomEvent) => {
+      setFooterUpdate(event.detail);
+    };
+    
+    window.addEventListener('footerContentUpdated', handleFooterUpdate as EventListener);
+    
+    return () => {
+      window.removeEventListener('footerContentUpdated', handleFooterUpdate as EventListener);
+    };
+  }, []);
+
+  const loadFooterContent = async () => {
+    try {
+      // For now, using localStorage as a fallback until proper database schema is set up
+      const stored = localStorage.getItem('footer_latest_update');
+      if (stored) {
+        const content = JSON.parse(stored);
+        setFooterUpdate(content);
+      }
+    } catch (error) {
+      console.error('Error loading footer content:', error);
+    }
+  };
+
   const socialLinks = [
     { 
       name: 'Facebook', 
@@ -166,15 +209,15 @@ export function Footer() {
             {/* Recent Activity Card */}
             <Card className="bg-red-500/10 border-red-500/20 backdrop-blur-sm">
               <CardContent className="p-4">
-                <h4 className="text-white font-medium mb-2 text-sm">Latest Update</h4>
+                <h4 className="text-white font-medium mb-2 text-sm">{footerUpdate.title}</h4>
                 <p className="text-white/80 text-xs mb-2">
-                  Spring 2024 registration is now open! Join hundreds of debaters competing nationally.
+                  {footerUpdate.content}
                 </p>
                 <a 
-                  href="/tournaments" 
+                  href={footerUpdate.link_url} 
                   className="inline-flex items-center text-red-400 hover:text-red-300 text-xs font-medium"
                 >
-                  Register Now <ExternalLink className="ml-1 h-3 w-3" />
+                  {footerUpdate.link_text} <ExternalLink className="ml-1 h-3 w-3" />
                 </a>
               </CardContent>
             </Card>
