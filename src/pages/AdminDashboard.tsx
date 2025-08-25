@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import React, { useState, useMemo } from 'react';
+import { useOptimizedAuth } from '@/hooks/useOptimizedAuth';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -19,7 +19,7 @@ import { StaffRevenueCalculator } from '@/components/admin/StaffRevenueCalculato
 import { SecurityDashboard } from '@/components/admin/SecurityDashboard';
 
 export default function AdminDashboard() {
-  const { signOut, isAdmin } = useAuth();
+  const { signOut, isAdmin } = useOptimizedAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('dashboard');
 
@@ -28,40 +28,27 @@ export default function AdminDashboard() {
     return null;
   }
 
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case 'dashboard':
-        return <Dashboard />;
-      case 'tournaments':
-        return <TournamentManager />;
-      case 'tabulation':
-        return <TabulationPlatform />;
-      case 'payments':
-        return <PaymentManager activeTab={activeTab} setActiveTab={setActiveTab} />;
-      case 'applications':
-        return <JudgeApplicationManager />;
-      case 'judges':
-        return <EnhancedJudgesManager />;
-      case 'users':
-        return <UserManager />;
-      case 'emails':
-        return <EnhancedEmailTemplateManager />;
-      case 'notifications':
-        return <NotificationsManager />;
-      case 'blog':
-        return <BlogManager />;
-      case 'site':
-        return <SiteEditor />;
-      case 'promos':
-        return <PromoCodesManager />;
-      case 'staff':
-        return <StaffRevenueCalculator />;
-      case 'security':
-        return <SecurityDashboard />;
-      default:
-        return <Dashboard />;
-    }
-  };
+  // Memoize tab content to prevent unnecessary re-renders
+  const renderTabContent = useMemo(() => {
+    const components = {
+      dashboard: <Dashboard />,
+      tournaments: <TournamentManager />,
+      tabulation: <TabulationPlatform />,
+      payments: <PaymentManager activeTab={activeTab} setActiveTab={setActiveTab} />,
+      applications: <JudgeApplicationManager />,
+      judges: <EnhancedJudgesManager />,
+      users: <UserManager />,
+      emails: <EnhancedEmailTemplateManager />,
+      notifications: <NotificationsManager />,
+      blog: <BlogManager />,
+      site: <SiteEditor />,
+      promos: <PromoCodesManager />,
+      staff: <StaffRevenueCalculator />,
+      security: <SecurityDashboard />,
+    };
+
+    return components[activeTab as keyof typeof components] || <Dashboard />;
+  }, [activeTab]);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -88,7 +75,7 @@ export default function AdminDashboard() {
           <TabsTrigger value="security" className="text-xs">Security</TabsTrigger>
         </TabsList>
         <TabsContent value={activeTab}>
-          {renderTabContent()}
+          {renderTabContent}
         </TabsContent>
       </Tabs>
     </div>

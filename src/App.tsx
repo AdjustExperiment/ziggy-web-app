@@ -1,121 +1,136 @@
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import Index from '@/pages/Index';
-import Tournaments from '@/pages/Tournaments';
-import Results from '@/pages/Results';
-import Blog from '@/pages/Blog';
-import Teams from '@/pages/Teams';
-import Login from '@/pages/Login';
-import SignUpPage from '@/pages/SignUpPage';
-import Dashboard from '@/pages/Dashboard';
-import UserAccount from '@/pages/UserAccount';
-import AdminDashboard from '@/pages/AdminDashboard';
-import GettingStarted from '@/pages/GettingStarted';
-import Features from '@/pages/Features';
-import About from '@/pages/About';
-import Contact from '@/pages/Contact';
-import Testimonials from '@/pages/Testimonials';
-import FAQ from '@/pages/FAQ';
-import Analytics from '@/pages/Analytics';
-import NotFound from '@/pages/NotFound';
-import TournamentRegistration from '@/pages/TournamentRegistration';
-import { AuthProvider } from '@/hooks/useAuth';
+import { QueryProvider } from '@/providers/QueryProvider';
+import { OptimizedAuthProvider } from '@/hooks/useOptimizedAuth';
 import { ThemeProvider } from "@/components/ThemeProvider"
 import { Toaster } from "@/components/ui/toaster"
 import { ProtectedRoute } from '@/components/ProtectedRoute';
-import MyTournaments from '@/pages/MyTournaments';
-import TournamentLanding from '@/pages/TournamentLanding';
-import TournamentRounds from '@/pages/TournamentRounds';
-import TournamentMyMatch from '@/pages/TournamentMyMatch';
-import TournamentPostings from '@/pages/TournamentPostings';
-import PairingDetail from '@/pages/PairingDetail';
-import JudgeDashboard from '@/pages/JudgeDashboard';
 import { Navbar } from '@/components/Navbar';
+
+// Lazy load all pages for better code splitting
+const Index = React.lazy(() => import('@/pages/Index'));
+const Tournaments = React.lazy(() => import('@/pages/Tournaments'));
+const Results = React.lazy(() => import('@/pages/Results'));
+const Blog = React.lazy(() => import('@/pages/Blog'));
+const Teams = React.lazy(() => import('@/pages/Teams'));
+const Login = React.lazy(() => import('@/pages/Login'));
+const SignUpPage = React.lazy(() => import('@/pages/SignUpPage'));
+const Dashboard = React.lazy(() => import('@/pages/Dashboard'));
+const UserAccount = React.lazy(() => import('@/pages/UserAccount'));
+const AdminDashboard = React.lazy(() => import('@/pages/AdminDashboard'));
+const GettingStarted = React.lazy(() => import('@/pages/GettingStarted'));
+const Features = React.lazy(() => import('@/pages/Features'));
+const About = React.lazy(() => import('@/pages/About'));
+const Contact = React.lazy(() => import('@/pages/Contact'));
+const Testimonials = React.lazy(() => import('@/pages/Testimonials'));
+const FAQ = React.lazy(() => import('@/pages/FAQ'));
+const Analytics = React.lazy(() => import('@/pages/Analytics'));
+const NotFound = React.lazy(() => import('@/pages/NotFound'));
+const TournamentRegistration = React.lazy(() => import('@/pages/TournamentRegistration'));
+const MyTournaments = React.lazy(() => import('@/pages/MyTournaments'));
+const TournamentLanding = React.lazy(() => import('@/pages/TournamentLanding'));
+const TournamentRounds = React.lazy(() => import('@/pages/TournamentRounds'));
+const TournamentMyMatch = React.lazy(() => import('@/pages/TournamentMyMatch'));
+const TournamentPostings = React.lazy(() => import('@/pages/TournamentPostings'));
+const PairingDetail = React.lazy(() => import('@/pages/PairingDetail'));
+const JudgeDashboard = React.lazy(() => import('@/pages/JudgeDashboard'));
+
+// Loading component for Suspense fallback
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center">
+    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+  </div>
+);
 
 function App() {
   return (
-    <Router>
-      <AuthProvider>
-        <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-          <Toaster />
-          <div className="min-h-screen bg-background">
-            <Navbar />
-            <main>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/tournaments" element={<Tournaments />} />
-                <Route path="/tournaments/:tournamentId" element={
-                  <ProtectedRoute>
-                    <TournamentLanding />
-                  </ProtectedRoute>
-                } />
-                <Route path="/tournaments/:id/register" element={<TournamentRegistration />} />
-                <Route path="/tournament/:id/register" element={<TournamentRegistration />} />
-                <Route path="/results" element={<Results />} />
-                <Route path="/blog" element={<Blog />} />
-                <Route path="/teams" element={<Teams />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/signup" element={<SignUpPage />} />
-                <Route path="/dashboard" element={
-                  <ProtectedRoute>
-                    <Dashboard />
-                  </ProtectedRoute>
-                } />
-                <Route path="/my-tournaments" element={
-                  <ProtectedRoute>
-                    <MyTournaments />
-                  </ProtectedRoute>
-                } />
-                <Route path="/tournaments/:tournamentId/rounds" element={
-                  <ProtectedRoute>
-                    <TournamentRounds />
-                  </ProtectedRoute>
-                } />
-                <Route path="/tournaments/:tournamentId/my-match" element={
-                  <ProtectedRoute>
-                    <TournamentMyMatch />
-                  </ProtectedRoute>
-                } />
-                <Route path="/tournaments/:tournamentId/postings" element={
-                  <ProtectedRoute>
-                    <TournamentPostings />
-                  </ProtectedRoute>
-                } />
-                <Route path="/pairings/:pairingId" element={
-                  <ProtectedRoute>
-                    <PairingDetail />
-                  </ProtectedRoute>
-                } />
-                <Route path="/judge-dashboard" element={
-                  <ProtectedRoute>
-                    <JudgeDashboard />
-                  </ProtectedRoute>
-                } />
-                <Route path="/account" element={
-                  <ProtectedRoute>
-                    <UserAccount />
-                  </ProtectedRoute>
-                } />
-                <Route path="/admin" element={
-                  <ProtectedRoute>
-                    <AdminDashboard />
-                  </ProtectedRoute>
-                } />
-                <Route path="/getting-started" element={<GettingStarted />} />
-                <Route path="/features" element={<Features />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/testimonials" element={<Testimonials />} />
-                <Route path="/faq" element={<FAQ />} />
-                <Route path="/analytics" element={<Analytics />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </main>
-          </div>
-        </ThemeProvider>
-      </AuthProvider>
-    </Router>
+    <QueryProvider>
+      <Router>
+        <OptimizedAuthProvider>
+          <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+            <Toaster />
+            <div className="min-h-screen bg-background">
+              <Navbar />
+              <PerformanceMonitor />
+              <main>
+                <Suspense fallback={<PageLoader />}>
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/tournaments" element={<Tournaments />} />
+                    <Route path="/tournaments/:tournamentId" element={
+                      <ProtectedRoute>
+                        <TournamentLanding />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/tournaments/:id/register" element={<TournamentRegistration />} />
+                    <Route path="/tournament/:id/register" element={<TournamentRegistration />} />
+                    <Route path="/results" element={<Results />} />
+                    <Route path="/blog" element={<Blog />} />
+                    <Route path="/teams" element={<Teams />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/signup" element={<SignUpPage />} />
+                    <Route path="/dashboard" element={
+                      <ProtectedRoute>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/my-tournaments" element={
+                      <ProtectedRoute>
+                        <MyTournaments />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/tournaments/:tournamentId/rounds" element={
+                      <ProtectedRoute>
+                        <TournamentRounds />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/tournaments/:tournamentId/my-match" element={
+                      <ProtectedRoute>
+                        <TournamentMyMatch />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/tournaments/:tournamentId/postings" element={
+                      <ProtectedRoute>
+                        <TournamentPostings />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/pairings/:pairingId" element={
+                      <ProtectedRoute>
+                        <PairingDetail />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/judge-dashboard" element={
+                      <ProtectedRoute>
+                        <JudgeDashboard />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/account" element={
+                      <ProtectedRoute>
+                        <UserAccount />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/admin" element={
+                      <ProtectedRoute>
+                        <AdminDashboard />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/getting-started" element={<GettingStarted />} />
+                    <Route path="/features" element={<Features />} />
+                    <Route path="/about" element={<About />} />
+                    <Route path="/contact" element={<Contact />} />
+                    <Route path="/testimonials" element={<Testimonials />} />
+                    <Route path="/faq" element={<FAQ />} />
+                    <Route path="/analytics" element={<Analytics />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </Suspense>
+              </main>
+            </div>
+          </ThemeProvider>
+        </OptimizedAuthProvider>
+      </Router>
+    </QueryProvider>
   );
 }
 

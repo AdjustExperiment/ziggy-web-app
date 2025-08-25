@@ -2,9 +2,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/hooks/useAuth';
+import { useOptimizedAuth } from '@/hooks/useOptimizedAuth';
 import { ThemeToggle } from './ThemeToggle';
 import { NotificationsDropdown } from './admin/NotificationsDropdown';
+import { LazyImage } from '@/components/LazyImage';
 import { 
   Calendar, 
   BarChart3, 
@@ -30,7 +31,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 export function Navbar() {
-  const { user, profile, signOut, isAdmin } = useAuth();
+  const { user, profile, signOut, isAdmin } = useOptimizedAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
   const displayName = profile?.first_name 
@@ -43,7 +44,11 @@ export function Navbar() {
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-2">
-              <img src="/lovable-uploads/760b99f2-12c5-4e29-8b02-5d93d41f41a9.png" alt="Ziggy" className="h-8 w-8 rounded-full border-2 border-white" />
+              <LazyImage 
+                src="/lovable-uploads/760b99f2-12c5-4e29-8b02-5d93d41f41a9.png" 
+                alt="Ziggy" 
+                className="h-8 w-8 rounded-full border-2 border-white" 
+              />
               <span className="text-lg sm:text-xl font-bold">Ziggy Online Debate</span>
             </Link>
             
