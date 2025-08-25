@@ -192,6 +192,15 @@ const About = () => {
             How <span className="text-red-500">Ziggy</span> Works
           </h2>
           
+          {/* How Ziggy Works Graphic */}
+          <div className="mb-12">
+            <img 
+              src="/lovable-uploads/8b363ad9-c2c5-4087-bc19-215b5ac99e68.png" 
+              alt="How Ziggy Works - Comprehensive overview of Ziggy Online Debate platform process including tournament formats, judging, scheduling, and recognition system"
+              className="w-full rounded-lg shadow-elegant border border-red-500/20"
+            />
+          </div>
+          
           <div className="grid gap-8 lg:grid-cols-2">
             <Card className="bg-black border-red-500/30 shadow-elegant hover-scale">
               <CardHeader>
