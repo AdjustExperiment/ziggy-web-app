@@ -8,6 +8,8 @@ import { Toaster } from "@/components/ui/toaster"
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { Navbar } from '@/components/Navbar';
 
+import { Footer } from '@/components/Footer';
+
 // Conditionally load PerformanceMonitor only in development
 const PerformanceMonitor = import.meta.env.DEV 
   ? React.lazy(() => import('@/components/PerformanceMonitor').then(module => ({ default: module.PerformanceMonitor })))
@@ -62,7 +64,7 @@ function App() {
                   <PerformanceMonitor />
                 </Suspense>
               )}
-              <main>
+              <main className="pt-16">
                 <Suspense fallback={<PageLoader />}>
                   <Routes>
                     <Route path="/" element={<Index />} />
@@ -135,6 +137,7 @@ function App() {
                   </Routes>
                 </Suspense>
               </main>
+              <Footer />
             </div>
           </ThemeProvider>
         </OptimizedAuthProvider>
