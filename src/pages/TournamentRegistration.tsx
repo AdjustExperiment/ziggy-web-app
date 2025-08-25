@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useOptimizedAuth } from '@/hooks/useOptimizedAuth';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -51,7 +51,7 @@ const initialFormData: FormData = {
 };
 
 export default function TournamentRegistration() {
-  const { user } = useAuth();
+  const { user } = useOptimizedAuth();
   const { id } = useParams();
   const navigate = useNavigate();
   const [tournament, setTournament] = useState<Tournament | null>(null);
