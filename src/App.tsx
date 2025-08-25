@@ -42,6 +42,7 @@ const TournamentMyMatch = React.lazy(() => import('@/pages/TournamentMyMatch'));
 const TournamentPostings = React.lazy(() => import('@/pages/TournamentPostings'));
 const PairingDetail = React.lazy(() => import('@/pages/PairingDetail'));
 const JudgeDashboard = React.lazy(() => import('@/pages/JudgeDashboard'));
+const Privacy = React.lazy(() => import('@/pages/Privacy'));
 
 // Loading component for Suspense fallback
 const PageLoader = () => (
@@ -132,6 +133,7 @@ function App() {
                     <Route path="/contact" element={<Contact />} />
                     <Route path="/testimonials" element={<Testimonials />} />
                     <Route path="/faq" element={<FAQ />} />
+                    <Route path="/privacy" element={<Privacy />} />
                     <Route path="/analytics" element={<Analytics />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
