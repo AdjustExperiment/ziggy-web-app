@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/components/ThemeProvider"
 import { Toaster } from "@/components/ui/toaster"
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { Navbar } from '@/components/Navbar';
+import { PerformanceMonitor } from '@/components/PerformanceMonitor';
 
 // Lazy load all pages for better code splitting
 const Index = React.lazy(() => import('@/pages/Index'));
