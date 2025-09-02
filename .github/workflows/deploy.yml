@@ -1,28 +1,37 @@
 name: Build & Deploy
+
 on:
   push:
     branches: [ main ]
+  workflow_dispatch: {}
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Install dependencies
-        run: npm install
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
 
-      - name: Build the project
+      - name: Install deps
+        run: npm ci
+
+      - name: Build
         run: npm run build
 
       - name: Upload to cPanel via FTP
-  uses: SamKirkland/FTP-Deploy-Action@v4
-  with:
-    server: ${{ secrets.FTP_HOST }}
-    username: ${{ secrets.FTP_USER }}
-    password: ${{ secrets.FTP_PASS }}
-    port: 21
-    protocol: ftp
-    local-dir: dist/    # or your actual build folder
-    server-dir: /home/ziggydebate/newsite.ziggyonlinedebate.com/
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASS }}
+          port: 21
+          protocol: ftp
+          local-dir: dist/      # <- change if your build folder isn't dist/
+          server-dir: /home/ziggydebate/newsite.ziggyonlinedebate.com/
+
 
