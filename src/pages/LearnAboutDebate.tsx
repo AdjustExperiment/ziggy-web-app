@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import VideoDialog from "@/components/VideoDialog";
 import {
   Card,
   CardContent,
@@ -39,6 +40,7 @@ const debateFormats = [
     details: "LD is all about engaging with philosophical ideas and exploring their real-world implications. What does it mean to value one human right more than another? These are the important questions LDers tackle.",
     topics: "Competition is superior to cooperation as a means of achieving excellence",
     judging: "Judge determines which side better upholds their value framework",
+    youtubeId: "X0V_nAnqWaQ",
   },
   {
     title: "Team Policy Debate (TP)",
@@ -49,6 +51,7 @@ const debateFormats = [
     details: "Teams read evidence from news articles, studies, and official documents to prove either that a policy should be enacted (Affirmative) or that it's not a good idea (Negative).",
     topics: "The United States should significantly reform its criminal justice system",
     judging: "Judge evaluates policy relevance, importance, workability, and benefits",
+    youtubeId: "uEtrF4QQu7s",
   },
   {
     title: "Team Parliamentary (Team Parli)",
@@ -59,6 +62,7 @@ const debateFormats = [
     details: "Teams debate topics crafted by Harvard-educated Isaac Sommers. Instead of Cross Examination, debaters may interrupt to ask questions during speeches.",
     topics: "Privacy is less necessary than convenience in the twenty-first century",
     judging: "Open to all high school leagues and collegiate debaters",
+    youtubeId: "gTJv_8YYa5Q",
   },
   {
     title: "Individual Parliamentary (IPD)",
@@ -265,6 +269,11 @@ const LearnAboutDebate = () => {
                       </p>
                     </div>
                   </div>
+                  {format.youtubeId && (
+                    <div className="mt-4 pt-4 border-t">
+                      <VideoDialog youtubeId={format.youtubeId} title={`${format.title} Example`} />
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))}
