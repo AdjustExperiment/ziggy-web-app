@@ -3,6 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookOpen, Users, Calendar, MessageSquare, Clock, Video, FileText, ExternalLink, CheckCircle, PlayCircle } from "lucide-react";
 import { BackgroundFX } from "@/components/BackgroundFX";
 import { Button } from "@/components/ui/button";
+import VideoDialog from "@/components/VideoDialog";
+import SlidesViewer from "@/components/SlidesViewer";
 
 const GettingStarted = () => {
   const debaterSteps = [
@@ -84,86 +86,51 @@ const GettingStarted = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-black relative overflow-hidden">
+    <div className="min-h-screen bg-background relative overflow-hidden">
       <BackgroundFX />
       
-      {/* Animated Background Elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-red-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute top-1/2 -left-32 w-64 h-64 bg-red-600/15 rounded-full blur-2xl animate-bounce"></div>
-        <div className="absolute bottom-20 right-1/4 w-48 h-48 bg-white/5 rounded-full blur-xl animate-pulse"></div>
-        <div className="absolute top-1/4 left-1/3 w-32 h-32 bg-red-400/20 rounded-full blur-2xl animate-ping"></div>
-      </div>
-
       {/* Hero Section */}
       <section className="relative py-16 sm:py-20 lg:py-24 bg-gradient-hero">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center relative z-10">
-          <Badge className="mb-6 bg-white/10 text-white border-white/20 hover:bg-white/20 animate-fade-in">
-            <span className="inline-block w-2 h-2 bg-red-500 rounded-full mr-2 animate-pulse"></span>
+          <Badge className="mb-6 bg-muted/20 text-foreground border-border animate-fade-in">
+            <span className="inline-block w-2 h-2 bg-primary rounded-full mr-2 animate-pulse"></span>
             Step-by-Step Instructions
           </Badge>
-          <h1 className="text-3xl sm:text-4xl lg:text-6xl font-bold text-white mb-6 font-primary animate-fade-in">
-            Getting <span className="text-red-500">Started</span>
+          <h1 className="text-3xl sm:text-4xl lg:text-6xl font-bold text-foreground mb-6 font-primary animate-fade-in">
+            Getting <span className="text-primary">Started</span>
           </h1>
-          <p className="text-lg sm:text-xl text-white/90 leading-relaxed max-w-3xl mx-auto font-secondary animate-fade-in">
+          <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed max-w-3xl mx-auto font-secondary animate-fade-in">
             Complete instructions for debaters and judges to get the most out of your Ziggy Online Debate experience.
           </p>
         </div>
       </section>
 
       {/* Debater Instructions */}
-      <section className="relative py-20 bg-black">
+      <section className="relative py-20 bg-background/50">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4 font-primary">
-              Instructions for <span className="text-red-500">Debaters</span>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-4 font-primary">
+              Instructions for <span className="text-primary">Debaters</span>
             </h2>
-            <p className="text-xl text-white/80 max-w-3xl mx-auto font-secondary">
-              Follow these steps to successfully participate in Ziggy tournaments
-            </p>
           </div>
           
           <div className="grid gap-8 lg:grid-cols-2">
-            {debaterSteps.map((step, index) => (
-              <Card key={step.id} className="bg-black border-red-500/30 shadow-elegant hover-scale group relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <CardHeader className="relative z-10">
+            {debaterSteps.map((step) => (
+              <Card key={step.id} className="bg-card border-primary/30 shadow-elegant hover-scale group">
+                <CardHeader>
                   <div className="flex items-center gap-4 mb-4">
-                    <span className="text-sm font-mono text-red-400 bg-red-500/10 px-3 py-1 rounded-full">
+                    <span className="text-sm font-mono text-primary bg-primary/10 px-3 py-1 rounded-full">
                       Step {step.id}
                     </span>
-                    <div className="text-red-500 group-hover:text-red-400 transition-colors">
-                      {step.icon}
-                    </div>
+                    <div className="text-primary">{step.icon}</div>
                   </div>
-                  <CardTitle className="text-xl font-bold text-white group-hover:text-red-100 transition-colors">
-                    {step.title}
-                  </CardTitle>
+                  <CardTitle className="text-xl font-bold text-card-foreground">{step.title}</CardTitle>
                 </CardHeader>
-                <CardContent className="relative z-10">
-                  <p className="text-white/80 leading-relaxed">
-                    {step.description}
-                  </p>
+                <CardContent>
+                  <p className="text-muted-foreground">{step.description}</p>
                 </CardContent>
               </Card>
             ))}
-          </div>
-
-          <div className="mt-12 text-center">
-            <Card className="bg-black/50 border-red-500/30 shadow-elegant backdrop-blur-sm inline-block">
-              <CardContent className="p-6">
-                <p className="text-white/80 mb-4">
-                  <strong className="text-red-400">Pro Tip for TP Debaters:</strong> If you're the Affirmative team, 
-                  send your 1AC (or an outline) to your opponent as soon as possible after getting your pairing.
-                </p>
-                <Button asChild className="bg-red-500 hover:bg-red-600">
-                  <a href="http://tournament.ziggyonlinedebate.com/" target="_blank" rel="noopener noreferrer">
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    Visit Tournament Platform
-                  </a>
-                </Button>
-              </CardContent>
-            </Card>
           </div>
         </div>
       </section>
@@ -172,87 +139,72 @@ const GettingStarted = () => {
       <section className="relative py-20 bg-gradient-subtle">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4 font-primary">
-              Instructions for <span className="text-red-500">Judges</span>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-4 font-primary">
+              Instructions for <span className="text-primary">Judges</span>
             </h2>
-            <p className="text-xl text-white/80 max-w-3xl mx-auto font-secondary">
-              Everything you need to know to effectively judge Ziggy tournaments
-            </p>
           </div>
           
           <div className="grid gap-8 lg:grid-cols-2">
-            {judgeSteps.map((step, index) => (
-              <Card key={step.id} className="bg-black/50 border-red-500/30 shadow-elegant backdrop-blur-sm hover-scale group relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <CardHeader className="relative z-10">
+            {judgeSteps.map((step) => (
+              <Card key={step.id} className="bg-card/50 border-primary/30 shadow-elegant backdrop-blur-sm hover-scale group">
+                <CardHeader>
                   <div className="flex items-center gap-4 mb-4">
-                    <span className="text-sm font-mono text-red-400 bg-red-500/10 px-3 py-1 rounded-full">
+                    <span className="text-sm font-mono text-primary bg-primary/10 px-3 py-1 rounded-full">
                       Step {step.id}
                     </span>
-                    <div className="text-red-500 group-hover:text-red-400 transition-colors">
-                      {step.icon}
-                    </div>
+                    <div className="text-primary">{step.icon}</div>
                   </div>
-                  <CardTitle className="text-xl font-bold text-white group-hover:text-red-100 transition-colors">
-                    {step.title}
-                  </CardTitle>
+                  <CardTitle className="text-xl font-bold text-card-foreground">{step.title}</CardTitle>
                 </CardHeader>
-                <CardContent className="relative z-10">
-                  <p className="text-white/80 leading-relaxed">
-                    {step.description}
-                  </p>
+                <CardContent>
+                  <p className="text-muted-foreground">{step.description}</p>
                 </CardContent>
               </Card>
             ))}
           </div>
 
           <div className="mt-12 grid gap-6 lg:grid-cols-3">
-            <Card className="bg-black/50 border-red-500/30 shadow-elegant backdrop-blur-sm text-center hover-scale">
+            <Card className="bg-card/50 border-primary/30 shadow-elegant backdrop-blur-sm text-center hover-scale">
               <CardHeader>
-                <PlayCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-                <CardTitle className="text-white">Judge Orientation Video</CardTitle>
+                <PlayCircle className="h-12 w-12 text-primary mx-auto mb-4" />
+                <CardTitle className="text-card-foreground">Judge Orientation Video</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-white/80 text-sm mb-4">
-                  Watch our comprehensive 15-20 minute orientation video
-                </p>
-                <Button variant="outline" asChild className="border-red-500/50 text-red-400 hover:bg-red-500/10">
-                  <a href="https://youtu.be/P2yS-NpXb0c" target="_blank" rel="noopener noreferrer">
+                <VideoDialog youtubeId="P2yS-NpXb0c" title="Judge Orientation Video">
+                  <Button variant="outline" className="border-primary/50 text-primary hover:bg-primary/10">
                     <PlayCircle className="h-4 w-4 mr-2" />
                     Watch Video
-                  </a>
-                </Button>
+                  </Button>
+                </VideoDialog>
               </CardContent>
             </Card>
 
-            <Card className="bg-black/50 border-red-500/30 shadow-elegant backdrop-blur-sm text-center hover-scale">
+            <Card className="bg-card/50 border-primary/30 shadow-elegant backdrop-blur-sm text-center hover-scale">
               <CardHeader>
-                <FileText className="h-12 w-12 text-red-500 mx-auto mb-4" />
-                <CardTitle className="text-white">Orientation Slides</CardTitle>
+                <FileText className="h-12 w-12 text-primary mx-auto mb-4" />
+                <CardTitle className="text-card-foreground">Orientation Slides</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-white/80 text-sm mb-4">
-                  Download the judge orientation slides PDF
-                </p>
-                <Button variant="outline" asChild className="border-red-500/50 text-red-400 hover:bg-red-500/10">
-                  <a href="https://ziggyonlinedebate.com/wp-content/uploads/2021/09/JUDGING-Ziggy-Online-Debate-Judge-Orientation.pdf" target="_blank" rel="noopener noreferrer">
+                <SlidesViewer 
+                  slidesUrl="https://docs.google.com/presentation/d/1rQjKXZYHm8k9P4QjY8XQjY5YxK7X9QjY8X/embed"
+                  downloadUrl="https://ziggyonlinedebate.com/wp-content/uploads/2021/09/JUDGING-Ziggy-Online-Debate-Judge-Orientation.pdf"
+                  title="Judge Orientation Slides"
+                >
+                  <Button variant="outline" className="border-primary/50 text-primary hover:bg-primary/10">
                     <FileText className="h-4 w-4 mr-2" />
                     View Slides
-                  </a>
-                </Button>
+                  </Button>
+                </SlidesViewer>
               </CardContent>
             </Card>
 
-            <Card className="bg-black/50 border-red-500/30 shadow-elegant backdrop-blur-sm text-center hover-scale">
+            <Card className="bg-card/50 border-primary/30 shadow-elegant backdrop-blur-sm text-center hover-scale">
               <CardHeader>
-                <FileText className="h-12 w-12 text-red-500 mx-auto mb-4" />
-                <CardTitle className="text-white">Speaker Points Guide</CardTitle>
+                <FileText className="h-12 w-12 text-primary mx-auto mb-4" />
+                <CardTitle className="text-card-foreground">Speaker Points Guide</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-white/80 text-sm mb-4">
-                  Helpful guidelines for consistent speaker point scoring
-                </p>
-                <Button variant="outline" asChild className="border-red-500/50 text-red-400 hover:bg-red-500/10">
+                <Button variant="outline" asChild className="border-primary/50 text-primary hover:bg-primary/10">
                   <a href="https://ziggyonlinedebate.com/wp-content/uploads/2021/09/Ziggy-Speaker-Points-Guide.pdf" target="_blank" rel="noopener noreferrer">
                     <FileText className="h-4 w-4 mr-2" />
                     Download Guide
@@ -261,71 +213,6 @@ const GettingStarted = () => {
               </CardContent>
             </Card>
           </div>
-        </div>
-      </section>
-
-      {/* New to Debate Section */}
-      <section className="relative py-16 bg-black">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 relative z-10 text-center">
-          <Card className="bg-black border-red-500/30 shadow-elegant">
-            <CardHeader>
-              <BookOpen className="h-16 w-16 text-red-500 mx-auto mb-4" />
-              <CardTitle className="text-2xl font-bold text-white">
-                New to Debate?
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-white/80 mb-6 leading-relaxed">
-                If you're completely new to debate, we have resources to help you get started. 
-                Check out our FAQ section for beginners to understand the basics of competitive debate.
-              </p>
-              <div className="flex gap-4 justify-center">
-                <Button asChild className="bg-red-500 hover:bg-red-600">
-                  <a href="/faq#newtodebate">
-                    <BookOpen className="h-4 w-4 mr-2" />
-                    Beginner's Guide
-                  </a>
-                </Button>
-                <Button variant="outline" asChild className="border-red-500/50 text-red-400 hover:bg-red-500/10">
-                  <a href="http://tournament.ziggyonlinedebate.com/" target="_blank" rel="noopener noreferrer">
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    Tournament Platform
-                  </a>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
-
-      {/* Support Section */}
-      <section className="relative py-16 bg-gradient-subtle">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 relative z-10 text-center">
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-8 font-primary">
-            Need <span className="text-red-500">Help?</span>
-          </h2>
-          <Card className="bg-black/50 border-red-500/30 shadow-elegant backdrop-blur-sm">
-            <CardContent className="p-8">
-              <p className="text-white/80 leading-relaxed mb-6">
-                If you encounter any issues or have questions, don't hesitate to reach out to our support team. 
-                We're here to help make your Ziggy experience as smooth as possible.
-              </p>
-              <div className="flex gap-4 justify-center flex-wrap">
-                <Button asChild className="bg-red-500 hover:bg-red-600">
-                  <a href="/contact">
-                    <MessageSquare className="h-4 w-4 mr-2" />
-                    Contact Support
-                  </a>
-                </Button>
-                <Button variant="outline" asChild className="border-red-500/50 text-red-400 hover:bg-red-500/10">
-                  <a href="tel:9794294449">
-                    <Clock className="h-4 w-4 mr-2" />
-                    Text: (979) 429-4449
-                  </a>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </section>
     </div>

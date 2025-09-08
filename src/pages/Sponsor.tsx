@@ -48,39 +48,39 @@ const Sponsor = () => {
           <section className="relative py-16 bg-gradient-subtle">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
               <div className="grid md:grid-cols-3 gap-8 mb-16">
-                <Card className="bg-black/80 border-primary/30 shadow-elegant hover-scale group">
+                <Card className="bg-card border-primary/30 shadow-elegant hover-scale group">
                   <CardHeader>
                     <Users className="h-12 w-12 text-primary mb-4" />
-                    <CardTitle className="text-white">Reach & Impact</CardTitle>
+                    <CardTitle className="text-card-foreground">Reach & Impact</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-white/80">
+                    <p className="text-muted-foreground">
                       Connect with thousands of students, educators, and debate enthusiasts 
                       across our tournament network.
                     </p>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-black/80 border-primary/30 shadow-elegant hover-scale group">
+                <Card className="bg-card border-primary/30 shadow-elegant hover-scale group">
                   <CardHeader>
                     <Calendar className="h-12 w-12 text-primary mb-4" />
-                    <CardTitle className="text-white">Year-Round Exposure</CardTitle>
+                    <CardTitle className="text-card-foreground">Year-Round Exposure</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-white/80">
+                    <p className="text-muted-foreground">
                       Gain visibility through multiple tournaments, events, and our 
                       growing online community platform.
                     </p>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-black/80 border-primary/30 shadow-elegant hover-scale group">
+                <Card className="bg-card border-primary/30 shadow-elegant hover-scale group">
                   <CardHeader>
                     <Target className="h-12 w-12 text-primary mb-4" />
-                    <CardTitle className="text-white">Targeted Audience</CardTitle>
+                    <CardTitle className="text-card-foreground">Targeted Audience</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-white/80">
+                    <p className="text-muted-foreground">
                       Reach a highly engaged audience of future leaders, academics, 
                       and professionals in education.
                     </p>
@@ -91,33 +91,33 @@ const Sponsor = () => {
           </section>
 
           {/* Why Sponsor Debate Events */}
-          <section className="relative py-16 bg-black/20">
+          <section className="relative py-16 bg-background/50">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
-              <h2 className="text-2xl sm:text-3xl font-bold text-center mb-12 text-white font-primary">Why Sponsor Debate Events?</h2>
+              <h2 className="text-2xl sm:text-3xl font-bold text-center mb-12 text-foreground font-primary">Why Sponsor Debate Events?</h2>
               <div className="grid md:grid-cols-2 gap-8">
                 <div>
-                  <h3 className="text-xl font-semibold mb-4 text-white">Educational Impact</h3>
-                  <p className="text-white/80 mb-6">
+                  <h3 className="text-xl font-semibold mb-4 text-foreground">Educational Impact</h3>
+                  <p className="text-muted-foreground mb-6">
                     Debate tournaments foster critical thinking, research skills, and public speaking 
                     abilities that prepare students for success in college and careers. Your sponsorship 
                     directly supports educational excellence.
                   </p>
                   
-                  <h3 className="text-xl font-semibold mb-4 text-white">Community Building</h3>
-                  <p className="text-white/80">
+                  <h3 className="text-xl font-semibold mb-4 text-foreground">Community Building</h3>
+                  <p className="text-muted-foreground">
                     Join a network of organizations committed to intellectual growth and academic 
                     achievement. Build meaningful connections with educators and students.
                   </p>
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold mb-4 text-white">Brand Visibility</h3>
-                  <p className="text-white/80 mb-6">
+                  <h3 className="text-xl font-semibold mb-4 text-foreground">Brand Visibility</h3>
+                  <p className="text-muted-foreground mb-6">
                     Gain exposure to a diverse, engaged audience through tournament materials, 
                     digital platforms, and event recognition opportunities.
                   </p>
                   
-                  <h3 className="text-xl font-semibold mb-4 text-white">Talent Pipeline</h3>
-                  <p className="text-white/80">
+                  <h3 className="text-xl font-semibold mb-4 text-foreground">Talent Pipeline</h3>
+                  <p className="text-muted-foreground">
                     Connect with high-achieving students who represent the next generation of 
                     leaders in business, law, education, and public service.
                   </p>
@@ -225,16 +225,16 @@ const Sponsor = () => {
 
           {/* Examples */}
           <div className="mb-16">
-            <h3 className="text-2xl font-bold text-white mb-8 text-center font-primary">
+            <h3 className="text-2xl font-bold text-foreground mb-8 text-center font-primary">
               Past Sponsorship <span className="text-primary">Examples</span>
             </h3>
             
-            <Card className="bg-black/80 border-primary/30 shadow-elegant">
+            <Card className="bg-card border-primary/30 shadow-elegant">
               <CardHeader>
-                <CardTitle className="text-lg font-bold text-white">Prize Examples</CardTitle>
+                <CardTitle className="text-lg font-bold text-card-foreground">Prize Examples</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid gap-4 md:grid-cols-2 text-white/80 text-sm">
+                <div className="grid gap-4 md:grid-cols-2 text-muted-foreground text-sm">
                   <div className="space-y-2">
                     <p>• <strong className="text-primary">$60,000 scholarships</strong> - Howard Payne University (1st & 2nd place teams)</p>
                     <p>• <strong className="text-primary">$17,000/year scholarships</strong> - LeTourneau University (1st place LD)</p>
@@ -255,14 +255,14 @@ const Sponsor = () => {
           {/* Call to Action */}
           <section className="relative py-16 bg-gradient-to-r from-primary/10 to-secondary/10">
             <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center relative z-10">
-              <Card className="bg-gradient-to-r from-primary/20 to-secondary/20 border-primary/30 shadow-elegant backdrop-blur-sm">
+                <Card className="bg-gradient-to-r from-primary/20 to-secondary/20 border-primary/30 shadow-elegant backdrop-blur-sm">
                 <CardHeader>
-                  <CardTitle className="text-2xl sm:text-3xl font-bold text-white flex items-center justify-center gap-3">
+                  <CardTitle className="text-2xl sm:text-3xl font-bold text-card-foreground flex items-center justify-center gap-3">
                     Ready to Make an Impact?
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-xl text-white/80 leading-relaxed mb-8 max-w-2xl mx-auto">
+                  <p className="text-xl text-muted-foreground leading-relaxed mb-8 max-w-2xl mx-auto">
                     Join our community of sponsors supporting the next generation of leaders. 
                     Start your sponsorship journey today.
                   </p>
@@ -278,7 +278,7 @@ const Sponsor = () => {
                       </Button>
                     </a>
                     <Link to="/contact">
-                      <Button variant="outline" size="lg" className="w-full sm:w-auto border-white/20 text-white hover:bg-white/10">
+                      <Button variant="outline" size="lg" className="w-full sm:w-auto">
                         View Guidelines
                       </Button>
                     </Link>
