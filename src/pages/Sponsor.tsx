@@ -7,90 +7,6 @@ import { Crown, Star, Trophy, Zap, Users, Calendar, Target, ArrowRight } from 'l
 import { SectionFX } from '@/components/SectionFX';
 
 const Sponsor = () => {
-  const getTierIcon = (tier: string) => {
-    switch (tier.toLowerCase()) {
-      case 'bronze': return <Trophy className="h-6 w-6" />;
-      case 'silver': return <Star className="h-6 w-6" />;
-      case 'gold': return <Crown className="h-6 w-6" />;
-      case 'platinum':
-      case 'legacy': return <Zap className="h-6 w-6" />;
-      default: return <Trophy className="h-6 w-6" />;
-    }
-  };
-
-  const sponsorshipTiers = [
-    {
-      name: "Bronze",
-      price: "No Fee*",
-      icon: <Trophy className="h-8 w-8 text-primary" />,
-      benefits: [
-        "Offer prize for at least 1 student per semester",
-        "Listed on sponsors page",
-        "Basic recognition in tournament materials",
-        "*Optional $25 fee if no prize offered"
-      ]
-    },
-    {
-      name: "Silver", 
-      price: "$75 Fee*",
-      icon: <Star className="h-8 w-8 text-primary" />,
-      benefits: [
-        "Offer prize for at least 2 students per semester",
-        "Logo featured on About Us page",
-        "Enhanced tournament visibility",
-        "*Fee waived if prizes for 4+ students"
-      ]
-    },
-    {
-      name: "Gold",
-      price: "$150 Fee*", 
-      icon: <Crown className="h-8 w-8 text-primary" />,
-      benefits: [
-        "Offer financial prize for 3+ debate events",
-        "Logo featured on home page",
-        "Priority sponsor recognition",
-        "*Fee waived if prizes for 6+ events"
-      ]
-    },
-    {
-      name: "Platinum/Legacy",
-      price: "$1,000+ Fee",
-      icon: <Zap className="h-8 w-8 text-primary" />,
-      benefits: [
-        "Financial prize for 5+ events per semester",
-        "2+ teams per event requirement",
-        "Premium home page placement",
-        "Exclusive partnership benefits"
-      ]
-    }
-  ];
-
-  const pastSponsorships = [
-    {
-      name: "Howard Payne University",
-      tier: "Platinum",
-      prizes: ["$60,000 scholarships for 1st & 2nd place teams", "$56,000 scholarships for 3rd & 4th place teams"],
-      description: "Major university scholarship provider"
-    },
-    {
-      name: "LeTourneau University",
-      tier: "Gold", 
-      prizes: ["Free dual credit college class", "$17,000/year scholarship upon completion"],
-      description: "Educational partnership and tuition assistance"
-    },
-    {
-      name: "Praxis",
-      tier: "Gold",
-      prizes: ["$1,000 scholarships for all participants", "$2,000 scholarships for 1st place teams"],
-      description: "Comprehensive student support program"
-    },
-    {
-      name: "Rhetoric LLC",
-      tier: "Bronze",
-      prizes: ["Free coaching sessions", "Random participant prizes"],
-      description: "Professional debate coaching services"
-    }
-  ];
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
@@ -211,94 +127,130 @@ const Sponsor = () => {
           </section>
 
           {/* Sponsorship Tiers */}
-          <section className="relative py-16 bg-gradient-subtle">
-            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
-              <h2 className="text-2xl sm:text-3xl font-bold text-center mb-12 text-white font-primary">Sponsorship <span className="text-primary">Tiers</span></h2>
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {sponsorshipTiers.map((tier, index) => {
-                  const getTierGradient = (name: string) => {
-                    switch (name.toLowerCase()) {
-                      case 'bronze': return 'from-bronze/20 to-bronze/5';
-                      case 'silver': return 'from-silver/20 to-silver/5';
-                      case 'gold': return 'from-gold/20 to-gold/5';
-                      case 'platinum/legacy': return 'from-platinum/20 to-platinum/5';
-                      default: return 'from-red-500/20 to-red-500/5';
-                    }
-                  };
+          <div className="mb-16">
+            <h3 className="text-2xl sm:text-3xl font-bold text-white mb-8 text-center font-primary">
+              Sponsorship <span className="text-primary">Tiers</span>
+            </h3>
+            
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+              {/* Bronze */}
+              <Card className="bg-black/80 border-bronze/30 shadow-elegant hover-scale group">
+                <CardHeader>
+                  <CardTitle className="text-lg font-bold text-bronze flex items-center gap-2">
+                    <Trophy className="h-5 w-5" />
+                    Bronze
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3 text-white/80 text-sm">
+                    <div className="text-bronze font-semibold">No Fee*</div>
+                    <p>Offer any service or product as a prize for at least <strong>1 student</strong> per semester tournament</p>
+                    <p className="text-xs text-white/60">*Optional $25 fee if no prize offered</p>
+                    <div className="pt-2">
+                      <Badge className="bg-bronze/20 text-bronze border-bronze/30">
+                        Entry Level
+                      </Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
-                  const getTierColor = (name: string) => {
-                    switch (name.toLowerCase()) {
-                      case 'bronze': return 'text-bronze';
-                      case 'silver': return 'text-silver';
-                      case 'gold': return 'text-gold';
-                      case 'platinum/legacy': return 'text-platinum';
-                      default: return 'text-primary';
-                    }
-                  };
+              {/* Silver */}
+              <Card className="bg-black/80 border-silver/30 shadow-elegant hover-scale group">
+                <CardHeader>
+                  <CardTitle className="text-lg font-bold text-silver flex items-center gap-2">
+                    <Trophy className="h-5 w-5" />
+                    Silver
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3 text-white/80 text-sm">
+                    <div className="text-silver font-semibold">$75 Fee</div>
+                    <p>Offer any service or product as a prize for at least <strong>2 students</strong> per semester tournament</p>
+                    <p className="text-xs text-white/60">Fee waived if prizes offered for 4+ students</p>
+                    <div className="pt-2">
+                      <Badge className="bg-silver/20 text-silver border-silver/30">
+                        Featured on About Page
+                      </Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
-                  return (
-                    <Card key={index} className="bg-black/80 border-primary/30 shadow-elegant hover-scale group relative overflow-hidden">
-                      <div className={`absolute inset-0 bg-gradient-to-br ${getTierGradient(tier.name)} opacity-0 group-hover:opacity-100 transition-opacity`}></div>
-                      <CardHeader className="text-center relative z-10">
-                        <div className="flex justify-center mb-4">
-                          <div className={getTierColor(tier.name)}>
-                            {tier.icon}
-                          </div>
-                        </div>
-                        <CardTitle className="text-xl text-white">{tier.name}</CardTitle>
-                        <CardDescription className={`text-2xl font-bold ${getTierColor(tier.name)}`}>
-                          {tier.price}
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent className="relative z-10">
-                        <ul className="space-y-2">
-                          {tier.benefits.map((benefit, benefitIndex) => (
-                            <li key={benefitIndex} className="text-sm text-white/80 flex items-start">
-                              <span className="text-primary mr-2">•</span>
-                              {benefit}
-                            </li>
-                          ))}
-                        </ul>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
+              {/* Gold */}
+              <Card className="bg-black/80 border-gold/30 shadow-elegant hover-scale group">
+                <CardHeader>
+                  <CardTitle className="text-lg font-bold text-gold flex items-center gap-2">
+                    <Trophy className="h-5 w-5" />
+                    Gold
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3 text-white/80 text-sm">
+                    <div className="text-gold font-semibold">$150 Fee</div>
+                    <p>Offer <strong>financial prizes</strong> for at least <strong>3 debate events</strong> per semester tournament</p>
+                    <p className="text-xs text-white/60">Fee waived if prizes offered for 6+ events</p>
+                    <div className="pt-2">
+                      <Badge className="bg-gold/20 text-gold border-gold/30">
+                        Featured on Home Page
+                      </Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Platinum */}
+              <Card className="bg-black/80 border-platinum/30 shadow-elegant hover-scale group">
+                <CardHeader>
+                  <CardTitle className="text-lg font-bold text-platinum flex items-center gap-2">
+                    <Star className="h-5 w-5" />
+                    Platinum/Legacy
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3 text-white/80 text-sm">
+                    <div className="text-platinum font-semibold">$1,000+ Fee</div>
+                    <p>Offer financial prizes for at least <strong>5 events</strong> and <strong>2+ teams each</strong> per semester</p>
+                    <p className="text-xs text-white/60">One year commitment required</p>
+                    <div className="pt-2">
+                      <Badge className="bg-platinum/20 text-platinum border-platinum/30">
+                        Premium Placement
+                      </Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-          </section>
+          </div>
 
-          {/* Examples of Past Sponsorships */}
-          <section className="relative py-16 bg-black/20">
-            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
-              <h2 className="text-2xl sm:text-3xl font-bold text-center mb-12 text-white font-primary">Success <span className="text-primary">Stories</span></h2>
-              <div className="grid md:grid-cols-3 gap-6">
-                {pastSponsorships.map((sponsor, index) => (
-                  <Card key={index} className="bg-black/80 border-primary/30 shadow-elegant hover-scale group">
-                    <CardHeader>
-                      <div className="flex items-center justify-between mb-2">
-                        <CardTitle className="text-lg text-white">{sponsor.name}</CardTitle>
-                        <Badge variant="secondary" className="flex items-center gap-1 bg-primary/20 text-primary border-primary/30">
-                          {getTierIcon(sponsor.tier)}
-                          {sponsor.tier}
-                        </Badge>
-                      </div>
-                      <CardDescription className="text-white/70">{sponsor.description}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div>
-                        <h4 className="font-semibold mb-2 text-white">Prize Examples:</h4>
-                        <ul className="text-sm text-white/80 space-y-1">
-                          {sponsor.prizes.map((prize, prizeIndex) => (
-                            <li key={prizeIndex}>• {prize}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          </section>
+          {/* Examples */}
+          <div className="mb-16">
+            <h3 className="text-2xl font-bold text-white mb-8 text-center font-primary">
+              Past Sponsorship <span className="text-primary">Examples</span>
+            </h3>
+            
+            <Card className="bg-black/80 border-primary/30 shadow-elegant">
+              <CardHeader>
+                <CardTitle className="text-lg font-bold text-white">Prize Examples</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4 md:grid-cols-2 text-white/80 text-sm">
+                  <div className="space-y-2">
+                    <p>• <strong className="text-primary">$60,000 scholarships</strong> - Howard Payne University (1st & 2nd place teams)</p>
+                    <p>• <strong className="text-primary">$17,000/year scholarships</strong> - LeTourneau University (1st place LD)</p>
+                    <p>• <strong className="text-primary">Free debate coaching</strong> - Rhetoric LLC (1st place teams)</p>
+                    <p>• <strong className="text-primary">Summer camp attendance</strong> - Patrick Henry College (1st place teams)</p>
+                  </div>
+                  <div className="space-y-2">
+                    <p>• <strong className="text-primary">$2,000 scholarships</strong> - Praxis (1st place teams)</p>
+                    <p>• <strong className="text-primary">$1,000 scholarships</strong> - Praxis (all participants)</p>
+                    <p>• <strong className="text-primary">$8,000 tuition awards</strong> - Criswell College (1st place teams)</p>
+                    <p>• <strong className="text-primary">Audition scholarships</strong> - Howard Payne SSB (quarterfinalists)</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
           {/* Call to Action */}
           <section className="relative py-16 bg-gradient-to-r from-primary/10 to-secondary/10">
