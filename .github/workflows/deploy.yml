@@ -23,11 +23,19 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Verify build contents
+        run: |
+          echo "Build directory contents:"
+          ls -la dist/
+          echo "Checking for .htaccess:"
+          ls -la dist/.htaccess || echo ".htaccess not found"
+
       - name: Create deployment artifact
         uses: actions/upload-artifact@v4
         with:
           name: website-build
-          path: dist/
+          path: dist/**
+          include-hidden-files: true
           retention-days: 7
 
       - name: Upload to cPanel via FTP
