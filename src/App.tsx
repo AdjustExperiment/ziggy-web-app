@@ -44,6 +44,7 @@ const PairingDetail = React.lazy(() => import('@/pages/PairingDetail'));
 const JudgeDashboard = React.lazy(() => import('@/pages/JudgeDashboard'));
 const Privacy = React.lazy(() => import('@/pages/Privacy'));
 const Rules = React.lazy(() => import('@/pages/Rules'));
+const SponsorDashboard = React.lazy(() => import('@/pages/SponsorDashboard'));
 
 // Loading component for Suspense fallback
 const PageLoader = () => (
@@ -113,9 +114,9 @@ function App() {
                         <PairingDetail />
                       </ProtectedRoute>
                     } />
-                    <Route path="/judge-dashboard" element={
+                    <Route path="/sponsor" element={
                       <ProtectedRoute>
-                        <JudgeDashboard />
+                        <SponsorDashboard />
                       </ProtectedRoute>
                     } />
                     <Route path="/account" element={

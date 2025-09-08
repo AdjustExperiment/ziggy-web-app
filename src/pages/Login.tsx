@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { User, Lock, Mail, Users, Shield, Eye, EyeOff, ArrowRight } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { User, Lock, Mail, Users, Shield, Eye, EyeOff, ArrowRight, Building } from "lucide-react";
 import { useOptimizedAuth } from "@/hooks/useOptimizedAuth";
 import { useToast } from "@/hooks/use-toast";
 
@@ -20,10 +21,11 @@ const Login = () => {
   
   const [showPassword, setShowPassword] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
+  const [isSponsorSignup, setIsSponsorSignup] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
   const [loginType, setLoginType] = useState(() => {
     const typeParam = searchParams.get("type");
-    return ["team", "individual", "admin"].includes(typeParam || "") ? typeParam || "team" : "team";
+    return ["user", "team", "admin"].includes(typeParam || "") ? typeParam || "user" : "user";
   });
   
   // Form state
@@ -33,8 +35,8 @@ const Login = () => {
 
   useEffect(() => {
     const typeParam = searchParams.get("type");
-    if (["team", "individual", "admin"].includes(typeParam || "")) {
-      setLoginType(typeParam || "team");
+    if (["user", "team", "admin"].includes(typeParam || "")) {
+      setLoginType(typeParam || "user");
     }
   }, [searchParams]);
 
@@ -184,18 +186,18 @@ const Login = () => {
                 <Tabs value={loginType} onValueChange={setLoginType} className="space-y-6">
                   <TabsList className="grid w-full grid-cols-3 bg-black border border-white/10">
                     <TabsTrigger 
+                      value="user" 
+                      className="data-[state=active]:bg-red-500 data-[state=active]:text-white text-white/70"
+                    >
+                      <User className="h-4 w-4 mr-2" />
+                      User
+                    </TabsTrigger>
+                    <TabsTrigger 
                       value="team" 
                       className="data-[state=active]:bg-red-500 data-[state=active]:text-white text-white/70"
                     >
                       <Users className="h-4 w-4 mr-2" />
                       ZIP
-                    </TabsTrigger>
-                    <TabsTrigger 
-                      value="individual" 
-                      className="data-[state=active]:bg-red-500 data-[state=active]:text-white text-white/70"
-                    >
-                      <User className="h-4 w-4 mr-2" />
-                      Individual
                     </TabsTrigger>
                     <TabsTrigger 
                       value="admin" 
@@ -205,6 +207,132 @@ const Login = () => {
                       Admin
                     </TabsTrigger>
                   </TabsList>
+
+                  <TabsContent value="user" className="space-y-4">
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                      {isSignUp && (
+                        <>
+                          <div className="text-center mb-4">
+                            <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20">
+                              Creating {isSponsorSignup ? 'Sponsor' : 'User'} Account
+                            </Badge>
+                          </div>
+                          
+                          <div className="flex items-center space-x-3 mb-4 p-3 bg-white/5 rounded-lg border border-white/10">
+                            <Building className="h-4 w-4 text-white/70" />
+                            <Label htmlFor="sponsor-toggle" className="text-white text-sm">
+                              Create sponsor account
+                            </Label>
+                            <Switch
+                              id="sponsor-toggle"
+                              checked={isSponsorSignup}
+                              onCheckedChange={setIsSponsorSignup}
+                            />
+                          </div>
+                          
+                          {isSponsorSignup && (
+                            <div className="p-3 bg-blue-500/10 rounded-lg border border-blue-500/20 mb-4">
+                              <p className="text-sm text-blue-300">
+                                Sponsor accounts can apply for tournament sponsorship opportunities and manage their brand presence.
+                              </p>
+                            </div>
+                          )}
+                        </>
+                      )}
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="user-email" className="text-white">Email Address</Label>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/70" />
+                          <Input
+                            id="user-email"
+                            type="email"
+                            placeholder="your.email@example.com"
+                            className="pl-10 bg-black border-white/20 text-white placeholder:text-white/70"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="user-password" className="text-white">Password</Label>
+                        <div className="relative">
+                          <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/70" />
+                          <Input
+                            id="user-password"
+                            type={showPassword ? "text" : "password"}
+                            placeholder="Enter your password"
+                            className="pl-10 pr-10 bg-black border-white/20 text-white placeholder:text-white/70"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-white/70 hover:text-white"
+                            onClick={() => setShowPassword(!showPassword)}
+                          >
+                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      {isSignUp && (
+                        <div className="space-y-2">
+                          <Label htmlFor="user-confirm-password" className="text-white">Confirm Password</Label>
+                          <div className="relative">
+                            <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/70" />
+                            <Input
+                              id="user-confirm-password"
+                              type={showPassword ? "text" : "password"}
+                              placeholder="Confirm your password"
+                              className="pl-10 bg-black border-white/20 text-white placeholder:text-white/70"
+                              value={confirmPassword}
+                              onChange={(e) => setConfirmPassword(e.target.value)}
+                              required
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="flex items-center justify-between text-sm">
+                        <label className="flex items-center gap-2 text-white/70">
+                          <input type="checkbox" className="rounded" />
+                          Remember me
+                        </label>
+                        <Button variant="link" className="text-red-500 hover:text-red-400 p-0" type="button">
+                          Forgot password?
+                        </Button>
+                      </div>
+
+                      <Button 
+                        type="submit" 
+                        className="w-full bg-red-500 hover:bg-red-600 text-white" 
+                        disabled={formLoading}
+                      >
+                        {formLoading ? (
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                        ) : null}
+                        {isSignUp ? `Create ${isSponsorSignup ? 'Sponsor' : 'User'} Account` : 'Sign In'}
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
+                      
+                      <div className="text-center">
+                        <Button
+                          variant="link"
+                          className="text-white/70 hover:text-white p-0"
+                          type="button"
+                          onClick={() => setIsSignUp(!isSignUp)}
+                        >
+                          {isSignUp ? 'Already have an account? Sign in' : 'Need an account? Sign up'}
+                        </Button>
+                      </div>
+                    </form>
+                  </TabsContent>
 
                   <TabsContent value="team" className="space-y-4">
                     <div className="text-center mb-4">
@@ -315,7 +443,7 @@ const Login = () => {
                     </form>
                   </TabsContent>
 
-                  <TabsContent value="individual" className="space-y-4">
+                  <TabsContent value="admin" className="space-y-4">
                     <form onSubmit={handleSubmit} className="space-y-4">
                       {isSignUp && (
                         <div className="text-center mb-4">

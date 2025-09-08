@@ -17,6 +17,7 @@ import { SiteEditor } from '@/components/admin/SiteEditor';
 import { PromoCodesManager } from '@/components/admin/PromoCodesManager';
 import { StaffRevenueCalculator } from '@/components/admin/StaffRevenueCalculator';
 import { SecurityDashboard } from '@/components/admin/SecurityDashboard';
+import SponsorsManager from '@/components/admin/SponsorsManager';
 
 import { FooterContentManager } from '@/components/admin/FooterContentManager';
 

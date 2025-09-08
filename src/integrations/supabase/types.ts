@@ -1547,6 +1547,99 @@ export type Database = {
         }
         Relationships: []
       }
+      sponsor_applications: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          id: string
+          offerings: string | null
+          requests: string | null
+          sponsor_profile_id: string
+          status: string
+          tier: string
+          tournament_id: string
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          id?: string
+          offerings?: string | null
+          requests?: string | null
+          sponsor_profile_id: string
+          status?: string
+          tier: string
+          tournament_id: string
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          id?: string
+          offerings?: string | null
+          requests?: string | null
+          sponsor_profile_id?: string
+          status?: string
+          tier?: string
+          tournament_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sponsor_applications_sponsor_profile_id_fkey"
+            columns: ["sponsor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "sponsor_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sponsor_applications_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sponsor_profiles: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          logo_url: string | null
+          name: string
+          resources: Json
+          updated_at: string
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          logo_url?: string | null
+          name: string
+          resources?: Json
+          updated_at?: string
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          logo_url?: string | null
+          name?: string
+          resources?: Json
+          updated_at?: string
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       top_performers: {
         Row: {
           created_at: string
@@ -1994,6 +2087,10 @@ export type Database = {
       make_admin_by_email: {
         Args: { target_email: string }
         Returns: boolean
+      }
+      map_sponsor_tier_for_display: {
+        Args: { _tier: string }
+        Returns: string
       }
       publish_due_ballots: {
         Args: Record<PropertyKey, never>
