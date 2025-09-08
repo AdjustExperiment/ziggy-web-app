@@ -1,4 +1,4 @@
-name: Build & Deploy (FTPS)
+name: Build & Deploy (FTPS, Clean Slate)
 
 on:
   push:
@@ -43,14 +43,13 @@ jobs:
           RewriteRule . /index.html [L]
           EOF
 
-      # Optional: keep artifact for quick rollback
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: dist
           path: dist
 
-      # --- Preflight (sanity checks) ---
+      # (Optional) sanity checks
       - name: Assert required secrets exist (no values printed)
         env:
           FTP_HOST: ${{ secrets.FTP_HOST }}
@@ -61,28 +60,23 @@ jobs:
             [ -n "${!v}" ] && echo "Secret $v present (len=${#v})" || { echo "::error::$v missing"; exit 1; }
           done
 
-      - name: Preflight - DNS lookup
-        run: |
-          echo "Host (masked in logs) set."
-          getent hosts "${{ secrets.FTP_HOST }}" || true
-          which nslookup >/dev/null 2>&1 && nslookup "${{ secrets.FTP_HOST }}" || true
-
       - name: Preflight - FTPS handshake on :21
         run: |
           echo | openssl s_client -starttls ftp -connect "${{ secrets.FTP_HOST }}:21" -brief || true
 
-      # --- Deploy (EXPLICIT FTPS on port 21) ---
-      - name: Deploy via FTPS
+      - name: Deploy via FTPS (clean slate)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_HOST }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ftps              # <— switch to FTPS (TLS)
+          protocol: ftps
           port: ${{ secrets.FTP_PORT || 21 }}
           local-dir: dist/
           server-dir: /home/ziggydebate/newsite.ziggyonlinedebate.com/
           state-name: .ftp-deploy-sync-state.json
+          # Wipe remote directory first (dangerous: deletes everything in server-dir)
+          dangerous-clean-slate: true
           exclude: |
             **/.git*
             **/node_modules/**
