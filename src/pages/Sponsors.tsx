@@ -272,43 +272,236 @@ const Sponsors = () => {
         </div>
       </section>
 
-      {/* Partner with Ziggy CTA */}
-      <section className="relative py-12 bg-gradient-to-r from-primary/20 to-secondary/20">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center relative z-10">
-          <Card className="bg-black/80 border-primary/30 shadow-elegant backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="text-2xl font-bold text-white flex items-center justify-center gap-3">
-                <Heart className="h-6 w-6 text-primary" />
-                Partner with Ziggy!
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-white/80 leading-relaxed mb-6">
-                Join our mission to provide accessible, high-quality debate education nationwide. 
-                Become a sponsor and help shape the next generation of critical thinkers.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                {user ? (
-                  <Button asChild size="lg" className="bg-primary hover:bg-primary/90">
-                    <Link to="/sponsor">Become a Sponsor</Link>
+      {/* Sponsorship Information */}
+      <section className="relative py-16 bg-gradient-subtle">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center mb-12">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-6 font-primary">
+              Become a <span className="text-primary">Sponsor</span>
+            </h2>
+            <p className="text-lg text-white/80 max-w-3xl mx-auto font-secondary">
+              Partner with Ziggy Online Debate® and support accessible, high-quality debate education nationwide.
+            </p>
+          </div>
+
+          <div className="grid gap-8 lg:grid-cols-2 mb-16">
+            {/* Overview */}
+            <Card className="bg-black/80 border-primary/30 shadow-elegant">
+              <CardHeader>
+                <CardTitle className="text-xl font-bold text-white flex items-center gap-3">
+                  <Building className="h-6 w-6 text-primary" />
+                  Sponsorship Overview
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4 text-white/80">
+                  <p>
+                    Sponsorship agreements are determined on a yearly basis and by default include both of 
+                    Ziggy's premiere offerings: the Fall Semester Tournament and the Spring Semester Tournament.
+                  </p>
+                  <p>
+                    The Ziggy Online Debate® website features all current sponsors on this dedicated page. 
+                    Higher tier sponsorships also feature sponsors' logos prominently throughout the site.
+                  </p>
+                  <p>
+                    Sponsors are encouraged to offer services that students can use immediately or in the coming years, 
+                    such as college scholarships, training programs, and coaching services.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Debate Events */}
+            <Card className="bg-black/80 border-primary/30 shadow-elegant">
+              <CardHeader>
+                <CardTitle className="text-xl font-bold text-white flex items-center gap-3">
+                  <Trophy className="h-6 w-6 text-primary" />
+                  Debate Events
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3 text-white/80 text-sm">
+                  <p className="text-white font-medium mb-3">We typically recognize awards for:</p>
+                  <ul className="space-y-2">
+                    <li>• NCFCA Team Policy (TP) - 2 individuals per team</li>
+                    <li>• Stoa Team Policy - 2 individuals per team</li>
+                    <li>• NCFCA Lincoln-Douglas (LD) - Individual event</li>
+                    <li>• Stoa Lincoln-Douglas - Individual event</li>
+                    <li>• Team Parliamentary Debate - 2 individuals per team</li>
+                    <li>• Individual Parliamentary - Individual event</li>
+                    <li>• Moot Court (Spring only) - 2 individuals per team</li>
+                  </ul>
+                  <p className="text-primary/80 mt-4">
+                    Most popular: NCFCA LD, NCFCA TP, Stoa LD, and Stoa TP
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Sponsorship Tiers */}
+          <div className="mb-16">
+            <h3 className="text-2xl sm:text-3xl font-bold text-white mb-8 text-center font-primary">
+              Sponsorship <span className="text-primary">Tiers</span>
+            </h3>
+            
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+              {/* Bronze */}
+              <Card className="bg-black/80 border-bronze/30 shadow-elegant hover-scale group">
+                <CardHeader>
+                  <CardTitle className="text-lg font-bold text-bronze flex items-center gap-2">
+                    <Trophy className="h-5 w-5" />
+                    Bronze
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3 text-white/80 text-sm">
+                    <div className="text-bronze font-semibold">No Fee*</div>
+                    <p>Offer any service or product as a prize for at least <strong>1 student</strong> per semester tournament</p>
+                    <p className="text-xs text-white/60">*Optional $25 fee if no prize offered</p>
+                    <div className="pt-2">
+                      <Badge className="bg-bronze/20 text-bronze border-bronze/30">
+                        Entry Level
+                      </Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Silver */}
+              <Card className="bg-black/80 border-silver/30 shadow-elegant hover-scale group">
+                <CardHeader>
+                  <CardTitle className="text-lg font-bold text-silver flex items-center gap-2">
+                    <Trophy className="h-5 w-5" />
+                    Silver
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3 text-white/80 text-sm">
+                    <div className="text-silver font-semibold">$75 Fee</div>
+                    <p>Offer any service or product as a prize for at least <strong>2 students</strong> per semester tournament</p>
+                    <p className="text-xs text-white/60">Fee waived if prizes offered for 4+ students</p>
+                    <div className="pt-2">
+                      <Badge className="bg-silver/20 text-silver border-silver/30">
+                        Featured on About Page
+                      </Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Gold */}
+              <Card className="bg-black/80 border-gold/30 shadow-elegant hover-scale group">
+                <CardHeader>
+                  <CardTitle className="text-lg font-bold text-gold flex items-center gap-2">
+                    <Trophy className="h-5 w-5" />
+                    Gold
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3 text-white/80 text-sm">
+                    <div className="text-gold font-semibold">$150 Fee</div>
+                    <p>Offer <strong>financial prizes</strong> for at least <strong>3 debate events</strong> per semester tournament</p>
+                    <p className="text-xs text-white/60">Fee waived if prizes offered for 6+ events</p>
+                    <div className="pt-2">
+                      <Badge className="bg-gold/20 text-gold border-gold/30">
+                        Featured on Home Page
+                      </Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Platinum */}
+              <Card className="bg-black/80 border-platinum/30 shadow-elegant hover-scale group">
+                <CardHeader>
+                  <CardTitle className="text-lg font-bold text-platinum flex items-center gap-2">
+                    <Star className="h-5 w-5" />
+                    Platinum/Legacy
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3 text-white/80 text-sm">
+                    <div className="text-platinum font-semibold">$1,000+ Fee</div>
+                    <p>Offer financial prizes for at least <strong>5 events</strong> and <strong>2+ teams each</strong> per semester</p>
+                    <p className="text-xs text-white/60">One year commitment required</p>
+                    <div className="pt-2">
+                      <Badge className="bg-platinum/20 text-platinum border-platinum/30">
+                        Premium Placement
+                      </Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+
+          {/* Examples */}
+          <div className="mb-16">
+            <h3 className="text-2xl font-bold text-white mb-8 text-center font-primary">
+              Past Sponsorship <span className="text-primary">Examples</span>
+            </h3>
+            
+            <Card className="bg-black/80 border-primary/30 shadow-elegant">
+              <CardHeader>
+                <CardTitle className="text-lg font-bold text-white">Prize Examples</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4 md:grid-cols-2 text-white/80 text-sm">
+                  <div className="space-y-2">
+                    <p>• <strong className="text-primary">$60,000 scholarships</strong> - Howard Payne University (1st & 2nd place teams)</p>
+                    <p>• <strong className="text-primary">$17,000/year scholarships</strong> - LeTourneau University (1st place LD)</p>
+                    <p>• <strong className="text-primary">Free debate coaching</strong> - Rhetoric LLC (1st place teams)</p>
+                    <p>• <strong className="text-primary">Summer camp attendance</strong> - Patrick Henry College (1st place teams)</p>
+                  </div>
+                  <div className="space-y-2">
+                    <p>• <strong className="text-primary">$2,000 scholarships</strong> - Praxis (1st place teams)</p>
+                    <p>• <strong className="text-primary">$1,000 scholarships</strong> - Praxis (all participants)</p>
+                    <p>• <strong className="text-primary">$8,000 tuition awards</strong> - Criswell College (1st place teams)</p>
+                    <p>• <strong className="text-primary">Audition scholarships</strong> - Howard Payne SSB (quarterfinalists)</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* CTA */}
+          <div className="text-center">
+            <Card className="bg-gradient-to-r from-primary/20 to-secondary/20 border-primary/30 shadow-elegant backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="text-2xl font-bold text-white flex items-center justify-center gap-3">
+                  <Heart className="h-6 w-6 text-primary" />
+                  Ready to Partner with Ziggy?
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-white/80 leading-relaxed mb-6 max-w-2xl mx-auto">
+                  Join our mission to provide accessible, high-quality debate education nationwide. 
+                  Help shape the next generation of critical thinkers and public speakers.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  {user ? (
+                    <Button asChild size="lg" className="bg-primary hover:bg-primary/90">
+                      <Link to="/sponsor">Create Sponsor Account</Link>
+                    </Button>
+                  ) : (
+                    <Button asChild size="lg" className="bg-primary hover:bg-primary/90">
+                      <Link to="/login?sponsor=true">Create Sponsor Account</Link>
+                    </Button>
+                  )}
+                  <Button 
+                    variant="outline" 
+                    size="lg"
+                    className="border-white/20 text-white hover:bg-white/10"
+                    onClick={() => window.open('https://docs.google.com/forms/d/e/1FAIpQLSdWCj-1nnRKUUOD6sPsQ9Le4bY1_Ib15JyhYlzTezCRbOg6ig/viewform?usp=sf_link', '_blank')}
+                  >
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    Submit Application Form
                   </Button>
-                ) : (
-                  <Button asChild size="lg" className="bg-primary hover:bg-primary/90">
-                    <Link to="/login?sponsor=true">Become a Sponsor</Link>
-                  </Button>
-                )}
-                <Button 
-                  variant="outline" 
-                  size="lg"
-                  className="border-white/20 text-white hover:bg-white/10"
-                  onClick={() => window.open('https://ziggyonlinedebate.com/sponsor-application/', '_blank')}
-                >
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  Learn More
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </section>
 
@@ -403,11 +596,11 @@ const Sponsors = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             {user ? (
               <Button asChild size="lg" className="bg-primary hover:bg-primary/90">
-                <Link to="/sponsor">Apply Now</Link>
+                <Link to="/sponsor">Sponsor Dashboard</Link>
               </Button>
             ) : (
               <Button asChild size="lg" className="bg-primary hover:bg-primary/90">
-                <Link to="/login?sponsor=true">Get Started</Link>
+                <Link to="/login?sponsor=true">Create Sponsor Account</Link>
               </Button>
             )}
           </div>
