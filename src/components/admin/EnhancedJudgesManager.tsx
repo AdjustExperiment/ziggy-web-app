@@ -45,6 +45,7 @@ export function EnhancedJudgesManager() {
     name: '',
     email: '',
     phone: '',
+    password: '',
     bio: '',
     qualifications: '',
     specializations: [] as string[],
@@ -81,6 +82,7 @@ export function EnhancedJudgesManager() {
       name: '',
       email: '',
       phone: '',
+      password: '',
       bio: '',
       qualifications: '',
       specializations: [],
@@ -93,18 +95,19 @@ export function EnhancedJudgesManager() {
     e.preventDefault();
 
     try {
-      const judgeData = {
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone || null,
-        bio: formData.bio || null,
-        qualifications: formData.qualifications || null,
-        specializations: formData.specializations,
-        experience_years: formData.experience_years,
-        experience_level: getExperienceLevel(formData.experience_years) // Keep for backward compatibility
-      };
-
       if (editingJudge) {
+        // Update existing judge profile only
+        const judgeData = {
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone || null,
+          bio: formData.bio || null,
+          qualifications: formData.qualifications || null,
+          specializations: formData.specializations,
+          experience_years: formData.experience_years,
+          experience_level: getExperienceLevel(formData.experience_years)
+        };
+
         const { error } = await supabase
           .from('judge_profiles')
           .update(judgeData)
@@ -117,15 +120,45 @@ export function EnhancedJudgesManager() {
           description: "Judge updated successfully",
         });
       } else {
-        const { error } = await supabase
+        // Create new user account first
+        const nameParts = formData.name.trim().split(' ');
+        const firstName = nameParts[0] || '';
+        const lastName = nameParts.slice(1).join(' ') || '';
+
+        const { data: createUserResponse, error: createUserError } = await supabase.functions.invoke('admin-create-user', {
+          body: {
+            email: formData.email,
+            password: formData.password,
+            firstName,
+            lastName,
+            role: 'judge'
+          }
+        });
+
+        if (createUserError) throw createUserError;
+
+        // Then create judge profile with user_id
+        const judgeData = {
+          user_id: createUserResponse.user.id,
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone || null,
+          bio: formData.bio || null,
+          qualifications: formData.qualifications || null,
+          specializations: formData.specializations,
+          experience_years: formData.experience_years,
+          experience_level: getExperienceLevel(formData.experience_years)
+        };
+
+        const { error: judgeError } = await supabase
           .from('judge_profiles')
           .insert([judgeData]);
 
-        if (error) throw error;
+        if (judgeError) throw judgeError;
 
         toast({
           title: "Success",
-          description: "Judge created successfully",
+          description: "Judge account created successfully",
         });
       }
 
@@ -155,6 +188,7 @@ export function EnhancedJudgesManager() {
       name: judge.name,
       email: judge.email,
       phone: judge.phone || '',
+      password: '', // Don't populate password for editing
       bio: judge.bio || '',
       qualifications: judge.qualifications || '',
       specializations: judge.specializations,
@@ -221,14 +255,14 @@ export function EnhancedJudgesManager() {
           <DialogTrigger asChild>
             <Button onClick={() => { resetForm(); setIsDialogOpen(true); }}>
               <Plus className="h-4 w-4 mr-2" />
-              Add Judge
+              Create Judge Account
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>{editingJudge ? 'Edit' : 'Add'} Judge Profile</DialogTitle>
+              <DialogTitle>{editingJudge ? 'Edit Judge Profile' : 'Create Judge Account'}</DialogTitle>
               <DialogDescription>
-                {editingJudge ? 'Update judge information' : 'Create a new judge profile'}
+                {editingJudge ? 'Update judge information' : 'Create a new judge account with login credentials'}
               </DialogDescription>
             </DialogHeader>
             
@@ -264,6 +298,20 @@ export function EnhancedJudgesManager() {
                   onChange={(e) => setFormData({...formData, phone: e.target.value})}
                 />
               </div>
+
+              {!editingJudge && (
+                <div>
+                  <Label htmlFor="password">Password *</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={formData.password}
+                    onChange={(e) => setFormData({...formData, password: e.target.value})}
+                    required
+                    placeholder="Enter secure password"
+                  />
+                </div>
+              )}
 
               <div>
                 <Label>Years of Experience: {formData.experience_years} years</Label>
@@ -328,7 +376,7 @@ export function EnhancedJudgesManager() {
                   Cancel
                 </Button>
                 <Button type="submit">
-                  {editingJudge ? 'Update' : 'Create'} Judge
+                  {editingJudge ? 'Update Judge' : 'Create Judge Account'}
                 </Button>
               </div>
             </form>
