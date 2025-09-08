@@ -1,24 +1,26 @@
-# Welcome to your Lovable project
+# Welcome to the Ziggy Web-App
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/a22e01e1-f2bf-4852-a270-d223c2e06c1a
+ **URL**: newsite.ziggyonlinedebate.com
 
 ## How can I edit this code?
 
-There are several ways of editing your application.
+There are several ways of editing this application.
 
 **Use Lovable** 
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/a22e01e1-f2bf-4852-a270-d223c2e06c1a) and start prompting.
+If you want to make easy, AI-prompted edits, feel free to use Lovable AI. Simply reach out and ask for user credentials, and you will be able to push automatic updates via a prompt-line or typescript edits. Simply visit the [Lovable Project](https://lovable.dev/projects/a22e01e1-f2bf-4852-a270-d223c2e06c1a) and start prompting.
 
 Changes made via Lovable will be committed automatically to this repo.
 
-**Use your preferred IDE**
-1
+**Use a preferred IDE**
+
 If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
 
 The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+
+This is naturally more complex, but is quite easy with basic IDE experience. 
 
 Follow these steps:
 
@@ -59,13 +61,12 @@ This project is built with:
 - React
 - shadcn-ui
 - Tailwind CSS
+- Prayer
 
 ## How can I deploy this project?
 
-**Option 1: Lovable Hosting**
-Simply open [Lovable](https://lovable.dev/projects/a22e01e1-f2bf-4852-a270-d223c2e06c1a) and click on Share -> Publish.
 
-**Option 2: Manual cPanel Upload**
+**Option 1: Manual cPanel Upload**
 
 1. **Generate the site files:**
    - Go to the [Actions tab](../../actions) in this GitHub repository
@@ -88,12 +89,8 @@ Simply open [Lovable](https://lovable.dev/projects/a22e01e1-f2bf-4852-a270-d223c
    - Delete the uploaded ZIP file (optional cleanup)
    - Test your site - both the homepage and deep links should work
 
-**Note:** If deploying to a subfolder instead of the domain root, you may need to rebuild with a custom base path.
+**Note:** As of 9/8/25, the 'Build and Deploy' function makes the manual export obselete. It automatically pushes a fresh version of the build everytime a commit is added via github or lovable via FTPS.
 
-## Can I connect a custom domain to my Lovable project?
+-Justus
 
-Yes, you can!
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
