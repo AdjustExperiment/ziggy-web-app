@@ -1,4 +1,4 @@
-name: Build & Deploy (FTP)
+name: Build & Deploy (FTPS)
 
 on:
   push:
@@ -43,33 +43,42 @@ jobs:
           RewriteRule . /index.html [L]
           EOF
 
+      # Optional: keep artifact for quick rollback
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: dist
           path: dist
 
-      # --- Preflight diagnostics ---
+      # --- Preflight (sanity checks) ---
+      - name: Assert required secrets exist (no values printed)
+        env:
+          FTP_HOST: ${{ secrets.FTP_HOST }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          for v in FTP_HOST FTP_USERNAME FTP_PASSWORD; do
+            [ -n "${!v}" ] && echo "Secret $v present (len=${#v})" || { echo "::error::$v missing"; exit 1; }
+          done
+
       - name: Preflight - DNS lookup
         run: |
-          echo "Host from secret: ${{ secrets.FTP_HOST }}"
+          echo "Host (masked in logs) set."
           getent hosts "${{ secrets.FTP_HOST }}" || true
-          which dig >/dev/null 2>&1 && dig +short "${{ secrets.FTP_HOST }}" || true
           which nslookup >/dev/null 2>&1 && nslookup "${{ secrets.FTP_HOST }}" || true
 
-      - name: Preflight - Port 21 connectivity
+      - name: Preflight - FTPS handshake on :21
         run: |
-          echo "Testing TCP 21 to ${{ secrets.FTP_HOST }} ..."
-          (echo quit | timeout 5 telnet "${{ secrets.FTP_HOST }}" 21) || true
-          which nc >/dev/null 2>&1 && nc -vz -w 5 "${{ secrets.FTP_HOST }}" 21 || true
+          echo | openssl s_client -starttls ftp -connect "${{ secrets.FTP_HOST }}:21" -brief || true
 
-      - name: Deploy via FTP
+      # --- Deploy (EXPLICIT FTPS on port 21) ---
+      - name: Deploy via FTPS
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_HOST }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ftp
+          protocol: ftps              # <— switch to FTPS (TLS)
           port: ${{ secrets.FTP_PORT || 21 }}
           local-dir: dist/
           server-dir: /home/ziggydebate/newsite.ziggyonlinedebate.com/
