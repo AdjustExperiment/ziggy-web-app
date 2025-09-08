@@ -21,67 +21,74 @@ const Sponsor = () => {
   const sponsorshipTiers = [
     {
       name: "Bronze",
-      price: "$500+",
+      price: "No Fee*",
       icon: <Trophy className="h-8 w-8 text-primary" />,
       benefits: [
-        "Logo on tournament materials",
-        "Social media recognition",
-        "Basic event listing"
+        "Offer prize for at least 1 student per semester",
+        "Listed on sponsors page",
+        "Basic recognition in tournament materials",
+        "*Optional $25 fee if no prize offered"
       ]
     },
     {
       name: "Silver", 
-      price: "$1,000+",
+      price: "$75 Fee*",
       icon: <Star className="h-8 w-8 text-primary" />,
       benefits: [
-        "Everything in Bronze",
-        "Prominent logo placement",
-        "Judge recruitment priority",
-        "Event program inclusion"
+        "Offer prize for at least 2 students per semester",
+        "Logo featured on About Us page",
+        "Enhanced tournament visibility",
+        "*Fee waived if prizes for 4+ students"
       ]
     },
     {
       name: "Gold",
-      price: "$2,500+", 
+      price: "$150 Fee*", 
       icon: <Crown className="h-8 w-8 text-primary" />,
       benefits: [
-        "Everything in Silver",
-        "Speaking opportunities",
-        "VIP tournament access",
-        "Custom recognition ceremony"
+        "Offer financial prize for 3+ debate events",
+        "Logo featured on home page",
+        "Priority sponsor recognition",
+        "*Fee waived if prizes for 6+ events"
       ]
     },
     {
       name: "Platinum/Legacy",
-      price: "$5,000+",
+      price: "$1,000+ Fee",
       icon: <Zap className="h-8 w-8 text-primary" />,
       benefits: [
-        "Everything in Gold",
-        "Tournament naming rights",
-        "Exclusive networking events", 
-        "Year-round partnership"
+        "Financial prize for 5+ events per semester",
+        "2+ teams per event requirement",
+        "Premium home page placement",
+        "Exclusive partnership benefits"
       ]
     }
   ];
 
   const pastSponsorships = [
     {
-      name: "Harvard Debate Society",
-      tier: "Gold",
-      tournaments: ["National Championships 2024", "Regional Qualifiers"],
-      description: "Supporting collegiate debate excellence"
-    },
-    {
-      name: "TechCorp Solutions",
-      tier: "Silver", 
-      tournaments: ["High School Invitational"],
-      description: "Empowering the next generation of critical thinkers"
-    },
-    {
-      name: "Education Foundation",
+      name: "Howard Payne University",
       tier: "Platinum",
-      tournaments: ["Summer Debate Camp", "Youth League Championships"],
-      description: "Committed to educational excellence and opportunity"
+      prizes: ["$60,000 scholarships for 1st & 2nd place teams", "$56,000 scholarships for 3rd & 4th place teams"],
+      description: "Major university scholarship provider"
+    },
+    {
+      name: "LeTourneau University",
+      tier: "Gold", 
+      prizes: ["Free dual credit college class", "$17,000/year scholarship upon completion"],
+      description: "Educational partnership and tuition assistance"
+    },
+    {
+      name: "Praxis",
+      tier: "Gold",
+      prizes: ["$1,000 scholarships for all participants", "$2,000 scholarships for 1st place teams"],
+      description: "Comprehensive student support program"
+    },
+    {
+      name: "Rhetoric LLC",
+      tier: "Bronze",
+      prizes: ["Free coaching sessions", "Random participant prizes"],
+      description: "Professional debate coaching services"
     }
   ];
 
@@ -99,12 +106,16 @@ const Sponsor = () => {
               in fostering critical thinking, public speaking, and academic excellence.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/sponsor/dashboard">
+              <a 
+                href="https://docs.google.com/forms/d/e/1FAIpQLSdWCj-1nnRKUUOD6sPsQ9Le4bY1_Ib15JyhYlzTezCRbOg6ig/viewform?usp=sf_link" 
+                target="_blank" 
+                rel="noopener noreferrer"
+              >
                 <Button size="lg" className="w-full sm:w-auto">
                   Apply Now
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
-              </Link>
+              </a>
               <Link to="/contact">
                 <Button variant="outline" size="lg" className="w-full sm:w-auto">
                   Contact Us
@@ -237,10 +248,10 @@ const Sponsor = () => {
                   </CardHeader>
                   <CardContent>
                     <div>
-                      <h4 className="font-semibold mb-2">Sponsored Tournaments:</h4>
+                      <h4 className="font-semibold mb-2">Prize Examples:</h4>
                       <ul className="text-sm text-muted-foreground space-y-1">
-                        {sponsor.tournaments.map((tournament, tournamentIndex) => (
-                          <li key={tournamentIndex}>• {tournament}</li>
+                        {sponsor.prizes.map((prize, prizeIndex) => (
+                          <li key={prizeIndex}>• {prize}</li>
                         ))}
                       </ul>
                     </div>
@@ -258,15 +269,21 @@ const Sponsor = () => {
               Start your sponsorship journey today.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/sponsor/dashboard">
+              <a 
+                href="https://docs.google.com/forms/d/e/1FAIpQLSdWCj-1nnRKUUOD6sPsQ9Le4bY1_Ib15JyhYlzTezCRbOg6ig/viewform?usp=sf_link" 
+                target="_blank" 
+                rel="noopener noreferrer"
+              >
                 <Button size="lg" className="w-full sm:w-auto">
                   Submit Application
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
+              </a>
+              <Link to="/contact">
+                <Button variant="outline" size="lg" className="w-full sm:w-auto">
+                  View Guidelines
+                </Button>
               </Link>
-              <Button variant="outline" size="lg" className="w-full sm:w-auto">
-                Download Sponsorship Package
-              </Button>
             </div>
           </div>
         </div>
