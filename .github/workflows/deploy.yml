@@ -72,7 +72,7 @@ jobs:
           protocol: ftp
           port: ${{ secrets.FTP_PORT || 21 }}
           local-dir: dist/
-          server-dir: /home/ziggydebate/newsite.ziggyonlinedebate.com/
+          server-dir: /home/ziggydebate/newsite.ziggyonlinedebate.com/ziggydebate/
           state-name: .ftp-deploy-sync-state.json
           exclude: |
             **/.git*
