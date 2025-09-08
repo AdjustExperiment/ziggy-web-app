@@ -137,22 +137,22 @@ const Sponsors = () => {
       case 'bronze':
         return <Trophy className="h-5 w-5 text-bronze" />;
       default:
-        return <Building className="h-5 w-5" />;
+        return <Building className="h-5 w-5 text-primary" />;
     }
   };
 
   const getTierGradient = (tier: string) => {
     switch (tier.toLowerCase()) {
       case 'platinum':
-        return 'from-platinum/20 to-platinum/5';
+        return 'from-primary/20 to-primary/5';
       case 'gold':
-        return 'from-gold/20 to-gold/5';
+        return 'from-primary/20 to-primary/5';
       case 'silver':
-        return 'from-silver/20 to-silver/5';
+        return 'from-primary/15 to-primary/5';
       case 'bronze':
-        return 'from-bronze/20 to-bronze/5';
+        return 'from-primary/10 to-primary/5';
       default:
-        return 'from-red-500/20 to-red-500/5';
+        return 'from-primary/20 to-primary/5';
     }
   };
 
@@ -182,7 +182,7 @@ const Sponsors = () => {
               </CardTitle>
               <div className="flex gap-2 mt-1">
                 {tier && (
-                  <Badge className="bg-red-500/20 text-red-300 border-red-500/30 text-xs">
+                  <Badge className="bg-primary/20 text-primary border-primary/30 text-xs">
                     {getTierIcon(tier)}
                     <span className="ml-1">{tier.toUpperCase()}</span>
                   </Badge>
@@ -347,7 +347,7 @@ const Sponsors = () => {
             
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
               {/* Bronze */}
-              <Card className="bg-black/80 border-bronze/30 shadow-elegant hover-scale group">
+              <Card className="bg-black/80 border-bronze shadow-elegant hover-scale group">
                 <CardHeader>
                   <CardTitle className="text-lg font-bold text-bronze flex items-center gap-2">
                     <Trophy className="h-5 w-5" />
@@ -360,7 +360,7 @@ const Sponsors = () => {
                     <p>Offer any service or product as a prize for at least <strong>1 student</strong> per semester tournament</p>
                     <p className="text-xs text-white/60">*Optional $25 fee if no prize offered</p>
                     <div className="pt-2">
-                      <Badge className="bg-bronze/20 text-bronze border-bronze/30">
+                      <Badge className="bg-primary/20 text-primary border-primary/30">
                         Entry Level
                       </Badge>
                     </div>
@@ -369,7 +369,7 @@ const Sponsors = () => {
               </Card>
 
               {/* Silver */}
-              <Card className="bg-black/80 border-silver/30 shadow-elegant hover-scale group">
+              <Card className="bg-black/80 border-silver shadow-elegant hover-scale group">
                 <CardHeader>
                   <CardTitle className="text-lg font-bold text-silver flex items-center gap-2">
                     <Trophy className="h-5 w-5" />
@@ -382,7 +382,7 @@ const Sponsors = () => {
                     <p>Offer any service or product as a prize for at least <strong>2 students</strong> per semester tournament</p>
                     <p className="text-xs text-white/60">Fee waived if prizes offered for 4+ students</p>
                     <div className="pt-2">
-                      <Badge className="bg-silver/20 text-silver border-silver/30">
+                      <Badge className="bg-primary/20 text-primary border-primary/30">
                         Featured on About Page
                       </Badge>
                     </div>
@@ -391,7 +391,7 @@ const Sponsors = () => {
               </Card>
 
               {/* Gold */}
-              <Card className="bg-black/80 border-gold/30 shadow-elegant hover-scale group">
+              <Card className="bg-black/80 border-gold shadow-elegant hover-scale group">
                 <CardHeader>
                   <CardTitle className="text-lg font-bold text-gold flex items-center gap-2">
                     <Trophy className="h-5 w-5" />
@@ -404,7 +404,7 @@ const Sponsors = () => {
                     <p>Offer <strong>financial prizes</strong> for at least <strong>3 debate events</strong> per semester tournament</p>
                     <p className="text-xs text-white/60">Fee waived if prizes offered for 6+ events</p>
                     <div className="pt-2">
-                      <Badge className="bg-gold/20 text-gold border-gold/30">
+                      <Badge className="bg-primary/20 text-primary border-primary/30">
                         Featured on Home Page
                       </Badge>
                     </div>
@@ -413,7 +413,7 @@ const Sponsors = () => {
               </Card>
 
               {/* Platinum */}
-              <Card className="bg-black/80 border-platinum/30 shadow-elegant hover-scale group">
+              <Card className="bg-black/80 border-platinum shadow-elegant hover-scale group">
                 <CardHeader>
                   <CardTitle className="text-lg font-bold text-platinum flex items-center gap-2">
                     <Star className="h-5 w-5" />
@@ -426,7 +426,7 @@ const Sponsors = () => {
                     <p>Offer financial prizes for at least <strong>5 events</strong> and <strong>2+ teams each</strong> per semester</p>
                     <p className="text-xs text-white/60">One year commitment required</p>
                     <div className="pt-2">
-                      <Badge className="bg-platinum/20 text-platinum border-platinum/30">
+                      <Badge className="bg-primary/20 text-primary border-primary/30">
                         Premium Placement
                       </Badge>
                     </div>
