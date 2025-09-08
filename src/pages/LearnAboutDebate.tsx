@@ -148,7 +148,7 @@ const gettingStartedSteps = [
   },
 ];
 
-export default function LearnAboutDebate() {
+const LearnAboutDebate = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
@@ -464,4 +464,6 @@ export default function LearnAboutDebate() {
       </section>
     </div>
   );
-}
+};
+
+export default LearnAboutDebate;
