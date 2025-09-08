@@ -90,6 +90,12 @@ export function Navbar() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
+                    <Link to="/sponsor" className="flex items-center">
+                      <Users className="mr-2 h-4 w-4" />
+                      <span>Become a Sponsor</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
                     <Link to="/faq" className="flex items-center">
                       <HelpCircle className="mr-2 h-4 w-4" />
                       <span>FAQ</span>
