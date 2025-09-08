@@ -23,6 +23,13 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Create deployment artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: website-build
+          path: dist/
+          retention-days: 7
+
       - name: Upload to cPanel via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
