@@ -1,12 +1,10 @@
-name: Build & Deploy
+name: Manual Export
 
 on:
-  push:
-    branches: [ main ]
   workflow_dispatch: {}
 
 jobs:
-  deploy:
+  export:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -29,13 +27,20 @@ jobs:
           ls -la dist/
           echo "Checking for .htaccess:"
           ls -la dist/.htaccess || echo ".htaccess not found"
+          echo "Checking for index.html:"
+          ls -la dist/index.html || echo "index.html not found"
 
-      - name: Create deployment artifact
+      - name: Create site archive
+        run: |
+          cd dist
+          zip -r ../site-dist.zip .
+          cd ..
+          echo "Archive created. Contents:"
+          unzip -l site-dist.zip | head -20
+
+      - name: Upload site archive
         uses: actions/upload-artifact@v4
         with:
-          name: website-build
-          path: dist/**
-          include-hidden-files: true
-          retention-days: 7
-
-
+          name: site-dist
+          path: site-dist.zip
+          retention-days: 30

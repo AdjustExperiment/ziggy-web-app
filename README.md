@@ -62,7 +62,33 @@ This project is built with:
 
 ## How can I deploy this project?
 
+**Option 1: Lovable Hosting**
 Simply open [Lovable](https://lovable.dev/projects/a22e01e1-f2bf-4852-a270-d223c2e06c1a) and click on Share -> Publish.
+
+**Option 2: Manual cPanel Upload**
+
+1. **Generate the site files:**
+   - Go to the [Actions tab](../../actions) in this GitHub repository
+   - Click on "Manual Export" in the left sidebar
+   - Click "Run workflow" → "Run workflow" button
+   - Wait for the workflow to complete (green checkmark)
+
+2. **Download the site archive:**
+   - Click on the completed workflow run
+   - In the "Artifacts" section, download `site-dist`
+   - Extract the `site-dist.zip` file on your computer
+
+3. **Upload to cPanel:**
+   - Log into your cPanel File Manager
+   - Navigate to your domain's document root (usually `public_html/` or similar)
+   - **Important:** Enable "Show Hidden Files" in File Manager settings
+   - Upload the `site-dist.zip` file to the document root
+   - Extract the ZIP file directly in the document root
+   - Verify that `index.html` and `.htaccess` are now in the document root
+   - Delete the uploaded ZIP file (optional cleanup)
+   - Test your site - both the homepage and deep links should work
+
+**Note:** If deploying to a subfolder instead of the domain root, you may need to rebuild with a custom base path.
 
 ## Can I connect a custom domain to my Lovable project?
 
