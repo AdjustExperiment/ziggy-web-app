@@ -311,7 +311,7 @@ const Login = () => {
 
                       <Button 
                         type="submit" 
-                        className="w-full bg-red-500 hover:bg-red-600 text-white" 
+                        className="w-full bg-red-500 hover:bg-red-600 text-white touch-target" 
                         disabled={formLoading}
                       >
                         {formLoading ? (
@@ -324,7 +324,7 @@ const Login = () => {
                       <div className="text-center">
                         <Button
                           variant="link"
-                          className="text-white/70 hover:text-white p-0"
+                          className="text-white/70 hover:text-white p-0 touch-target"
                           type="button"
                           onClick={() => setIsSignUp(!isSignUp)}
                         >

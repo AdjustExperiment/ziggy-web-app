@@ -97,7 +97,7 @@ const Index = () => {
             </p>
           </div>
 
-          <div className="grid gap-6 sm:gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid gap-6 sm:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {features.map((feature, index) => (
               <Card key={index} className="bg-card border-border shadow-card hover:shadow-tournament transition-smooth group hover:border-primary/30">
                 <CardHeader>

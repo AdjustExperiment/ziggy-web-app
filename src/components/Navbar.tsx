@@ -203,8 +203,9 @@ export function Navbar() {
             <Button
               variant="ghost"
               size="sm"
-              className="lg:hidden"
+              className="lg:hidden touch-target p-2"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
             >
               {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
@@ -213,50 +214,50 @@ export function Navbar() {
 
         {/* Mobile Navigation Menu */}
         {isMobileMenuOpen && (
-          <div className="lg:hidden">
-            <div className="px-2 pt-2 pb-3 space-y-1">
+          <div className="lg:hidden animate-mobile-slide-up">
+            <div className="mobile-px pt-2 pb-3 space-y-1 bg-background/95 backdrop-blur-md border-b border-border">
               <Link
                 to="/results"
-                className="flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium hover:bg-muted"
+                className="flex items-center space-x-2 px-3 py-3 rounded-md text-base font-medium hover:bg-muted touch-target"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                <BarChart3 className="h-4 w-4" />
+                <BarChart3 className="h-5 w-5" />
                 <span>Results</span>
               </Link>
 
               <Link
                 to="/about"
-                className="flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium hover:bg-muted"
+                className="flex items-center space-x-2 px-3 py-3 rounded-md text-base font-medium hover:bg-muted touch-target"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                <Info className="h-4 w-4" />
+                <Info className="h-5 w-5" />
                 <span>About</span>
               </Link>
 
               <Link
                 to="/blog"
-                className="flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium hover:bg-muted"
+                className="flex items-center space-x-2 px-3 py-3 rounded-md text-base font-medium hover:bg-muted touch-target"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                <FileText className="h-4 w-4" />
+                <FileText className="h-5 w-5" />
                 <span>Blog</span>
               </Link>
 
               <Link
                 to="/rules"
-                className="flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium hover:bg-muted"
+                className="flex items-center space-x-2 px-3 py-3 rounded-md text-base font-medium hover:bg-muted touch-target"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                <ScrollText className="h-4 w-4" />
+                <ScrollText className="h-5 w-5" />
                 <span>Rules</span>
               </Link>
 
               <Link
                 to="/sponsors"
-                className="flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium hover:bg-muted"
+                className="flex items-center space-x-2 px-3 py-3 rounded-md text-base font-medium hover:bg-muted touch-target"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                <Users className="h-4 w-4" />
+                <Users className="h-5 w-5" />
                 <span>Sponsors</span>
               </Link>
 
@@ -264,39 +265,39 @@ export function Navbar() {
                 <>
                   <Link
                     to="/dashboard"
-                    className="flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium hover:bg-muted"
+                    className="flex items-center space-x-2 px-3 py-3 rounded-md text-base font-medium hover:bg-muted touch-target"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    <Home className="h-4 w-4" />
+                    <Home className="h-5 w-5" />
                     <span>My Dashboard</span>
                   </Link>
 
                   <Link
                     to="/my-tournaments"
-                    className="flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium hover:bg-muted"
+                    className="flex items-center space-x-2 px-3 py-3 rounded-md text-base font-medium hover:bg-muted touch-target"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    <Trophy className="h-4 w-4" />
+                    <Trophy className="h-5 w-5" />
                     <span>My Tournaments</span>
                   </Link>
 
                   {isAdmin && (
                     <Link
                       to="/admin"
-                      className="flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium hover:bg-muted"
+                      className="flex items-center space-x-2 px-3 py-3 rounded-md text-base font-medium hover:bg-muted touch-target"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
-                      <Settings className="h-4 w-4" />
+                      <Settings className="h-5 w-5" />
                       <span>Admin Dashboard</span>
                     </Link>
                   )}
 
                   <Link
                     to="/account"
-                    className="flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium hover:bg-muted"
+                    className="flex items-center space-x-2 px-3 py-3 rounded-md text-base font-medium hover:bg-muted touch-target"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    <User className="h-4 w-4" />
+                    <User className="h-5 w-5" />
                     <span>Account Settings</span>
                   </Link>
 
@@ -305,21 +306,21 @@ export function Navbar() {
                       signOut();
                       setIsMobileMenuOpen(false);
                     }}
-                    className="flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium hover:bg-muted w-full text-left"
+                    className="flex items-center space-x-2 px-3 py-3 rounded-md text-base font-medium hover:bg-muted w-full text-left touch-target"
                   >
-                    <LogOut className="h-4 w-4" />
+                    <LogOut className="h-5 w-5" />
                     <span>Sign out</span>
                   </button>
                 </>
               ) : (
-                <div className="space-y-2 px-3 py-2">
+                <div className="space-y-3 px-3 py-2">
                   <Link to="/login" onClick={() => setIsMobileMenuOpen(false)}>
-                    <Button variant="ghost" className="w-full justify-start">
+                    <Button variant="ghost" className="w-full justify-start touch-target">
                       Sign in
                     </Button>
                   </Link>
                   <Link to="/tournaments" onClick={() => setIsMobileMenuOpen(false)}>
-                    <Button className="w-full justify-start">
+                    <Button className="w-full justify-start touch-target">
                       Sign up
                     </Button>
                   </Link>
