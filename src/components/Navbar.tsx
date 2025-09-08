@@ -21,7 +21,8 @@ import {
   HelpCircle,
   Menu,
   X,
-  ScrollText
+  ScrollText,
+  BookOpen
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -99,6 +100,12 @@ export function Navbar() {
                     <Link to="/faq" className="flex items-center">
                       <HelpCircle className="mr-2 h-4 w-4" />
                       <span>FAQ</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/learn-about-debate" className="flex items-center">
+                      <BookOpen className="mr-2 h-4 w-4" />
+                      <span>Learn about Debate</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
@@ -247,6 +254,15 @@ export function Navbar() {
               >
                 <FileText className="h-5 w-5" />
                 <span>Blog</span>
+              </Link>
+
+              <Link
+                to="/learn-about-debate"
+                className="flex items-center space-x-2 px-3 py-3 rounded-md text-base font-medium hover:bg-muted touch-target"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <BookOpen className="h-5 w-5" />
+                <span>Learn about Debate</span>
               </Link>
 
               <Link

@@ -47,6 +47,7 @@ const Rules = React.lazy(() => import('@/pages/Rules'));
 const Sponsor = React.lazy(() => import('@/pages/Sponsor'));
 const SponsorDashboard = React.lazy(() => import('@/pages/SponsorDashboard'));
 const Sponsors = React.lazy(() => import('@/pages/Sponsors'));
+const LearnAboutDebate = React.lazy(() => import('@/pages/LearnAboutDebate'));
 
 // Loading component for Suspense fallback
 const PageLoader = () => (
@@ -141,6 +142,7 @@ function App() {
                     <Route path="/faq" element={<FAQ />} />
                     <Route path="/privacy" element={<Privacy />} />
                     <Route path="/rules" element={<Rules />} />
+                    <Route path="/learn-about-debate" element={<LearnAboutDebate />} />
                     <Route path="/terms" element={<Navigate to="/rules" replace />} />
                     <Route path="/analytics" element={<Analytics />} />
                     <Route path="*" element={<NotFound />} />
