@@ -37,6 +37,12 @@ All colors MUST be HSL.
     --input: 0 0% 96%;
     --ring: 355 100% 45%;
 
+    /* Sponsor Tier Colors */
+    --platinum: 210 40% 70%;
+    --gold: 45 95% 50%;
+    --silver: 210 15% 70%;
+    --bronze: 30 60% 45%;
+
     /* Tournament Brand Gradients */
     --gradient-hero: linear-gradient(
       135deg, 
@@ -125,6 +131,12 @@ All colors MUST be HSL.
     --border: 0 0% 20%;
     --input: 0 0% 15%;
     --ring: 355 100% 55%;
+
+    /* Sponsor Tier Colors - Dark Mode */
+    --platinum: 210 50% 80%;
+    --gold: 45 90% 60%;
+    --silver: 210 20% 75%;
+    --bronze: 30 70% 55%;
 
     /* Dark mode gradients */
     --gradient-hero: linear-gradient(
@@ -228,5 +240,23 @@ All colors MUST be HSL.
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 3;
+  }
+
+  /* Hover effects */
+  .hover-scale {
+    transition: transform 0.3s ease;
+  }
+
+  .hover-scale:hover {
+    transform: scale(1.02);
+  }
+
+  /* Shadow variants */
+  .shadow-elegant {
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+
+  .dark .shadow-elegant {
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
   }
 }

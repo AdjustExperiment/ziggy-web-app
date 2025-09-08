@@ -20,6 +20,8 @@ interface SponsorProfile {
   description?: string;
   website?: string;
   resources: any;
+  is_platform_partner?: boolean;
+  partnership_notes?: string;
   created_at: string;
   updated_at: string;
 }
@@ -58,7 +60,9 @@ const SponsorsManager = () => {
     name: "",
     description: "",
     website: "",
-    logo_url: ""
+    logo_url: "",
+    is_platform_partner: false,
+    partnership_notes: ""
   });
 
   useEffect(() => {
@@ -141,7 +145,9 @@ const SponsorsManager = () => {
           name: profileForm.name,
           description: profileForm.description,
           website: profileForm.website,
-          logo_url: profileForm.logo_url
+          logo_url: profileForm.logo_url,
+          is_platform_partner: profileForm.is_platform_partner,
+          partnership_notes: profileForm.partnership_notes
         })
         .eq('id', editingProfile.id);
 
@@ -170,7 +176,9 @@ const SponsorsManager = () => {
       name: profile.name,
       description: profile.description || "",
       website: profile.website || "",
-      logo_url: profile.logo_url || ""
+      logo_url: profile.logo_url || "",
+      is_platform_partner: profile.is_platform_partner || false,
+      partnership_notes: profile.partnership_notes || ""
     });
   };
 
@@ -467,6 +475,29 @@ const SponsorsManager = () => {
                 onChange={(e) => setProfileForm({...profileForm, logo_url: e.target.value})}
               />
             </div>
+
+            <div className="flex items-center space-x-2">
+              <input
+                id="edit-platform-partner"
+                type="checkbox"
+                checked={profileForm.is_platform_partner}
+                onChange={(e) => setProfileForm({...profileForm, is_platform_partner: e.target.checked})}
+                className="rounded border-gray-300"
+              />
+              <Label htmlFor="edit-platform-partner">Platform Partner</Label>
+            </div>
+
+            {profileForm.is_platform_partner && (
+              <div>
+                <Label htmlFor="edit-partnership-notes">Partnership Notes</Label>
+                <Textarea
+                  id="edit-partnership-notes"
+                  value={profileForm.partnership_notes}
+                  onChange={(e) => setProfileForm({...profileForm, partnership_notes: e.target.value})}
+                  placeholder="Additional information about the partnership..."
+                />
+              </div>
+            )}
 
             {profileForm.logo_url && (
               <div className="flex justify-center">

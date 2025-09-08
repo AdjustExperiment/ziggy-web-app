@@ -1609,8 +1609,10 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          is_platform_partner: boolean
           logo_url: string | null
           name: string
+          partnership_notes: string | null
           resources: Json
           updated_at: string
           user_id: string
@@ -1620,8 +1622,10 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_platform_partner?: boolean
           logo_url?: string | null
           name: string
+          partnership_notes?: string | null
           resources?: Json
           updated_at?: string
           user_id: string
@@ -1631,8 +1635,10 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_platform_partner?: boolean
           logo_url?: string | null
           name?: string
+          partnership_notes?: string | null
           resources?: Json
           updated_at?: string
           user_id?: string

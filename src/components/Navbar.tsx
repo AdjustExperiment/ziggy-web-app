@@ -113,6 +113,11 @@ export function Navbar() {
                 <FileText className="h-4 w-4" />
                 <span>Blog</span>
               </Link>
+
+              <Link to="/sponsors" className="flex items-center space-x-1 hover:text-primary transition-colors">
+                <Users className="h-4 w-4" />
+                <span>Sponsors</span>
+              </Link>
             </div>
           </div>
           
@@ -244,6 +249,15 @@ export function Navbar() {
               >
                 <ScrollText className="h-4 w-4" />
                 <span>Rules</span>
+              </Link>
+
+              <Link
+                to="/sponsors"
+                className="flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium hover:bg-muted"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <Users className="h-4 w-4" />
+                <span>Sponsors</span>
               </Link>
 
               {user ? (
