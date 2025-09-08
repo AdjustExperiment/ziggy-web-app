@@ -49,6 +49,20 @@ jobs:
           name: dist
           path: dist
 
+      # --- Preflight diagnostics ---
+      - name: Preflight - DNS lookup
+        run: |
+          echo "Host from secret: ${{ secrets.FTP_HOST }}"
+          getent hosts "${{ secrets.FTP_HOST }}" || true
+          which dig >/dev/null 2>&1 && dig +short "${{ secrets.FTP_HOST }}" || true
+          which nslookup >/dev/null 2>&1 && nslookup "${{ secrets.FTP_HOST }}" || true
+
+      - name: Preflight - Port 21 connectivity
+        run: |
+          echo "Testing TCP 21 to ${{ secrets.FTP_HOST }} ..."
+          (echo quit | timeout 5 telnet "${{ secrets.FTP_HOST }}" 21) || true
+          which nc >/dev/null 2>&1 && nc -vz -w 5 "${{ secrets.FTP_HOST }}" 21 || true
+
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
