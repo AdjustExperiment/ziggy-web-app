@@ -14,14 +14,13 @@ jobs:
         with:
           fetch-depth: 1
 
-      # Use npm since package-lock.json is present (more stable than Bun here)
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      - name: Install deps
-        run: npm ci
+      - name: Install deps (allow legacy peer deps)
+        run: npm ci --legacy-peer-deps
 
       - name: Generate .env.production for Vite
         run: |
@@ -32,8 +31,7 @@ jobs:
       - name: Build
         run: npm run build
 
-      # Ensure SPA routes work on refresh by shipping .htaccess with the build
-      - name: Add .htaccess to dist
+      - name: Add .htaccess to dist (SPA routing)
         run: |
           cat > dist/.htaccess << 'EOF'
           RewriteEngine On
@@ -45,7 +43,6 @@ jobs:
           RewriteRule . /index.html [L]
           EOF
 
-      # Optional: keep a copy of the build for quick rollback/debug
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
