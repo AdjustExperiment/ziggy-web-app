@@ -72,9 +72,102 @@ export const finalizeScheduleProposal = async (proposalId: string, action: 'appr
       }
     }
     
-    return { success: true };
+  return { success: true };
   } catch (error) {
     console.error('Error finalizing schedule proposal:', error);
+    throw error;
+  }
+};
+
+export const approveSponsorApplication = async (applicationId: string, adminUserId: string) => {
+  try {
+    const { error } = await supabase
+      .from('sponsor_applications')
+      .update({ 
+        status: 'approved',
+        approved_by: adminUserId,
+        approved_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', applicationId);
+
+    if (error) throw error;
+
+    // Log admin action
+    await supabase
+      .from('security_audit_logs')
+      .insert({
+        user_id: adminUserId,
+        action: 'sponsor_application_approved',
+        context: { application_id: applicationId }
+      });
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Error approving sponsor application:', error);
+    throw error;
+  }
+};
+
+export const rejectSponsorApplication = async (applicationId: string, adminUserId: string) => {
+  try {
+    const { error } = await supabase
+      .from('sponsor_applications')
+      .update({ 
+        status: 'rejected',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', applicationId);
+
+    if (error) throw error;
+
+    // Log admin action
+    await supabase
+      .from('security_audit_logs')
+      .insert({
+        user_id: adminUserId,
+        action: 'sponsor_application_rejected',
+        context: { application_id: applicationId }
+      });
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Error rejecting sponsor application:', error);
+    throw error;
+  }
+};
+
+export const updateSponsorApplication = async (applicationId: string, updates: {
+  tier?: string;
+  offerings?: string;
+  requests?: string;
+}, adminUserId: string) => {
+  try {
+    const { error } = await supabase
+      .from('sponsor_applications')
+      .update({
+        ...updates,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', applicationId);
+
+    if (error) throw error;
+
+    // Log admin action
+    await supabase
+      .from('security_audit_logs')
+      .insert({
+        user_id: adminUserId,
+        action: 'sponsor_application_updated',
+        context: { 
+          application_id: applicationId,
+          updates: Object.keys(updates)
+        }
+      });
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Error updating sponsor application:', error);
     throw error;
   }
 };

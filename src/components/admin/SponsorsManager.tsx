@@ -11,6 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Building, CheckCircle, XCircle, Clock, Edit, Eye, ExternalLink } from "lucide-react";
+import { approveSponsorApplication, rejectSponsorApplication, updateSponsorApplication } from "@/utils/adminActions";
+import { useAuth } from "@/hooks/useAuth";
 
 interface SponsorProfile {
   id: string;
@@ -47,6 +49,7 @@ interface SponsorApplication {
 
 const SponsorsManager = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [profiles, setProfiles] = useState<SponsorProfile[]>([]);
   const [applications, setApplications] = useState<SponsorApplication[]>([]);
@@ -56,6 +59,12 @@ const SponsorsManager = () => {
 
   // Edit forms
   const [editingProfile, setEditingProfile] = useState<SponsorProfile | null>(null);
+  const [editingApplication, setEditingApplication] = useState<SponsorApplication | null>(null);
+  const [applicationForm, setApplicationForm] = useState({
+    tier: "",
+    offerings: "",
+    requests: ""
+  });
   const [profileForm, setProfileForm] = useState({
     name: "",
     description: "",
@@ -105,19 +114,14 @@ const SponsorsManager = () => {
   };
 
   const handleApplicationStatus = async (applicationId: string, status: 'approved' | 'rejected') => {
+    if (!user?.id) return;
+
     try {
-      const updateData: any = { status };
-      
       if (status === 'approved') {
-        updateData.approved_at = new Date().toISOString();
+        await approveSponsorApplication(applicationId, user.id);
+      } else {
+        await rejectSponsorApplication(applicationId, user.id);
       }
-
-      const { error } = await supabase
-        .from('sponsor_applications')
-        .update(updateData)
-        .eq('id', applicationId);
-
-      if (error) throw error;
 
       toast({
         title: 'Success',
@@ -126,13 +130,47 @@ const SponsorsManager = () => {
 
       fetchData();
     } catch (error) {
-      console.error('Error updating application:', error);
       toast({
         title: 'Error',
         description: 'Failed to update application',
         variant: 'destructive',
       });
     }
+  };
+
+  const handleEditApplication = async () => {
+    if (!editingApplication || !user?.id) return;
+
+    try {
+      await updateSponsorApplication(editingApplication.id, {
+        tier: applicationForm.tier,
+        offerings: applicationForm.offerings,
+        requests: applicationForm.requests
+      }, user.id);
+
+      toast({
+        title: 'Success',
+        description: 'Application updated successfully',
+      });
+
+      setEditingApplication(null);
+      fetchData();
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update application',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const startEditingApplication = (application: SponsorApplication) => {
+    setEditingApplication(application);
+    setApplicationForm({
+      tier: application.tier,
+      offerings: application.offerings || "",
+      requests: application.requests || ""
+    });
   };
 
   const handleEditProfile = async () => {
@@ -286,26 +324,36 @@ const SponsorsManager = () => {
                         </div>
                       )}
 
-                      {app.status === 'pending' && (
-                        <div className="flex gap-2">
-                          <Button 
-                            size="sm" 
-                            onClick={() => handleApplicationStatus(app.id, 'approved')}
-                            className="bg-green-600 hover:bg-green-700"
-                          >
-                            <CheckCircle className="h-4 w-4 mr-1" />
-                            Approve
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="destructive"
-                            onClick={() => handleApplicationStatus(app.id, 'rejected')}
-                          >
-                            <XCircle className="h-4 w-4 mr-1" />
-                            Reject
-                          </Button>
-                        </div>
-                      )}
+                      <div className="flex gap-2">
+                        {app.status === 'pending' && (
+                          <>
+                            <Button 
+                              size="sm" 
+                              onClick={() => handleApplicationStatus(app.id, 'approved')}
+                              className="bg-green-600 hover:bg-green-700"
+                            >
+                              <CheckCircle className="h-4 w-4 mr-1" />
+                              Approve
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="destructive"
+                              onClick={() => handleApplicationStatus(app.id, 'rejected')}
+                            >
+                              <XCircle className="h-4 w-4 mr-1" />
+                              Reject
+                            </Button>
+                          </>
+                        )}
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => startEditingApplication(app)}
+                        >
+                          <Edit className="h-4 w-4 mr-1" />
+                          Edit
+                        </Button>
+                      </div>
 
                       {app.approved_at && (
                         <div className="text-sm text-muted-foreground">
@@ -519,6 +567,60 @@ const SponsorsManager = () => {
                 className="flex-1"
               >
                 Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Application Dialog */}
+      <Dialog open={!!editingApplication} onOpenChange={() => setEditingApplication(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Sponsor Application</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="edit-app-tier">Sponsorship Tier</Label>
+              <Select value={applicationForm.tier} onValueChange={(value) => setApplicationForm({...applicationForm, tier: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select tier" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="bronze">Bronze</SelectItem>
+                  <SelectItem value="silver">Silver</SelectItem>
+                  <SelectItem value="gold">Gold</SelectItem>
+                  <SelectItem value="platinum">Platinum</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="edit-app-offerings">Offerings</Label>
+              <Textarea
+                id="edit-app-offerings"
+                placeholder="What can you offer to the tournament?"
+                value={applicationForm.offerings}
+                onChange={(e) => setApplicationForm({...applicationForm, offerings: e.target.value})}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-app-requests">Requests</Label>
+              <Textarea
+                id="edit-app-requests"
+                placeholder="What do you need from the tournament?"
+                value={applicationForm.requests}
+                onChange={(e) => setApplicationForm({...applicationForm, requests: e.target.value})}
+              />
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setEditingApplication(null)}>
+                Cancel
+              </Button>
+              <Button onClick={handleEditApplication}>
+                Update Application
               </Button>
             </div>
           </div>
