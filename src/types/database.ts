@@ -134,6 +134,9 @@ export interface Tournament {
   id: string;
   name: string;
   ballot_reveal_mode: string;
+  ballot_privacy: string;
+  reveal_delay_minutes: number;
+  judge_anonymity: boolean;
   end_date: string;
   status: string;
   // ... other existing fields
