@@ -494,8 +494,9 @@ export default function TournamentRegistration() {
           </div>
         )}
         
-        <PaymentButtons 
+        <PaymentButtons
           amount={finalAmount}
+          currency="USD"
           onPayPalPayment={async () => {
             console.log('PayPal payment initiated for:', finalAmount);
           }}

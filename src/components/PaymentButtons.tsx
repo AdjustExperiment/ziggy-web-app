@@ -7,12 +7,19 @@ import { CreditCard, Smartphone } from 'lucide-react';
 
 interface PaymentButtonsProps {
   amount: number;
+  currency?: string;
   onPayPalPayment: () => Promise<void>;
   onVenmoPayment: () => Promise<void>;
   disabled?: boolean;
 }
 
-const PaymentButtons = ({ amount, onPayPalPayment, onVenmoPayment, disabled = false }: PaymentButtonsProps) => {
+const currencySymbols: Record<string, string> = {
+  USD: '$',
+  EUR: '€',
+  GBP: '£'
+};
+
+const PaymentButtons = ({ amount, currency = 'USD', onPayPalPayment, onVenmoPayment, disabled = false }: PaymentButtonsProps) => {
   return (
     <Card>
       <CardHeader>
@@ -25,7 +32,9 @@ const PaymentButtons = ({ amount, onPayPalPayment, onVenmoPayment, disabled = fa
         <div className="bg-muted/50 p-4 rounded-lg">
           <div className="text-center mb-4">
             <p className="text-sm text-muted-foreground">Registration Fee</p>
-            <p className="text-2xl font-bold">${amount.toFixed(2)}</p>
+            <p className="text-2xl font-bold">
+              {currencySymbols[currency] || ''}{amount.toFixed(2)}{currency !== 'USD' ? ` ${currency}` : ''}
+            </p>
           </div>
         </div>
         
