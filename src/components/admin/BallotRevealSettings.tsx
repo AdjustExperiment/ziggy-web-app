@@ -7,13 +7,18 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
 import { toast } from '@/components/ui/use-toast';
-import { Eye, EyeOff, Clock, CheckCircle } from 'lucide-react';
+import { Eye, Clock, CheckCircle } from 'lucide-react';
 
 interface Tournament {
   id: string;
   name: string;
   ballot_reveal_mode: string;
+  ballot_privacy: string;
+  reveal_delay_minutes: number;
+  judge_anonymity: boolean;
   end_date: string;
   status: string;
 }
@@ -31,7 +36,7 @@ export function BallotRevealSettings() {
     try {
       const { data, error } = await supabase
         .from('tournaments')
-        .select('id, name, end_date, status, ballot_reveal_mode')
+        .select('id, name, end_date, status, ballot_reveal_mode, ballot_privacy, reveal_delay_minutes, judge_anonymity')
         .order('name');
 
       if (error) throw error;
@@ -48,27 +53,27 @@ export function BallotRevealSettings() {
     }
   };
 
-  const updateRevealMode = async (tournamentId: string, mode: string) => {
+  const updateTournament = async (tournamentId: string, values: Partial<Tournament>) => {
     try {
       setUpdating(tournamentId);
-      
+
       const { error } = await supabase
         .from('tournaments')
-        .update({ ballot_reveal_mode: mode })
+        .update(values)
         .eq('id', tournamentId);
 
       if (error) throw error;
 
       toast({
         title: "Success",
-        description: "Ballot reveal mode updated successfully",
+        description: "Tournament settings updated successfully",
       });
 
       fetchTournaments();
     } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to update ballot reveal mode",
+        description: "Failed to update tournament settings",
         variant: "destructive",
       });
     } finally {
@@ -92,39 +97,6 @@ export function BallotRevealSettings() {
         description: "Failed to publish due ballots",
         variant: "destructive",
       });
-    }
-  };
-
-  const getRevealModeDescription = (mode: string) => {
-    switch (mode) {
-      case 'auto_on_submit':
-        return 'Ballots are automatically revealed when judges submit them';
-      case 'after_tournament':
-        return 'Ballots are revealed after the tournament end date';
-      default:
-        return 'Unknown reveal mode';
-    }
-  };
-
-  const getRevealModeIcon = (mode: string) => {
-    switch (mode) {
-      case 'auto_on_submit':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'after_tournament':
-        return <Clock className="h-4 w-4 text-blue-500" />;
-      default:
-        return <Eye className="h-4 w-4" />;
-    }
-  };
-
-  const getRevealModeVariant = (mode: string) => {
-    switch (mode) {
-      case 'auto_on_submit':
-        return 'default' as const;
-      case 'after_tournament':
-        return 'secondary' as const;
-      default:
-        return 'outline' as const;
     }
   };
 
@@ -211,8 +183,10 @@ export function BallotRevealSettings() {
                   <TableHead>Tournament</TableHead>
                   <TableHead>End Date</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Current Setting</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead>Reveal Mode</TableHead>
+                  <TableHead>Privacy</TableHead>
+                  <TableHead>Delay (min)</TableHead>
+                  <TableHead>Judge Anonymity</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -232,20 +206,9 @@ export function BallotRevealSettings() {
                       <Badge variant="outline">{tournament.status}</Badge>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2">
-                        {getRevealModeIcon(tournament.ballot_reveal_mode)}
-                        <Badge variant={getRevealModeVariant(tournament.ballot_reveal_mode)}>
-                          {tournament.ballot_reveal_mode === 'auto_on_submit' ? 'Auto on Submit' : 'After Tournament'}
-                        </Badge>
-                      </div>
-                      <div className="text-xs text-muted-foreground mt-1">
-                        {getRevealModeDescription(tournament.ballot_reveal_mode)}
-                      </div>
-                    </TableCell>
-                    <TableCell>
                       <Select
                         value={tournament.ballot_reveal_mode}
-                        onValueChange={(value) => updateRevealMode(tournament.id, value)}
+                        onValueChange={(value) => updateTournament(tournament.id, { ballot_reveal_mode: value })}
                         disabled={updating === tournament.id}
                       >
                         <SelectTrigger className="w-48">
@@ -266,6 +229,43 @@ export function BallotRevealSettings() {
                           </SelectItem>
                         </SelectContent>
                       </Select>
+                    </TableCell>
+                    <TableCell>
+                      <Select
+                        value={tournament.ballot_privacy}
+                        onValueChange={(value) => updateTournament(tournament.id, { ballot_privacy: value })}
+                        disabled={updating === tournament.id}
+                      >
+                        <SelectTrigger className="w-40">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="public">Public</SelectItem>
+                          <SelectItem value="private">Private</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="number"
+                        className="w-24"
+                        defaultValue={tournament.reveal_delay_minutes}
+                        onBlur={(e) =>
+                          updateTournament(tournament.id, {
+                            reveal_delay_minutes: parseInt(e.target.value, 10) || 0,
+                          })
+                        }
+                        disabled={updating === tournament.id}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Switch
+                        checked={tournament.judge_anonymity}
+                        onCheckedChange={(checked) =>
+                          updateTournament(tournament.id, { judge_anonymity: checked })
+                        }
+                        disabled={updating === tournament.id}
+                      />
                     </TableCell>
                   </TableRow>
                 ))}
