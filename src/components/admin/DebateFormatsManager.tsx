@@ -9,9 +9,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/components/ui/use-toast';
 import { Plus, Edit2, Trash2, MessageSquare } from 'lucide-react';
 import { DebateFormat } from '@/types/database';
+import { FORMAT_TEMPLATES } from '@/lib/formats/templates';
 
 export function DebateFormatsManager() {
   const [formats, setFormats] = useState<DebateFormat[]>([]);
@@ -22,7 +24,9 @@ export function DebateFormatsManager() {
     key: '',
     name: '',
     description: '',
-    rules: ''
+    rules: '',
+    timing_rules: '',
+    judging_criteria: ''
   });
 
   useEffect(() => {
@@ -54,18 +58,30 @@ export function DebateFormatsManager() {
     e.preventDefault();
     
     try {
-      let rules;
+      let rules, timingRules, judgingCriteria;
       try {
         rules = formData.rules ? JSON.parse(formData.rules) : {};
       } catch {
         throw new Error('Invalid JSON in rules field');
+      }
+      try {
+        timingRules = formData.timing_rules ? JSON.parse(formData.timing_rules) : {};
+      } catch {
+        throw new Error('Invalid JSON in timing rules field');
+      }
+      try {
+        judgingCriteria = formData.judging_criteria ? JSON.parse(formData.judging_criteria) : {};
+      } catch {
+        throw new Error('Invalid JSON in judging criteria field');
       }
 
       const formatData = {
         key: formData.key,
         name: formData.name,
         description: formData.description || null,
-        rules
+        rules,
+        timing_rules: timingRules,
+        judging_criteria: judgingCriteria
       };
 
       if (editingFormat) {
@@ -134,7 +150,7 @@ export function DebateFormatsManager() {
   };
 
   const resetForm = () => {
-    setFormData({ key: '', name: '', description: '', rules: '' });
+    setFormData({ key: '', name: '', description: '', rules: '', timing_rules: '', judging_criteria: '' });
     setEditingFormat(null);
   };
 
@@ -144,7 +160,9 @@ export function DebateFormatsManager() {
       key: format.key,
       name: format.name,
       description: format.description || '',
-      rules: JSON.stringify(format.rules, null, 2)
+      rules: JSON.stringify(format.rules, null, 2),
+      timing_rules: JSON.stringify(format.timing_rules || {}, null, 2),
+      judging_criteria: JSON.stringify(format.judging_criteria || {}, null, 2)
     });
     setIsDialogOpen(true);
   };
@@ -188,6 +206,31 @@ export function DebateFormatsManager() {
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <Label htmlFor="template">Import Template</Label>
+                <Select onValueChange={(value) => {
+                  const tmpl = FORMAT_TEMPLATES[value];
+                  if (tmpl) {
+                    setFormData({
+                      key: tmpl.key,
+                      name: tmpl.name,
+                      description: tmpl.description,
+                      rules: JSON.stringify(tmpl.rules, null, 2),
+                      timing_rules: JSON.stringify(tmpl.timing_rules, null, 2),
+                      judging_criteria: JSON.stringify(tmpl.judging_criteria, null, 2)
+                    });
+                  }
+                }}>
+                  <SelectTrigger id="template">
+                    <SelectValue placeholder="Choose template" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.values(FORMAT_TEMPLATES).map((t) => (
+                      <SelectItem key={t.key} value={t.key}>{t.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="key">Format Key</Label>
@@ -227,6 +270,26 @@ export function DebateFormatsManager() {
                   value={formData.rules}
                   onChange={(e) => setFormData(prev => ({ ...prev, rules: e.target.value }))}
                   placeholder='{"rounds": 3, "speakers": 4, "time_limit": 7}'
+                  rows={6}
+                />
+              </div>
+              <div>
+                <Label htmlFor="timing_rules">Timing Rules (JSON)</Label>
+                <Textarea
+                  id="timing_rules"
+                  value={formData.timing_rules}
+                  onChange={(e) => setFormData(prev => ({ ...prev, timing_rules: e.target.value }))}
+                  placeholder='{"AC":6, "NC":7}'
+                  rows={6}
+                />
+              </div>
+              <div>
+                <Label htmlFor="judging_criteria">Judging Criteria (JSON)</Label>
+                <Textarea
+                  id="judging_criteria"
+                  value={formData.judging_criteria}
+                  onChange={(e) => setFormData(prev => ({ ...prev, judging_criteria: e.target.value }))}
+                  placeholder='{"persuasion":30, "evidence":30}'
                   rows={6}
                 />
               </div>

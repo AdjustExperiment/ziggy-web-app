@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from '@/components/ui/use-toast';
 import { Plus, Edit2, Trash2, Clock, Play, Pause } from 'lucide-react';
 import { Round } from '@/types/database';
+import { parseFormat, validateFormat } from '@/lib/formats';
 
 interface Tournament {
   id: string;
@@ -75,10 +76,30 @@ export function RoundsManager() {
     }
   };
 
+  const validateTournamentFormat = async (tournamentId: string) => {
+    const { data: tournament, error: tErr } = await supabase
+      .from('tournaments')
+      .select('format_key')
+      .eq('id', tournamentId)
+      .single();
+    if (tErr) throw tErr;
+    if (!tournament?.format_key) return;
+    const { data: format, error: fErr } = await supabase
+      .from('debate_formats')
+      .select('rules, timing_rules, judging_criteria')
+      .eq('key', tournament.format_key)
+      .single();
+    if (fErr) throw fErr;
+    const parsed = parseFormat(format);
+    const errors = validateFormat(parsed);
+    if (errors.length) throw new Error(errors.join(', '));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
+      await validateTournamentFormat(formData.tournament_id);
       if (editingRound) {
         // Update existing round
         const { error } = await supabase

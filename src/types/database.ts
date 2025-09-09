@@ -5,6 +5,8 @@ export interface DebateFormat {
   name: string;
   description: string | null;
   rules: any;
+  timing_rules: any;
+  judging_criteria: any;
   created_at: string;
   updated_at: string;
 }

@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { toast } from '@/components/ui/use-toast';
 import { Users, Plus, Edit2, Trash2, Eye, EyeOff } from 'lucide-react';
 import { Pairing, Round, Registration } from '@/types/database';
+import { parseFormat, validateFormat } from '@/lib/formats';
 
 interface Tournament {
   id: string;
@@ -164,6 +165,25 @@ export function PairingsManager() {
     }
   };
 
+  const validateTournamentFormat = async (tournamentId: string) => {
+    const { data: tournament, error: tErr } = await supabase
+      .from('tournaments')
+      .select('format_key')
+      .eq('id', tournamentId)
+      .single();
+    if (tErr) throw tErr;
+    if (!tournament?.format_key) return;
+    const { data: format, error: fErr } = await supabase
+      .from('debate_formats')
+      .select('rules, timing_rules, judging_criteria')
+      .eq('key', tournament.format_key)
+      .single();
+    if (fErr) throw fErr;
+    const parsed = parseFormat(format);
+    const errors = validateFormat(parsed);
+    if (errors.length) throw new Error(errors.join(', '));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -177,6 +197,7 @@ export function PairingsManager() {
     }
 
     try {
+      await validateTournamentFormat(selectedTournament);
       const pairingData = {
         tournament_id: selectedTournament,
         round_id: selectedRound,

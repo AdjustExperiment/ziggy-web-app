@@ -249,6 +249,8 @@ export type Database = {
           key: string
           name: string
           rules: Json
+          timing_rules: Json
+          judging_criteria: Json
           updated_at: string
         }
         Insert: {
@@ -258,6 +260,8 @@ export type Database = {
           key: string
           name: string
           rules?: Json
+          timing_rules?: Json
+          judging_criteria?: Json
           updated_at?: string
         }
         Update: {
@@ -267,6 +271,8 @@ export type Database = {
           key?: string
           name?: string
           rules?: Json
+          timing_rules?: Json
+          judging_criteria?: Json
           updated_at?: string
         }
         Relationships: []
