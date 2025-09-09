@@ -1085,6 +1085,41 @@ export type Database = {
           },
         ]
       }
+      refund_requests: {
+        Row: {
+          created_at: string
+          id: string
+          reason: string | null
+          registration_id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reason?: string | null
+          registration_id: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reason?: string | null
+          registration_id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "refund_requests_registration_id_fkey"
+            columns: ["registration_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_registrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       results_recent: {
         Row: {
           created_at: string
