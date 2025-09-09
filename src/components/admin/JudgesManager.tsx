@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from '@/components/ui/use-toast';
-import WeeklyAvailabilityEditor from '@/components/WeeklyAvailabilityEditor';
+import WeeklyAvailabilityEditor, { WeeklyAvailability } from '@/components/WeeklyAvailabilityEditor';
 import { Plus, Edit2, Trash2, Gavel, Phone, Mail } from 'lucide-react';
 import { JudgeProfile } from '@/types/database';
 
@@ -20,13 +20,24 @@ export function JudgesManager() {
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingJudge, setEditingJudge] = useState<JudgeProfile | null>(null);
+  const DEFAULT_AVAILABILITY: WeeklyAvailability = {
+    monday: { morning: false, afternoon: false, evening: false },
+    tuesday: { morning: false, afternoon: false, evening: false },
+    wednesday: { morning: false, afternoon: false, evening: false },
+    thursday: { morning: false, afternoon: false, evening: false },
+    friday: { morning: false, afternoon: false, evening: false },
+    saturday: { morning: false, afternoon: false, evening: false },
+    sunday: { morning: false, afternoon: false, evening: false },
+  };
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
     experience_level: 'novice',
     bio: '',
-    qualifications: ''
+    qualifications: '',
+    specializations: [] as string[],
+    availability: DEFAULT_AVAILABILITY as WeeklyAvailability,
   });
 
   const experienceLevels = ['novice', 'intermediate', 'experienced', 'expert'];
@@ -58,7 +69,7 @@ export function JudgesManager() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       const judgeData = {
         name: formData.name,
@@ -67,8 +78,8 @@ export function JudgesManager() {
         experience_level: formData.experience_level,
         bio: formData.bio || null,
         qualifications: formData.qualifications || null,
-        specializations: [],
-        availability: {}
+        specializations: formData.specializations,
+        availability: formData.availability
       };
 
       if (editingJudge) {
@@ -137,13 +148,15 @@ export function JudgesManager() {
   };
 
   const resetForm = () => {
-    setFormData({ 
-      name: '', 
-      email: '', 
-      phone: '', 
-      experience_level: 'novice', 
-      bio: '', 
-      qualifications: '' 
+    setFormData({
+      name: '',
+      email: '',
+      phone: '',
+      experience_level: 'novice',
+      bio: '',
+      qualifications: '',
+      specializations: [],
+      availability: DEFAULT_AVAILABILITY,
     });
     setEditingJudge(null);
   };
@@ -156,7 +169,9 @@ export function JudgesManager() {
       phone: judge.phone || '',
       experience_level: judge.experience_level,
       bio: judge.bio || '',
-      qualifications: judge.qualifications || ''
+      qualifications: judge.qualifications || '',
+      specializations: judge.specializations || [],
+      availability: judge.availability || DEFAULT_AVAILABILITY,
     });
     setIsDialogOpen(true);
   };
@@ -269,6 +284,15 @@ export function JudgesManager() {
                   rows={3}
                 />
               </div>
+              <WeeklyAvailabilityEditor
+                availability={formData.availability}
+                onAvailabilityChange={(availability) => setFormData(prev => ({ ...prev, availability }))}
+                specializations={formData.specializations}
+                onSpecializationsChange={(specializations) => setFormData(prev => ({ ...prev, specializations }))}
+                showSpecializations
+                hideSaveButton
+                onSave={() => {}}
+              />
               <div className="flex justify-end gap-2 pt-4">
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Cancel
@@ -302,6 +326,8 @@ export function JudgesManager() {
                   <TableHead>Name</TableHead>
                   <TableHead>Contact</TableHead>
                   <TableHead>Experience</TableHead>
+                  <TableHead>Specializations</TableHead>
+                  <TableHead>Availability</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -332,6 +358,33 @@ export function JudgesManager() {
                       <Badge variant="outline">
                         {judge.experience_level.charAt(0).toUpperCase() + judge.experience_level.slice(1)}
                       </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {judge.specializations && judge.specializations.length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                          {judge.specializations.map((spec) => (
+                            <Badge key={spec} variant="secondary" className="text-xs">
+                              {spec}
+                            </Badge>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">None</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {judge.availability && Object.keys(judge.availability).length > 0 ? (
+                        <Badge variant="outline">
+                          {(() => {
+                            const available = Object.values(judge.availability).reduce((acc: number, day: any) => {
+                              return acc + (day.morning ? 1 : 0) + (day.afternoon ? 1 : 0) + (day.evening ? 1 : 0);
+                            }, 0);
+                            return `${available}/21 slots`;
+                          })()}
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline">Not Set</Badge>
+                      )}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">

@@ -4,8 +4,9 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Calendar, Clock, Save } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 
-interface WeeklyAvailability {
+export interface WeeklyAvailability {
   monday: { morning: boolean; afternoon: boolean; evening: boolean };
   tuesday: { morning: boolean; afternoon: boolean; evening: boolean };
   wednesday: { morning: boolean; afternoon: boolean; evening: boolean };
@@ -20,6 +21,10 @@ interface WeeklyAvailabilityEditorProps {
   onAvailabilityChange: (availability: WeeklyAvailability) => void;
   onSave: () => void;
   loading?: boolean;
+  specializations?: string[];
+  onSpecializationsChange?: (specializations: string[]) => void;
+  showSpecializations?: boolean;
+  hideSaveButton?: boolean;
 }
 
 const DAYS = [
@@ -38,11 +43,17 @@ const TIME_SLOTS = [
   { key: 'evening', label: 'Evening', icon: '🌙' }
 ] as const;
 
+const SPECIALIZATIONS = ['Parliamentary', 'Policy', 'Public Forum', 'Lincoln-Douglas', 'World Schools', 'Academic', 'British Parliamentary'];
+
 export default function WeeklyAvailabilityEditor({
   availability,
   onAvailabilityChange,
   onSave,
-  loading = false
+  loading = false,
+  specializations = [],
+  onSpecializationsChange,
+  showSpecializations = false,
+  hideSaveButton = false
 }: WeeklyAvailabilityEditorProps) {
   const updateAvailability = (day: keyof WeeklyAvailability, timeSlot: 'morning' | 'afternoon' | 'evening', value: boolean) => {
     const newAvailability = {
@@ -90,6 +101,28 @@ export default function WeeklyAvailabilityEditor({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        {showSpecializations && onSpecializationsChange && (
+          <div className="space-y-2">
+            <Label className="font-medium">Specializations</Label>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+              {SPECIALIZATIONS.map(spec => (
+                <label key={spec} className="flex items-center space-x-2">
+                  <Checkbox
+                    checked={specializations.includes(spec)}
+                    onCheckedChange={(checked) => {
+                      const newSpecs = checked
+                        ? [...specializations, spec]
+                        : specializations.filter(s => s !== spec);
+                      onSpecializationsChange(newSpecs);
+                    }}
+                  />
+                  <span className="text-sm">{spec}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Time slot headers with bulk actions */}
         <div className="grid grid-cols-4 gap-4">
           <div className="font-medium">Day</div>
@@ -162,13 +195,14 @@ export default function WeeklyAvailabilityEditor({
           </div>
         </div>
 
-        {/* Save button */}
-        <div className="flex justify-end">
-          <Button onClick={onSave} disabled={loading}>
-            <Save className="h-4 w-4 mr-2" />
-            {loading ? 'Saving...' : 'Save Availability'}
-          </Button>
-        </div>
+        {!hideSaveButton && (
+          <div className="flex justify-end">
+            <Button onClick={onSave} disabled={loading}>
+              <Save className="h-4 w-4 mr-2" />
+              {loading ? 'Saving...' : 'Save Availability'}
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
