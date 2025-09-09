@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
@@ -17,9 +18,15 @@ interface Tournament {
   name: string;
 }
 
+interface DebateFormat {
+  key: string;
+  name: string;
+}
+
 export function RoundsManager() {
   const [rounds, setRounds] = useState<Round[]>([]);
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
+  const [formats, setFormats] = useState<DebateFormat[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingRound, setEditingRound] = useState<Round | null>(null);
@@ -27,8 +34,12 @@ export function RoundsManager() {
     tournament_id: '',
     name: '',
     round_number: 1,
-    status: 'pending'
+    status: 'pending',
+    start_time: '',
+    format: '',
+    notes: ''
   });
+  const [step, setStep] = useState(1);
 
   useEffect(() => {
     fetchData();
@@ -45,6 +56,15 @@ export function RoundsManager() {
       if (tournamentsError) throw tournamentsError;
       setTournaments(tournamentsData || []);
 
+      // Fetch debate formats
+      const { data: formatsData, error: formatsError } = await supabase
+        .from('debate_formats')
+        .select('key, name')
+        .order('name');
+
+      if (formatsError) throw formatsError;
+      setFormats(formatsData || []);
+
       // Fetch rounds
       const { data: roundsData, error: roundsError } = await supabase
         .from('rounds')
@@ -54,6 +74,9 @@ export function RoundsManager() {
           round_number,
           status,
           scheduled_date,
+          start_time,
+          format,
+          notes,
           tournament_id,
           created_at,
           updated_at
@@ -77,7 +100,14 @@ export function RoundsManager() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
+    const startTime = formData.start_time
+      ? new Date(formData.start_time).toISOString()
+      : null;
+    const datePart = formData.start_time
+      ? formData.start_time.split('T')[0]
+      : null;
+
     try {
       if (editingRound) {
         // Update existing round
@@ -87,7 +117,11 @@ export function RoundsManager() {
             name: formData.name,
             round_number: formData.round_number,
             status: formData.status,
-            tournament_id: formData.tournament_id
+            tournament_id: formData.tournament_id,
+            start_time: startTime,
+            scheduled_date: datePart,
+            format: formData.format || null,
+            notes: formData.notes || null
           })
           .eq('id', editingRound.id);
 
@@ -99,20 +133,34 @@ export function RoundsManager() {
         });
       } else {
         // Create new round
-        const { error } = await supabase
+        const { data: newRound, error } = await supabase
           .from('rounds')
           .insert({
             name: formData.name,
             round_number: formData.round_number,
             status: formData.status,
-            tournament_id: formData.tournament_id
-          });
+            tournament_id: formData.tournament_id,
+            start_time: startTime,
+            scheduled_date: datePart,
+            format: formData.format || null,
+            notes: formData.notes || null
+          })
+          .select()
+          .single();
 
         if (error) throw error;
 
+        // Generate pairings for the new round
+        const { error: rpcError } = await supabase.rpc(
+          'generate_pairings_for_round',
+          { round_id: newRound.id }
+        );
+
+        if (rpcError) throw rpcError;
+
         toast({
           title: "Success",
-          description: "Round created successfully",
+          description: "Round created and pairings generated",
         });
       }
 
@@ -178,8 +226,17 @@ export function RoundsManager() {
   };
 
   const resetForm = () => {
-    setFormData({ tournament_id: '', name: '', round_number: 1, status: 'pending' });
+    setFormData({
+      tournament_id: '',
+      name: '',
+      round_number: 1,
+      status: 'pending',
+      start_time: '',
+      format: '',
+      notes: ''
+    });
     setEditingRound(null);
+    setStep(1);
   };
 
   const openEditDialog = (round: Round) => {
@@ -188,8 +245,14 @@ export function RoundsManager() {
       tournament_id: round.tournament_id,
       name: round.name,
       round_number: round.round_number,
-      status: round.status
+      status: round.status,
+      start_time: round.start_time
+        ? new Date(round.start_time).toISOString().slice(0, 16)
+        : '',
+      format: round.format || '',
+      notes: round.notes || ''
     });
+    setStep(1);
     setIsDialogOpen(true);
   };
 
@@ -215,7 +278,13 @@ export function RoundsManager() {
             Create and manage tournament rounds
           </p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog
+          open={isDialogOpen}
+          onOpenChange={(open) => {
+            setIsDialogOpen(open);
+            if (!open) resetForm();
+          }}
+        >
           <DialogTrigger asChild>
             <Button onClick={openCreateDialog}>
               <Plus className="h-4 w-4 mr-2" />
@@ -232,70 +301,123 @@ export function RoundsManager() {
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <Label htmlFor="tournament">Tournament</Label>
-                <Select
-                  value={formData.tournament_id}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, tournament_id: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select tournament" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {tournaments.map((tournament) => (
-                      <SelectItem key={tournament.id} value={tournament.id}>
-                        {tournament.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="name">Round Name</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder="e.g., Preliminary Round 1"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="round_number">Round Number</Label>
-                  <Input
-                    id="round_number"
-                    type="number"
-                    min="1"
-                    value={formData.round_number}
-                    onChange={(e) => setFormData(prev => ({ ...prev, round_number: parseInt(e.target.value) }))}
-                    required
-                  />
-                </div>
-              </div>
-              <div>
-                <Label htmlFor="status">Status</Label>
-                <Select
-                  value={formData.status}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              {step === 1 ? (
+                <>
+                  <div>
+                    <Label htmlFor="tournament">Tournament</Label>
+                    <Select
+                      value={formData.tournament_id}
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, tournament_id: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select tournament" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {tournaments.map((tournament) => (
+                          <SelectItem key={tournament.id} value={tournament.id}>
+                            {tournament.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="name">Round Name</Label>
+                      <Input
+                        id="name"
+                        value={formData.name}
+                        onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                        placeholder="e.g., Preliminary Round 1"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="round_number">Round Number</Label>
+                      <Input
+                        id="round_number"
+                        type="number"
+                        min="1"
+                        value={formData.round_number}
+                        onChange={(e) => setFormData(prev => ({ ...prev, round_number: parseInt(e.target.value) }))}
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="status">Status</Label>
+                    <Select
+                      value={formData.status}
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <Label htmlFor="start_time">Start Time</Label>
+                    <Input
+                      id="start_time"
+                      type="datetime-local"
+                      value={formData.start_time}
+                      onChange={(e) => setFormData(prev => ({ ...prev, start_time: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="format">Format</Label>
+                    <Select
+                      value={formData.format}
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, format: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select format" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {formats.map((f) => (
+                          <SelectItem key={f.key} value={f.key}>
+                            {f.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="notes">Notes</Label>
+                    <Textarea
+                      id="notes"
+                      value={formData.notes}
+                      onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                    />
+                  </div>
+                </>
+              )}
               <div className="flex justify-end gap-2 pt-4">
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Cancel
                 </Button>
-                <Button type="submit">
-                  {editingRound ? 'Update' : 'Add'} Round
-                </Button>
+                {step > 1 && (
+                  <Button type="button" variant="outline" onClick={() => setStep(step - 1)}>
+                    Back
+                  </Button>
+                )}
+                {step < 2 ? (
+                  <Button type="button" onClick={() => setStep(step + 1)}>
+                    Next
+                  </Button>
+                ) : (
+                  <Button type="submit">
+                    {editingRound ? 'Update' : 'Add'} Round
+                  </Button>
+                )}
               </div>
             </form>
           </DialogContent>
@@ -349,11 +471,11 @@ export function RoundsManager() {
                 <CardContent>
                   <div className="flex items-center justify-between">
                     <div className="text-sm text-muted-foreground">
-                      {round.scheduled_date ? (
-                        `Scheduled: ${new Date(round.scheduled_date).toLocaleDateString()}`
-                      ) : (
-                        'No date scheduled'
-                      )}
+                      {round.start_time
+                        ? `Starts: ${new Date(round.start_time).toLocaleString()}`
+                        : round.scheduled_date
+                          ? `Scheduled: ${new Date(round.scheduled_date).toLocaleDateString()}`
+                          : 'No date scheduled'}
                     </div>
                     <div className="flex gap-2">
                       <Button
