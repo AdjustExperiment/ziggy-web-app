@@ -76,9 +76,29 @@ export interface BallotTemplate {
   template_key: string;
   schema: any;
   html: string | null;
+  layout: any;
+  version: number;
   is_default: boolean;
   created_at: string;
   updated_at: string;
+}
+
+export interface TemplateVersion {
+  id: string;
+  template_id: string;
+  version: number;
+  schema: any;
+  html: string | null;
+  layout: any;
+  created_at: string;
+}
+
+export interface BallotSubmission {
+  id: string;
+  template_id: string;
+  template_version: number;
+  data: any;
+  created_at: string;
 }
 
 export interface Ballot {
