@@ -16,6 +16,8 @@ export interface Round {
   round_number: number;
   status: string;
   scheduled_date: string | null;
+  start_time: string | null;
+  format: string | null;
   created_at: string;
   updated_at: string;
 }
