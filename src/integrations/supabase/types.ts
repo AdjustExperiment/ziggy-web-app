@@ -69,11 +69,13 @@ export type Database = {
           html: string | null
           id: string
           is_default: boolean
+          layout: Json
           schema: Json
           supported_tags: string[]
           template_key: string
           tournament_id: string | null
           updated_at: string
+          version: number
         }
         Insert: {
           created_at?: string
@@ -81,11 +83,13 @@ export type Database = {
           html?: string | null
           id?: string
           is_default?: boolean
+          layout?: Json
           schema?: Json
           supported_tags?: string[]
           template_key: string
           tournament_id?: string | null
           updated_at?: string
+          version?: number
         }
         Update: {
           created_at?: string
@@ -93,11 +97,13 @@ export type Database = {
           html?: string | null
           id?: string
           is_default?: boolean
+          layout?: Json
           schema?: Json
           supported_tags?: string[]
           template_key?: string
           tournament_id?: string | null
           updated_at?: string
+          version?: number
         }
         Relationships: [
           {
@@ -105,6 +111,76 @@ export type Database = {
             columns: ["tournament_id"]
             isOneToOne: false
             referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ballot_submissions: {
+        Row: {
+          created_at: string
+          data: Json
+          id: string
+          template_id: string
+          template_version: number
+        }
+        Insert: {
+          created_at?: string
+          data: Json
+          id?: string
+          template_id: string
+          template_version?: number
+        }
+        Update: {
+          created_at?: string
+          data?: Json
+          id?: string
+          template_id?: string
+          template_version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ballot_submissions_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "ballot_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      template_versions: {
+        Row: {
+          created_at: string
+          html: string | null
+          id: string
+          layout: Json
+          schema: Json
+          template_id: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          html?: string | null
+          id?: string
+          layout?: Json
+          schema?: Json
+          template_id: string
+          version: number
+        }
+        Update: {
+          created_at?: string
+          html?: string | null
+          id?: string
+          layout?: Json
+          schema?: Json
+          template_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "template_versions_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "ballot_templates"
             referencedColumns: ["id"]
           },
         ]

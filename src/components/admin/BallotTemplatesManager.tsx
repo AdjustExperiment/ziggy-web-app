@@ -8,11 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { toast } from '@/components/ui/use-toast';
 import { Plus, Edit, Star, FileText, Trash2 } from 'lucide-react';
 import { BallotTemplate } from '@/types/database';
+import BallotTemplateDesigner from './BallotTemplateDesigner';
 
 interface Tournament {
   id: string;
@@ -30,8 +30,9 @@ export function BallotTemplatesManager() {
   const [formData, setFormData] = useState({
     event_style: '',
     template_key: '',
-    schema: '{}',
+    schema: { fields: [] as any[] },
     html: '',
+    layout: { fields: [] as any[] },
     is_default: false
   });
 
@@ -104,27 +105,34 @@ export function BallotTemplatesManager() {
 
   const createTemplate = async () => {
     try {
-      let schema;
-      try {
-        schema = JSON.parse(formData.schema);
-      } catch {
-        throw new Error('Invalid JSON in schema field');
-      }
-
       const templateData = {
         tournament_id: selectedTournament === 'global' ? null : selectedTournament,
         event_style: formData.event_style,
         template_key: formData.template_key,
-        schema,
+        schema: formData.schema,
         html: formData.html || null,
-        is_default: formData.is_default
+        layout: formData.layout,
+        is_default: formData.is_default,
+        version: 1
       };
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('ballot_templates')
-        .insert([templateData]);
+        .insert([templateData])
+        .select()
+        .single();
 
       if (error) throw error;
+
+      await supabase.from('template_versions').insert([
+        {
+          template_id: data.id,
+          version: 1,
+          schema: formData.schema,
+          html: formData.html || null,
+          layout: formData.layout
+        }
+      ]);
 
       toast({
         title: "Success",
@@ -147,19 +155,16 @@ export function BallotTemplatesManager() {
     if (!editingTemplate) return;
 
     try {
-      let schema;
-      try {
-        schema = JSON.parse(formData.schema);
-      } catch {
-        throw new Error('Invalid JSON in schema field');
-      }
+      const newVersion = (editingTemplate.version || 1) + 1;
 
       const templateData = {
         event_style: formData.event_style,
         template_key: formData.template_key,
-        schema,
+        schema: formData.schema,
         html: formData.html || null,
-        is_default: formData.is_default
+        layout: formData.layout,
+        is_default: formData.is_default,
+        version: newVersion
       };
 
       const { error } = await supabase
@@ -168,6 +173,16 @@ export function BallotTemplatesManager() {
         .eq('id', editingTemplate.id);
 
       if (error) throw error;
+
+      await supabase.from('template_versions').insert([
+        {
+          template_id: editingTemplate.id,
+          version: newVersion,
+          schema: formData.schema,
+          html: formData.html || null,
+          layout: formData.layout
+        }
+      ]);
 
       toast({
         title: "Success",
@@ -244,8 +259,9 @@ export function BallotTemplatesManager() {
     setFormData({
       event_style: template.event_style,
       template_key: template.template_key,
-      schema: JSON.stringify(template.schema, null, 2),
+      schema: template.schema || { fields: [] },
       html: template.html || '',
+      layout: template.layout || { fields: [] },
       is_default: template.is_default
     });
     setIsEditDialogOpen(true);
@@ -255,20 +271,12 @@ export function BallotTemplatesManager() {
     setFormData({
       event_style: '',
       template_key: '',
-      schema: '{}',
+      schema: { fields: [] },
       html: '',
+      layout: { fields: [] },
       is_default: false
     });
   };
-
-  const defaultSchema = JSON.stringify({
-    fields: [
-      { name: 'speaker1_points', label: 'Speaker 1 Points', type: 'number', min: 0, max: 30 },
-      { name: 'speaker2_points', label: 'Speaker 2 Points', type: 'number', min: 0, max: 30 },
-      { name: 'winner', label: 'Winner', type: 'select', options: ['Affirmative', 'Negative'] },
-      { name: 'comments', label: 'Comments', type: 'textarea' }
-    ]
-  }, null, 2);
 
   if (loading) {
     return (
@@ -336,36 +344,11 @@ export function BallotTemplatesManager() {
                 />
                 <Label>Set as default template for this event style</Label>
               </div>
-              
-              <div>
-                <Label htmlFor="schema">Schema (JSON)</Label>
-                <Textarea
-                  id="schema"
-                  value={formData.schema}
-                  onChange={(e) => setFormData({...formData, schema: e.target.value})}
-                  placeholder={defaultSchema}
-                  rows={10}
-                  className="font-mono text-sm"
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Define the ballot structure using JSON. Include fields, labels, types, and validation rules.
-                </p>
-              </div>
-              
-              <div>
-                <Label htmlFor="html">Custom HTML (Optional)</Label>
-                <Textarea
-                  id="html"
-                  value={formData.html}
-                  onChange={(e) => setFormData({...formData, html: e.target.value})}
-                  placeholder="<style>...</style><div>Custom ballot layout</div>"
-                  rows={5}
-                  className="font-mono text-sm"
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Optional custom HTML for ballot layout and styling.
-                </p>
-              </div>
+
+              <BallotTemplateDesigner
+                value={{ schema: formData.schema, html: formData.html, layout: formData.layout }}
+                onChange={(val) => setFormData({ ...formData, ...val })}
+              />
             </div>
             
             <div className="flex gap-2 justify-end">
@@ -421,6 +404,7 @@ export function BallotTemplatesManager() {
                 <TableRow>
                   <TableHead>Event Style</TableHead>
                   <TableHead>Template Key</TableHead>
+                  <TableHead>Version</TableHead>
                   <TableHead>Scope</TableHead>
                   <TableHead>Default</TableHead>
                   <TableHead>Actions</TableHead>
@@ -433,6 +417,7 @@ export function BallotTemplatesManager() {
                       <Badge variant="outline">{template.event_style}</Badge>
                     </TableCell>
                     <TableCell className="font-mono">{template.template_key}</TableCell>
+                    <TableCell>{template.version}</TableCell>
                     <TableCell>
                       <Badge variant={template.tournament_id ? 'default' : 'secondary'}>
                         {template.tournament_id ? 'Tournament' : 'Global'}
@@ -519,27 +504,10 @@ export function BallotTemplatesManager() {
               <Label>Set as default template for this event style</Label>
             </div>
             
-            <div>
-              <Label htmlFor="edit_schema">Schema (JSON)</Label>
-              <Textarea
-                id="edit_schema"
-                value={formData.schema}
-                onChange={(e) => setFormData({...formData, schema: e.target.value})}
-                rows={10}
-                className="font-mono text-sm"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="edit_html">Custom HTML (Optional)</Label>
-              <Textarea
-                id="edit_html"
-                value={formData.html}
-                onChange={(e) => setFormData({...formData, html: e.target.value})}
-                rows={5}
-                className="font-mono text-sm"
-              />
-            </div>
+            <BallotTemplateDesigner
+              value={{ schema: formData.schema, html: formData.html, layout: formData.layout }}
+              onChange={(val) => setFormData({ ...formData, ...val })}
+            />
           </div>
           
           <div className="flex gap-2 justify-end">
