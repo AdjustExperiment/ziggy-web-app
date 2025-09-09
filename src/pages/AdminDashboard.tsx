@@ -37,7 +37,7 @@ export default function AdminDashboard() {
       dashboard: <Dashboard />,
       tournaments: <TournamentManager />,
       tabulation: <TabulationPlatform />,
-      payments: <PaymentManager activeTab={activeTab} setActiveTab={setActiveTab} />,
+      payments: <PaymentManager />,
       applications: <JudgeApplicationManager />,
       judges: <EnhancedJudgesManager />,
       users: <UserManager />,

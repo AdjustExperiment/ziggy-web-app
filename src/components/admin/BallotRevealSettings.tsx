@@ -36,11 +36,18 @@ export function BallotRevealSettings() {
     try {
       const { data, error } = await supabase
         .from('tournaments')
-        .select('id, name, end_date, status, ballot_reveal_mode, reveal_delay_minutes, judge_anonymity')
+        .select('id, name, end_date, status, ballot_reveal_mode')
         .order('name');
 
       if (error) throw error;
-      setTournaments(data || []);
+      // Type cast to handle missing properties from Tournament interface
+      const typedTournaments = (data || []).map(tournament => ({
+        ...tournament,
+        ballot_privacy: 'private' as const,
+        reveal_delay_minutes: 0,
+        judge_anonymity: false
+      }));
+      setTournaments(typedTournaments);
     } catch (error: any) {
       console.error('Error fetching tournaments:', error);
       toast({

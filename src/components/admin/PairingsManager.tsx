@@ -95,7 +95,14 @@ export function PairingsManager() {
         .order('round_number');
 
       if (error) throw error;
-      setRounds(data || []);
+      // Type cast to handle missing optional properties from the Round interface
+      const typedRounds = (data || []).map(round => ({
+        ...round,
+        start_time: (round as any).start_time || null,
+        format: (round as any).format || null,
+        notes: (round as any).notes || null
+      }));
+      setRounds(typedRounds);
     } catch (error: any) {
       console.error('Error fetching rounds:', error);
     }
