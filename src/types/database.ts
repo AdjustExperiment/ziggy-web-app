@@ -97,11 +97,10 @@ export interface Ballot {
 export interface RefundRequest {
   id: string;
   registration_id: string;
+  user_id: string;
   reason: string | null;
   status: string;
-  requested_at: string;
-  processed_at: string | null;
-  admin_notes: string | null;
+  created_at: string;
 }
 
 // Updated Registration interface to match tournament_registrations table structure

@@ -7,12 +7,13 @@ import { CreditCard, Smartphone } from 'lucide-react';
 
 interface PaymentButtonsProps {
   amount: number;
+  onStripePayment: () => Promise<void>;
   onPayPalPayment: () => Promise<void>;
   onVenmoPayment: () => Promise<void>;
   disabled?: boolean;
 }
 
-const PaymentButtons = ({ amount, onPayPalPayment, onVenmoPayment, disabled = false }: PaymentButtonsProps) => {
+const PaymentButtons = ({ amount, onStripePayment, onPayPalPayment, onVenmoPayment, disabled = false }: PaymentButtonsProps) => {
   return (
     <Card>
       <CardHeader>
@@ -31,15 +32,15 @@ const PaymentButtons = ({ amount, onPayPalPayment, onVenmoPayment, disabled = fa
         
         <div className="space-y-3">
           <Button
-            onClick={onPayPalPayment}
+            onClick={onStripePayment}
             disabled={disabled}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+            className="w-full bg-purple-600 hover:bg-purple-700 text-white"
             size="lg"
           >
             <CreditCard className="h-4 w-4 mr-2" />
-            Pay with PayPal
+            Pay with Card
           </Button>
-          
+
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <Separator className="w-full" />
@@ -48,7 +49,17 @@ const PaymentButtons = ({ amount, onPayPalPayment, onVenmoPayment, disabled = fa
               <span className="bg-background px-2 text-muted-foreground">or</span>
             </div>
           </div>
-          
+
+          <Button
+            onClick={onPayPalPayment}
+            disabled={disabled}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+            size="lg"
+          >
+            <CreditCard className="h-4 w-4 mr-2" />
+            Pay with PayPal
+          </Button>
+
           <Button
             onClick={onVenmoPayment}
             disabled={disabled}

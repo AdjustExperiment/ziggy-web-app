@@ -17,6 +17,7 @@ import { Registration } from '@/types/database';
 import { AlertCircle, CheckCircle, Info } from 'lucide-react';
 import PromoCodeInput from '@/components/PromoCodeInput';
 import { Separator } from '@/components/ui/separator';
+import { loadStripe } from '@stripe/stripe-js';
 
 interface Tournament {
   id: string;
@@ -67,6 +68,7 @@ export default function TournamentRegistration() {
   }>({ status: 'idle' });
   const [discountAmount, setDiscountAmount] = useState(0);
   const [appliedPromoCode, setAppliedPromoCode] = useState('');
+  const [refundRequest, setRefundRequest] = useState<any | null>(null);
 
   useEffect(() => {
     const fetchTournament = async () => {
@@ -101,6 +103,20 @@ export default function TournamentRegistration() {
 
     fetchTournament();
   }, [id]);
+
+  useEffect(() => {
+    const fetchRefund = async () => {
+      if (!registration || !user) return;
+      const { data } = await supabase
+        .from('refund_requests')
+        .select('*')
+        .eq('registration_id', registration.id)
+        .eq('user_id', user.id)
+        .single();
+      setRefundRequest(data);
+    };
+    fetchRefund();
+  }, [registration?.id, user?.id]);
 
   const handleInputChange = (name: string, value: string) => {
     setFormData(prev => ({
@@ -218,11 +234,25 @@ export default function TournamentRegistration() {
   const requestRefund = async () => {
     if (!registration || !user) return;
 
-    toast({
-      title: "Refund Request",
-      description: "Refund requests will be available after database migration. Please contact support directly.",
-      variant: "default",
-    });
+    const reason = window.prompt('Please provide a reason for your refund request:');
+    if (!reason) return;
+
+    const { data, error } = await supabase
+      .from('refund_requests')
+      .insert({
+        registration_id: registration.id,
+        user_id: user.id,
+        reason,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      toast({ title: 'Refund Request Failed', description: error.message, variant: 'destructive' });
+    } else {
+      setRefundRequest(data);
+      toast({ title: 'Refund Requested', description: 'Your refund request has been submitted.' });
+    }
   };
 
   const handlePromoCodeDiscount = (discount: number, promoCode: string) => {
@@ -494,8 +524,20 @@ export default function TournamentRegistration() {
           </div>
         )}
         
-        <PaymentButtons 
+        <PaymentButtons
           amount={finalAmount}
+          onStripePayment={async () => {
+            if (!registration) return;
+            const { data, error } = await supabase.functions.invoke('create-stripe-checkout', {
+              body: { registration_id: registration.id, amount: finalAmount },
+            });
+            if (error) {
+              toast({ title: 'Payment error', description: error.message, variant: 'destructive' });
+              return;
+            }
+            const stripe = await loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY!);
+            await stripe?.redirectToCheckout({ sessionId: data.sessionId });
+          }}
           onPayPalPayment={async () => {
             console.log('PayPal payment initiated for:', finalAmount);
           }}
@@ -505,14 +547,14 @@ export default function TournamentRegistration() {
         />
 
         {registration?.payment_status === 'paid' && (
-          <div className="mt-4">
-            <Button 
-              variant="outline" 
-              onClick={requestRefund}
-              className="w-full"
-            >
-              Request Refund
-            </Button>
+          <div className="mt-4 space-y-2">
+            {refundRequest ? (
+              <p className="text-sm text-muted-foreground">Refund status: {refundRequest.status}</p>
+            ) : (
+              <Button variant="outline" onClick={requestRefund} className="w-full">
+                Request Refund
+              </Button>
+            )}
           </div>
         )}
       </CardContent>
