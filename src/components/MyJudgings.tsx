@@ -7,11 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/components/ui/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Gavel, MessageSquare, FileText, Lock, Eye } from 'lucide-react';
+import { Gavel, MessageSquare, FileText, Lock } from 'lucide-react';
 import { BallotEntry } from './BallotEntry';
 
-interface JudgeAssignment {
+interface AssignmentDisplay {
   id: string;
+  pairing_id: string;
   tournament_name: string;
   round_name: string;
   room: string;
@@ -27,80 +28,94 @@ interface JudgeAssignment {
 
 export function MyJudgings() {
   const { user } = useAuth();
-  const [assignments, setAssignments] = useState<JudgeAssignment[]>([]);
+  const [assignments, setAssignments] = useState<AssignmentDisplay[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedPairing, setSelectedPairing] = useState<JudgeAssignment | null>(null);
+  const [selectedPairing, setSelectedPairing] = useState<AssignmentDisplay | null>(null);
 
   useEffect(() => {
-    if (user) {
-      fetchMyAssignments();
-    }
-  }, [user]);
-
-  const fetchMyAssignments = async () => {
     if (!user) return;
 
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    let judgeProfileId: string;
+
+    const init = async () => {
+      try {
+        const { data: judgeProfile, error: judgeError } = await supabase
+          .from('judge_profiles')
+          .select('id')
+          .eq('user_id', user.id)
+          .single();
+
+        if (judgeError && judgeError.code !== 'PGRST116') throw judgeError;
+
+        if (!judgeProfile) {
+          setAssignments([]);
+          setLoading(false);
+          return;
+        }
+
+        judgeProfileId = judgeProfile.id;
+        await fetchMyAssignments(judgeProfileId);
+
+        channel = supabase
+          .channel('judge-assignments-channel')
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'judge_assignments', filter: `judge_id=eq.${judgeProfileId}` }, () => fetchMyAssignments(judgeProfileId))
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'ballot_entries', filter: `judge_user_id=eq.${user.id}` }, () => fetchMyAssignments(judgeProfileId))
+          .subscribe();
+      } catch (error: any) {
+        console.error('Error fetching assignments:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load your judging assignments",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    init();
+
+    return () => {
+      if (channel) supabase.removeChannel(channel);
+    };
+  }, [user]);
+
+  const fetchMyAssignments = async (judgeProfileId: string) => {
     try {
-      // Check if user has a judge profile
-      const { data: judgeProfile, error: judgeError } = await supabase
-        .from('judge_profiles')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
-
-      if (judgeError && judgeError.code !== 'PGRST116') {
-        console.error('Error fetching judge profile:', judgeError);
-        setAssignments([]);
-        return;
-      }
-
-      if (!judgeProfile) {
-        // User is not a judge
-        setAssignments([]);
-        return;
-      }
-
-      // Fetch pairings where user is assigned as judge with ballot info
-      const { data: pairingsData, error: pairingsError } = await supabase
-        .from('pairings')
+      const { data, error } = await supabase
+        .from('judge_assignments')
         .select(`
           id,
-          tournament_id,
-          round_id,
-          aff_registration_id,
-          neg_registration_id,
-          judge_id,
-          room,
-          scheduled_time,
-          released,
-          status,
-          result,
-          created_at,
-          updated_at,
-          aff_registration:tournament_registrations!aff_registration_id(participant_name, participant_email),
-          neg_registration:tournament_registrations!neg_registration_id(participant_name, participant_email),
-          round:rounds(name),
-          tournaments(name),
-          judge_profiles(name, email),
-          ballots(id, status, is_published)
+          role,
+          pairing:pairings(
+            id,
+            room,
+            scheduled_time,
+            aff_registration:tournament_registrations!aff_registration_id(participant_name, participant_email),
+            neg_registration:tournament_registrations!neg_registration_id(participant_name, participant_email),
+            round:rounds(name),
+            tournaments(name)
+          ),
+          ballot_entries(id, status)
         `)
-        .eq('judge_id', judgeProfile.id)
-        .order('created_at', { ascending: false });
+        .eq('judge_id', judgeProfileId)
+        .order('assigned_at', { ascending: false });
 
-      if (pairingsError) throw pairingsError;
+      if (error) throw error;
 
-      // Transform pairings data to match JudgeAssignment interface
-      const assignments: JudgeAssignment[] = (pairingsData || []).map(pairing => {
-        const ballot = pairing.ballots?.[0]; // Get first ballot if exists
+      const assignments: AssignmentDisplay[] = (data || []).map(ja => {
+        const ballot = ja.ballot_entries?.[0];
         return {
-          id: pairing.id,
-          tournament_name: pairing.tournaments?.name || 'Unknown Tournament',
-          round_name: pairing.round?.name || 'Unknown Round',
-          room: pairing.room || 'TBD',
-          scheduled_time: pairing.scheduled_time || undefined,
-          aff_participant: pairing.aff_registration?.participant_name || 'Unknown',
-          neg_participant: pairing.neg_registration?.participant_name || 'Unknown',
-          role: 'Judge',
+          id: ja.id,
+          pairing_id: ja.pairing?.id || '',
+          tournament_name: ja.pairing?.tournaments?.name || 'Unknown Tournament',
+          round_name: ja.pairing?.round?.name || 'Unknown Round',
+          room: ja.pairing?.room || 'TBD',
+          scheduled_time: ja.pairing?.scheduled_time || undefined,
+          aff_participant: ja.pairing?.aff_registration?.participant_name || 'Unknown',
+          neg_participant: ja.pairing?.neg_registration?.participant_name || 'Unknown',
+          role: ja.role,
           ballot_id: ballot?.id,
           ballot_status: ballot?.status || 'none',
           ballot_submitted: ballot?.status === 'submitted',
@@ -109,24 +124,31 @@ export function MyJudgings() {
       });
 
       setAssignments(assignments);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error fetching assignments:', error);
       toast({
         title: "Error",
         description: "Failed to load your judging assignments",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
-  const openBallot = (assignment: JudgeAssignment) => {
+  const openBallot = (assignment: AssignmentDisplay) => {
     setSelectedPairing(assignment);
   };
 
   const handleBallotSubmitted = () => {
-    fetchMyAssignments(); // Refresh assignments
+    if (user) {
+      supabase
+        .from('judge_profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single()
+        .then(({ data }) => {
+          if (data) fetchMyAssignments(data.id);
+        });
+    }
   };
 
   if (loading) {
@@ -263,7 +285,7 @@ export function MyJudgings() {
       {/* Ballot Entry Dialog */}
       {selectedPairing && (
         <BallotEntry
-          pairingId={selectedPairing.id}
+          assignmentId={selectedPairing.id}
           tournamentName={selectedPairing.tournament_name}
           roundName={selectedPairing.round_name}
           affParticipant={selectedPairing.aff_participant}

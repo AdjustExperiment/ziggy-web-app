@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Gavel, Save, Send, Eye } from 'lucide-react';
 
 interface BallotEntryProps {
-  pairingId: string;
+  assignmentId: string;
   tournamentName: string;
   roundName: string;
   affParticipant: string;
@@ -22,7 +22,7 @@ interface BallotEntryProps {
 }
 
 export function BallotEntry({
-  pairingId,
+  assignmentId,
   tournamentName,
   roundName,
   affParticipant,
@@ -36,40 +36,72 @@ export function BallotEntry({
   const [comments, setComments] = useState<string>('');
   const [affPoints, setAffPoints] = useState<string>('');
   const [negPoints, setNegPoints] = useState<string>('');
+  const [affRank, setAffRank] = useState<string>('');
+  const [negRank, setNegRank] = useState<string>('');
+  const [affFeedback, setAffFeedback] = useState<string>('');
+  const [negFeedback, setNegFeedback] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [judgeProfileId, setJudgeProfileId] = useState<string | null>(null);
+  const [judgeUserId, setJudgeUserId] = useState<string | null>(null);
+  const canEdit = !ballot || ballot.status !== 'submitted';
 
   useEffect(() => {
-    if (isOpen && pairingId) {
+    if (isOpen && assignmentId) {
       fetchBallot();
     }
-  }, [isOpen, pairingId]);
+  }, [isOpen, assignmentId]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const timer = setTimeout(() => {
+      if (canEdit) saveBallot('draft', true);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [winner, comments, affPoints, negPoints, affRank, negRank, affFeedback, negFeedback, isOpen]);
 
   const fetchBallot = async () => {
     setLoading(true);
     try {
+      const userRes = await supabase.auth.getUser();
+      const userId = userRes.data.user?.id || null;
+      setJudgeUserId(userId);
+
+      const { data: judgeProfile } = await supabase
+        .from('judge_profiles')
+        .select('id')
+        .eq('user_id', userId)
+        .single();
+      setJudgeProfileId(judgeProfile?.id || null);
+
       const { data, error } = await supabase
-        .from('ballots')
+        .from('ballot_entries')
         .select('*')
-        .eq('pairing_id', pairingId)
+        .eq('judge_assignment_id', assignmentId)
         .maybeSingle();
 
       if (error) throw error;
 
       if (data) {
         setBallot(data);
-        const payload = (data.payload as any) || {};
-        setWinner(payload.winner || '');
-        setComments(payload.comments || '');
-        setAffPoints(payload.aff_points || '');
-        setNegPoints(payload.neg_points || '');
+        setWinner(data.winner || '');
+        setComments(data.comments || '');
+        setAffPoints(data.aff_points?.toString() || '');
+        setNegPoints(data.neg_points?.toString() || '');
+        setAffRank(data.aff_rank?.toString() || '');
+        setNegRank(data.neg_rank?.toString() || '');
+        setAffFeedback(data.aff_feedback || '');
+        setNegFeedback(data.neg_feedback || '');
       } else {
-        // Initialize empty ballot
         setBallot(null);
         setWinner('');
         setComments('');
         setAffPoints('');
         setNegPoints('');
+        setAffRank('');
+        setNegRank('');
+        setAffFeedback('');
+        setNegFeedback('');
       }
     } catch (error: any) {
       console.error('Error fetching ballot:', error);
@@ -83,75 +115,72 @@ export function BallotEntry({
     }
   };
 
-  const saveBallot = async (status: 'draft' | 'submitted') => {
-    setSaving(true);
+  const saveBallot = async (status: 'draft' | 'submitted', auto = false) => {
+    if (!judgeProfileId || !judgeUserId) return;
+    if (!auto) setSaving(true);
     try {
       const payload = {
         winner,
         comments,
-        aff_points: affPoints,
-        neg_points: negPoints,
+        aff_points: affPoints ? parseFloat(affPoints) : null,
+        neg_points: negPoints ? parseFloat(negPoints) : null,
+        aff_rank: affRank ? parseInt(affRank) : null,
+        neg_rank: negRank ? parseInt(negRank) : null,
+        aff_feedback: affFeedback,
+        neg_feedback: negFeedback,
       };
 
       if (ballot) {
-        // Update existing ballot
-        const { error } = await supabase
-          .from('ballots')
-          .update({
-            payload,
-            status,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', ballot.id);
-
-        if (error) throw error;
-      } else {
-        // Create new ballot
-        const { data: judgeProfile } = await supabase
-          .from('judge_profiles')
-          .select('id')
-          .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
+        const { data, error } = await supabase
+          .from('ballot_entries')
+          .update({ ...payload, status, updated_at: new Date().toISOString() })
+          .eq('id', ballot.id)
+          .select()
           .single();
 
-        if (!judgeProfile) throw new Error('Judge profile not found');
-
-        const { error } = await supabase
-          .from('ballots')
+        if (error) throw error;
+        setBallot(data);
+      } else {
+        const { data, error } = await supabase
+          .from('ballot_entries')
           .insert({
-            pairing_id: pairingId,
-            judge_profile_id: judgeProfile.id,
-            judge_user_id: (await supabase.auth.getUser()).data.user?.id,
-            payload,
+            judge_assignment_id: assignmentId,
+            judge_profile_id: judgeProfileId,
+            judge_user_id: judgeUserId,
+            ...payload,
             status,
-          });
+          })
+          .select()
+          .single();
 
         if (error) throw error;
+        setBallot(data);
       }
 
-      toast({
-        title: "Success",
-        description: status === 'submitted' ? "Ballot submitted successfully" : "Ballot saved as draft",
-      });
+      if (!auto) {
+        toast({
+          title: "Success",
+          description: status === 'submitted' ? 'Ballot submitted successfully' : 'Ballot saved as draft',
+        });
+      }
 
       if (status === 'submitted') {
         onBallotSubmitted();
         onClose();
-      } else {
-        fetchBallot(); // Refresh ballot data
       }
     } catch (error: any) {
       console.error('Error saving ballot:', error);
-      toast({
-        title: "Error",
-        description: "Failed to save ballot",
-        variant: "destructive",
-      });
+      if (!auto) {
+        toast({
+          title: "Error",
+          description: "Failed to save ballot",
+          variant: "destructive",
+        });
+      }
     } finally {
-      setSaving(false);
+      if (!auto) setSaving(false);
     }
   };
-
-  const canEdit = !ballot || ballot.status !== 'submitted';
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -253,6 +282,58 @@ export function BallotEntry({
                   disabled={!canEdit}
                   className="w-full p-2 border rounded-md disabled:opacity-50 disabled:bg-muted"
                   placeholder="0.0"
+                />
+              </div>
+            </div>
+
+            {/* Rankings */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="aff-rank">Affirmative Rank</Label>
+                <input
+                  id="aff-rank"
+                  type="number"
+                  min="1"
+                  value={affRank}
+                  onChange={(e) => setAffRank(e.target.value)}
+                  disabled={!canEdit}
+                  className="w-full p-2 border rounded-md disabled:opacity-50 disabled:bg-muted"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="neg-rank">Negative Rank</Label>
+                <input
+                  id="neg-rank"
+                  type="number"
+                  min="1"
+                  value={negRank}
+                  onChange={(e) => setNegRank(e.target.value)}
+                  disabled={!canEdit}
+                  className="w-full p-2 border rounded-md disabled:opacity-50 disabled:bg-muted"
+                />
+              </div>
+            </div>
+
+            {/* Feedback */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="aff-feedback">Affirmative Feedback</Label>
+                <Textarea
+                  id="aff-feedback"
+                  value={affFeedback}
+                  onChange={(e) => setAffFeedback(e.target.value)}
+                  disabled={!canEdit}
+                  rows={3}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="neg-feedback">Negative Feedback</Label>
+                <Textarea
+                  id="neg-feedback"
+                  value={negFeedback}
+                  onChange={(e) => setNegFeedback(e.target.value)}
+                  disabled={!canEdit}
+                  rows={3}
                 />
               </div>
             </div>
