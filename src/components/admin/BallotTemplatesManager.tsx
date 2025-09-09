@@ -13,6 +13,7 @@ import { Switch } from '@/components/ui/switch';
 import { toast } from '@/components/ui/use-toast';
 import { Plus, Edit, Star, FileText, Trash2 } from 'lucide-react';
 import { BallotTemplate } from '@/types/database';
+import BallotTemplateDesigner from './BallotTemplateDesigner';
 
 interface Tournament {
   id: string;
@@ -27,6 +28,7 @@ export function BallotTemplatesManager() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<BallotTemplate | null>(null);
+  const [isDesignerOpen, setIsDesignerOpen] = useState(false);
   const [formData, setFormData] = useState({
     event_style: '',
     template_key: '',
@@ -362,6 +364,9 @@ export function BallotTemplatesManager() {
                   rows={5}
                   className="font-mono text-sm"
                 />
+                <Button type="button" variant="outline" className="mt-2" onClick={() => setIsDesignerOpen(true)}>
+                  Design Template
+                </Button>
                 <p className="text-xs text-muted-foreground mt-1">
                   Optional custom HTML for ballot layout and styling.
                 </p>
@@ -539,6 +544,9 @@ export function BallotTemplatesManager() {
                 rows={5}
                 className="font-mono text-sm"
               />
+              <Button type="button" variant="outline" className="mt-2" onClick={() => setIsDesignerOpen(true)}>
+                Design Template
+              </Button>
             </div>
           </div>
           
@@ -550,6 +558,21 @@ export function BallotTemplatesManager() {
               Update Template
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isDesignerOpen} onOpenChange={setIsDesignerOpen}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Design Ballot Template</DialogTitle>
+          </DialogHeader>
+          <BallotTemplateDesigner
+            initialSchema={(() => { try { return JSON.parse(formData.schema); } catch { return []; } })()}
+            onSave={(schema, html) => {
+              setFormData({ ...formData, schema: JSON.stringify(schema, null, 2), html });
+              setIsDesignerOpen(false);
+            }}
+          />
         </DialogContent>
       </Dialog>
     </div>
