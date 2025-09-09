@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/components/ui/use-toast';
-import { CreditCard, Settings, DollarSign, TrendingUp, Download, RefreshCw, Calculator, Users as UsersIcon, Tag } from 'lucide-react';
+import { CreditCard, Settings, DollarSign, TrendingUp, Download, RefreshCw, Calculator, Tag, RotateCcw } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -19,31 +19,43 @@ import { StaffRevenueCalculator } from './StaffRevenueCalculator';
 
 interface PaymentTransaction {
   id: string;
-  participant_name: string;
-  participant_email: string;
-  amount_paid: number;
-  payment_status: string;
-  payment_id: string;
-  registration_date: string;
-  tournaments: {
-    name: string;
+  registration_id: string;
+  user_id: string;
+  amount: number;
+  currency: string;
+  status: string;
+  stripe_session_id: string | null;
+  created_at: string;
+  tournament_registrations?: {
+    participant_name: string;
+    participant_email: string;
+    tournaments: { name: string };
   };
 }
 
-interface PaymentHandler {
+interface RefundRequest {
   id: string;
-  name: string;
-  type: string;
-  config: any;
-  active: boolean;
+  registration_id: string;
+  user_id: string;
+  reason: string;
+  status: string;
+  created_at: string;
+  tournament_registrations?: {
+    participant_name: string;
+    participant_email: string;
+    tournaments: { name: string };
+  };
 }
 
 export function PaymentManager({ activeTab, setActiveTab }: { activeTab?: string; setActiveTab?: (tab: string) => void }) {
   const [transactions, setTransactions] = useState<PaymentTransaction[]>([]);
-  const [handlers, setHandlers] = useState<PaymentHandler[]>([]);
+  const [refundRequests, setRefundRequests] = useState<RefundRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [statsLoading, setStatsLoading] = useState(false);
   const [isConfigDialogOpen, setIsConfigDialogOpen] = useState(false);
+  const [isRefundDialogOpen, setIsRefundDialogOpen] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState<PaymentTransaction | null>(null);
+  const [refundReason, setRefundReason] = useState('');
   const [selectedHandler, setSelectedHandler] = useState<string>('');
   const [handlerConfig, setHandlerConfig] = useState({
     paypal_client_id: '',
@@ -63,25 +75,16 @@ export function PaymentManager({ activeTab, setActiveTab }: { activeTab?: string
   useEffect(() => {
     fetchTransactions();
     fetchPaymentStats();
+    fetchRefundRequests();
   }, []);
 
   const fetchTransactions = async () => {
     try {
       const { data, error } = await supabase
-        .from('tournament_registrations')
-        .select(`
-          id,
-          participant_name,
-          participant_email,
-          amount_paid,
-          payment_status,
-          payment_id,
-          registration_date,
-          tournaments (
-            name
-          )
-        `)
-        .order('registration_date', { ascending: false })
+        .from('payment_transactions')
+        .select(`id, registration_id, user_id, amount, currency, status, stripe_session_id, created_at,
+          tournament_registrations:registration_id (participant_name, participant_email, tournaments(name))`)
+        .order('created_at', { ascending: false })
         .limit(100);
 
       if (error) throw error;
@@ -100,20 +103,19 @@ export function PaymentManager({ activeTab, setActiveTab }: { activeTab?: string
   const fetchPaymentStats = async () => {
     setStatsLoading(true);
     try {
-      // Get payment statistics
       const { data, error } = await supabase
-        .from('tournament_registrations')
-        .select('amount_paid, payment_status');
+        .from('payment_transactions')
+        .select('amount, status');
 
       if (error) throw error;
 
       const totalRevenue = data
-        .filter(t => t.payment_status === 'paid')
-        .reduce((sum, t) => sum + (t.amount_paid || 0), 0);
+        .filter(t => t.status === 'succeeded')
+        .reduce((sum, t) => sum + (t.amount || 0), 0);
 
       const totalTransactions = data.length;
-      const pendingPayments = data.filter(t => t.payment_status === 'pending').length;
-      const successfulPayments = data.filter(t => t.payment_status === 'paid').length;
+      const pendingPayments = data.filter(t => t.status === 'pending').length;
+      const successfulPayments = data.filter(t => t.status === 'succeeded').length;
 
       setStats({
         totalRevenue,
@@ -128,11 +130,26 @@ export function PaymentManager({ activeTab, setActiveTab }: { activeTab?: string
     }
   };
 
+  const fetchRefundRequests = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('refund_requests')
+        .select(`id, registration_id, user_id, reason, status, created_at,
+          tournament_registrations:registration_id (participant_name, participant_email, tournaments(name))`)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setRefundRequests(data || []);
+    } catch (error) {
+      console.error('Error fetching refund requests', error);
+    }
+  };
+
   const updatePaymentStatus = async (transactionId: string, newStatus: string) => {
     try {
       const { error } = await supabase
-        .from('tournament_registrations')
-        .update({ payment_status: newStatus })
+        .from('payment_transactions')
+        .update({ status: newStatus })
         .eq('id', transactionId);
 
       if (error) throw error;
@@ -153,17 +170,59 @@ export function PaymentManager({ activeTab, setActiveTab }: { activeTab?: string
     }
   };
 
+  const handleStripeCheckout = async (transactionId: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('create-stripe-checkout', {
+        body: { transaction_id: transactionId }
+      });
+      if (error) throw error;
+      if (data?.url) {
+        window.location.href = data.url;
+      }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Unable to start Stripe Checkout',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const submitRefundRequest = async () => {
+    if (!selectedTransaction) return;
+    try {
+      const { error } = await supabase.from('refund_requests').insert({
+        registration_id: selectedTransaction.registration_id,
+        user_id: selectedTransaction.user_id,
+        reason: refundReason
+      });
+      if (error) throw error;
+      toast({ title: 'Refund Requested', description: 'Refund request submitted' });
+      setIsRefundDialogOpen(false);
+      setRefundReason('');
+      fetchRefundRequests();
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to submit refund request',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const currencySymbols: Record<string, string> = { USD: '$', EUR: '€', GBP: '£' };
+
   const exportTransactions = () => {
     const csvContent = [
-      ['Date', 'Tournament', 'Participant', 'Email', 'Amount', 'Status', 'Payment ID'],
+      ['Date', 'Tournament', 'Participant', 'Email', 'Amount', 'Status', 'Stripe Session'],
       ...transactions.map(t => [
-        new Date(t.registration_date).toLocaleDateString(),
-        t.tournaments?.name || 'N/A',
-        t.participant_name,
-        t.participant_email,
-        `$${t.amount_paid}`,
-        t.payment_status,
-        t.payment_id || 'N/A'
+        new Date(t.created_at).toLocaleDateString(),
+        t.tournament_registrations?.tournaments?.name || 'N/A',
+        t.tournament_registrations?.participant_name,
+        t.tournament_registrations?.participant_email,
+        `${currencySymbols[t.currency] || ''}${t.amount}`,
+        t.status,
+        t.stripe_session_id || 'N/A'
       ])
     ].map(row => row.join(',')).join('\n');
 
@@ -314,10 +373,14 @@ export function PaymentManager({ activeTab, setActiveTab }: { activeTab?: string
       </div>
 
       <Tabs defaultValue="transactions" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="transactions" className="flex items-center gap-2">
             <CreditCard className="h-4 w-4" />
             Transactions
+          </TabsTrigger>
+          <TabsTrigger value="refunds" className="flex items-center gap-2">
+            <RotateCcw className="h-4 w-4" />
+            Refunds
           </TabsTrigger>
           <TabsTrigger value="promo-codes" className="flex items-center gap-2">
             <Tag className="h-4 w-4" />
@@ -407,46 +470,109 @@ export function PaymentManager({ activeTab, setActiveTab }: { activeTab?: string
                   {transactions.map((transaction) => (
                     <TableRow key={transaction.id}>
                       <TableCell>
-                        {new Date(transaction.registration_date).toLocaleDateString()}
+                        {new Date(transaction.created_at).toLocaleDateString()}
                       </TableCell>
-                      <TableCell>{transaction.tournaments?.name || 'N/A'}</TableCell>
+                      <TableCell>{transaction.tournament_registrations?.tournaments?.name || 'N/A'}</TableCell>
                       <TableCell>
                         <div>
-                          <div>{transaction.participant_name}</div>
-                          <div className="text-sm text-muted-foreground">{transaction.participant_email}</div>
+                          <div>{transaction.tournament_registrations?.participant_name}</div>
+                          <div className="text-sm text-muted-foreground">{transaction.tournament_registrations?.participant_email}</div>
                         </div>
                       </TableCell>
-                      <TableCell>${transaction.amount_paid}</TableCell>
+                      <TableCell>{currencySymbols[transaction.currency] || ''}{transaction.amount}</TableCell>
                       <TableCell>
-                        <Badge 
+                        <Badge
                           variant={
-                            transaction.payment_status === 'paid' ? 'default' :
-                            transaction.payment_status === 'pending' ? 'secondary' : 'destructive'
+                            transaction.status === 'succeeded' ? 'default' :
+                            transaction.status === 'pending' ? 'secondary' : 'destructive'
                           }
                         >
-                          {transaction.payment_status}
+                          {transaction.status}
                         </Badge>
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-2">
-                          {transaction.payment_status === 'pending' && (
-                            <Button
-                              size="sm"
-                              onClick={() => updatePaymentStatus(transaction.id, 'paid')}
-                            >
-                              Mark Paid
-                            </Button>
+                          {transaction.status === 'pending' && (
+                            <>
+                              <Button size="sm" onClick={() => handleStripeCheckout(transaction.id)}>
+                                Stripe Checkout
+                              </Button>
+                              <Button
+                                size="sm"
+                                onClick={() => updatePaymentStatus(transaction.id, 'succeeded')}
+                              >
+                                Mark Paid
+                              </Button>
+                            </>
                           )}
-                          {transaction.payment_status === 'paid' && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => updatePaymentStatus(transaction.id, 'refunded')}
-                            >
-                              Refund
-                            </Button>
+                          {transaction.status === 'succeeded' && (
+                            <>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => updatePaymentStatus(transaction.id, 'refunded')}
+                              >
+                                Refund
+                              </Button>
+                              <Button
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedTransaction(transaction);
+                                  setIsRefundDialogOpen(true);
+                                }}
+                              >
+                                Request Refund
+                              </Button>
+                            </>
                           )}
                         </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="refunds" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Refund Requests</CardTitle>
+              <CardDescription>Requests submitted by participants</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Tournament</TableHead>
+                    <TableHead>Participant</TableHead>
+                    <TableHead>Reason</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {refundRequests.map((req) => (
+                    <TableRow key={req.id}>
+                      <TableCell>{new Date(req.created_at).toLocaleDateString()}</TableCell>
+                      <TableCell>{req.tournament_registrations?.tournaments?.name || 'N/A'}</TableCell>
+                      <TableCell>
+                        <div>
+                          <div>{req.tournament_registrations?.participant_name}</div>
+                          <div className="text-sm text-muted-foreground">{req.tournament_registrations?.participant_email}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell>{req.reason}</TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            req.status === 'approved' ? 'default' :
+                            req.status === 'pending' ? 'secondary' : 'destructive'
+                          }
+                        >
+                          {req.status}
+                        </Badge>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -589,6 +715,29 @@ export function PaymentManager({ activeTab, setActiveTab }: { activeTab?: string
           </Card>
         </TabsContent>
       </Tabs>
+
+      <Dialog open={isRefundDialogOpen} onOpenChange={setIsRefundDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Request Refund</DialogTitle>
+            <DialogDescription>
+              Provide a reason for the refund request
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            value={refundReason}
+            onChange={(e) => setRefundReason(e.target.value)}
+            placeholder="Reason for refund"
+            className="mb-4"
+          />
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setIsRefundDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={submitRefundRequest}>Submit</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
