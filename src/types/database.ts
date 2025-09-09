@@ -94,6 +94,32 @@ export interface Ballot {
   updated_at: string;
 }
 
+export interface JudgeAssignment {
+  id: string;
+  pairing_id: string;
+  judge_id: string;
+  role: string;
+  assigned_at: string;
+}
+
+export interface BallotEntry {
+  id: string;
+  judge_assignment_id: string;
+  judge_profile_id: string;
+  judge_user_id: string;
+  status: string;
+  winner: string | null;
+  aff_points: number | null;
+  neg_points: number | null;
+  aff_rank: number | null;
+  neg_rank: number | null;
+  aff_feedback: string | null;
+  neg_feedback: string | null;
+  comments: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface RefundRequest {
   id: string;
   registration_id: string;
