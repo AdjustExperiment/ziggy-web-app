@@ -81,6 +81,14 @@ export interface BallotTemplate {
   updated_at: string;
 }
 
+export interface TemplateVersion {
+  id: string;
+  template_id: string;
+  schema: any;
+  html: string | null;
+  created_at: string;
+}
+
 export interface Ballot {
   id: string;
   pairing_id: string;
