@@ -59,8 +59,8 @@ export function MyJudgings() {
 
         channel = supabase
           .channel('judge-assignments-channel')
-          .on('postgres_changes', { event: '*', schema: 'public', table: 'judge_assignments', filter: `judge_id=eq.${judgeProfileId}` }, () => fetchMyAssignments(judgeProfileId))
-          .on('postgres_changes', { event: '*', schema: 'public', table: 'ballot_entries', filter: `judge_user_id=eq.${user.id}` }, () => fetchMyAssignments(judgeProfileId))
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'pairing_judge_assignments', filter: `judge_profile_id=eq.${judgeProfileId}` }, () => fetchMyAssignments(judgeProfileId))
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'ballots', filter: `judge_user_id=eq.${user.id}` }, () => fetchMyAssignments(judgeProfileId))
           .subscribe();
       } catch (error: any) {
         console.error('Error fetching assignments:', error);
@@ -84,37 +84,48 @@ export function MyJudgings() {
   const fetchMyAssignments = async (judgeProfileId: string) => {
     try {
       const { data, error } = await supabase
-        .from('judge_assignments')
+        .from('pairing_judge_assignments')
         .select(`
           id,
           role,
-          pairing:pairings(
+          pairing_id,
+          pairings!inner(
             id,
             room,
             scheduled_time,
             aff_registration:tournament_registrations!aff_registration_id(participant_name, participant_email),
-            neg_registration:tournament_registrations!neg_registration_id(participant_name, participant_email),
-            round:rounds(name),
-            tournaments(name)
-          ),
-          ballot_entries(id, status)
+            neg_registration:tournament_registrations!neg_registration_id(participant_name, participant_email, user_id),
+            rounds!inner(name),
+            tournaments!inner(name)
+          )
         `)
-        .eq('judge_id', judgeProfileId)
-        .order('assigned_at', { ascending: false });
+        .eq('judge_profile_id', judgeProfileId)
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
 
+      // Get ballots for these pairings
+      const pairingIds = (data || []).map(ja => ja.pairing_id);
+      const { data: ballots } = await supabase
+        .from('ballots')
+        .select('id, pairing_id, status, is_published')
+        .eq('judge_profile_id', judgeProfileId)
+        .in('pairing_id', pairingIds);
+
+      const ballotsMap = new Map(ballots?.map(b => [b.pairing_id, b]) || []);
+
       const assignments: AssignmentDisplay[] = (data || []).map(ja => {
-        const ballot = ja.ballot_entries?.[0];
+        const pairing = ja.pairings;
+        const ballot = ballotsMap.get(ja.pairing_id);
         return {
           id: ja.id,
-          pairing_id: ja.pairing?.id || '',
-          tournament_name: ja.pairing?.tournaments?.name || 'Unknown Tournament',
-          round_name: ja.pairing?.round?.name || 'Unknown Round',
-          room: ja.pairing?.room || 'TBD',
-          scheduled_time: ja.pairing?.scheduled_time || undefined,
-          aff_participant: ja.pairing?.aff_registration?.participant_name || 'Unknown',
-          neg_participant: ja.pairing?.neg_registration?.participant_name || 'Unknown',
+          pairing_id: ja.pairing_id,
+          tournament_name: pairing?.tournaments?.name || 'Unknown Tournament',
+          round_name: pairing?.rounds?.name || 'Unknown Round',
+          room: pairing?.room || 'TBD',
+          scheduled_time: pairing?.scheduled_time || undefined,
+          aff_participant: pairing?.aff_registration?.participant_name || 'Unknown',
+          neg_participant: pairing?.neg_registration?.participant_name || 'Unknown',
           role: ja.role,
           ballot_id: ballot?.id,
           ballot_status: ballot?.status || 'none',

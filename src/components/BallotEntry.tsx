@@ -74,24 +74,35 @@ export function BallotEntry({
         .single();
       setJudgeProfileId(judgeProfile?.id || null);
 
+      // Get the pairing_id from the assignment
+      const { data: assignment } = await supabase
+        .from('pairing_judge_assignments')
+        .select('pairing_id')
+        .eq('id', assignmentId)
+        .single();
+
+      if (!assignment) return;
+
       const { data, error } = await supabase
-        .from('ballot_entries')
+        .from('ballots')
         .select('*')
-        .eq('judge_assignment_id', assignmentId)
+        .eq('pairing_id', assignment.pairing_id)
+        .eq('judge_user_id', userId)
         .maybeSingle();
 
       if (error) throw error;
 
       if (data) {
         setBallot(data);
-        setWinner(data.winner || '');
-        setComments(data.comments || '');
-        setAffPoints(data.aff_points?.toString() || '');
-        setNegPoints(data.neg_points?.toString() || '');
-        setAffRank(data.aff_rank?.toString() || '');
-        setNegRank(data.neg_rank?.toString() || '');
-        setAffFeedback(data.aff_feedback || '');
-        setNegFeedback(data.neg_feedback || '');
+        const payload = data.payload as any || {};
+        setWinner(payload.winner || '');
+        setComments(payload.comments || '');
+        setAffPoints(payload.aff_points?.toString() || '');
+        setNegPoints(payload.neg_points?.toString() || '');
+        setAffRank(payload.aff_rank?.toString() || '');
+        setNegRank(payload.neg_rank?.toString() || '');
+        setAffFeedback(payload.aff_feedback || '');
+        setNegFeedback(payload.neg_feedback || '');
       } else {
         setBallot(null);
         setWinner('');
@@ -130,10 +141,23 @@ export function BallotEntry({
         neg_feedback: negFeedback,
       };
 
+      // Get the pairing_id from the assignment
+      const { data: assignment } = await supabase
+        .from('pairing_judge_assignments')
+        .select('pairing_id')
+        .eq('id', assignmentId)
+        .single();
+
+      if (!assignment) throw new Error('Assignment not found');
+
       if (ballot) {
         const { data, error } = await supabase
-          .from('ballot_entries')
-          .update({ ...payload, status, updated_at: new Date().toISOString() })
+          .from('ballots')
+          .update({ 
+            payload,
+            status, 
+            updated_at: new Date().toISOString() 
+          })
           .eq('id', ballot.id)
           .select()
           .single();
@@ -142,12 +166,12 @@ export function BallotEntry({
         setBallot(data);
       } else {
         const { data, error } = await supabase
-          .from('ballot_entries')
+          .from('ballots')
           .insert({
-            judge_assignment_id: assignmentId,
+            pairing_id: assignment.pairing_id,
             judge_profile_id: judgeProfileId,
             judge_user_id: judgeUserId,
-            ...payload,
+            payload,
             status,
           })
           .select()
