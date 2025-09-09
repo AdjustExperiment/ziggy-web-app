@@ -101,6 +101,7 @@ export function RoundsManager() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Convert submitted start_time into ISO timestamp and separate date component
     const startTime = formData.start_time
       ? new Date(formData.start_time).toISOString()
       : null;
