@@ -109,6 +109,38 @@ export type Database = {
           },
         ]
       }
+      template_versions: {
+        Row: {
+          created_at: string
+          html: string | null
+          id: string
+          schema: Json
+          template_id: string
+        }
+        Insert: {
+          created_at?: string
+          html?: string | null
+          id?: string
+          schema?: Json
+          template_id: string
+        }
+        Update: {
+          created_at?: string
+          html?: string | null
+          id?: string
+          schema?: Json
+          template_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "template_versions_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "ballot_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      },
       ballots: {
         Row: {
           created_at: string
