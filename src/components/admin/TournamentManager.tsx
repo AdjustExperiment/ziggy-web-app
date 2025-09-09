@@ -27,6 +27,9 @@ interface Tournament {
   location: string | null;
   status: string;
   opt_outs_enabled: boolean;
+  privacy_level: string;
+  reveal_delay: number;
+  judge_anonymity: boolean;
 }
 
 export function TournamentManager() {
@@ -41,6 +44,9 @@ export function TournamentManager() {
     location: null,
     status: 'draft',
     opt_outs_enabled: false,
+    privacy_level: 'public',
+    reveal_delay: 0,
+    judge_anonymity: false,
   });
   const [formats, setFormats] = useState<{ id: string; name: string }[]>([]);
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
@@ -62,11 +68,18 @@ export function TournamentManager() {
     try {
       const { data, error } = await supabase
         .from('tournaments')
-        .select('id, name, description, start_date, end_date, location, status, opt_outs_enabled')
+        .select('id, name, description, start_date, end_date, location, status, opt_outs_enabled, privacy_level, reveal_delay, judge_anonymity')
         .order('name');
 
       if (error) throw error;
-      setTournaments(data || []);
+      setTournaments(
+        (data || []).map(t => ({
+          ...t,
+          privacy_level: t.privacy_level || 'public',
+          reveal_delay: t.reveal_delay || 0,
+          judge_anonymity: t.judge_anonymity || false,
+        }))
+      );
     } catch (error: any) {
       console.error('Error fetching tournaments:', error);
     }
@@ -94,7 +107,7 @@ export function TournamentManager() {
     try {
       const { data, error } = await supabase
         .from('tournaments')
-        .select('id, name, description, start_date, end_date, location, status, opt_outs_enabled')
+        .select('id, name, description, start_date, end_date, location, status, opt_outs_enabled, privacy_level, reveal_delay, judge_anonymity')
         .eq('id', id)
         .single();
 
@@ -105,6 +118,9 @@ export function TournamentManager() {
         ...data,
         start_date: data.start_date ? format(new Date(data.start_date), 'yyyy-MM-dd') : null,
         end_date: data.end_date ? format(new Date(data.end_date), 'yyyy-MM-dd') : null,
+        privacy_level: data.privacy_level || 'public',
+        reveal_delay: data.reveal_delay || 0,
+        judge_anonymity: data.judge_anonymity || false,
       });
     } catch (error: any) {
       console.error('Error fetching tournament:', error);
@@ -131,6 +147,9 @@ export function TournamentManager() {
         location: formData.location,
         status: formData.status,
         opt_outs_enabled: formData.opt_outs_enabled,
+        privacy_level: formData.privacy_level,
+        reveal_delay: formData.reveal_delay,
+        judge_anonymity: formData.judge_anonymity,
         format: 'Standard', // Default format to satisfy database requirement
       };
 
@@ -283,6 +302,47 @@ export function TournamentManager() {
                 />
                 <Label htmlFor="opt_outs_enabled" className="text-sm font-normal">
                   Enable round opt-outs and extra round requests
+                </Label>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="privacy_level">Privacy Level</Label>
+              <Select
+                value={formData.privacy_level}
+                onValueChange={(value) => setFormData({ ...formData, privacy_level: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select privacy level" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="public">Public</SelectItem>
+                  <SelectItem value="private">Private</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="reveal_delay">Ballot Reveal Delay (minutes)</Label>
+              <Input
+                type="number"
+                id="reveal_delay"
+                value={formData.reveal_delay}
+                onChange={(e) => setFormData({ ...formData, reveal_delay: parseInt(e.target.value) })}
+                min={0}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="judge_anonymity">Judge Anonymity</Label>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="judge_anonymity"
+                  checked={formData.judge_anonymity}
+                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, judge_anonymity: checked }))}
+                />
+                <Label htmlFor="judge_anonymity" className="text-sm font-normal">
+                  Hide judge names on public ballots
                 </Label>
               </div>
             </div>
