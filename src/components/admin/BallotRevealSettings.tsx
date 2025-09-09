@@ -36,7 +36,7 @@ export function BallotRevealSettings() {
     try {
       const { data, error } = await supabase
         .from('tournaments')
-        .select('id, name, end_date, status, ballot_reveal_mode, ballot_privacy, reveal_delay_minutes, judge_anonymity')
+        .select('id, name, end_date, status, ballot_reveal_mode, reveal_delay_minutes, judge_anonymity')
         .order('name');
 
       if (error) throw error;

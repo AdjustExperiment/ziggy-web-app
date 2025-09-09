@@ -73,7 +73,13 @@ export function MyPairings() {
 
       if (pairingsError) throw pairingsError;
 
-      setPairings(pairingsData || []);
+      // Type cast to handle missing optional properties from the Pairing interface
+      const typedPairings = (pairingsData || []).map(pairing => ({
+        ...pairing,
+        method: (pairing as any).method || null,
+        seed: (pairing as any).seed || null
+      })) as Pairing[];
+      setPairings(typedPairings);
     } catch (error: any) {
       console.error('Error fetching pairings:', error);
       toast({

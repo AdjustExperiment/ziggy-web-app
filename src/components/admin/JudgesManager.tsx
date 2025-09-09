@@ -57,7 +57,12 @@ export function JudgesManager() {
         .order('name');
 
       if (error) throw error;
-      setJudges(data || []);
+      // Type cast to handle Json type for availability
+      const typedJudges = (data || []).map(judge => ({
+        ...judge,
+        availability: judge.availability as any
+      }));
+      setJudges(typedJudges);
     } catch (error: any) {
       console.error('Error fetching judges:', error);
       toast({
