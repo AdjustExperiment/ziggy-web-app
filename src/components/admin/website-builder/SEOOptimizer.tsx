@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Sparkles, Search, Save } from 'lucide-react';
+import { Sparkles, Search, Save, CheckCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import type { SitePage, SiteBlock } from '@/types/website-builder';
 
@@ -28,7 +28,9 @@ export const SEOOptimizer = ({ page, blocks, onUpdate }: SEOOptimizerProps) => {
   });
   const [analyzing, setAnalyzing] = useState(false);
   const [optimizing, setOptimizing] = useState(false);
-  const [analysis, setAnalysis] = useState<any>(null);
+  const [analysis, setAnalysis] = useState<Record<string, unknown> | null>(null);
+  const [checks, setChecks] = useState<{ meta: boolean; sitemap: boolean } | null>(null);
+  const [checking, setChecking] = useState(false);
 
   const runSEOAnalysis = async () => {
     setAnalyzing(true);
@@ -75,6 +77,28 @@ export const SEOOptimizer = ({ page, blocks, onUpdate }: SEOOptimizerProps) => {
     }
   };
 
+  const runChecks = async () => {
+    setChecking(true);
+    try {
+      const meta = !!seoData.title && !!seoData.description;
+      let sitemap = false;
+      try {
+        const res = await fetch('/sitemap.xml');
+        const text = await res.text();
+        sitemap = text.includes(page.slug.replace(/^\//, ''));
+      } catch {
+        sitemap = false;
+      }
+      setChecks({ meta, sitemap });
+      toast.success('Checks completed');
+    } catch (error) {
+      console.error('Error running checks:', error);
+      toast.error('Failed to run checks');
+    } finally {
+      setChecking(false);
+    }
+  };
+
   const saveSEO = async () => {
     const updatedSeo = {
       ...page.seo,
@@ -103,8 +127,8 @@ export const SEOOptimizer = ({ page, blocks, onUpdate }: SEOOptimizerProps) => {
               </CardDescription>
             </div>
             <div className="flex gap-2">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={runSEOAnalysis}
                 disabled={analyzing}
                 className="flex items-center gap-2"
@@ -112,7 +136,16 @@ export const SEOOptimizer = ({ page, blocks, onUpdate }: SEOOptimizerProps) => {
                 <Search className="h-4 w-4" />
                 {analyzing ? 'Analyzing...' : 'Analyze SEO'}
               </Button>
-              <Button 
+              <Button
+                variant="outline"
+                onClick={runChecks}
+                disabled={checking}
+                className="flex items-center gap-2"
+              >
+                <CheckCircle className="h-4 w-4" />
+                {checking ? 'Checking...' : 'Run Checks'}
+              </Button>
+              <Button
                 onClick={optimizeSEO}
                 disabled={optimizing}
                 className="flex items-center gap-2"
@@ -124,6 +157,16 @@ export const SEOOptimizer = ({ page, blocks, onUpdate }: SEOOptimizerProps) => {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
+          {checks && (
+            <div className="flex gap-2">
+              <Badge variant={checks.meta ? 'default' : 'destructive'}>
+                Meta tags {checks.meta ? 'ok' : 'missing'}
+              </Badge>
+              <Badge variant={checks.sitemap ? 'default' : 'destructive'}>
+                Sitemap {checks.sitemap ? 'ok' : 'missing'}
+              </Badge>
+            </div>
+          )}
           {analysis && (
             <div className="mb-6 p-4 border rounded-lg">
               <h3 className="font-medium mb-2">SEO Analysis Results</h3>
@@ -233,22 +276,29 @@ export const SEOOptimizer = ({ page, blocks, onUpdate }: SEOOptimizerProps) => {
               </div>
             </div>
 
-            <div className="space-y-2 mt-4">
-              <Label htmlFor="og-description">OG Description</Label>
-              <Textarea
-                id="og-description"
-                value={seoData.ogDescription}
-                onChange={(e) => setSeoData({ ...seoData, ogDescription: e.target.value })}
-                placeholder="Description for social media sharing"
-                rows={2}
-              />
-            </div>
+          <div className="space-y-2 mt-4">
+            <Label htmlFor="og-description">OG Description</Label>
+            <Textarea
+              id="og-description"
+              value={seoData.ogDescription}
+              onChange={(e) => setSeoData({ ...seoData, ogDescription: e.target.value })}
+              placeholder="Description for social media sharing"
+              rows={2}
+            />
           </div>
+        </div>
 
-          <Button onClick={saveSEO} className="flex items-center gap-2">
-            <Save className="h-4 w-4" />
-            Save SEO Settings
-          </Button>
+        <div className="border p-4 rounded-lg space-y-1">
+          <p className="text-sm text-muted-foreground">Search Preview</p>
+          <h3 className="text-blue-600 text-lg">{seoData.title}</h3>
+          <p className="text-green-600 text-sm">example.com{page.slug}</p>
+          <p className="text-muted-foreground">{seoData.description}</p>
+        </div>
+
+        <Button onClick={saveSEO} className="flex items-center gap-2">
+          <Save className="h-4 w-4" />
+          Save SEO Settings
+        </Button>
         </CardContent>
       </Card>
     </div>
