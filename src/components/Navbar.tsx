@@ -164,6 +164,12 @@ export function Navbar() {
                           <span>My Tournaments</span>
                         </Link>
                       </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/portal" className="flex items-center">
+                          <Users className="mr-2 h-4 w-4" />
+                          <span>Participant Portal</span>
+                        </Link>
+                      </DropdownMenuItem>
                       {isAdmin && (
                         <DropdownMenuItem asChild>
                           <Link to="/admin" className="flex items-center">
@@ -301,6 +307,15 @@ export function Navbar() {
                   >
                     <Trophy className="h-5 w-5" />
                     <span>My Tournaments</span>
+                  </Link>
+
+                  <Link
+                    to="/portal"
+                    className="flex items-center space-x-2 px-3 py-3 rounded-md text-base font-medium hover:bg-muted touch-target"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <Users className="h-5 w-5" />
+                    <span>Participant Portal</span>
                   </Link>
 
                   {isAdmin && (

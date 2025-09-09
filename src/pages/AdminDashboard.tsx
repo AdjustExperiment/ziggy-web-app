@@ -18,6 +18,7 @@ import { PromoCodesManager } from '@/components/admin/PromoCodesManager';
 import { StaffRevenueCalculator } from '@/components/admin/StaffRevenueCalculator';
 import { SecurityDashboard } from '@/components/admin/SecurityDashboard';
 import SponsorsManager from '@/components/admin/SponsorsManager';
+import { RoleAccessManager } from '@/components/admin/RoleAccessManager';
 
 import { FooterContentManager } from '@/components/admin/FooterContentManager';
 
@@ -48,6 +49,7 @@ export default function AdminDashboard() {
       promos: <PromoCodesManager />,
       staff: <StaffRevenueCalculator />,
       security: <SecurityDashboard />,
+      roles: <RoleAccessManager />,
       footer: <FooterContentManager />,
     };
 
@@ -77,6 +79,7 @@ export default function AdminDashboard() {
           <TabsTrigger value="promos" className="text-xs">Promo Codes</TabsTrigger>
           <TabsTrigger value="staff" className="text-xs">Staff Calc</TabsTrigger>
           <TabsTrigger value="security" className="text-xs">Security</TabsTrigger>
+          <TabsTrigger value="roles" className="text-xs">Role Access</TabsTrigger>
           <TabsTrigger value="footer" className="text-xs">Footer</TabsTrigger>
         </TabsList>
         <TabsContent value={activeTab}>
