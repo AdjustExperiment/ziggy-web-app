@@ -5,24 +5,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { 
-  Save, 
-  Eye, 
-  Plus, 
-  Trash2, 
-  Edit, 
-  Globe,
-  Sparkles,
-  History,
-  ArrowUp,
-  ArrowDown
-} from 'lucide-react';
+import { Eye, Plus, Trash2, Edit, Globe, History } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { PageEditor } from './website-builder/PageEditor';
 import { BlockEditor } from './website-builder/BlockEditor';
 import { SEOOptimizer } from './website-builder/SEOOptimizer';
 import { PreviewRenderer } from './website-builder/PreviewRenderer';
-import type { SitePage, SiteBlock } from '@/types/website-builder';
+import { CustomCssEditor } from './website-builder/CustomCssEditor';
+import { VersionsSidebar } from './website-builder/VersionsSidebar';
+import type { SitePage, SiteBlock, SitePageVersion } from '@/types/website-builder';
 
 export const WebsiteBuilder = () => {
   const [activeTab, setActiveTab] = useState('pages');
@@ -32,6 +23,7 @@ export const WebsiteBuilder = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [previewMode, setPreviewMode] = useState(false);
+  const [versionsOpen, setVersionsOpen] = useState(false);
 
   useEffect(() => {
     loadPages();
@@ -55,7 +47,8 @@ export const WebsiteBuilder = () => {
       // Type assertion to ensure status is properly typed
       const typedPages: SitePage[] = (data || []).map(page => ({
         ...page,
-        status: page.status as 'draft' | 'published'
+        status: page.status as 'draft' | 'published',
+        custom_css: page.custom_css || ''
       }));
       
       setPages(typedPages);
@@ -94,7 +87,8 @@ export const WebsiteBuilder = () => {
           title: 'New Page',
           description: 'A new page',
           status: 'draft',
-          seo: {}
+          seo: {},
+          custom_css: ''
         }])
         .select()
         .single();
@@ -103,7 +97,8 @@ export const WebsiteBuilder = () => {
       if (data) {
         const typedPage: SitePage = {
           ...data,
-          status: data.status as 'draft' | 'published'
+          status: data.status as 'draft' | 'published',
+          custom_css: data.custom_css || ''
         };
         setPages([typedPage, ...pages]);
         setSelectedPage(typedPage);
@@ -132,7 +127,8 @@ export const WebsiteBuilder = () => {
       if (data) {
         const typedPage: SitePage = {
           ...data,
-          status: data.status as 'draft' | 'published'
+          status: data.status as 'draft' | 'published',
+          custom_css: data.custom_css || ''
         };
         const updatedPages = pages.map(p => p.id === selectedPage.id ? typedPage : p);
         setPages(updatedPages);
@@ -160,27 +156,23 @@ export const WebsiteBuilder = () => {
         .eq('page_id', pageId)
         .order('position');
 
-      const snapshot = {
-        page: {
-          id: page.id,
-          slug: page.slug,
-          title: page.title,
-          description: page.description,
-          status: page.status,
-          seo: page.seo,
-          published_at: page.published_at,
-          created_at: page.created_at,
-          updated_at: page.updated_at
-        },
-        blocks: pageBlocks.data || [],
-        published_at: new Date().toISOString()
-      };
+      const { data: lastVersion } = await supabase
+        .from('site_page_versions')
+        .select('version_number')
+        .eq('page_id', pageId)
+        .order('version_number', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const nextVersion = (lastVersion?.version_number || 0) + 1;
 
       const { error: versionError } = await supabase
         .from('site_page_versions')
         .insert([{
           page_id: pageId,
-          snapshot: snapshot as any
+          version_number: nextVersion,
+          blocks: pageBlocks.data || [],
+          custom_css: page.custom_css || ''
         }]);
 
       if (versionError) throw versionError;
@@ -201,7 +193,8 @@ export const WebsiteBuilder = () => {
       if (data) {
         const typedPage: SitePage = {
           ...data,
-          status: data.status as 'draft' | 'published'
+          status: data.status as 'draft' | 'published',
+          custom_css: data.custom_css || ''
         };
         const updatedPages = pages.map(p => p.id === pageId ? typedPage : p);
         setPages(updatedPages);
@@ -242,6 +235,39 @@ export const WebsiteBuilder = () => {
     }
   };
 
+  const restoreVersion = async (version: SitePageVersion) => {
+    if (!selectedPage) return;
+    setSaving(true);
+    try {
+      await supabase
+        .from('site_pages')
+        .update({ custom_css: version.custom_css })
+        .eq('id', selectedPage.id);
+
+      await supabase.from('site_blocks').delete().eq('page_id', selectedPage.id);
+      if (version.blocks && version.blocks.length > 0) {
+        const blocksToInsert = version.blocks.map((b: SiteBlock, index: number) => ({
+          page_id: selectedPage.id,
+          type: b.type,
+          content: b.content,
+          position: index + 1,
+          visible: b.visible ?? true
+        }));
+        await supabase.from('site_blocks').insert(blocksToInsert);
+      }
+
+      setSelectedPage({ ...selectedPage, custom_css: version.custom_css || '' });
+      await loadBlocks(selectedPage.id);
+      toast.success('Version restored');
+    } catch (error) {
+      console.error('Error restoring version:', error);
+      toast.error('Failed to restore version');
+    } finally {
+      setSaving(false);
+      setVersionsOpen(false);
+    }
+  };
+
   if (loading) {
     return <div className="flex items-center justify-center h-64">Loading...</div>;
   }
@@ -256,15 +282,25 @@ export const WebsiteBuilder = () => {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={() => setPreviewMode(!previewMode)}
             className="flex items-center gap-2"
           >
             <Eye className="h-4 w-4" />
             {previewMode ? 'Edit Mode' : 'Preview'}
           </Button>
-          <Button 
+          {selectedPage && (
+            <Button
+              variant="outline"
+              onClick={() => setVersionsOpen(true)}
+              className="flex items-center gap-2"
+            >
+              <History className="h-4 w-4" />
+              Versions
+            </Button>
+          )}
+          <Button
             onClick={createPage}
             className="flex items-center gap-2"
           >
@@ -351,16 +387,17 @@ export const WebsiteBuilder = () => {
           <TabsContent value="editor" className="space-y-4">
             {selectedPage && (
               <>
-                <PageEditor 
-                  page={selectedPage} 
+                <PageEditor
+                  page={selectedPage}
                   onUpdate={updatePage}
                   saving={saving}
                 />
-                <BlockEditor 
+                <BlockEditor
                   pageId={selectedPage.id}
                   blocks={blocks}
                   onBlocksChange={setBlocks}
                 />
+                <CustomCssEditor page={selectedPage} onUpdate={updatePage} />
               </>
             )}
           </TabsContent>
@@ -391,6 +428,14 @@ export const WebsiteBuilder = () => {
             </Card>
           </TabsContent>
         </Tabs>
+      )}
+      {selectedPage && (
+        <VersionsSidebar
+          pageId={selectedPage.id}
+          open={versionsOpen}
+          onOpenChange={setVersionsOpen}
+          onRestore={restoreVersion}
+        />
       )}
     </div>
   );

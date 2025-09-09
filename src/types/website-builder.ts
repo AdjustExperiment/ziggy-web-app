@@ -10,6 +10,7 @@ export interface SitePage {
   published_at: string | null;
   created_at: string;
   updated_at: string;
+  custom_css: string | null;
 }
 
 export interface SiteBlock {
@@ -27,7 +28,9 @@ export interface SiteBlock {
 export interface SitePageVersion {
   id: string;
   page_id: string;
-  snapshot: any;
+  version_number: number;
+  blocks: SiteBlock[];
+  custom_css: string | null;
   created_at: string;
 }
 

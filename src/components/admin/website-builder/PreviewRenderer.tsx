@@ -13,23 +13,24 @@ export const PreviewRenderer = ({ page, blocks }: PreviewRendererProps) => {
 
     const content = block.content || {};
 
-    switch (block.type) {
-      case 'heading':
-        const HeadingTag = `h${content.level || 1}` as keyof JSX.IntrinsicElements;
-        return (
-          <HeadingTag 
-            key={block.id}
-            className={`font-bold ${
-              content.level === 1 ? 'text-4xl' :
-              content.level === 2 ? 'text-3xl' :
-              content.level === 3 ? 'text-2xl' :
-              content.level === 4 ? 'text-xl' :
-              content.level === 5 ? 'text-lg' : 'text-base'
-            }`}
-          >
-            {content.text || 'Heading'}
-          </HeadingTag>
-        );
+      switch (block.type) {
+        case 'heading': {
+          const HeadingTag = `h${content.level || 1}` as keyof JSX.IntrinsicElements;
+          return (
+            <HeadingTag
+              key={block.id}
+              className={`font-bold ${
+                content.level === 1 ? 'text-4xl' :
+                content.level === 2 ? 'text-3xl' :
+                content.level === 3 ? 'text-2xl' :
+                content.level === 4 ? 'text-xl' :
+                content.level === 5 ? 'text-lg' : 'text-base'
+              }`}
+            >
+              {content.text || 'Heading'}
+            </HeadingTag>
+          );
+        }
 
       case 'text':
         return (
@@ -116,6 +117,7 @@ export const PreviewRenderer = ({ page, blocks }: PreviewRendererProps) => {
       </CardHeader>
       <CardContent>
         <div className="bg-background border rounded-lg p-6 min-h-[400px]">
+          <style>{page.custom_css || ''}</style>
           <div className="space-y-6">
             {blocks
               .sort((a, b) => a.position - b.position)

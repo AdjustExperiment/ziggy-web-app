@@ -29,7 +29,7 @@ interface SponsorApplication {
 interface SiteBlock {
   id: string;
   type: string;
-  content: any;
+  content: Record<string, unknown>;
   position: number;
 }
 
@@ -38,6 +38,7 @@ const Sponsors = () => {
   const [siteBlocks, setSiteBlocks] = useState<SiteBlock[]>([]);
   const [approvedSponsors, setApprovedSponsors] = useState<{ [key: string]: SponsorApplication[] }>({});
   const [platformPartners, setPlatformPartners] = useState<SponsorProfile[]>([]);
+  const [customCss, setCustomCss] = useState('');
 
   useEffect(() => {
     fetchData();
@@ -50,11 +51,12 @@ const Sponsors = () => {
       // Fetch site blocks for editable content
       const { data: pageData } = await supabase
         .from('site_pages')
-        .select('id')
+        .select('id, custom_css')
         .eq('slug', 'sponsors')
         .single();
 
       if (pageData) {
+        setCustomCss(pageData.custom_css || '');
         const { data: blocksData } = await supabase
           .from('site_blocks')
           .select('*')
@@ -102,27 +104,28 @@ const Sponsors = () => {
     }
   };
 
-  const renderSiteBlock = (block: SiteBlock) => {
-    switch (block.type) {
-      case 'heading':
-        const HeadingTag = block.content.level || 'h2';
-        return (
-          <HeadingTag key={block.id} className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 text-center">
-            {block.content.text}
-          </HeadingTag>
-        );
-      case 'text':
-        return (
-          <div 
-            key={block.id} 
-            className="text-lg text-muted-foreground text-center mb-8 max-w-3xl mx-auto"
-            dangerouslySetInnerHTML={{ __html: block.content.html }}
-          />
-        );
-      default:
-        return null;
-    }
-  };
+    const renderSiteBlock = (block: SiteBlock) => {
+      switch (block.type) {
+        case 'heading': {
+          const HeadingTag = (block.content.level as keyof JSX.IntrinsicElements) || 'h2';
+          return (
+            <HeadingTag key={block.id} className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 text-center">
+              {block.content.text as string}
+            </HeadingTag>
+          );
+        }
+        case 'text':
+          return (
+            <div
+              key={block.id}
+              className="text-lg text-muted-foreground text-center mb-8 max-w-3xl mx-auto"
+              dangerouslySetInnerHTML={{ __html: block.content.html as string }}
+            />
+          );
+        default:
+          return null;
+      }
+    };
 
   const getTierIcon = (tier: string) => {
     switch (tier.toLowerCase()) {
@@ -229,6 +232,7 @@ const Sponsors = () => {
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
+      <style>{customCss}</style>
       <SectionFX variant="hero" intensity="medium" />
       
       {/* Hero Section */}

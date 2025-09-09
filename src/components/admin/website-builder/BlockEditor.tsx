@@ -1,5 +1,13 @@
 
 import { useState } from 'react';
+import { DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
+import {
+  SortableContext,
+  arrayMove,
+  verticalListSortingStrategy,
+  useSortable
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,16 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { 
-  Plus, 
-  Trash2, 
-  Edit, 
-  Save,
-  ArrowUp,
-  ArrowDown,
-  Eye,
-  EyeOff
-} from 'lucide-react';
+import { Plus, Trash2, Edit, Save, Eye, EyeOff, GripVertical } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import type { SiteBlock } from '@/types/website-builder';
 
@@ -117,38 +116,33 @@ export const BlockEditor = ({ pageId, blocks, onBlocksChange }: BlockEditorProps
     }
   };
 
-  const moveBlock = async (blockId: string, direction: 'up' | 'down') => {
-    const block = blocks.find(b => b.id === blockId);
-    if (!block) return;
+  const sensors = useSensors(useSensor(PointerSensor));
 
-    const sortedBlocks = [...blocks].sort((a, b) => a.position - b.position);
-    const currentIndex = sortedBlocks.findIndex(b => b.id === blockId);
-    
-    if (direction === 'up' && currentIndex === 0) return;
-    if (direction === 'down' && currentIndex === sortedBlocks.length - 1) return;
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
 
-    const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
-    const targetBlock = sortedBlocks[targetIndex];
+    const oldIndex = sortedBlocks.findIndex(b => b.id === active.id);
+    const newIndex = sortedBlocks.findIndex(b => b.id === over.id);
+    const newBlocks = arrayMove(sortedBlocks, oldIndex, newIndex).map((b, index) => ({
+      ...b,
+      position: index + 1
+    }));
+    onBlocksChange(newBlocks);
 
     try {
-      // Swap positions
-      await Promise.all([
-        supabase.from('site_blocks').update({ position: targetBlock.position }).eq('id', block.id),
-        supabase.from('site_blocks').update({ position: block.position }).eq('id', targetBlock.id)
-      ]);
-
-      // Update local state
-      const updatedBlocks = blocks.map(b => {
-        if (b.id === block.id) return { ...b, position: targetBlock.position };
-        if (b.id === targetBlock.id) return { ...b, position: block.position };
-        return b;
-      });
-      
-      onBlocksChange(updatedBlocks);
-      toast.success('Block moved successfully');
+      await Promise.all(
+        newBlocks.map(b =>
+          supabase
+            .from('site_blocks')
+            .update({ position: b.position })
+            .eq('id', b.id)
+        )
+      );
+      toast.success('Block order updated');
     } catch (error) {
-      console.error('Error moving block:', error);
-      toast.error('Failed to move block');
+      console.error('Error reordering blocks:', error);
+      toast.error('Failed to update order');
     }
   };
 
@@ -182,8 +176,14 @@ export const BlockEditor = ({ pageId, blocks, onBlocksChange }: BlockEditorProps
     }
   };
 
+  interface GenericBlockContent {
+    text?: string;
+    title?: string;
+    [key: string]: unknown;
+  }
+
   const renderBlockEditor = (block: SiteBlock) => {
-    const content = block.content as any;
+    const content = block.content as GenericBlockContent;
     
     return (
       <div className="space-y-4 p-4 border rounded-lg">
@@ -289,6 +289,61 @@ export const BlockEditor = ({ pageId, blocks, onBlocksChange }: BlockEditorProps
     );
   };
 
+  const SortableBlock = ({ block, index }: { block: SiteBlock; index: number }) => {
+    const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: block.id });
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition
+    };
+    const content = block.content as GenericBlockContent;
+
+    return (
+      <div ref={setNodeRef} style={style}>
+        {editingBlock === block.id ? (
+          renderBlockEditor(block)
+        ) : (
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div className="flex items-center gap-3">
+              <span {...attributes} {...listeners} className="cursor-grab">
+                <GripVertical className="h-4 w-4" />
+              </span>
+              <Badge variant="outline">{block.type}</Badge>
+              <span className="font-medium">
+                {content.text || content.title || `${block.type} block`}
+              </span>
+              {!block.visible && (
+                <Badge variant="secondary">Hidden</Badge>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => toggleBlockVisibility(block.id)}
+              >
+                {block.visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setEditingBlock(block.id)}
+              >
+                <Edit className="h-4 w-4" />
+              </Button>
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={() => deleteBlock(block.id)}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const sortedBlocks = [...blocks].sort((a, b) => a.position - b.position);
 
   return (
@@ -319,74 +374,21 @@ export const BlockEditor = ({ pageId, blocks, onBlocksChange }: BlockEditorProps
           </Button>
         </div>
 
-        <div className="space-y-4">
-          {sortedBlocks.map((block, index) => (
-            <div key={block.id}>
-              {editingBlock === block.id ? (
-                renderBlockEditor(block)
-              ) : (
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <Badge variant="outline">{block.type}</Badge>
-                    <span className="font-medium">
-                      {(block.content as any)?.text || 
-                       (block.content as any)?.title || 
-                       `${block.type} block`}
-                    </span>
-                    {!block.visible && (
-                      <Badge variant="secondary">Hidden</Badge>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => moveBlock(block.id, 'up')}
-                      disabled={index === 0}
-                    >
-                      <ArrowUp className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => moveBlock(block.id, 'down')}
-                      disabled={index === sortedBlocks.length - 1}
-                    >
-                      <ArrowDown className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => toggleBlockVisibility(block.id)}
-                    >
-                      {block.visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setEditingBlock(block.id)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => deleteBlock(block.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+        <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+          <SortableContext items={sortedBlocks.map((b) => b.id)} strategy={verticalListSortingStrategy}>
+            <div className="space-y-4">
+              {sortedBlocks.map((block, index) => (
+                <SortableBlock key={block.id} block={block} index={index} />
+              ))}
+
+              {blocks.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground">
+                  No blocks created yet. Add your first block to get started.
                 </div>
               )}
             </div>
-          ))}
-
-          {blocks.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
-              No blocks created yet. Add your first block to get started.
-            </div>
-          )}
-        </div>
+          </SortableContext>
+        </DndContext>
       </CardContent>
     </Card>
   );
