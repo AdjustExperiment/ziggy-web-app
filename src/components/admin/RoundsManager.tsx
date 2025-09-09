@@ -23,11 +23,16 @@ export function RoundsManager() {
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingRound, setEditingRound] = useState<Round | null>(null);
+  const [showSchedulingWizard, setShowSchedulingWizard] = useState(false);
+  const [newRoundId, setNewRoundId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     tournament_id: '',
     name: '',
     round_number: 1,
-    status: 'pending'
+    status: 'pending',
+    scheduled_date: '',
+    start_time: '',
+    format: ''
   });
 
   useEffect(() => {
@@ -54,6 +59,8 @@ export function RoundsManager() {
           round_number,
           status,
           scheduled_date,
+          start_time,
+          format,
           tournament_id,
           created_at,
           updated_at
@@ -87,7 +94,10 @@ export function RoundsManager() {
             name: formData.name,
             round_number: formData.round_number,
             status: formData.status,
-            tournament_id: formData.tournament_id
+            tournament_id: formData.tournament_id,
+            scheduled_date: formData.scheduled_date || null,
+            start_time: formData.start_time || null,
+            format: formData.format || null
           })
           .eq('id', editingRound.id);
 
@@ -99,16 +109,25 @@ export function RoundsManager() {
         });
       } else {
         // Create new round
-        const { error } = await supabase
+        const { data: newRound, error } = await supabase
           .from('rounds')
           .insert({
             name: formData.name,
             round_number: formData.round_number,
             status: formData.status,
-            tournament_id: formData.tournament_id
-          });
+            tournament_id: formData.tournament_id,
+            scheduled_date: formData.scheduled_date || null,
+            start_time: formData.start_time || null,
+            format: formData.format || null
+          })
+          .select()
+          .single();
 
         if (error) throw error;
+
+        await supabase.rpc('generate_pairings', { round_id: newRound.id });
+        setNewRoundId(newRound.id);
+        setShowSchedulingWizard(true);
 
         toast({
           title: "Success",
@@ -178,7 +197,15 @@ export function RoundsManager() {
   };
 
   const resetForm = () => {
-    setFormData({ tournament_id: '', name: '', round_number: 1, status: 'pending' });
+    setFormData({
+      tournament_id: '',
+      name: '',
+      round_number: 1,
+      status: 'pending',
+      scheduled_date: '',
+      start_time: '',
+      format: ''
+    });
     setEditingRound(null);
   };
 
@@ -188,7 +215,10 @@ export function RoundsManager() {
       tournament_id: round.tournament_id,
       name: round.name,
       round_number: round.round_number,
-      status: round.status
+      status: round.status,
+      scheduled_date: round.scheduled_date || '',
+      start_time: round.start_time || '',
+      format: round.format || ''
     });
     setIsDialogOpen(true);
   };
@@ -208,6 +238,20 @@ export function RoundsManager() {
 
   return (
     <div className="space-y-6">
+      <Dialog open={showSchedulingWizard} onOpenChange={setShowSchedulingWizard}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Scheduling Wizard</DialogTitle>
+            <DialogDescription>
+              Pairings generated for round {newRoundId}. Configure scheduling details.
+            </DialogDescription>
+          </DialogHeader>
+          <p className="py-4 text-sm text-muted-foreground">
+            Scheduling wizard UI coming soon.
+          </p>
+          <Button onClick={() => setShowSchedulingWizard(false)}>Close</Button>
+        </DialogContent>
+      </Dialog>
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-semibold">Round Management</h3>
@@ -270,6 +314,35 @@ export function RoundsManager() {
                     value={formData.round_number}
                     onChange={(e) => setFormData(prev => ({ ...prev, round_number: parseInt(e.target.value) }))}
                     required
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="scheduled_date">Scheduled Date</Label>
+                  <Input
+                    id="scheduled_date"
+                    type="date"
+                    value={formData.scheduled_date}
+                    onChange={(e) => setFormData(prev => ({ ...prev, scheduled_date: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="start_time">Start Time</Label>
+                  <Input
+                    id="start_time"
+                    type="time"
+                    value={formData.start_time}
+                    onChange={(e) => setFormData(prev => ({ ...prev, start_time: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="format">Format</Label>
+                  <Input
+                    id="format"
+                    value={formData.format}
+                    onChange={(e) => setFormData(prev => ({ ...prev, format: e.target.value }))}
+                    placeholder="e.g., async"
                   />
                 </div>
               </div>
@@ -354,6 +427,8 @@ export function RoundsManager() {
                       ) : (
                         'No date scheduled'
                       )}
+                      {round.start_time && ` • Start: ${round.start_time}`}
+                      {round.format && ` • Format: ${round.format}`}
                     </div>
                     <div className="flex gap-2">
                       <Button
