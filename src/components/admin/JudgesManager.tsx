@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from '@/components/ui/use-toast';
 import WeeklyAvailabilityEditor from '@/components/WeeklyAvailabilityEditor';
-import { Plus, Edit2, Trash2, Gavel, Phone, Mail } from 'lucide-react';
+import { Plus, Edit2, Trash2, Gavel, Phone, Mail, Calendar } from 'lucide-react';
 import { JudgeProfile } from '@/types/database';
 
 export function JudgesManager() {
@@ -20,13 +20,27 @@ export function JudgesManager() {
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingJudge, setEditingJudge] = useState<JudgeProfile | null>(null);
+  const [isAvailabilityDialogOpen, setIsAvailabilityDialogOpen] = useState(false);
+  const [availabilityJudge, setAvailabilityJudge] = useState<JudgeProfile | null>(null);
+  const DEFAULT_AVAILABILITY = {
+    monday: { morning: false, afternoon: false, evening: false },
+    tuesday: { morning: false, afternoon: false, evening: false },
+    wednesday: { morning: false, afternoon: false, evening: false },
+    thursday: { morning: false, afternoon: false, evening: false },
+    friday: { morning: false, afternoon: false, evening: false },
+    saturday: { morning: false, afternoon: false, evening: false },
+    sunday: { morning: false, afternoon: false, evening: false }
+  };
+  const [currentAvailability, setCurrentAvailability] = useState(DEFAULT_AVAILABILITY);
+  const [availabilityLoading, setAvailabilityLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
     experience_level: 'novice',
     bio: '',
-    qualifications: ''
+    qualifications: '',
+    specializations: ''
   });
 
   const experienceLevels = ['novice', 'intermediate', 'experienced', 'expert'];
@@ -67,8 +81,11 @@ export function JudgesManager() {
         experience_level: formData.experience_level,
         bio: formData.bio || null,
         qualifications: formData.qualifications || null,
-        specializations: [],
-        availability: {}
+        specializations: formData.specializations
+          .split(',')
+          .map(s => s.trim())
+          .filter(Boolean),
+        availability: editingJudge?.availability || DEFAULT_AVAILABILITY
       };
 
       if (editingJudge) {
@@ -137,13 +154,14 @@ export function JudgesManager() {
   };
 
   const resetForm = () => {
-    setFormData({ 
-      name: '', 
-      email: '', 
-      phone: '', 
-      experience_level: 'novice', 
-      bio: '', 
-      qualifications: '' 
+    setFormData({
+      name: '',
+      email: '',
+      phone: '',
+      experience_level: 'novice',
+      bio: '',
+      qualifications: '',
+      specializations: ''
     });
     setEditingJudge(null);
   };
@@ -156,9 +174,45 @@ export function JudgesManager() {
       phone: judge.phone || '',
       experience_level: judge.experience_level,
       bio: judge.bio || '',
-      qualifications: judge.qualifications || ''
+      qualifications: judge.qualifications || '',
+      specializations: judge.specializations?.join(', ') || ''
     });
     setIsDialogOpen(true);
+  };
+
+  const openAvailabilityDialog = (judge: JudgeProfile) => {
+    setAvailabilityJudge(judge);
+    setCurrentAvailability(judge.availability || DEFAULT_AVAILABILITY);
+    setIsAvailabilityDialogOpen(true);
+  };
+
+  const saveAvailability = async () => {
+    if (!availabilityJudge) return;
+    try {
+      setAvailabilityLoading(true);
+      const { error } = await supabase
+        .from('judge_profiles')
+        .update({ availability: currentAvailability })
+        .eq('id', availabilityJudge.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Availability updated",
+      });
+
+      setIsAvailabilityDialogOpen(false);
+      fetchJudges();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to update availability",
+        variant: "destructive",
+      });
+    } finally {
+      setAvailabilityLoading(false);
+    }
   };
 
   const openCreateDialog = () => {
@@ -250,6 +304,15 @@ export function JudgesManager() {
                 </div>
               </div>
               <div>
+                <Label htmlFor="specializations">Specializations</Label>
+                <Input
+                  id="specializations"
+                  value={formData.specializations}
+                  onChange={(e) => setFormData(prev => ({ ...prev, specializations: e.target.value }))}
+                  placeholder="Policy, Public Forum"
+                />
+              </div>
+              <div>
                 <Label htmlFor="qualifications">Qualifications</Label>
                 <Textarea
                   id="qualifications"
@@ -282,6 +345,23 @@ export function JudgesManager() {
         </Dialog>
       </div>
 
+      <Dialog open={isAvailabilityDialogOpen} onOpenChange={setIsAvailabilityDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Manage Weekly Availability - {availabilityJudge?.name}</DialogTitle>
+            <DialogDescription>
+              Set the judge's general weekly availability for receiving assignments
+            </DialogDescription>
+          </DialogHeader>
+          <WeeklyAvailabilityEditor
+            availability={currentAvailability}
+            onAvailabilityChange={setCurrentAvailability}
+            onSave={saveAvailability}
+            loading={availabilityLoading}
+          />
+        </DialogContent>
+      </Dialog>
+
       <Card>
         <CardHeader>
           <CardTitle>Judges ({judges.length})</CardTitle>
@@ -302,6 +382,7 @@ export function JudgesManager() {
                   <TableHead>Name</TableHead>
                   <TableHead>Contact</TableHead>
                   <TableHead>Experience</TableHead>
+                  <TableHead>Specializations</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -334,6 +415,19 @@ export function JudgesManager() {
                       </Badge>
                     </TableCell>
                     <TableCell>
+                      {judge.specializations?.length ? (
+                        <div className="flex flex-wrap gap-1">
+                          {judge.specializations.map(spec => (
+                            <Badge key={spec} variant="secondary" className="text-xs">
+                              {spec}
+                            </Badge>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">None</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
                       <div className="flex items-center gap-2">
                         <Button
                           size="sm"
@@ -342,6 +436,14 @@ export function JudgesManager() {
                         >
                           <Edit2 className="h-4 w-4 mr-1" />
                           Edit
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => openAvailabilityDialog(judge)}
+                        >
+                          <Calendar className="h-4 w-4 mr-1" />
+                          Availability
                         </Button>
                         <Button
                           size="sm"

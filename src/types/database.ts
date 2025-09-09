@@ -54,6 +54,16 @@ export interface Pairing {
   };
 }
 
+export interface WeeklyAvailability {
+  monday: { morning: boolean; afternoon: boolean; evening: boolean };
+  tuesday: { morning: boolean; afternoon: boolean; evening: boolean };
+  wednesday: { morning: boolean; afternoon: boolean; evening: boolean };
+  thursday: { morning: boolean; afternoon: boolean; evening: boolean };
+  friday: { morning: boolean; afternoon: boolean; evening: boolean };
+  saturday: { morning: boolean; afternoon: boolean; evening: boolean };
+  sunday: { morning: boolean; afternoon: boolean; evening: boolean };
+}
+
 export interface JudgeProfile {
   id: string;
   user_id: string | null;
@@ -62,7 +72,7 @@ export interface JudgeProfile {
   phone: string | null;
   experience_level: string;
   specializations: string[];
-  availability: any;
+  availability: WeeklyAvailability;
   bio: string | null;
   qualifications: string | null;
   created_at: string;
