@@ -12,6 +12,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { toast } from '@/components/ui/use-toast';
 import { Plus, Edit2, Trash2, MessageSquare } from 'lucide-react';
 import { DebateFormat } from '@/types/database';
+import { FORMAT_TEMPLATES } from '@/lib/formats/templates';
+import { parseFormatRules } from '@/lib/formats';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export function DebateFormatsManager() {
   const [formats, setFormats] = useState<DebateFormat[]>([]);
@@ -24,6 +27,7 @@ export function DebateFormatsManager() {
     description: '',
     rules: ''
   });
+  const [selectedTemplate, setSelectedTemplate] = useState('');
 
   useEffect(() => {
     fetchFormats();
@@ -54,12 +58,14 @@ export function DebateFormatsManager() {
     e.preventDefault();
     
     try {
-      let rules;
+      let rawRules;
       try {
-        rules = formData.rules ? JSON.parse(formData.rules) : {};
+        rawRules = formData.rules ? JSON.parse(formData.rules) : {};
       } catch {
         throw new Error('Invalid JSON in rules field');
       }
+
+      const rules = parseFormatRules(rawRules);
 
       const formatData = {
         key: formData.key,
@@ -136,6 +142,7 @@ export function DebateFormatsManager() {
   const resetForm = () => {
     setFormData({ key: '', name: '', description: '', rules: '' });
     setEditingFormat(null);
+    setSelectedTemplate('');
   };
 
   const openEditDialog = (format: DebateFormat) => {
@@ -146,12 +153,26 @@ export function DebateFormatsManager() {
       description: format.description || '',
       rules: JSON.stringify(format.rules, null, 2)
     });
+    setSelectedTemplate('');
     setIsDialogOpen(true);
   };
 
   const openCreateDialog = () => {
     resetForm();
     setIsDialogOpen(true);
+  };
+
+  const handleTemplateSelect = (templateKey: string) => {
+    setSelectedTemplate(templateKey);
+    const template = FORMAT_TEMPLATES.find(t => t.key === templateKey);
+    if (template) {
+      setFormData({
+        key: template.key,
+        name: template.name,
+        description: template.description,
+        rules: JSON.stringify(template.rules, null, 2)
+      });
+    }
   };
 
   if (loading) {
@@ -188,6 +209,21 @@ export function DebateFormatsManager() {
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <Label>Use Preset Template</Label>
+                <Select value={selectedTemplate} onValueChange={handleTemplateSelect}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a template (optional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {FORMAT_TEMPLATES.map((t) => (
+                      <SelectItem key={t.key} value={t.key}>
+                        {t.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="key">Format Key</Label>
