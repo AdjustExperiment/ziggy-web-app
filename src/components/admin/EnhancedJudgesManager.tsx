@@ -25,7 +25,6 @@ interface JudgeProfile {
   specializations: string[];
   experience_level: string;
   experience_years: number;
-  accredited: boolean;
   user_id?: string;
 }
 
@@ -150,7 +149,6 @@ export function EnhancedJudgesManager() {
           specializations: formData.specializations,
           experience_years: formData.experience_years,
           experience_level: getExperienceLevel(formData.experience_years),
-          accredited: false,
         };
 
         const { error: judgeError } = await supabase
@@ -229,21 +227,7 @@ export function EnhancedJudgesManager() {
     }
   };
 
-  const toggleAccreditation = async (judge: JudgeProfile) => {
-    try {
-      const { error } = await supabase
-        .from('judge_profiles')
-        .update({ accredited: !judge.accredited })
-        .eq('id', judge.id);
-
-      if (error) throw error;
-
-      setJudges(prev => prev.map(j => j.id === judge.id ? { ...j, accredited: !j.accredited } : j));
-    } catch (error: any) {
-      console.error('Error updating accreditation:', error);
-      toast({ title: 'Error', description: 'Failed to update accreditation', variant: 'destructive' });
-    }
-  };
+  // Removed accreditation toggle as the field doesn't exist in the database
 
   const handleSpecializationChange = (formatId: string, checked: boolean) => {
     setFormData(prev => ({
@@ -426,7 +410,7 @@ export function EnhancedJudgesManager() {
                   <TableHead>Experience</TableHead>
                   <TableHead>Specializations</TableHead>
                   <TableHead>Contact</TableHead>
-                  <TableHead>Accredited</TableHead>
+                  <TableHead>Status</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -478,12 +462,11 @@ export function EnhancedJudgesManager() {
                         )}
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <Switch
-                        checked={judge.accredited}
-                        onCheckedChange={() => toggleAccreditation(judge)}
-                      />
-                    </TableCell>
+                     <TableCell>
+                       <Badge variant="secondary" className="text-xs">
+                         Active
+                       </Badge>
+                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
                         <Button

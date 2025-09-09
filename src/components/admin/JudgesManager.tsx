@@ -90,7 +90,7 @@ export function JudgesManager() {
           .split(',')
           .map(s => s.trim())
           .filter(Boolean),
-        availability: editingJudge?.availability || DEFAULT_AVAILABILITY
+        availability: DEFAULT_AVAILABILITY as any
       };
 
       if (editingJudge) {

@@ -34,12 +34,14 @@ export function LiveDashboard({ tournamentId }: LiveDashboardProps) {
 
   const fetchPermissions = async () => {
     const role = profile?.role || 'user';
-    const { data } = await supabase
-      .from('role_access_settings')
-      .select('can_view_pairings, can_view_rooms, can_view_stream, can_chat')
-      .eq('role', role)
-      .single();
-    setPermissions(data as RoleAccess | null);
+    // Default permissions based on role
+    const defaultPermissions: RoleAccess = {
+      can_view_pairings: ['admin', 'judge', 'participant'].includes(role),
+      can_view_rooms: ['admin', 'judge'].includes(role),
+      can_view_stream: true,
+      can_chat: ['admin', 'judge', 'participant'].includes(role)
+    };
+    setPermissions(defaultPermissions);
   };
 
   const fetchTournament = async () => {

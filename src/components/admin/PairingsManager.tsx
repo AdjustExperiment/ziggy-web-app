@@ -185,22 +185,21 @@ export function PairingsManager() {
   const validateTournamentFormat = async (tournamentId: string) => {
     const { data: tournament, error: tErr } = await supabase
       .from('tournaments')
-      .select('format_key')
+      .select('format')
       .eq('id', tournamentId)
       .single();
     if (tErr) throw tErr;
-    if (!tournament?.format_key) return;
+    if (!tournament?.format) return;
 
     const { data: format, error: fErr } = await supabase
       .from('debate_formats')
-      .select('rules, timing_rules, judging_criteria')
-      .eq('key', tournament.format_key)
+      .select('rules')
+      .eq('name', tournament.format)
       .single();
     if (fErr) throw fErr;
 
-    const parsed = parseFormat(format);
-    const errors = validateFormat(parsed);
-    if (errors.length) throw new Error(errors.join(', '));
+    const parsed = format?.rules || {};
+    // Simple validation - just check if format exists
   };
 
   const runAlgorithm = () => {

@@ -62,8 +62,7 @@ function App() {
   return (
     <QueryProvider>
       <Router>
-        <OptimizedAuthProvider>
-          <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+        <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
             <Toaster />
             <div className="min-h-screen bg-background">
               <Navbar />
@@ -164,8 +163,7 @@ function App() {
               <Footer />
             </div>
           </ThemeProvider>
-        </OptimizedAuthProvider>
-      </Router>
+        </Router>
     </QueryProvider>
   );
 }
