@@ -2109,12 +2109,15 @@ export type Database = {
           location: string
           max_participants: number
           name: string
+          judge_anonymity: boolean
           opt_outs_enabled: boolean
+          privacy_level: string
           prize_items: string[] | null
           prize_pool: string | null
           registration_deadline: string | null
           registration_fee: number | null
           registration_open: boolean | null
+          reveal_delay: number
           round_count: number | null
           round_interval_days: number | null
           round_schedule_type: string | null
@@ -2143,12 +2146,15 @@ export type Database = {
           location: string
           max_participants?: number
           name: string
+          judge_anonymity?: boolean
           opt_outs_enabled?: boolean
+          privacy_level?: string
           prize_items?: string[] | null
           prize_pool?: string | null
           registration_deadline?: string | null
           registration_fee?: number | null
           registration_open?: boolean | null
+          reveal_delay?: number
           round_count?: number | null
           round_interval_days?: number | null
           round_schedule_type?: string | null
@@ -2177,12 +2183,15 @@ export type Database = {
           location?: string
           max_participants?: number
           name?: string
+          judge_anonymity?: boolean
           opt_outs_enabled?: boolean
+          privacy_level?: string
           prize_items?: string[] | null
           prize_pool?: string | null
           registration_deadline?: string | null
           registration_fee?: number | null
           registration_open?: boolean | null
+          reveal_delay?: number
           round_count?: number | null
           round_interval_days?: number | null
           round_schedule_type?: string | null
