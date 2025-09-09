@@ -1,8 +1,29 @@
 import React, { useState, useMemo } from 'react';
 import { useOptimizedAuth } from '@/hooks/useOptimizedAuth';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import AdminLayout from '@/components/admin/AdminLayout';
+import {
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+} from '@/components/ui/sidebar';
+import {
+  LayoutDashboard,
+  Trophy,
+  BarChart3,
+  CreditCard,
+  ClipboardList,
+  Gavel,
+  Users,
+  Mail,
+  Bell,
+  FileText,
+  Globe,
+  Tag,
+  Briefcase,
+  Shield,
+  SquareStack,
+} from 'lucide-react';
 import { Dashboard } from '@/components/admin/Dashboard';
 import { TournamentManager } from '@/components/admin/TournamentManager';
 import { TabulationPlatform } from '@/components/admin/TabulationPlatform';
@@ -17,8 +38,6 @@ import { SiteEditor } from '@/components/admin/SiteEditor';
 import { PromoCodesManager } from '@/components/admin/PromoCodesManager';
 import { StaffRevenueCalculator } from '@/components/admin/StaffRevenueCalculator';
 import { SecurityDashboard } from '@/components/admin/SecurityDashboard';
-import SponsorsManager from '@/components/admin/SponsorsManager';
-
 import { FooterContentManager } from '@/components/admin/FooterContentManager';
 
 export default function AdminDashboard() {
@@ -31,7 +50,24 @@ export default function AdminDashboard() {
     return null;
   }
 
-  // Memoize tab content to prevent unnecessary re-renders
+  const menuItems = [
+    { value: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { value: 'tournaments', label: 'Tournaments', icon: Trophy },
+    { value: 'tabulation', label: 'Tabulation', icon: BarChart3 },
+    { value: 'payments', label: 'Payments', icon: CreditCard },
+    { value: 'applications', label: 'Applications', icon: ClipboardList },
+    { value: 'judges', label: 'Judges', icon: Gavel },
+    { value: 'users', label: 'Users', icon: Users },
+    { value: 'emails', label: 'Emails', icon: Mail },
+    { value: 'notifications', label: 'Notifications', icon: Bell },
+    { value: 'blog', label: 'Blog', icon: FileText },
+    { value: 'site', label: 'Site Editor', icon: Globe },
+    { value: 'promos', label: 'Promo Codes', icon: Tag },
+    { value: 'staff', label: 'Staff Calc', icon: Briefcase },
+    { value: 'security', label: 'Security', icon: Shield },
+    { value: 'footer', label: 'Footer', icon: SquareStack },
+  ];
+
   const renderTabContent = useMemo(() => {
     const components = {
       dashboard: <Dashboard />,
@@ -54,35 +90,25 @@ export default function AdminDashboard() {
     return components[activeTab as keyof typeof components] || <Dashboard />;
   }, [activeTab]);
 
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-        <Button variant="outline" onClick={() => signOut()}>Logout</Button>
-      </div>
+  const sidebar = (
+    <SidebarMenu>
+      {menuItems.map((item) => (
+        <SidebarMenuItem key={item.value}>
+          <SidebarMenuButton
+            isActive={activeTab === item.value}
+            onClick={() => setActiveTab(item.value)}
+          >
+            <item.icon className="h-4 w-4" />
+            <span>{item.label}</span>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      ))}
+    </SidebarMenu>
+  );
 
-      <Tabs defaultValue="dashboard" value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-12 gap-1 h-auto p-1">
-          <TabsTrigger value="dashboard" className="text-xs">Dashboard</TabsTrigger>
-          <TabsTrigger value="tournaments" className="text-xs">Tournaments</TabsTrigger>
-          <TabsTrigger value="tabulation" className="text-xs">Tabulation</TabsTrigger>
-          <TabsTrigger value="payments" className="text-xs">Payments</TabsTrigger>
-          <TabsTrigger value="applications" className="text-xs">Applications</TabsTrigger>
-          <TabsTrigger value="judges" className="text-xs">Judges</TabsTrigger>
-          <TabsTrigger value="users" className="text-xs">Users</TabsTrigger>
-          <TabsTrigger value="emails" className="text-xs">Emails</TabsTrigger>
-          <TabsTrigger value="notifications" className="text-xs">Notifications</TabsTrigger>
-          <TabsTrigger value="blog" className="text-xs">Blog</TabsTrigger>
-          <TabsTrigger value="site" className="text-xs">Site Editor</TabsTrigger>
-          <TabsTrigger value="promos" className="text-xs">Promo Codes</TabsTrigger>
-          <TabsTrigger value="staff" className="text-xs">Staff Calc</TabsTrigger>
-          <TabsTrigger value="security" className="text-xs">Security</TabsTrigger>
-          <TabsTrigger value="footer" className="text-xs">Footer</TabsTrigger>
-        </TabsList>
-        <TabsContent value={activeTab}>
-          {renderTabContent}
-        </TabsContent>
-      </Tabs>
-    </div>
+  return (
+    <AdminLayout title="Admin Dashboard" onLogout={signOut} sidebar={sidebar}>
+      {renderTabContent}
+    </AdminLayout>
   );
 }
