@@ -840,12 +840,14 @@ export type Database = {
           id: string
           judge_id: string | null
           neg_registration_id: string
+          method: string | null
           released: boolean
           result: Json | null
           room: string | null
           round_id: string
           scheduled_time: string | null
           status: string
+          seed: Json | null
           tournament_id: string
           updated_at: string
         }
@@ -855,12 +857,14 @@ export type Database = {
           id?: string
           judge_id?: string | null
           neg_registration_id: string
+          method?: string | null
           released?: boolean
           result?: Json | null
           room?: string | null
           round_id: string
           scheduled_time?: string | null
           status?: string
+          seed?: Json | null
           tournament_id: string
           updated_at?: string
         }
@@ -870,12 +874,14 @@ export type Database = {
           id?: string
           judge_id?: string | null
           neg_registration_id?: string
+          method?: string | null
           released?: boolean
           result?: Json | null
           room?: string | null
           round_id?: string
           scheduled_time?: string | null
           status?: string
+          seed?: Json | null
           tournament_id?: string
           updated_at?: string
         }
