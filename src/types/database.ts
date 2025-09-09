@@ -33,6 +33,8 @@ export interface Pairing {
   room: string | null;
   scheduled_time: string | null;
   released: boolean;
+  method: string | null;
+  seed: any;
   status: string;
   result: any;
   created_at: string;
