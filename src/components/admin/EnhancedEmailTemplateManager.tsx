@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Mail, Image, Eye, Send, Plus, Edit, Trash2, Upload } from 'lucide-react';
+import { Mail, Image, Eye, Send, Plus, Edit, Trash2, Upload, Clock } from 'lucide-react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
@@ -20,11 +20,15 @@ interface EnhancedEmailTemplate {
   template_key: string;
   subject: string;
   html_content: string;
-  variables: Record<string, any>;
+  variables: Record<string, unknown>;
   images: string[];
   from_email?: string;
   reply_to?: string;
   enabled: boolean;
+  schedule_at?: string | null;
+  automation_trigger?: string | null;
+  open_count?: number;
+  click_count?: number;
   created_at?: string;
   updated_at?: string;
 }
@@ -41,7 +45,7 @@ export const EnhancedEmailTemplateManager = () => {
   const { toast } = useToast();
   const [templates, setTemplates] = useState<EnhancedEmailTemplate[]>([]);
   const [apiKeys, setApiKeys] = useState<ApiKeyConfig[]>([]);
-  const [tournaments, setTournaments] = useState<any[]>([]);
+  const [tournaments, setTournaments] = useState<{ id: string; name: string }[]>([]);
   const [selectedTournament, setSelectedTournament] = useState<string>('global');
   const [activeTab, setActiveTab] = useState('templates');
   const [editingTemplate, setEditingTemplate] = useState<EnhancedEmailTemplate | null>(null);
@@ -72,7 +76,7 @@ export const EnhancedEmailTemplateManager = () => {
       // Type conversion for templates
       const typedTemplates: EnhancedEmailTemplate[] = (templatesData || []).map(template => ({
         ...template,
-        variables: typeof template.variables === 'object' ? template.variables as Record<string, any> : {},
+        variables: typeof template.variables === 'object' ? template.variables as Record<string, unknown> : {},
         images: Array.isArray(template.images) ? template.images as string[] : []
       }));
       
@@ -152,7 +156,9 @@ export const EnhancedEmailTemplateManager = () => {
         images: template.images || [],
         from_email: template.from_email || null,
         reply_to: template.reply_to || null,
-        enabled: template.enabled
+        enabled: template.enabled,
+        schedule_at: template.schedule_at || null,
+        automation_trigger: template.automation_trigger || null
       };
 
       if (template.id) {
@@ -285,6 +291,10 @@ export const EnhancedEmailTemplateManager = () => {
               variables: {},
               images: [],
               enabled: true,
+              schedule_at: null,
+              automation_trigger: '',
+              open_count: 0,
+              click_count: 0,
               tournament_id: selectedTournament === 'global' ? null : selectedTournament
             } as EnhancedEmailTemplate)}>
               <Plus className="h-4 w-4 mr-2" />
@@ -311,6 +321,14 @@ export const EnhancedEmailTemplateManager = () => {
                             {template.images.length} images
                           </Badge>
                         )}
+                        {template.schedule_at && (
+                          <Badge variant="outline">
+                            <Clock className="h-3 w-3 mr-1" />
+                            {new Date(template.schedule_at).toLocaleString()}
+                          </Badge>
+                        )}
+                        <Badge variant="outline">Opens: {template.open_count || 0}</Badge>
+                        <Badge variant="outline">Clicks: {template.click_count || 0}</Badge>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -431,8 +449,33 @@ export const EnhancedEmailTemplateManager = () => {
                       </div>
                     </div>
 
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Schedule Send</Label>
+                        <Input
+                          type="datetime-local"
+                          value={editingTemplate.schedule_at ? new Date(editingTemplate.schedule_at).toISOString().slice(0,16) : ''}
+                          onChange={(e) => setEditingTemplate({
+                            ...editingTemplate,
+                            schedule_at: e.target.value ? new Date(e.target.value).toISOString() : null
+                          })}
+                        />
+                      </div>
+                      <div>
+                        <Label>Automation Trigger</Label>
+                        <Input
+                          value={editingTemplate.automation_trigger || ''}
+                          onChange={(e) => setEditingTemplate({
+                            ...editingTemplate,
+                            automation_trigger: e.target.value
+                          })}
+                          placeholder="event_key"
+                        />
+                      </div>
+                    </div>
+
                     <div className="flex items-center space-x-2">
-                      <Switch 
+                      <Switch
                         checked={editingTemplate.enabled}
                         onCheckedChange={(checked) => setEditingTemplate({...editingTemplate, enabled: checked})}
                       />
