@@ -414,7 +414,45 @@ export type Database = {
             columns: ["registration_id"]
             isOneToOne: false
             referencedRelation: "tournament_registrations"
-            referencedColumns: ["id"]
+          referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_delivery_logs: {
+        Row: {
+          created_at: string
+          event_timestamp: string
+          event_type: string
+          id: string
+          metadata: Json | null
+          recipient_email: string
+          template_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_timestamp?: string
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          recipient_email: string
+          template_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_timestamp?: string
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          recipient_email?: string
+          template_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_delivery_logs_template_id_fkey",
+            columns: ["template_id"],
+            isOneToOne: false,
+            referencedRelation: "email_templates_enhanced",
+            referencedColumns: ["id"],
           },
         ]
       }
@@ -507,6 +545,10 @@ export type Database = {
           id: string
           images: Json | null
           reply_to: string | null
+          schedule_at: string | null
+          automation_trigger: string | null
+          open_count: number
+          click_count: number
           subject: string
           template_key: string
           template_name: string
@@ -522,6 +564,10 @@ export type Database = {
           id?: string
           images?: Json | null
           reply_to?: string | null
+          schedule_at?: string | null
+          automation_trigger?: string | null
+          open_count?: number
+          click_count?: number
           subject: string
           template_key: string
           template_name: string
@@ -537,6 +583,10 @@ export type Database = {
           id?: string
           images?: Json | null
           reply_to?: string | null
+          schedule_at?: string | null
+          automation_trigger?: string | null
+          open_count?: number
+          click_count?: number
           subject?: string
           template_key?: string
           template_name?: string
