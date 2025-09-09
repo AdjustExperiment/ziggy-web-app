@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Plus, Edit, Trash2, Users, Award } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
 
 interface JudgeProfile {
   id: string;
@@ -24,6 +25,7 @@ interface JudgeProfile {
   specializations: string[];
   experience_level: string;
   experience_years: number;
+  accredited: boolean;
   user_id?: string;
 }
 
@@ -147,7 +149,8 @@ export function EnhancedJudgesManager() {
           qualifications: formData.qualifications || null,
           specializations: formData.specializations,
           experience_years: formData.experience_years,
-          experience_level: getExperienceLevel(formData.experience_years)
+          experience_level: getExperienceLevel(formData.experience_years),
+          accredited: false,
         };
 
         const { error: judgeError } = await supabase
@@ -223,6 +226,22 @@ export function EnhancedJudgesManager() {
         description: error.message || "Failed to delete judge",
         variant: "destructive",
       });
+    }
+  };
+
+  const toggleAccreditation = async (judge: JudgeProfile) => {
+    try {
+      const { error } = await supabase
+        .from('judge_profiles')
+        .update({ accredited: !judge.accredited })
+        .eq('id', judge.id);
+
+      if (error) throw error;
+
+      setJudges(prev => prev.map(j => j.id === judge.id ? { ...j, accredited: !j.accredited } : j));
+    } catch (error: any) {
+      console.error('Error updating accreditation:', error);
+      toast({ title: 'Error', description: 'Failed to update accreditation', variant: 'destructive' });
     }
   };
 
@@ -407,6 +426,7 @@ export function EnhancedJudgesManager() {
                   <TableHead>Experience</TableHead>
                   <TableHead>Specializations</TableHead>
                   <TableHead>Contact</TableHead>
+                  <TableHead>Accredited</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -457,6 +477,12 @@ export function EnhancedJudgesManager() {
                           <div className="text-muted-foreground">{judge.phone}</div>
                         )}
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      <Switch
+                        checked={judge.accredited}
+                        onCheckedChange={() => toggleAccreditation(judge)}
+                      />
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
