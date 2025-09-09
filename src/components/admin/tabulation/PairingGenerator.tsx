@@ -11,19 +11,24 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from '@/components/ui/use-toast';
-import { 
-  Plus, 
-  Play, 
-  Lock, 
-  Unlock, 
-  Users, 
-  Calendar, 
-  MapPin, 
+import {
+  Plus,
+  Play,
+  Lock,
+  Unlock,
+  Users,
+  Calendar,
+  MapPin,
   Shuffle,
   Eye,
   EyeOff
 } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  generateSwissPairings,
+  generateEliminationPairings,
+  BasicPairing
+} from '@/lib/pairings';
 
 interface PairingGeneratorProps {
   tournamentId: string;
@@ -101,6 +106,28 @@ export function PairingGenerator({
     }
   };
 
+  const saveGeneratedPairings = async (pairs: BasicPairing[]) => {
+    const newPairings = pairs.map((p, index) => ({
+      round_id: selectedRound,
+      tournament_id: tournamentId,
+      aff_registration_id: p.aff,
+      neg_registration_id: p.neg,
+      room: `Room ${index + 1}`,
+      status: 'scheduled',
+      released: false,
+    }));
+
+    const { error } = await supabase.from('pairings').insert(newPairings);
+    if (error) throw error;
+
+    toast({
+      title: 'Success',
+      description: `Generated ${newPairings.length} pairings`,
+    });
+
+    fetchPairings();
+  };
+
   const createRound = async () => {
     try {
       setLoading(true);
@@ -141,55 +168,69 @@ export function PairingGenerator({
     }
   };
 
-  const generatePairings = async () => {
+  const generateRandomPairings = async () => {
     if (!selectedRound) return;
 
     try {
       setLoading(true);
 
-      // Simple random pairing algorithm
       const availableRegistrations = [...registrations];
-      const newPairings = [];
 
-      // Shuffle registrations
       for (let i = availableRegistrations.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [availableRegistrations[i], availableRegistrations[j]] = [availableRegistrations[j], availableRegistrations[i]];
+        [availableRegistrations[i], availableRegistrations[j]] = [
+          availableRegistrations[j],
+          availableRegistrations[i],
+        ];
       }
 
-      // Create pairs
+      const pairs: BasicPairing[] = [];
       for (let i = 0; i < availableRegistrations.length - 1; i += 2) {
         const aff = availableRegistrations[i];
         const neg = availableRegistrations[i + 1];
-        
-        newPairings.push({
-          round_id: selectedRound,
-          tournament_id: tournamentId,
-          aff_registration_id: aff.id,
-          neg_registration_id: neg.id,
-          room: `Room ${Math.floor(i / 2) + 1}`,
-          status: 'scheduled',
-          released: false
-        });
+        pairs.push({ aff: aff.id, neg: neg.id });
       }
 
-      const { error } = await supabase
-        .from('pairings')
-        .insert(newPairings);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: `Generated ${newPairings.length} pairings`,
-      });
-
-      fetchPairings();
+      await saveGeneratedPairings(pairs);
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: error.message || "Failed to generate pairings",
-        variant: "destructive",
+        title: 'Error',
+        description: error.message || 'Failed to generate pairings',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const generateSwiss = async () => {
+    if (!selectedRound) return;
+    try {
+      setLoading(true);
+      const pairs = generateSwissPairings(registrations);
+      await saveGeneratedPairings(pairs);
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to generate pairings',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const generateElimination = async () => {
+    if (!selectedRound) return;
+    try {
+      setLoading(true);
+      const pairs = generateEliminationPairings(registrations);
+      await saveGeneratedPairings(pairs);
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to generate pairings',
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
@@ -400,15 +441,31 @@ export function PairingGenerator({
 
               <div className="flex gap-2">
                 {pairings.length === 0 && selectedRoundData.status !== 'locked' && (
-                  <Button
-                    onClick={generatePairings}
-                    disabled={loading || registrations.length < 2}
-                  >
-                    <Shuffle className="h-4 w-4 mr-2" />
-                    Generate Pairings
-                  </Button>
+                  <>
+                    <Button
+                      onClick={generateRandomPairings}
+                      disabled={loading || registrations.length < 2}
+                    >
+                      <Shuffle className="h-4 w-4 mr-2" />
+                      Random
+                    </Button>
+                    <Button
+                      onClick={generateSwiss}
+                      disabled={loading || registrations.length < 2}
+                    >
+                      <Shuffle className="h-4 w-4 mr-2" />
+                      Swiss
+                    </Button>
+                    <Button
+                      onClick={generateElimination}
+                      disabled={loading || registrations.length < 2}
+                    >
+                      <Shuffle className="h-4 w-4 mr-2" />
+                      Elimination
+                    </Button>
+                  </>
                 )}
-                
+
                 {pairings.length > 0 && (
                   <Button
                     onClick={releaseAllPairings}
@@ -460,10 +517,20 @@ export function PairingGenerator({
                 <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
                 <p>No pairings generated for this round</p>
                 {registrations.length >= 2 && selectedRoundData?.status !== 'locked' && (
-                  <Button onClick={generatePairings} className="mt-4" disabled={loading}>
-                    <Shuffle className="h-4 w-4 mr-2" />
-                    Generate Pairings
-                  </Button>
+                  <div className="flex gap-2 justify-center mt-4">
+                    <Button onClick={generateRandomPairings} disabled={loading}>
+                      <Shuffle className="h-4 w-4 mr-2" />
+                      Random
+                    </Button>
+                    <Button onClick={generateSwiss} disabled={loading}>
+                      <Shuffle className="h-4 w-4 mr-2" />
+                      Swiss
+                    </Button>
+                    <Button onClick={generateElimination} disabled={loading}>
+                      <Shuffle className="h-4 w-4 mr-2" />
+                      Elimination
+                    </Button>
+                  </div>
                 )}
               </div>
             ) : (
