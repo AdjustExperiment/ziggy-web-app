@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,6 +21,12 @@ interface BallotEntryProps {
   onBallotSubmitted: () => void;
 }
 
+interface BallotRecord {
+  id: string;
+  status: string;
+  payload: Record<string, unknown> | null;
+}
+
 export function BallotEntry({
   pairingId,
   tournamentName,
@@ -31,21 +37,20 @@ export function BallotEntry({
   onClose,
   onBallotSubmitted,
 }: BallotEntryProps) {
-  const [ballot, setBallot] = useState<any>(null);
+  const [ballot, setBallot] = useState<BallotRecord | null>(null);
   const [winner, setWinner] = useState<string>('');
   const [comments, setComments] = useState<string>('');
   const [affPoints, setAffPoints] = useState<string>('');
   const [negPoints, setNegPoints] = useState<string>('');
+  const [affFeedback, setAffFeedback] = useState<string>('');
+  const [negFeedback, setNegFeedback] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [autoSaving, setAutoSaving] = useState(false);
+  const initialLoad = useRef(true);
+  const canEdit = !ballot || ballot.status !== 'submitted';
 
-  useEffect(() => {
-    if (isOpen && pairingId) {
-      fetchBallot();
-    }
-  }, [isOpen, pairingId]);
-
-  const fetchBallot = async () => {
+  const fetchBallot = useCallback(async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -56,13 +61,17 @@ export function BallotEntry({
 
       if (error) throw error;
 
-      if (data) {
-        setBallot(data);
-        const payload = (data.payload as any) || {};
-        setWinner(payload.winner || '');
-        setComments(payload.comments || '');
-        setAffPoints(payload.aff_points || '');
-        setNegPoints(payload.neg_points || '');
+      const ballotData = data as BallotRecord | null;
+
+      if (ballotData) {
+        setBallot(ballotData);
+        const payload = (ballotData.payload as Record<string, unknown>) || {};
+        setWinner((payload.winner as string) || '');
+        setComments((payload.comments as string) || '');
+        setAffPoints((payload.aff_points as string) || '');
+        setNegPoints((payload.neg_points as string) || '');
+        setAffFeedback((payload.aff_feedback as string) || '');
+        setNegFeedback((payload.neg_feedback as string) || '');
       } else {
         // Initialize empty ballot
         setBallot(null);
@@ -70,8 +79,10 @@ export function BallotEntry({
         setComments('');
         setAffPoints('');
         setNegPoints('');
+        setAffFeedback('');
+        setNegFeedback('');
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error fetching ballot:', error);
       toast({
         title: "Error",
@@ -81,16 +92,53 @@ export function BallotEntry({
     } finally {
       setLoading(false);
     }
-  };
+  }, [pairingId]);
 
-  const saveBallot = async (status: 'draft' | 'submitted') => {
-    setSaving(true);
+  useEffect(() => {
+    if (isOpen) {
+      fetchBallot();
+    }
+  }, [isOpen, fetchBallot]);
+
+  // Subscribe to ballot changes for realtime updates
+  useEffect(() => {
+    if (!pairingId) return;
+    const channel = supabase
+      .channel(`ballot-${pairingId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'ballots',
+          filter: `pairing_id=eq.${pairingId}`,
+        },
+        () => {
+          fetchBallot();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [pairingId, fetchBallot]);
+
+  const saveBallot = useCallback(async (status: 'draft' | 'submitted', silent = false) => {
+    if (status === 'draft' && silent) {
+      setAutoSaving(true);
+    } else {
+      setSaving(true);
+    }
+
     try {
       const payload = {
         winner,
         comments,
         aff_points: affPoints,
         neg_points: negPoints,
+        aff_feedback: affFeedback,
+        neg_feedback: negFeedback,
       };
 
       if (ballot) {
@@ -115,7 +163,7 @@ export function BallotEntry({
 
         if (!judgeProfile) throw new Error('Judge profile not found');
 
-        const { error } = await supabase
+        const { data: newBallot, error } = await supabase
           .from('ballots')
           .insert({
             pairing_id: pairingId,
@@ -123,35 +171,59 @@ export function BallotEntry({
             judge_user_id: (await supabase.auth.getUser()).data.user?.id,
             payload,
             status,
-          });
+          })
+          .select()
+          .single();
 
         if (error) throw error;
+        setBallot(newBallot as BallotRecord);
       }
 
-      toast({
-        title: "Success",
-        description: status === 'submitted' ? "Ballot submitted successfully" : "Ballot saved as draft",
-      });
+      if (!silent) {
+        toast({
+          title: "Success",
+          description: status === 'submitted' ? "Ballot submitted successfully" : "Ballot saved as draft",
+        });
+      }
 
       if (status === 'submitted') {
         onBallotSubmitted();
         onClose();
-      } else {
+      } else if (!silent) {
         fetchBallot(); // Refresh ballot data
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error saving ballot:', error);
-      toast({
-        title: "Error",
-        description: "Failed to save ballot",
-        variant: "destructive",
-      });
+      if (!silent) {
+        toast({
+          title: "Error",
+          description: "Failed to save ballot",
+          variant: "destructive",
+        });
+      }
     } finally {
-      setSaving(false);
+      if (status === 'draft' && silent) {
+        setAutoSaving(false);
+      } else {
+        setSaving(false);
+      }
     }
-  };
+  }, [affFeedback, affPoints, ballot, comments, negFeedback, negPoints, onBallotSubmitted, onClose, pairingId, winner, fetchBallot]);
 
-  const canEdit = !ballot || ballot.status !== 'submitted';
+  // Autosave ballot when fields change
+  useEffect(() => {
+    if (initialLoad.current) {
+      initialLoad.current = false;
+      return;
+    }
+    if (!isOpen || !canEdit) return;
+
+    const timer = setTimeout(() => {
+      saveBallot('draft', true);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [winner, comments, affPoints, negPoints, affFeedback, negFeedback, isOpen, canEdit, saveBallot]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -257,15 +329,41 @@ export function BallotEntry({
               </div>
             </div>
 
+            {/* Speaker Feedback */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="aff-feedback">Affirmative Feedback</Label>
+                <Textarea
+                  id="aff-feedback"
+                  value={affFeedback}
+                  onChange={(e) => setAffFeedback(e.target.value)}
+                  disabled={!canEdit}
+                  placeholder={`Feedback for ${affParticipant}`}
+                  rows={3}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="neg-feedback">Negative Feedback</Label>
+                <Textarea
+                  id="neg-feedback"
+                  value={negFeedback}
+                  onChange={(e) => setNegFeedback(e.target.value)}
+                  disabled={!canEdit}
+                  placeholder={`Feedback for ${negParticipant}`}
+                  rows={3}
+                />
+              </div>
+            </div>
+
             {/* Comments */}
             <div className="space-y-2">
-              <Label htmlFor="comments">Comments & Feedback</Label>
+              <Label htmlFor="comments">General Comments</Label>
               <Textarea
                 id="comments"
                 value={comments}
                 onChange={(e) => setComments(e.target.value)}
                 disabled={!canEdit}
-                placeholder="Provide feedback on the debate..."
+                placeholder="Additional comments on the debate..."
                 rows={4}
               />
             </div>
@@ -292,6 +390,9 @@ export function BallotEntry({
                   Submit Ballot
                 </Button>
               </div>
+            )}
+            {autoSaving && (
+              <div className="text-sm text-muted-foreground text-right">Autosaving...</div>
             )}
           </div>
         )}
