@@ -1,13 +1,12 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/components/ui/use-toast';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Gavel, MessageSquare, FileText, Lock, Eye } from 'lucide-react';
+import { Gavel, FileText, Lock, Eye } from 'lucide-react';
 import { BallotEntry } from './BallotEntry';
 
 interface JudgeAssignment {
@@ -25,19 +24,68 @@ interface JudgeAssignment {
   ballot_locked?: boolean;
 }
 
+interface PairingRow {
+  id: string;
+  tournaments?: { name?: string } | null;
+  round?: { name?: string } | null;
+  room?: string | null;
+  scheduled_time?: string | null;
+  aff_registration?: { participant_name?: string } | null;
+  neg_registration?: { participant_name?: string } | null;
+  ballots?: { id: string; status?: string }[] | null;
+}
+
 export function MyJudgings() {
   const { user } = useAuth();
   const [assignments, setAssignments] = useState<JudgeAssignment[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPairing, setSelectedPairing] = useState<JudgeAssignment | null>(null);
+  const [judgeProfileId, setJudgeProfileId] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
       fetchMyAssignments();
     }
-  }, [user]);
+  }, [user, fetchMyAssignments]);
 
-  const fetchMyAssignments = async () => {
+  // Subscribe to assignment and ballot changes
+  useEffect(() => {
+    if (!judgeProfileId) return;
+
+    const channel = supabase
+      .channel(`judge-assignments-${judgeProfileId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'pairings',
+          filter: `judge_id=eq.${judgeProfileId}`,
+        },
+        () => {
+          fetchMyAssignments();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'ballots',
+          filter: `judge_profile_id=eq.${judgeProfileId}`,
+        },
+        () => {
+          fetchMyAssignments();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [judgeProfileId, fetchMyAssignments]);
+
+  const fetchMyAssignments = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -57,8 +105,11 @@ export function MyJudgings() {
       if (!judgeProfile) {
         // User is not a judge
         setAssignments([]);
+        setJudgeProfileId(null);
         return;
       }
+
+      setJudgeProfileId(judgeProfile.id);
 
       // Fetch pairings where user is assigned as judge with ballot info
       const { data: pairingsData, error: pairingsError } = await supabase
@@ -89,8 +140,10 @@ export function MyJudgings() {
 
       if (pairingsError) throw pairingsError;
 
+      const pairings: PairingRow[] = (pairingsData as PairingRow[] | null) || [];
+
       // Transform pairings data to match JudgeAssignment interface
-      const assignments: JudgeAssignment[] = (pairingsData || []).map(pairing => {
+      const assignments: JudgeAssignment[] = pairings.map((pairing) => {
         const ballot = pairing.ballots?.[0]; // Get first ballot if exists
         return {
           id: pairing.id,
@@ -109,7 +162,7 @@ export function MyJudgings() {
       });
 
       setAssignments(assignments);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error fetching assignments:', error);
       toast({
         title: "Error",
@@ -119,7 +172,7 @@ export function MyJudgings() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   const openBallot = (assignment: JudgeAssignment) => {
     setSelectedPairing(assignment);
@@ -153,9 +206,6 @@ export function MyJudgings() {
             <h3 className="text-lg font-semibold mb-2">No Judging Assignments</h3>
             <p className="text-muted-foreground">
               Your judging assignments will appear here once you are assigned to debates.
-            </p>
-            <p className="text-sm text-muted-foreground mt-2">
-              This feature is being set up and will be fully functional soon.
             </p>
           </CardContent>
         </Card>
@@ -230,27 +280,6 @@ export function MyJudgings() {
                         <FileText className="h-4 w-4 mr-2" />
                         {assignment.ballot_status === 'submitted' ? 'View Ballot' : 'Enter Ballot'}
                       </Button>
-
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button variant="outline" size="sm">
-                            <MessageSquare className="h-4 w-4 mr-2" />
-                            Chat
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Pairing Chat</DialogTitle>
-                            <DialogDescription>
-                              Communicate with the competitors about scheduling and logistics
-                            </DialogDescription>
-                          </DialogHeader>
-                          <div className="text-center py-8 text-muted-foreground">
-                            <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                            <p>Chat functionality is being set up and will be available soon.</p>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
                     </div>
                   </div>
                 </CardContent>
