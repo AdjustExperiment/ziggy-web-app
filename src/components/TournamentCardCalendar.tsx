@@ -6,9 +6,10 @@ interface TournamentCardCalendarProps {
   startDate: string;
   endDate: string;
   className?: string;
+  variant?: 'default' | 'mini';
 }
 
-export const TournamentCardCalendar = ({ startDate, endDate, className }: TournamentCardCalendarProps) => {
+export const TournamentCardCalendar = ({ startDate, endDate, className, variant = 'default' }: TournamentCardCalendarProps) => {
   const start = parseISO(startDate);
   const end = parseISO(endDate);
 
@@ -44,16 +45,28 @@ export const TournamentCardCalendar = ({ startDate, endDate, className }: Tourna
     },
   };
 
+  const isMini = variant === 'mini';
+
   return (
-    <div className={cn("bg-muted/20 rounded-lg p-3 border border-border/20", className)}>
-      <div className="text-xs text-muted-foreground mb-2">Tournament Schedule</div>
+    <div className={cn(
+      "bg-muted/20 rounded-lg border border-border/20",
+      isMini ? "p-2" : "p-3",
+      className
+    )}>
+      {!isMini && <div className="text-xs text-muted-foreground mb-2">Tournament Schedule</div>}
       <Calendar
         mode="single"
         month={start}
         modifiers={modifiers}
         modifiersStyles={modifiersStyles}
-        className="pointer-events-auto w-full [&_.rdp-month]:w-full [&_.rdp-table]:w-full [&_.rdp-cell]:text-xs [&_.rdp-day]:h-6 [&_.rdp-day]:w-6 [&_.rdp-day]:text-xs [&_.rdp-head_cell]:text-xs [&_.rdp-caption_label]:text-sm"
+        className={cn(
+          "pointer-events-auto w-full [&_.rdp-month]:w-full [&_.rdp-table]:w-full [&_.rdp-cell]:text-xs [&_.rdp-head_cell]:text-xs",
+          isMini 
+            ? "[&_.rdp-day]:h-4 [&_.rdp-day]:w-4 [&_.rdp-day]:text-[10px] [&_.rdp-caption_label]:text-xs [&_.rdp-nav]:hidden [&_.rdp-head_cell]:text-[9px] [&_.rdp-head_cell]:p-0"
+            : "[&_.rdp-day]:h-6 [&_.rdp-day]:w-6 [&_.rdp-day]:text-xs [&_.rdp-caption_label]:text-sm"
+        )}
         showOutsideDays={false}
+        disabled={isMini ? { before: new Date(0) } : undefined}
       />
     </div>
   );

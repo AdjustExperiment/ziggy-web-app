@@ -345,6 +345,7 @@ const Tournaments = () => {
                         startDate={tournament.start_date}
                         endDate={tournament.end_date}
                         className="mb-4"
+                        variant="mini"
                       />
                       
                       <div className="flex flex-col gap-2">
@@ -438,11 +439,12 @@ const Tournaments = () => {
                   
                    <CardContent className={`space-y-3 sm:space-y-4 ${viewMode === 'list' ? 'lg:flex-1' : ''} pt-0`}>
                      {viewMode === 'grid' && (
-                       <TournamentCardCalendar 
-                         startDate={tournament.start_date}
-                         endDate={tournament.end_date}
-                         className="mb-4"
-                       />
+                        <TournamentCardCalendar 
+                          startDate={tournament.start_date}
+                          endDate={tournament.end_date}
+                          className="mb-4"
+                          variant="mini"
+                        />
                      )}
                      
                      <div className="flex flex-wrap items-center gap-4 mt-3 text-sm text-muted-foreground">
