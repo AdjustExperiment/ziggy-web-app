@@ -12,6 +12,7 @@ import TournamentInfo from "@/components/TournamentInfo";
 import { FluidBlobBackground } from "@/components/FluidBlobBackground";
 import { TournamentCardCalendar } from "@/components/TournamentCardCalendar";
 import { useOptimizedAuth } from "@/hooks/useOptimizedAuth";
+import { AuthModal } from "@/components/AuthModal";
 
 interface Sponsor {
   name: string;
@@ -48,8 +49,10 @@ const Tournaments = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'calendar'>(() => {
     return (localStorage.getItem('tournament-view-mode') as 'grid' | 'list' | 'calendar') || 'grid';
   });
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [pendingRegistrationId, setPendingRegistrationId] = useState<string | null>(null);
   const navigate = useNavigate();
-  const { profile } = useOptimizedAuth();
+  const { user, isAdmin } = useOptimizedAuth();
 
   // Persist view mode preference
   useEffect(() => {
@@ -99,7 +102,12 @@ const Tournaments = () => {
   });
 
   const handleRegister = (tournamentId: string) => {
-    navigate(`/tournaments/${tournamentId}/register`);
+    if (user) {
+      navigate(`/tournaments/${tournamentId}/register`);
+    } else {
+      setPendingRegistrationId(tournamentId);
+      setShowAuthModal(true);
+    }
   };
 
   const handleViewDetails = (tournamentId: string) => {
@@ -246,7 +254,7 @@ const Tournaments = () => {
                     Export Calendar (.ics)
                   </Button>
                   
-                  {profile?.role === 'admin' && (
+                  {isAdmin && (
                     <div className="flex gap-2">
                       <Button
                         variant="outline"
@@ -307,7 +315,7 @@ const Tournaments = () => {
                         >
                           {tournament.status}
                         </Badge>
-                        {profile?.role === 'admin' && (
+                        {isAdmin && (
                           <Button
                             variant="ghost"
                             size="sm"
@@ -406,7 +414,7 @@ const Tournaments = () => {
                             {tournament.prize_pool || (tournament.cash_prize_total > 0 ? `$${tournament.cash_prize_total.toLocaleString()}` : 'TBD')}
                           </div>
                         </div>
-                        {profile?.role === 'admin' && (
+                        {isAdmin && (
                           <Button
                             variant="ghost"
                             size="sm"
@@ -608,6 +616,22 @@ const Tournaments = () => {
           </div>
         </div>
       </section>
+
+      {/* Auth Modal for Registration */}
+      <AuthModal 
+        open={showAuthModal} 
+        onOpenChange={setShowAuthModal}
+        defaultTab="signin"
+        title="Sign in to register"
+        description="Sign in or create an account to complete your tournament registration."
+        onSuccess={() => {
+          if (pendingRegistrationId) {
+            navigate(`/tournaments/${pendingRegistrationId}/register`);
+          }
+          setShowAuthModal(false);
+          setPendingRegistrationId(null);
+        }}
+      />
     </div>
   );
 };
