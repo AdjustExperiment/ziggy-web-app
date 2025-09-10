@@ -87,6 +87,10 @@ const Login = () => {
             description: 'Account created successfully! Please check your email to verify your account.',
           });
           setIsSignUp(false);
+          // Reset form
+          setEmail('');
+          setPassword('');
+          setConfirmPassword('');
         }
       } else {
         const { error } = await signIn(email, password);
@@ -96,6 +100,11 @@ const Login = () => {
             title: 'Sign In Error', 
             description: error.message,
             variant: 'destructive',
+          });
+        } else {
+          toast({
+            title: 'Success',
+            description: 'Signed in successfully! Redirecting...',
           });
         }
       }
@@ -427,110 +436,6 @@ const Login = () => {
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
                         ) : null}
                         {isSignUp ? 'Create ZIP Account' : 'Sign In to ZIP Portal'}
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </Button>
-                      
-                      <div className="text-center">
-                        <Button
-                          variant="link"
-                          className="text-white/70 hover:text-white p-0"
-                          type="button"
-                          onClick={() => setIsSignUp(!isSignUp)}
-                        >
-                          {isSignUp ? 'Already have an account? Sign in' : 'Need an account? Sign up'}
-                        </Button>
-                      </div>
-                    </form>
-                  </TabsContent>
-
-                  <TabsContent value="admin" className="space-y-4">
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                      {isSignUp && (
-                        <div className="text-center mb-4">
-                          <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20">
-                            Creating Individual Account
-                          </Badge>
-                        </div>
-                      )}
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="individual-email" className="text-white">Email Address</Label>
-                        <div className="relative">
-                          <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/70" />
-                          <Input
-                            id="individual-email"
-                            type="email"
-                            placeholder="your.email@example.com"
-                            className="pl-10 bg-black border-white/20 text-white placeholder:text-white/70"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                          />
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="individual-password" className="text-white">Password</Label>
-                        <div className="relative">
-                          <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/70" />
-                          <Input
-                            id="individual-password"
-                            type={showPassword ? "text" : "password"}
-                            placeholder="Enter your password"
-                            className="pl-10 pr-10 bg-black border-white/20 text-white placeholder:text-white/70"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                          />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="absolute right-2 top-1/2 -translate-y-1/2 text-white/70 hover:text-white"
-                            onClick={() => setShowPassword(!showPassword)}
-                          >
-                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                          </Button>
-                        </div>
-                      </div>
-                      
-                      {isSignUp && (
-                        <div className="space-y-2">
-                          <Label htmlFor="individual-confirm-password" className="text-white">Confirm Password</Label>
-                          <div className="relative">
-                            <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/70" />
-                            <Input
-                              id="individual-confirm-password"
-                              type={showPassword ? "text" : "password"}
-                              placeholder="Confirm your password"
-                              className="pl-10 bg-black border-white/20 text-white placeholder:text-white/70"
-                              value={confirmPassword}
-                              onChange={(e) => setConfirmPassword(e.target.value)}
-                              required
-                            />
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="flex items-center justify-between text-sm">
-                        <label className="flex items-center gap-2 text-white/70">
-                          <input type="checkbox" className="rounded" />
-                          Keep me signed in
-                        </label>
-                        <Button variant="link" className="text-red-500 hover:text-red-400 p-0" type="button">
-                          Need help?
-                        </Button>
-                      </div>
-
-                      <Button 
-                        type="submit" 
-                        className="w-full bg-red-500 hover:bg-red-600 text-white"
-                        disabled={formLoading}
-                      >
-                        {formLoading ? (
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                        ) : null}
-                        {isSignUp ? 'Create Individual Account' : 'Sign In as Individual'}
                         <ArrowRight className="ml-2 h-4 w-4" />
                       </Button>
                       

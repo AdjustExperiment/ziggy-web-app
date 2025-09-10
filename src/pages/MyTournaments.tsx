@@ -38,27 +38,41 @@ export default function MyTournaments() {
     try {
       setLoading(true);
       
-      const { data, error } = await supabase
+      // First, get the registrations
+      const { data: registrationData, error: regError } = await supabase
         .from('tournament_registrations')
-        .select(`
-          *,
-          tournament:tournaments (
-            id,
-            name,
-            location,
-            start_date,
-            end_date,
-            status,
-            current_participants,
-            max_participants
-          )
-        `)
+        .select('*')
         .eq('user_id', user?.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (regError) throw regError;
 
-      setRegistrations(data || []);
+      if (!registrationData || registrationData.length === 0) {
+        setRegistrations([]);
+        return;
+      }
+
+      // Get tournament IDs
+      const tournamentIds = registrationData.map(reg => reg.tournament_id);
+
+      // Then, get the tournament data
+      const { data: tournamentData, error: tournamentError } = await supabase
+        .from('tournaments')
+        .select('id, name, location, start_date, end_date, status, current_participants, max_participants')
+        .in('id', tournamentIds);
+
+      if (tournamentError) throw tournamentError;
+
+      // Combine the data
+      const combinedData = registrationData.map(registration => {
+        const tournament = tournamentData?.find(t => t.id === registration.tournament_id);
+        return {
+          ...registration,
+          tournament: tournament || null
+        };
+      });
+
+      setRegistrations(combinedData);
     } catch (error) {
       console.error('Error fetching tournaments:', error);
       toast({
