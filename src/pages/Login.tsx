@@ -524,7 +524,7 @@ const Login = () => {
                   <Button 
                     variant="outline" 
                     className="w-full border-white/30 text-white hover:bg-red-500 hover:border-red-500"
-                    onClick={() => window.location.href = '/signup'}
+                    onClick={() => navigate('/signup')}
                   >
                     Create New Account
                   </Button>
