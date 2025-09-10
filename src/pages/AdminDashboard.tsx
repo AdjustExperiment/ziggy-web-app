@@ -2,7 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { useOptimizedAuth } from '@/hooks/useOptimizedAuth';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Routes, Route } from 'react-router-dom';
+import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Dashboard } from '@/components/admin/Dashboard';
 import { TournamentManager } from '@/components/admin/TournamentManager';
 import { TabulationPlatform } from '@/components/admin/TabulationPlatform';
@@ -17,75 +18,44 @@ import { SiteEditor } from '@/components/admin/SiteEditor';
 import { PromoCodesManager } from '@/components/admin/PromoCodesManager';
 import { StaffRevenueCalculator } from '@/components/admin/StaffRevenueCalculator';
 import { SecurityDashboard } from '@/components/admin/SecurityDashboard';
-import SponsorsManager from '@/components/admin/SponsorsManager';
 import { RoleAccessManager } from '@/components/admin/RoleAccessManager';
-
+import { BallotRevealSettings } from '@/components/admin/BallotRevealSettings';
 import { FooterContentManager } from '@/components/admin/FooterContentManager';
+import SponsorsManager from '@/components/admin/SponsorsManager';
+import { ResultsManager } from '@/components/admin/ResultsManager';
 
 export default function AdminDashboard() {
-  const { signOut, isAdmin } = useOptimizedAuth();
+  const { isAdmin } = useOptimizedAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('dashboard');
 
   if (!isAdmin) {
     navigate('/');
     return null;
   }
 
-  // Memoize tab content to prevent unnecessary re-renders
-  const renderTabContent = useMemo(() => {
-    const components = {
-      dashboard: <Dashboard />,
-      tournaments: <TournamentManager />,
-      tabulation: <TabulationPlatform />,
-      payments: <PaymentManager />,
-      applications: <JudgeApplicationManager />,
-      judges: <EnhancedJudgesManager />,
-      users: <UserManager />,
-      emails: <EnhancedEmailTemplateManager />,
-      notifications: <NotificationsManager />,
-      blog: <BlogManager />,
-      site: <SiteEditor />,
-      promos: <PromoCodesManager />,
-      staff: <StaffRevenueCalculator />,
-      security: <SecurityDashboard />,
-      roles: <RoleAccessManager />,
-      footer: <FooterContentManager />,
-    };
-
-    return components[activeTab as keyof typeof components] || <Dashboard />;
-  }, [activeTab]);
-
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-        <Button variant="outline" onClick={() => signOut()}>Logout</Button>
-      </div>
-
-      <Tabs defaultValue="dashboard" value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-12 gap-1 h-auto p-1">
-          <TabsTrigger value="dashboard" className="text-xs">Dashboard</TabsTrigger>
-          <TabsTrigger value="tournaments" className="text-xs">Tournaments</TabsTrigger>
-          <TabsTrigger value="tabulation" className="text-xs">Tabulation</TabsTrigger>
-          <TabsTrigger value="payments" className="text-xs">Payments</TabsTrigger>
-          <TabsTrigger value="applications" className="text-xs">Applications</TabsTrigger>
-          <TabsTrigger value="judges" className="text-xs">Judges</TabsTrigger>
-          <TabsTrigger value="users" className="text-xs">Users</TabsTrigger>
-          <TabsTrigger value="emails" className="text-xs">Emails</TabsTrigger>
-          <TabsTrigger value="notifications" className="text-xs">Notifications</TabsTrigger>
-          <TabsTrigger value="blog" className="text-xs">Blog</TabsTrigger>
-          <TabsTrigger value="site" className="text-xs">Site Editor</TabsTrigger>
-          <TabsTrigger value="promos" className="text-xs">Promo Codes</TabsTrigger>
-          <TabsTrigger value="staff" className="text-xs">Staff Calc</TabsTrigger>
-          <TabsTrigger value="security" className="text-xs">Security</TabsTrigger>
-          <TabsTrigger value="roles" className="text-xs">Role Access</TabsTrigger>
-          <TabsTrigger value="footer" className="text-xs">Footer</TabsTrigger>
-        </TabsList>
-        <TabsContent value={activeTab}>
-          {renderTabContent}
-        </TabsContent>
-      </Tabs>
-    </div>
+    <AdminLayout>
+      <Routes>
+        <Route index element={<Dashboard />} />
+        <Route path="tournaments" element={<TournamentManager />} />
+        <Route path="tabulation" element={<TabulationPlatform />} />
+        <Route path="payments" element={<PaymentManager />} />
+        <Route path="applications" element={<JudgeApplicationManager />} />
+        <Route path="judges" element={<EnhancedJudgesManager />} />
+        <Route path="users" element={<UserManager />} />
+        <Route path="emails" element={<EnhancedEmailTemplateManager />} />
+        <Route path="notifications" element={<NotificationsManager />} />
+        <Route path="blog" element={<BlogManager />} />
+        <Route path="site" element={<SiteEditor />} />
+        <Route path="promos" element={<PromoCodesManager />} />
+        <Route path="staff" element={<StaffRevenueCalculator />} />
+        <Route path="security" element={<SecurityDashboard />} />
+        <Route path="roles" element={<RoleAccessManager />} />
+        <Route path="ballot-reveal" element={<BallotRevealSettings />} />
+        <Route path="footer" element={<FooterContentManager />} />
+        <Route path="sponsors" element={<SponsorsManager />} />
+        <Route path="results" element={<ResultsManager />} />
+      </Routes>
+    </AdminLayout>
   );
 }

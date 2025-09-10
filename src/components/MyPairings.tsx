@@ -19,9 +19,32 @@ export function MyPairings() {
   const [selectedResults, setSelectedResults] = useState<any>(null);
 
   useEffect(() => {
-    if (user) {
-      fetchMyPairings();
-    }
+    if (!user) return;
+
+    fetchMyPairings();
+
+    // Set up real-time subscription for pairing updates
+    const channel = supabase
+      .channel('my-pairings-updates')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'pairings'
+      }, () => {
+        fetchMyPairings();
+      })
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'ballots'
+      }, () => {
+        fetchMyPairings();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   const fetchMyPairings = async () => {

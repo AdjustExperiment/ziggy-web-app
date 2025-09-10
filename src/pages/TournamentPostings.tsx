@@ -81,9 +81,34 @@ export default function TournamentPostings() {
   const [userRegistrationId, setUserRegistrationId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (tournamentId && user) {
-      fetchTournamentData();
-    }
+    if (!tournamentId || !user) return;
+
+    fetchTournamentData();
+
+    // Set up real-time subscription for tournament postings updates
+    const channel = supabase
+      .channel('tournament-postings-updates')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'pairings',
+        filter: `tournament_id=eq.${tournamentId}`
+      }, () => {
+        fetchTournamentData();
+      })
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'spectate_requests',
+        filter: `tournament_id=eq.${tournamentId}`
+      }, () => {
+        fetchTournamentData();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [tournamentId, user]);
 
   const fetchTournamentData = async () => {

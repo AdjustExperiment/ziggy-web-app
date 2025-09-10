@@ -7,8 +7,6 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
 import { toast } from '@/components/ui/use-toast';
 import { Eye, Clock, CheckCircle } from 'lucide-react';
 
@@ -16,9 +14,6 @@ interface Tournament {
   id: string;
   name: string;
   ballot_reveal_mode: string;
-  ballot_privacy: string;
-  reveal_delay_minutes: number;
-  judge_anonymity: boolean;
   end_date: string;
   status: string;
 }
@@ -40,14 +35,7 @@ export function BallotRevealSettings() {
         .order('name');
 
       if (error) throw error;
-      // Type cast to handle missing properties from Tournament interface
-      const typedTournaments = (data || []).map(tournament => ({
-        ...tournament,
-        ballot_privacy: 'private' as const,
-        reveal_delay_minutes: 0,
-        judge_anonymity: false
-      }));
-      setTournaments(typedTournaments);
+      setTournaments(data || []);
     } catch (error: any) {
       console.error('Error fetching tournaments:', error);
       toast({
@@ -60,27 +48,27 @@ export function BallotRevealSettings() {
     }
   };
 
-  const updateTournament = async (tournamentId: string, values: Partial<Tournament>) => {
+  const updateTournament = async (tournamentId: string, ballotRevealMode: string) => {
     try {
       setUpdating(tournamentId);
 
       const { error } = await supabase
         .from('tournaments')
-        .update(values)
+        .update({ ballot_reveal_mode: ballotRevealMode })
         .eq('id', tournamentId);
 
       if (error) throw error;
 
       toast({
         title: "Success",
-        description: "Tournament settings updated successfully",
+        description: "Ballot reveal mode updated successfully",
       });
 
       fetchTournaments();
     } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to update tournament settings",
+        description: "Failed to update ballot reveal mode",
         variant: "destructive",
       });
     } finally {
@@ -174,7 +162,7 @@ export function BallotRevealSettings() {
         <CardHeader>
           <CardTitle>Tournament Settings ({tournaments.length})</CardTitle>
           <CardDescription>
-            Configure ballot reveal settings for each tournament
+            Configure ballot reveal settings for each tournament. Advanced privacy settings are in Beta.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -191,9 +179,6 @@ export function BallotRevealSettings() {
                   <TableHead>End Date</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Reveal Mode</TableHead>
-                  <TableHead>Privacy</TableHead>
-                  <TableHead>Delay (min)</TableHead>
-                  <TableHead>Judge Anonymity</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -215,7 +200,7 @@ export function BallotRevealSettings() {
                     <TableCell>
                       <Select
                         value={tournament.ballot_reveal_mode}
-                        onValueChange={(value) => updateTournament(tournament.id, { ballot_reveal_mode: value })}
+                        onValueChange={(value) => updateTournament(tournament.id, value)}
                         disabled={updating === tournament.id}
                       >
                         <SelectTrigger className="w-48">
@@ -236,43 +221,6 @@ export function BallotRevealSettings() {
                           </SelectItem>
                         </SelectContent>
                       </Select>
-                    </TableCell>
-                    <TableCell>
-                      <Select
-                        value={tournament.ballot_privacy}
-                        onValueChange={(value) => updateTournament(tournament.id, { ballot_privacy: value })}
-                        disabled={updating === tournament.id}
-                      >
-                        <SelectTrigger className="w-40">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="public">Public</SelectItem>
-                          <SelectItem value="private">Private</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        type="number"
-                        className="w-24"
-                        defaultValue={tournament.reveal_delay_minutes}
-                        onBlur={(e) =>
-                          updateTournament(tournament.id, {
-                            reveal_delay_minutes: parseInt(e.target.value, 10) || 0,
-                          })
-                        }
-                        disabled={updating === tournament.id}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Switch
-                        checked={tournament.judge_anonymity}
-                        onCheckedChange={(checked) =>
-                          updateTournament(tournament.id, { judge_anonymity: checked })
-                        }
-                        disabled={updating === tournament.id}
-                      />
                     </TableCell>
                   </TableRow>
                 ))}
