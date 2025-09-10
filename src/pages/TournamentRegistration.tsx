@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useOptimizedAuth } from '@/hooks/useOptimizedAuth';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,9 +14,10 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from '@/components/ui/use-toast';
 import PaymentButtons from '@/components/PaymentButtons';
 import { Registration } from '@/types/database';
-import { AlertCircle, CheckCircle, Info } from 'lucide-react';
+import { AlertCircle, CheckCircle, Info, User, Lock } from 'lucide-react';
 import PromoCodeInput from '@/components/PromoCodeInput';
 import { Separator } from '@/components/ui/separator';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface Tournament {
   id: string;
@@ -52,6 +53,7 @@ const initialFormData: FormData = {
 
 export default function TournamentRegistration() {
   const { user } = useOptimizedAuth();
+  const [showSignInModal, setShowSignInModal] = useState(false);
   const { id } = useParams();
   const navigate = useNavigate();
   const [tournament, setTournament] = useState<Tournament | null>(null);
@@ -67,6 +69,13 @@ export default function TournamentRegistration() {
   }>({ status: 'idle' });
   const [discountAmount, setDiscountAmount] = useState(0);
   const [appliedPromoCode, setAppliedPromoCode] = useState('');
+
+  useEffect(() => {
+    // Check if user is authenticated when component mounts
+    if (!user) {
+      setShowSignInModal(true);
+    }
+  }, [user]);
 
   useEffect(() => {
     const fetchTournament = async () => {
@@ -149,6 +158,12 @@ export default function TournamentRegistration() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!user) {
+      setShowSignInModal(true);
+      return;
+    }
+    
     setIsSubmitting(true);
 
     try {
@@ -260,6 +275,38 @@ export default function TournamentRegistration() {
   }
 
   const finalAmount = Math.max(0, (tournament?.registration_fee || 0) - discountAmount);
+
+  const renderSignInModal = () => (
+    <Dialog open={showSignInModal} onOpenChange={setShowSignInModal}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Lock className="h-5 w-5" />
+            Sign In Required
+          </DialogTitle>
+          <DialogDescription>
+            You need to sign in to register for tournaments. Create an account or sign in to continue with your registration.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="flex flex-col gap-3 mt-4">
+          <Button asChild className="w-full">
+            <Link to="/signup">
+              <User className="h-4 w-4 mr-2" />
+              Create Account
+            </Link>
+          </Button>
+          <Button variant="outline" asChild className="w-full">
+            <Link to="/login">
+              Sign In
+            </Link>
+          </Button>
+          <Button variant="ghost" onClick={() => navigate(`/tournaments/${id}`)} className="w-full">
+            View Tournament Info
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
 
   const renderRegistrationForm = () => (
     <Card>
@@ -528,50 +575,53 @@ export default function TournamentRegistration() {
   );
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2">
-          {step === 1 && renderRegistrationForm()}
-          {step === 3 && renderPaymentStep()}
-        </div>
-        
-        {step === 1 && tournament && (
-          <div className="lg:col-span-1">
-            <Card>
-              <CardHeader>
-                <CardTitle>Registration Summary</CardTitle>
-                <CardDescription>{tournament.name}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span>Registration Fee:</span>
-                  <span className="font-semibold">${tournament.registration_fee.toFixed(2)}</span>
-                </div>
-                
-                {discountAmount > 0 && (
-                  <>
-                    <div className="flex justify-between items-center text-green-600">
-                      <span>Discount ({appliedPromoCode}):</span>
-                      <span>-${discountAmount.toFixed(2)}</span>
-                    </div>
-                    <Separator />
-                    <div className="flex justify-between items-center font-bold text-lg">
-                      <span>Total:</span>
-                      <span>${finalAmount.toFixed(2)}</span>
-                    </div>
-                  </>
-                )}
-                
-                <div className="text-sm text-muted-foreground">
-                  <p>• Complete registration form</p>
-                  <p>• Provide judge information</p>
-                  <p>• Process payment to secure spot</p>
-                </div>
-              </CardContent>
-            </Card>
+    <>
+      {renderSignInModal()}
+      <div className="container mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2">
+            {step === 1 && renderRegistrationForm()}
+            {step === 3 && renderPaymentStep()}
           </div>
-        )}
+          
+          {step === 1 && tournament && (
+            <div className="lg:col-span-1">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Registration Summary</CardTitle>
+                  <CardDescription>{tournament.name}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span>Registration Fee:</span>
+                    <span className="font-semibold">${tournament.registration_fee.toFixed(2)}</span>
+                  </div>
+                  
+                  {discountAmount > 0 && (
+                    <>
+                      <div className="flex justify-between items-center text-green-600">
+                        <span>Discount ({appliedPromoCode}):</span>
+                        <span>-${discountAmount.toFixed(2)}</span>
+                      </div>
+                      <Separator />
+                      <div className="flex justify-between items-center font-bold text-lg">
+                        <span>Total:</span>
+                        <span>${finalAmount.toFixed(2)}</span>
+                      </div>
+                    </>
+                  )}
+                  
+                  <div className="text-sm text-muted-foreground">
+                    <p>• Complete registration form</p>
+                    <p>• Provide judge information</p>
+                    <p>• Process payment to secure spot</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }

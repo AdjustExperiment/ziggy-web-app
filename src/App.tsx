@@ -77,11 +77,7 @@ function App() {
                   <Routes>
                     <Route path="/" element={<Index />} />
                     <Route path="/tournaments" element={<Tournaments />} />
-                    <Route path="/tournaments/:tournamentId" element={
-                      <ProtectedRoute>
-                        <TournamentLanding />
-                      </ProtectedRoute>
-                    } />
+                    <Route path="/tournaments/:tournamentId" element={<TournamentLanding />} />
                     <Route path="/tournaments/:id/register" element={
                       <ProtectedRoute>
                         <TournamentRegistration />

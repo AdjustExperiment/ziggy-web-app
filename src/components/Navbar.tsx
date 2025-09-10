@@ -42,8 +42,8 @@ export function Navbar() {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-white/10 dark:bg-black/10 border-b border-white/20 dark:border-black/20">
-      <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6">
-        <div className="flex justify-between h-16">
+      <div className="w-full px-4 sm:px-6">
+        <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-2">
               <LazyImage 
@@ -55,9 +55,9 @@ export function Navbar() {
             </Link>
             
             {/* Desktop Navigation */}
-            <div className="hidden lg:flex ml-10 items-baseline space-x-4">
+            <div className="hidden lg:flex ml-8 items-baseline space-x-6">
               {user && (
-                <Link to="/tournaments" className="flex items-center space-x-1 hover:text-primary transition-colors">
+                <Link to="/tournaments" className="flex items-center space-x-1 text-sm hover:text-primary transition-colors">
                   <Trophy className="h-4 w-4" />
                   <span>Tournaments</span>
                 </Link>
@@ -66,13 +66,13 @@ export function Navbar() {
               {/* About Dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex items-center space-x-1 hover:text-primary transition-colors">
+                  <Button variant="ghost" className="flex items-center space-x-1 text-sm hover:text-primary transition-colors p-0 h-auto">
                     <Info className="h-4 w-4" />
                     <span>About</span>
                     <ChevronDown className="h-3 w-3" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="start">
+                <DropdownMenuContent align="start" className="z-[60]">
                   <DropdownMenuItem asChild>
                     <Link to="/about" className="flex items-center">
                       <Info className="mr-2 h-4 w-4" />
@@ -124,17 +124,17 @@ export function Navbar() {
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              <Link to="/results" className="flex items-center space-x-1 hover:text-primary transition-colors">
+              <Link to="/results" className="flex items-center space-x-1 text-sm hover:text-primary transition-colors">
                 <BarChart3 className="h-4 w-4" />
                 <span>Results</span>
               </Link>
 
-              <Link to="/blog" className="flex items-center space-x-1 hover:text-primary transition-colors">
+              <Link to="/blog" className="flex items-center space-x-1 text-sm hover:text-primary transition-colors">
                 <FileText className="h-4 w-4" />
                 <span>Blog</span>
               </Link>
 
-              <Link to="/sponsors" className="flex items-center space-x-1 hover:text-primary transition-colors">
+              <Link to="/sponsors" className="flex items-center space-x-1 text-sm hover:text-primary transition-colors">
                 <Users className="h-4 w-4" />
                 <span>Sponsors</span>
               </Link>
@@ -152,13 +152,13 @@ export function Navbar() {
                 <div className="hidden sm:block">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="flex items-center space-x-1 hover:text-primary transition-colors">
+                      <Button variant="ghost" className="flex items-center space-x-1 text-sm hover:text-primary transition-colors p-1">
                         <BarChart3 className="h-4 w-4" />
                         <span className="hidden lg:inline">Dashboard</span>
                         <ChevronDown className="h-3 w-3" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
+                    <DropdownMenuContent align="end" className="z-[60]">
                       <DropdownMenuItem asChild>
                         <Link to="/dashboard" className="flex items-center">
                           <Home className="mr-2 h-4 w-4" />
