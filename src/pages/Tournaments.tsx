@@ -96,7 +96,11 @@ const Tournaments = () => {
   });
 
   const handleRegister = (tournamentId: string) => {
-    navigate(`/tournament/${tournamentId}/register`);
+    navigate(`/tournaments/${tournamentId}/register`);
+  };
+
+  const handleViewDetails = (tournamentId: string) => {
+    navigate(`/tournaments/${tournamentId}`);
   };
 
   return (
@@ -327,7 +331,7 @@ const Tournaments = () => {
                       <Button 
                         variant="outline" 
                         className="border-border text-foreground hover:bg-muted hover:text-foreground text-sm"
-                        onClick={() => handleRegister(tournament.id)}
+                        onClick={() => handleViewDetails(tournament.id)}
                       >
                         Learn More
                       </Button>
