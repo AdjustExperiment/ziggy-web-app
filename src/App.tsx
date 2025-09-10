@@ -140,7 +140,7 @@ function App() {
                         <UserAccount />
                       </ProtectedRoute>
                     } />
-                    <Route path="/admin" element={
+                    <Route path="/admin/*" element={
                       <ProtectedRoute>
                         <AdminDashboard />
                       </ProtectedRoute>
