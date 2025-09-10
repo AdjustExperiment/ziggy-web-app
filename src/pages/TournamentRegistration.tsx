@@ -118,19 +118,26 @@ export default function TournamentRegistration() {
     setJudgeValidation({ status: 'checking' });
 
     try {
-      // For tournament registration, we need to check judge by email from the full table (admin query)
-      const { data, error } = await supabase
-        .from('judge_profiles')
-        .select('id, name, email')
-        .eq('email', email.toLowerCase())
-        .single();
+      // Use edge function to check judge email to bypass RLS
+      const { data, error } = await supabase.functions.invoke('lookup-user-by-email', {
+        body: { email: email.toLowerCase(), table: 'judge_profiles' }
+      });
 
-      if (error && error.code !== 'PGRST116') {
-        throw error;
+      if (error) {
+        console.error('Error checking judge email:', error);
+        setJudgeValidation({ status: 'not_found' });
+        return;
       }
 
-      if (data) {
-        setJudgeValidation({ status: 'found', judgeProfile: data });
+      if (data && data.exists) {
+        setJudgeValidation({ 
+          status: 'found', 
+          judgeProfile: { 
+            id: data.profile?.id, 
+            name: data.profile?.name, 
+            email: data.profile?.email 
+          } 
+        });
       } else {
         setJudgeValidation({ status: 'not_found' });
       }
@@ -150,20 +157,20 @@ export default function TournamentRegistration() {
         participant_name: formData.participantName,
         participant_email: formData.email,
         partner_name: formData.partnerName || null,
-        partner_email: formData.partnerEmail || null,
         emergency_contact: formData.emergencyContact || null,
         school_organization: formData.schoolOrganization || null,
         additional_info: {
           experience_level: formData.experienceLevel,
           additional_notes: formData.additionalNotes,
           timezone: formData.timezone,
-          judge_email: formData.judgeEmail
+          judge_email: formData.judgeEmail,
+          partner_email: formData.partnerEmail || null,
+          promo_code: appliedPromoCode || null
         },
         payment_status: 'pending',
-        user_id: user?.id || null,
+        user_id: user?.id,
         requested_judge_profile_id: judgeValidation.judgeProfile?.id || null,
-        amount_paid: Math.max(0, tournament?.registration_fee - discountAmount),
-        promo_code: appliedPromoCode || null
+        amount_paid: Math.max(0, (tournament?.registration_fee || 0) - discountAmount)
       };
 
       const { data, error } = await supabase
@@ -522,8 +529,49 @@ export default function TournamentRegistration() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {step === 1 && renderRegistrationForm()}
-      {step === 3 && renderPaymentStep()}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2">
+          {step === 1 && renderRegistrationForm()}
+          {step === 3 && renderPaymentStep()}
+        </div>
+        
+        {step === 1 && tournament && (
+          <div className="lg:col-span-1">
+            <Card>
+              <CardHeader>
+                <CardTitle>Registration Summary</CardTitle>
+                <CardDescription>{tournament.name}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span>Registration Fee:</span>
+                  <span className="font-semibold">${tournament.registration_fee.toFixed(2)}</span>
+                </div>
+                
+                {discountAmount > 0 && (
+                  <>
+                    <div className="flex justify-between items-center text-green-600">
+                      <span>Discount ({appliedPromoCode}):</span>
+                      <span>-${discountAmount.toFixed(2)}</span>
+                    </div>
+                    <Separator />
+                    <div className="flex justify-between items-center font-bold text-lg">
+                      <span>Total:</span>
+                      <span>${finalAmount.toFixed(2)}</span>
+                    </div>
+                  </>
+                )}
+                
+                <div className="text-sm text-muted-foreground">
+                  <p>• Complete registration form</p>
+                  <p>• Provide judge information</p>
+                  <p>• Process payment to secure spot</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

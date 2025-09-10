@@ -56,10 +56,12 @@ export function Navbar() {
             
             {/* Desktop Navigation */}
             <div className="hidden lg:flex ml-10 items-baseline space-x-4">
-              <Link to="/tournaments" className="flex items-center space-x-1 hover:text-primary transition-colors">
-                <Trophy className="h-4 w-4" />
-                <span>Tournaments</span>
-              </Link>
+              {user && (
+                <Link to="/tournaments" className="flex items-center space-x-1 hover:text-primary transition-colors">
+                  <Trophy className="h-4 w-4" />
+                  <span>Tournaments</span>
+                </Link>
+              )}
 
               {/* About Dropdown */}
               <DropdownMenu>
@@ -240,14 +242,16 @@ export function Navbar() {
         {isMobileMenuOpen && (
           <div className="lg:hidden animate-mobile-slide-up">
             <div className="mobile-px pt-2 pb-3 space-y-1 bg-background/95 backdrop-blur-md border-b border-border">
-              <Link
-                to="/tournaments"
-                className="flex items-center space-x-2 px-3 py-3 rounded-md text-base font-medium hover:bg-muted touch-target"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <Trophy className="h-5 w-5" />
-                <span>Tournaments</span>
-              </Link>
+              {user && (
+                <Link
+                  to="/tournaments"
+                  className="flex items-center space-x-2 px-3 py-3 rounded-md text-base font-medium hover:bg-muted touch-target"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <Trophy className="h-5 w-5" />
+                  <span>Tournaments</span>
+                </Link>
+              )}
 
               <Link
                 to="/results"

@@ -82,8 +82,16 @@ function App() {
                         <TournamentLanding />
                       </ProtectedRoute>
                     } />
-                    <Route path="/tournaments/:id/register" element={<TournamentRegistration />} />
-                    <Route path="/tournament/:id/register" element={<TournamentRegistration />} />
+                    <Route path="/tournaments/:id/register" element={
+                      <ProtectedRoute>
+                        <TournamentRegistration />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/tournament/:id/register" element={
+                      <ProtectedRoute>
+                        <TournamentRegistration />
+                      </ProtectedRoute>
+                    } />
                     <Route path="/results" element={<Results />} />
                     <Route path="/blog" element={<Blog />} />
                     <Route path="/teams" element={<Teams />} />
