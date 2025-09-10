@@ -1,9 +1,12 @@
 import React from 'react';
-import { Outlet } from 'react-router-dom';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from './AppSidebar';
 
-export function AdminLayout() {
+interface AdminLayoutProps {
+  children: React.ReactNode;
+}
+
+export function AdminLayout({ children }: AdminLayoutProps) {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
@@ -14,7 +17,7 @@ export function AdminLayout() {
             <h1 className="text-lg font-semibold">Admin Dashboard</h1>
           </header>
           <div className="flex-1 p-6">
-            <Outlet />
+            {children}
           </div>
         </main>
       </div>
