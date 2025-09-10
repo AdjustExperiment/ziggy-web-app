@@ -23,6 +23,7 @@ import { BallotRevealSettings } from '@/components/admin/BallotRevealSettings';
 import { FooterContentManager } from '@/components/admin/FooterContentManager';
 import SponsorsManager from '@/components/admin/SponsorsManager';
 import { ResultsManager } from '@/components/admin/ResultsManager';
+import PaymentLinksManager from '@/components/admin/PaymentLinksManager';
 
 export default function AdminDashboard() {
   const { isAdmin } = useOptimizedAuth();
@@ -40,6 +41,7 @@ export default function AdminDashboard() {
         <Route path="tournaments" element={<TournamentManager />} />
         <Route path="tabulation" element={<TabulationPlatform />} />
         <Route path="payments" element={<PaymentManager />} />
+        <Route path="payment-links" element={<PaymentLinksManager />} />
         <Route path="applications" element={<JudgeApplicationManager />} />
         <Route path="judges" element={<EnhancedJudgesManager />} />
         <Route path="users" element={<UserManager />} />

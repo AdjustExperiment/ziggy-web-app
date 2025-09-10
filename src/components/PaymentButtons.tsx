@@ -11,6 +11,8 @@ interface PaymentButtonsProps {
   onPayPalPayment: () => Promise<void>;
   onVenmoPayment: () => Promise<void>;
   disabled?: boolean;
+  paypalLink?: string;
+  venmoLink?: string;
 }
 
 const currencySymbols: Record<string, string> = {
@@ -19,7 +21,15 @@ const currencySymbols: Record<string, string> = {
   GBP: '£'
 };
 
-const PaymentButtons = ({ amount, currency = 'USD', onPayPalPayment, onVenmoPayment, disabled = false }: PaymentButtonsProps) => {
+const PaymentButtons = ({ 
+  amount, 
+  currency = 'USD', 
+  onPayPalPayment, 
+  onVenmoPayment, 
+  disabled = false, 
+  paypalLink, 
+  venmoLink 
+}: PaymentButtonsProps) => {
   return (
     <Card>
       <CardHeader>
@@ -39,35 +49,49 @@ const PaymentButtons = ({ amount, currency = 'USD', onPayPalPayment, onVenmoPaym
         </div>
         
         <div className="space-y-3">
-          <Button
-            onClick={onPayPalPayment}
-            disabled={disabled}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-            size="lg"
-          >
-            <CreditCard className="h-4 w-4 mr-2" />
-            Pay with PayPal
-          </Button>
+          {paypalLink && (
+            <Button
+              onClick={onPayPalPayment}
+              disabled={disabled}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+              size="lg"
+            >
+              <CreditCard className="h-4 w-4 mr-2" />
+              Pay with PayPal
+            </Button>
+          )}
           
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <Separator className="w-full" />
+          {paypalLink && venmoLink && (
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <Separator className="w-full" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">or</span>
+              </div>
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">or</span>
-            </div>
-          </div>
+          )}
           
-          <Button
-            onClick={onVenmoPayment}
-            disabled={disabled}
-            variant="outline"
-            className="w-full border-2 border-blue-500 text-blue-500 hover:bg-blue-50"
-            size="lg"
-          >
-            <Smartphone className="h-4 w-4 mr-2" />
-            Pay with Venmo
-          </Button>
+          {venmoLink && (
+            <Button
+              onClick={onVenmoPayment}
+              disabled={disabled}
+              variant="outline"
+              className="w-full border-2 border-blue-500 text-blue-500 hover:bg-blue-50"
+              size="lg"
+            >
+              <Smartphone className="h-4 w-4 mr-2" />
+              Pay with Venmo
+            </Button>
+          )}
+          
+          {!paypalLink && !venmoLink && (
+            <div className="text-center p-4 bg-muted rounded-lg">
+              <p className="text-muted-foreground">
+                Payment options are being configured. Please contact the tournament administrator for payment instructions.
+              </p>
+            </div>
+          )}
         </div>
         
         <div className="text-xs text-muted-foreground text-center mt-4">

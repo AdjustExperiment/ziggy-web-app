@@ -69,6 +69,7 @@ export default function TournamentRegistration() {
   }>({ status: 'idle' });
   const [discountAmount, setDiscountAmount] = useState(0);
   const [appliedPromoCode, setAppliedPromoCode] = useState('');
+  const [paymentLinks, setPaymentLinks] = useState<{paypal?: string, venmo?: string}>({});
 
   useEffect(() => {
     // Check if user is authenticated when component mounts
@@ -101,6 +102,10 @@ export default function TournamentRegistration() {
         }
 
         setTournament(data);
+        
+        // Fetch payment links for this tournament
+        await fetchPaymentLinks(data.id);
+        
         setLoading(false);
       } catch (err: any) {
         setError(err.message);
@@ -110,6 +115,32 @@ export default function TournamentRegistration() {
 
     fetchTournament();
   }, [id]);
+
+  const fetchPaymentLinks = async (tournamentId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('payment_links')
+        .select('provider, link_url')
+        .or(`tournament_id.eq.${tournamentId},tournament_id.is.null`)
+        .eq('is_active', true)
+        .order('tournament_id', { ascending: false }); // Tournament-specific first
+
+      if (error) throw error;
+
+      const links: {paypal?: string, venmo?: string} = {};
+      
+      // Process links, prioritizing tournament-specific over global
+      data?.forEach(link => {
+        if (!links[link.provider as 'paypal' | 'venmo']) {
+          links[link.provider as 'paypal' | 'venmo'] = link.link_url;
+        }
+      });
+
+      setPaymentLinks(links);
+    } catch (error) {
+      console.error('Failed to fetch payment links:', error);
+    }
+  };
 
   const handleInputChange = (name: string, value: string) => {
     setFormData(prev => ({
@@ -533,11 +564,29 @@ export default function TournamentRegistration() {
         <PaymentButtons
           amount={finalAmount}
           currency="USD"
+          paypalLink={paymentLinks.paypal}
+          venmoLink={paymentLinks.venmo}
           onPayPalPayment={async () => {
-            console.log('PayPal payment initiated for:', finalAmount);
+            if (paymentLinks.paypal) {
+              window.open(paymentLinks.paypal, '_blank');
+            } else {
+              toast({
+                title: "Payment Link Not Available",
+                description: "PayPal payment link is not configured for this tournament.",
+                variant: "destructive",
+              });
+            }
           }}
           onVenmoPayment={async () => {
-            console.log('Venmo payment initiated for:', finalAmount);
+            if (paymentLinks.venmo) {
+              window.open(paymentLinks.venmo, '_blank');
+            } else {
+              toast({
+                title: "Payment Link Not Available", 
+                description: "Venmo payment link is not configured for this tournament.",
+                variant: "destructive",
+              });
+            }
           }}
         />
 

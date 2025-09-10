@@ -56,6 +56,7 @@ const menuItems = [
     title: 'Financial Management',
     items: [
       { title: 'Payments', url: '/admin/payments', icon: CreditCard },
+      { title: 'Payment Links', url: '/admin/payment-links', icon: CreditCard },
       { title: 'Promo Codes', url: '/admin/promos', icon: Tag },
       { title: 'Staff Calculator', url: '/admin/staff', icon: DollarSign },
     ]
