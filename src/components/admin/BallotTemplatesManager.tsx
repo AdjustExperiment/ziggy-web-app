@@ -128,15 +128,16 @@ export function BallotTemplatesManager() {
 
       if (error) throw error;
 
-      await supabase.from('template_versions').insert([
-        {
-          template_id: data.id,
-          version: 1,
-          schema: formData.schema,
-          html: formData.html || null,
-          layout: formData.layout
-        }
-      ]);
+      // TODO: Implement template versioning when template_versions table is created
+      // await supabase.from('template_versions').insert([
+      //   {
+      //     template_id: data.id,
+      //     version: 1,
+      //     schema: formData.schema,
+      //     html: formData.html || null,
+      //     layout: formData.layout
+      //   }
+      // ]);
 
       toast({
         title: "Success",
@@ -178,15 +179,16 @@ export function BallotTemplatesManager() {
 
       if (error) throw error;
 
-      await supabase.from('template_versions').insert([
-        {
-          template_id: editingTemplate.id,
-          version: newVersion,
-          schema: formData.schema,
-          html: formData.html || null,
-          layout: formData.layout
-        }
-      ]);
+      // TODO: Implement template versioning when template_versions table is created
+      // await supabase.from('template_versions').insert([
+      //   {
+      //     template_id: editingTemplate.id,
+      //     version: newVersion,
+      //     schema: formData.schema,
+      //     html: formData.html || null,
+      //     layout: formData.layout
+      //   }
+      // ]);
 
       toast({
         title: "Success",
