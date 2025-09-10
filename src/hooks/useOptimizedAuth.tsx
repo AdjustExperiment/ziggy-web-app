@@ -21,7 +21,7 @@ interface AuthContextType {
   profile: Profile | null;
   loading: boolean;
   isAdmin: boolean;
-  signUp: (email: string, password: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, userData?: { data: { first_name?: string; last_name?: string } }) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -84,14 +84,16 @@ export function OptimizedAuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, [queryClient]);
 
-  const signUp = useCallback(async (email: string, password: string) => {
+  
+  const signUp = useCallback(async (email: string, password: string, userData?: { data: { first_name?: string; last_name?: string } }) => {
     const redirectUrl = `${window.location.origin}/`;
     
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: redirectUrl
+        emailRedirectTo: redirectUrl,
+        data: userData?.data
       }
     });
     

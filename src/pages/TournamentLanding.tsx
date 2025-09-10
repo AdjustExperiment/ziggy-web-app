@@ -25,6 +25,8 @@ import {
 } from 'lucide-react';
 import { TournamentContentManager } from '@/components/admin/TournamentContentManager';
 import { BackButton } from '@/components/ui/back-button';
+import { TournamentCalendarView } from '@/components/TournamentCalendarView';
+import { format } from 'date-fns';
 
 interface Tournament {
   id: string;
@@ -68,6 +70,17 @@ interface UserRegistration {
   payment_status: string;
 }
 
+interface RelatedTournament {
+  id: string;
+  name: string;
+  format: string;
+  start_date: string;
+  end_date: string;
+  location: string;
+  status: string;
+  registration_open: boolean;
+}
+
 export default function TournamentLanding() {
   const { tournamentId } = useParams<{ tournamentId: string }>();
   const { user, profile } = useAuth();
@@ -75,6 +88,7 @@ export default function TournamentLanding() {
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [content, setContent] = useState<TournamentContent | null>(null);
   const [userRegistration, setUserRegistration] = useState<UserRegistration | null>(null);
+  const [relatedTournaments, setRelatedTournaments] = useState<RelatedTournament[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
 
@@ -120,6 +134,20 @@ export default function TournamentLanding() {
 
         if (registrationData) {
           setUserRegistration(registrationData);
+        }
+      }
+
+      // Fetch related tournaments (same format, different tournaments)
+      if (tournamentData) {
+        const { data: relatedData } = await supabase
+          .from('tournaments')
+          .select('id, name, format, start_date, end_date, location, status, registration_open')
+          .eq('format', tournamentData.format)
+          .neq('id', tournamentId)
+          .limit(3);
+
+        if (relatedData) {
+          setRelatedTournaments(relatedData);
         }
       }
     } catch (error: any) {
@@ -289,7 +317,7 @@ export default function TournamentLanding() {
 
         <TabsContent value="overview" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-2 space-y-6">
               <Card>
                 <CardHeader>
                   <CardTitle>Tournament Information</CardTitle>
@@ -317,6 +345,24 @@ export default function TournamentLanding() {
                       <p className="text-muted-foreground">{content.schedule_notes}</p>
                     </div>
                   )}
+                </CardContent>
+              </Card>
+
+              {/* Tournament Calendar */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Tournament Calendar</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <TournamentCalendarView tournament={{
+                    id: tournament.id,
+                    name: tournament.name,
+                    start_date: tournament.start_date,
+                    end_date: tournament.end_date,
+                    location: tournament.location,
+                    format: tournament.format,
+                    status: tournament.status
+                  }} />
                 </CardContent>
               </Card>
             </div>
@@ -528,6 +574,54 @@ export default function TournamentLanding() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Related Tournaments */}
+      {relatedTournaments.length > 0 && (
+        <div className="mt-12">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Trophy className="h-5 w-5 mr-2" />
+                Related Tournaments
+              </CardTitle>
+              <CardDescription>
+                Other {tournament.format} tournaments you might be interested in
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {relatedTournaments.map((relatedTournament) => (
+                  <Card key={relatedTournament.id} className="hover:shadow-lg transition-shadow">
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <Badge variant={relatedTournament.status === 'Registration Open' ? 'default' : 'secondary'}>
+                          {relatedTournament.status}
+                        </Badge>
+                      </div>
+                      <h5 className="font-medium mb-2">{relatedTournament.name}</h5>
+                      <div className="text-sm text-muted-foreground mb-2">
+                        <div className="flex items-center mb-1">
+                          <Calendar className="h-3 w-3 mr-1" />
+                          {format(new Date(relatedTournament.start_date), "MMM d")} - {format(new Date(relatedTournament.end_date), "MMM d, yyyy")}
+                        </div>
+                        <div className="flex items-center">
+                          <MapPin className="h-3 w-3 mr-1" />
+                          {relatedTournament.location}
+                        </div>
+                      </div>
+                      <Button variant="outline" size="sm" asChild className="w-full">
+                        <Link to={`/tournaments/${relatedTournament.id}`}>
+                          View Details <ChevronRight className="h-4 w-4 ml-1" />
+                        </Link>
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

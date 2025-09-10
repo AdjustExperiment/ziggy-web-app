@@ -6,10 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Users, Clock, Trophy, Search, Filter, ExternalLink, Grid3X3, List } from "lucide-react";
+import { Calendar, Users, Clock, Trophy, Search, Filter, ExternalLink, Grid3X3, List, Download, CalendarIcon, Plus, Edit } from "lucide-react";
 import { format } from "date-fns";
 import TournamentInfo from "@/components/TournamentInfo";
 import { FluidBlobBackground } from "@/components/FluidBlobBackground";
+import { TournamentCardCalendar } from "@/components/TournamentCardCalendar";
+import { useOptimizedAuth } from "@/hooks/useOptimizedAuth";
 
 interface Sponsor {
   name: string;
@@ -43,10 +45,11 @@ const Tournaments = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [formatFilter, setFormatFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => {
-    return (localStorage.getItem('tournament-view-mode') as 'grid' | 'list') || 'grid';
+  const [viewMode, setViewMode] = useState<'grid' | 'list' | 'calendar'>(() => {
+    return (localStorage.getItem('tournament-view-mode') as 'grid' | 'list' | 'calendar') || 'grid';
   });
   const navigate = useNavigate();
+  const { profile } = useOptimizedAuth();
 
   // Persist view mode preference
   useEffect(() => {
@@ -101,6 +104,36 @@ const Tournaments = () => {
 
   const handleViewDetails = (tournamentId: string) => {
     navigate(`/tournaments/${tournamentId}`);
+  };
+
+  const exportCalendar = () => {
+    if (filteredTournaments.length === 0) return;
+    
+    const calendarData = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//Ziggy Online Debate//Tournament Calendar//EN',
+      'CALSCALE:GREGORIAN',
+      'METHOD:PUBLISH',
+      ...filteredTournaments.flatMap(tournament => [
+        'BEGIN:VEVENT',
+        `UID:tournament-${tournament.id}@ziggyonlinedebate.com`,
+        `DTSTART:${new Date(tournament.start_date).toISOString().replace(/[-:]/g, '').split('.')[0]}Z`,
+        `DTEND:${new Date(tournament.end_date).toISOString().replace(/[-:]/g, '').split('.')[0]}Z`,
+        `SUMMARY:${tournament.name}`,
+        `DESCRIPTION:${tournament.description || ''} - ${tournament.format}`,
+        `LOCATION:${tournament.location}`,
+        `STATUS:${tournament.status === 'Registration Open' ? 'CONFIRMED' : 'TENTATIVE'}`,
+        'END:VEVENT'
+      ]),
+      'END:VCALENDAR'
+    ].join('\r\n');
+
+    const blob = new Blob([calendarData], { type: 'text/calendar;charset=utf-8' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `ziggy-tournaments-${format(new Date(), 'yyyy-MM-dd')}.ics`;
+    link.click();
   };
 
   return (
@@ -172,24 +205,62 @@ const Tournaments = () => {
               </div>
             </div>
 
-            {/* View Mode Toggle */}
-            <div className="flex gap-2 bg-muted/50 backdrop-blur-sm rounded-lg p-1 border border-border/50 self-center">
-              <Button
-                variant={viewMode === 'grid' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('grid')}
-                className="h-8 px-3"
-              >
-                <Grid3X3 className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={viewMode === 'list' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('list')}
-                className="h-8 px-3"
-              >
-                <List className="h-4 w-4" />
-              </Button>
+            {/* View Mode Toggle and Export */}
+            <div className="flex gap-4 items-center">
+              <div className="flex gap-2 bg-muted/50 backdrop-blur-sm rounded-lg p-1 border border-border/50">
+                <Button
+                  variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('grid')}
+                  className="h-8 px-3"
+                >
+                  <Grid3X3 className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewMode === 'list' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('list')}
+                  className="h-8 px-3"
+                >
+                  <List className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewMode === 'calendar' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('calendar')}
+                  className="h-8 px-3"
+                >
+                  <CalendarIcon className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              {filteredTournaments.length > 0 && (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={exportCalendar}
+                    className="border-border text-foreground hover:bg-muted"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Export Calendar (.ics)
+                  </Button>
+                  
+                  {profile?.role === 'admin' && (
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate('/admin?tab=tournaments')}
+                        className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Create Tournament
+                      </Button>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -208,6 +279,92 @@ const Tournaments = () => {
               <Trophy className="h-16 w-16 text-muted mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-foreground mb-2">No tournaments found</h3>
               <p className="text-muted-foreground">Try adjusting your search criteria</p>
+            </div>
+          ) : viewMode === 'calendar' ? (
+            <div className="space-y-6">
+              {/* Calendar View */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredTournaments.map((tournament) => (
+                  <Card key={tournament.id} className="bg-card/80 backdrop-blur-sm border-border/50 hover:border-primary/30 hover:bg-card/90 transition-smooth group">
+                    <CardHeader className="pb-4">
+                      <div className="flex justify-between items-start mb-3">
+                        <Badge 
+                          variant={
+                            tournament.status === 'Registration Open' ? 'default' :
+                            tournament.status === 'Ongoing' ? 'default' :
+                            tournament.status === 'Completed' ? 'secondary' :
+                            tournament.status === 'Registration Closed' ? 'destructive' :
+                            'outline'
+                          }
+                          className={
+                            tournament.status === 'Registration Open' ? 'bg-green-600 hover:bg-green-700 text-white border-green-600' :
+                            tournament.status === 'Ongoing' ? 'bg-blue-600 hover:bg-blue-700 text-white border-blue-600' :
+                            tournament.status === 'Completed' ? 'bg-gray-600 hover:bg-gray-700 text-white border-gray-600' :
+                            tournament.status === 'Registration Closed' ? 'bg-red-600 hover:bg-red-700 text-white border-red-600' :
+                            tournament.status === 'Planning Phase' ? 'bg-yellow-600 hover:bg-yellow-700 text-white border-yellow-600' :
+                            'bg-muted text-muted-foreground'
+                          }
+                        >
+                          {tournament.status}
+                        </Badge>
+                        {profile?.role === 'admin' && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => navigate(`/admin?tab=tournaments&selected=${tournament.id}`)}
+                            className="h-6 w-6 p-0 hover:bg-muted"
+                          >
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </div>
+                      
+                      <CardTitle className="text-lg text-foreground font-primary group-hover:text-primary transition-smooth mb-2 leading-tight">
+                        {tournament.name}
+                      </CardTitle>
+                      
+                      <div className="text-sm text-primary font-medium mb-2">
+                        {tournament.format}
+                      </div>
+                      
+                      <div className="text-xs text-muted-foreground">
+                        {tournament.location}
+                      </div>
+                    </CardHeader>
+                    
+                    <CardContent className="space-y-4 pt-0">
+                      <TournamentCardCalendar 
+                        startDate={tournament.start_date}
+                        endDate={tournament.end_date}
+                        className="mb-4"
+                      />
+                      
+                      <div className="flex flex-col gap-2">
+                        <Button 
+                          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-sm"
+                          onClick={() => handleRegister(tournament.id)}
+                          disabled={!tournament.registration_open || tournament.current_participants >= tournament.max_participants}
+                        >
+                          {tournament.registration_open && tournament.current_participants < tournament.max_participants 
+                            ? `Register ($${tournament.registration_fee})` 
+                            : tournament.current_participants >= tournament.max_participants 
+                            ? 'Full' 
+                            : 'View Details'
+                          }
+                        </Button>
+                        
+                        <Button 
+                          variant="outline" 
+                          className="w-full border-border text-foreground hover:bg-muted text-sm"
+                          onClick={() => handleViewDetails(tournament.id)}
+                        >
+                          Learn More
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             </div>
           ) : (
             <div className={`grid gap-4 sm:gap-6 ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
@@ -242,11 +399,23 @@ const Tournaments = () => {
                           </span>
                         </div>
                       </div>
-                      <div className="text-right flex-shrink-0">
-                        <div className="text-xs text-muted-foreground">Prize Pool</div>
-                        <div className="font-bold text-primary text-sm">
-                          {tournament.prize_pool || (tournament.cash_prize_total > 0 ? `$${tournament.cash_prize_total.toLocaleString()}` : 'TBD')}
+                      <div className="flex items-center gap-2">
+                        <div className="text-right flex-shrink-0">
+                          <div className="text-xs text-muted-foreground">Prize Pool</div>
+                          <div className="font-bold text-primary text-sm">
+                            {tournament.prize_pool || (tournament.cash_prize_total > 0 ? `$${tournament.cash_prize_total.toLocaleString()}` : 'TBD')}
+                          </div>
                         </div>
+                        {profile?.role === 'admin' && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => navigate(`/admin?tab=tournaments&selected=${tournament.id}`)}
+                            className="h-6 w-6 p-0 hover:bg-muted"
+                          >
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                        )}
                       </div>
                     </div>
                     
@@ -259,18 +428,26 @@ const Tournaments = () => {
                     </div>
                   </CardHeader>
                   
-                  <CardContent className={`space-y-3 sm:space-y-4 ${viewMode === 'list' ? 'lg:flex-1' : ''} pt-0`}>
-                    <div className="flex flex-wrap items-center gap-4 mt-3 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4 flex-shrink-0" />
-                        <span className="whitespace-nowrap">{tournament.current_participants} / {tournament.max_participants} participants</span>
-                      </div>
-                      
-                      <div className="flex items-center gap-2">
-                        <Trophy className="h-4 w-4 flex-shrink-0" />
-                        <span>{tournament.location}</span>
-                      </div>
-                    </div>
+                   <CardContent className={`space-y-3 sm:space-y-4 ${viewMode === 'list' ? 'lg:flex-1' : ''} pt-0`}>
+                     {viewMode === 'grid' && (
+                       <TournamentCardCalendar 
+                         startDate={tournament.start_date}
+                         endDate={tournament.end_date}
+                         className="mb-4"
+                       />
+                     )}
+                     
+                     <div className="flex flex-wrap items-center gap-4 mt-3 text-sm text-muted-foreground">
+                       <div className="flex items-center gap-2">
+                         <Users className="h-4 w-4 flex-shrink-0" />
+                         <span className="whitespace-nowrap">{tournament.current_participants} / {tournament.max_participants} participants</span>
+                       </div>
+                       
+                       <div className="flex items-center gap-2">
+                         <Trophy className="h-4 w-4 flex-shrink-0" />
+                         <span>{tournament.location}</span>
+                       </div>
+                     </div>
 
                     {/* Tournament Information Preview */}
                     {tournament.tournament_info && (
@@ -343,6 +520,71 @@ const Tournaments = () => {
           )}
         </div>
       </section>
+
+      {/* Related Tournaments */}
+      {filteredTournaments.length > 0 && (
+        <section className="py-12 bg-muted/20 relative z-10">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-bold text-foreground mb-2 font-primary">
+                Related Tournaments
+              </h2>
+              <p className="text-muted-foreground">
+                Other tournaments that might interest you
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredTournaments.slice(0, 3).map((tournament) => (
+                <Card key={tournament.id} className="bg-card/80 backdrop-blur-sm border-border/50 hover:border-primary/30 hover:bg-card/90 transition-smooth group">
+                  <CardHeader className="pb-3">
+                    <Badge 
+                      variant={tournament.status === 'Registration Open' ? 'default' : 'secondary'}
+                      className="w-fit mb-2"
+                    >
+                      {tournament.status}
+                    </Badge>
+                    <CardTitle className="text-lg text-foreground font-primary group-hover:text-primary transition-smooth leading-tight">
+                      {tournament.name}
+                    </CardTitle>
+                    <div className="text-sm text-primary font-medium">
+                      {tournament.format}
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
+                      <Calendar className="h-4 w-4" />
+                      <span>{format(new Date(tournament.start_date), "MMM d")} - {format(new Date(tournament.end_date), "MMM d, yyyy")}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+                      <Trophy className="h-4 w-4" />
+                      <span>{tournament.location}</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button 
+                        size="sm"
+                        className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
+                        onClick={() => handleRegister(tournament.id)}
+                        disabled={!tournament.registration_open}
+                      >
+                        {tournament.registration_open ? 'Register' : 'View'}
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="flex-1 border-border text-foreground hover:bg-muted"
+                        onClick={() => handleViewDetails(tournament.id)}
+                      >
+                        Details
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* CTA Section */}
       <section className="py-16 bg-background relative z-10">

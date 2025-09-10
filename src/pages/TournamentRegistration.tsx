@@ -14,10 +14,10 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from '@/components/ui/use-toast';
 import PaymentButtons from '@/components/PaymentButtons';
 import { Registration } from '@/types/database';
-import { AlertCircle, CheckCircle, Info, User, Lock } from 'lucide-react';
+import { AlertCircle, CheckCircle, Info } from 'lucide-react';
 import PromoCodeInput from '@/components/PromoCodeInput';
 import { Separator } from '@/components/ui/separator';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { AuthModal } from '@/components/AuthModal';
 
 interface Tournament {
   id: string;
@@ -277,35 +277,17 @@ export default function TournamentRegistration() {
   const finalAmount = Math.max(0, (tournament?.registration_fee || 0) - discountAmount);
 
   const renderSignInModal = () => (
-    <Dialog open={showSignInModal} onOpenChange={setShowSignInModal}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Lock className="h-5 w-5" />
-            Sign In Required
-          </DialogTitle>
-          <DialogDescription>
-            You need to sign in to register for tournaments. Create an account or sign in to continue with your registration.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="flex flex-col gap-3 mt-4">
-          <Button asChild className="w-full">
-            <Link to="/signup">
-              <User className="h-4 w-4 mr-2" />
-              Create Account
-            </Link>
-          </Button>
-          <Button variant="outline" asChild className="w-full">
-            <Link to="/login">
-              Sign In
-            </Link>
-          </Button>
-          <Button variant="ghost" onClick={() => navigate(`/tournaments/${id}`)} className="w-full">
-            View Tournament Info
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+    <AuthModal
+      open={showSignInModal}
+      onOpenChange={setShowSignInModal}
+      title="Sign In Required"
+      description="You need to sign in to register for tournaments. Create an account or sign in to continue with your registration."
+      defaultTab="signup"
+      onSuccess={() => {
+        setShowSignInModal(false);
+        // Refresh the page or handle success as needed
+      }}
+    />
   );
 
   const renderRegistrationForm = () => (

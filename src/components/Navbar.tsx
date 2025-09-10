@@ -66,7 +66,7 @@ export function Navbar() {
               {/* About Dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex items-center space-x-1 text-sm hover:text-primary transition-colors p-0 h-auto">
+                  <Button variant="ghost" className="flex items-center space-x-1 text-xs hover:text-primary transition-colors p-0 h-auto">
                     <Info className="h-4 w-4" />
                     <span>About</span>
                     <ChevronDown className="h-3 w-3" />
@@ -124,17 +124,17 @@ export function Navbar() {
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              <Link to="/results" className="flex items-center space-x-1 text-sm hover:text-primary transition-colors">
+              <Link to="/results" className="flex items-center space-x-1 text-xs hover:text-primary transition-colors">
                 <BarChart3 className="h-4 w-4" />
                 <span>Results</span>
               </Link>
 
-              <Link to="/blog" className="flex items-center space-x-1 text-sm hover:text-primary transition-colors">
+              <Link to="/blog" className="flex items-center space-x-1 text-xs hover:text-primary transition-colors">
                 <FileText className="h-4 w-4" />
                 <span>Blog</span>
               </Link>
 
-              <Link to="/sponsors" className="flex items-center space-x-1 text-sm hover:text-primary transition-colors">
+              <Link to="/sponsors" className="flex items-center space-x-1 text-xs hover:text-primary transition-colors">
                 <Users className="h-4 w-4" />
                 <span>Sponsors</span>
               </Link>
