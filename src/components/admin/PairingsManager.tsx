@@ -171,7 +171,11 @@ export function PairingsManager() {
         .order('created_at');
 
       if (error) throw error;
-      setPairings(data || []);
+      setPairings((data || []).map((pairing: any) => ({
+        ...pairing,
+        method: pairing.method || null,
+        seed: pairing.seed || null
+      })));
     } catch (error: any) {
       console.error('Error fetching pairings:', error);
       toast({

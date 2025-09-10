@@ -17,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import MultiJudgePanelManager from './MultiJudgePanelManager';
 import { TournamentContentManager } from './TournamentContentManager';
 import { TournamentObserversManager } from './TournamentObserversManager';
+import { TournamentSettingsManager } from './TournamentSettingsManager';
 
 interface Tournament {
   id: string;
@@ -197,11 +198,12 @@ export function TournamentManager() {
 
       {(tournamentId || selectedTournamentId) ? (
         <Tabs defaultValue="details" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="details">Tournament Details</TabsTrigger>
             <TabsTrigger value="content">Content</TabsTrigger>
             <TabsTrigger value="panels">Multi-Judge Panels</TabsTrigger>
             <TabsTrigger value="observers">Observers</TabsTrigger>
+            <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
 
           <TabsContent value="details">
@@ -222,6 +224,10 @@ export function TournamentManager() {
 
           <TabsContent value="observers">
             <TournamentObserversManager tournamentId={tournamentId || selectedTournamentId} />
+          </TabsContent>
+
+          <TabsContent value="settings">
+            <TournamentSettingsManager tournamentId={tournamentId || selectedTournamentId} />
           </TabsContent>
         </Tabs>
       ) : (

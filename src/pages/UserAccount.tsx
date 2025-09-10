@@ -7,7 +7,11 @@ import { Badge } from '@/components/ui/badge';
 import { ProfileSetup } from '@/components/auth/ProfileSetup';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Calendar, CreditCard, MapPin, Clock, User, Phone, Mail } from 'lucide-react';
+import { Calendar, CreditCard, MapPin, Clock, User, Phone, Mail, Shield, Gavel, Settings, Plus } from 'lucide-react';
+import { JudgePromptBanner } from '@/components/JudgePromptBanner';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface Registration {
   id: string;
@@ -31,11 +35,18 @@ export default function UserAccount() {
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [loadingRegistrations, setLoadingRegistrations] = useState(true);
   const [showProfileSetup, setShowProfileSetup] = useState(false);
+  const [newEmail, setNewEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [hasJudgeProfile, setHasJudgeProfile] = useState(false);
+  const [emailChanging, setEmailChanging] = useState(false);
+  const [passwordChanging, setPasswordChanging] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     if (user && !loading) {
       fetchRegistrations();
+      checkJudgeProfile();
     }
   }, [user, loading]);
 
@@ -96,6 +107,92 @@ export default function UserAccount() {
     }
   };
 
+  const checkJudgeProfile = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('judge_profiles')
+        .select('id')
+        .eq('user_id', user?.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error;
+      setHasJudgeProfile(!!data);
+    } catch (error) {
+      console.error('Error checking judge profile:', error);
+    }
+  };
+
+  const handleEmailChange = async () => {
+    if (!newEmail) return;
+    setEmailChanging(true);
+    
+    try {
+      const { error } = await supabase.auth.updateUser({ email: newEmail });
+      if (error) throw error;
+      
+      toast({
+        title: 'Email Update Requested',
+        description: 'Please check both your old and new email addresses for confirmation links.',
+      });
+      setNewEmail('');
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to update email',
+        variant: 'destructive',
+      });
+    } finally {
+      setEmailChanging(false);
+    }
+  };
+
+  const handlePasswordChange = async () => {
+    if (!newPassword || newPassword !== confirmPassword) {
+      toast({
+        title: 'Error',
+        description: 'Passwords do not match',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast({
+        title: 'Error',
+        description: 'Password must be at least 6 characters long',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setPasswordChanging(true);
+    
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      
+      toast({
+        title: 'Password Updated',
+        description: 'Your password has been successfully updated.',
+      });
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to update password',
+        variant: 'destructive',
+      });
+    } finally {
+      setPasswordChanging(false);
+    }
+  };
+
+  const handleCreateJudgeProfile = () => {
+    // Navigate to judge profile creation - this could be a modal or separate page
+    window.location.href = '/judge-signup';
+  };
+
   const isProfileComplete = profile?.first_name && profile?.last_name && profile?.state && profile?.time_zone && profile?.phone;
 
   if (loading) {
@@ -128,7 +225,7 @@ export default function UserAccount() {
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto space-y-6">
           <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold">My Account</h1>
+            <h1 className="text-3xl font-bold">Account Settings</h1>
             {!isProfileComplete && (
               <Button onClick={() => setShowProfileSetup(true)}>
                 Complete Profile
@@ -136,8 +233,21 @@ export default function UserAccount() {
             )}
           </div>
 
-          {/* Profile Information */}
-          <Card>
+          {/* Judge Profile Prompt */}
+          <JudgePromptBanner onCreateProfile={handleCreateJudgeProfile} />
+
+          <Tabs defaultValue="profile" className="space-y-6">
+            <TabsList>
+              <TabsTrigger value="profile">Profile</TabsTrigger>
+              <TabsTrigger value="security">Security</TabsTrigger>
+              <TabsTrigger value="judge">Judge Account</TabsTrigger>
+              <TabsTrigger value="tournaments">Tournaments</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="profile">
+
+            {/* Profile Information */}
+            <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <User className="h-5 w-5" />
@@ -195,10 +305,140 @@ export default function UserAccount() {
                 </div>
               )}
             </CardContent>
-          </Card>
+            </Card>
+            </TabsContent>
 
-          {/* Tournament Registrations */}
-          <Card>
+            <TabsContent value="security">
+              <div className="space-y-6">
+                {/* Email Change */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Mail className="h-5 w-5" />
+                      Change Email Address
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="current-email">Current Email</Label>
+                      <Input
+                        id="current-email"
+                        type="email"
+                        value={user?.email || ''}
+                        disabled
+                        className="bg-muted"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="new-email">New Email Address</Label>
+                      <Input
+                        id="new-email"
+                        type="email"
+                        value={newEmail}
+                        onChange={(e) => setNewEmail(e.target.value)}
+                        placeholder="Enter new email address"
+                      />
+                    </div>
+                    <Button onClick={handleEmailChange} disabled={emailChanging || !newEmail}>
+                      {emailChanging ? 'Updating...' : 'Update Email'}
+                    </Button>
+                    <p className="text-sm text-muted-foreground">
+                      You'll receive confirmation emails at both addresses.
+                    </p>
+                  </CardContent>
+                </Card>
+
+                {/* Password Change */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Shield className="h-5 w-5" />
+                      Change Password
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="new-password">New Password</Label>
+                      <Input
+                        id="new-password"
+                        type="password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="Enter new password"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="confirm-password">Confirm New Password</Label>
+                      <Input
+                        id="confirm-password"
+                        type="password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="Confirm new password"
+                      />
+                    </div>
+                    <Button 
+                      onClick={handlePasswordChange} 
+                      disabled={passwordChanging || !newPassword || !confirmPassword}
+                    >
+                      {passwordChanging ? 'Updating...' : 'Update Password'}
+                    </Button>
+                    <p className="text-sm text-muted-foreground">
+                      Password must be at least 6 characters long.
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="judge">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Gavel className="h-5 w-5" />
+                    Judge Account
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {hasJudgeProfile ? (
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="default">Judge Profile Active</Badge>
+                      </div>
+                      <p className="text-muted-foreground">
+                        You have an active judge profile. You can manage your judging availability 
+                        and preferences through the judge dashboard.
+                      </p>
+                      <Button variant="outline" asChild>
+                        <a href="/judge-dashboard" target="_blank" rel="noopener noreferrer">
+                          Manage Judge Profile
+                        </a>
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <p className="text-muted-foreground">
+                        You don't currently have a judge profile. Creating one allows you to:
+                      </p>
+                      <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground ml-4">
+                        <li>Judge debates and help the community</li>
+                        <li>Earn judge fees and recognition</li>
+                        <li>Set your availability and preferences</li>
+                        <li>Receive judge assignments for tournaments</li>
+                      </ul>
+                      <Button onClick={handleCreateJudgeProfile}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Create Judge Profile
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="tournaments">
+              {/* Tournament Registrations */}
+              <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Calendar className="h-5 w-5" />
@@ -284,7 +524,9 @@ export default function UserAccount() {
                 </div>
               )}
             </CardContent>
-          </Card>
+            </Card>
+            </TabsContent>
+          </Tabs>
 
           {/* Profile Setup Modal */}
           {showProfileSetup && (

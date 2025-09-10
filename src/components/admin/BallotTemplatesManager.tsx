@@ -89,7 +89,11 @@ export function BallotTemplatesManager() {
       const { data, error } = await query.order('event_style');
 
       if (error) throw error;
-      setTemplates(data || []);
+      setTemplates((data || []).map((template: any) => ({
+        ...template,
+        layout: template.layout || {},
+        version: template.version || 1
+      })));
       
     } catch (error: any) {
       console.error('Error fetching ballot templates:', error);

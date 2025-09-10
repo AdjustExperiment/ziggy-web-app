@@ -124,7 +124,11 @@ export function AdminPostings({ tournamentId, judges, onUpdate }: AdminPostingsP
         setScheduleProposals([]);
       }
 
-      setPairings(pairingsData || []);
+      setPairings((pairingsData || []).map((pairing: any) => ({
+        ...pairing,
+        method: pairing.method || null,
+        seed: pairing.seed || null
+      })));
     } catch (error: any) {
       console.error('Error fetching postings data:', error);
       toast({

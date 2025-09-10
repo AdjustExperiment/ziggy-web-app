@@ -42,7 +42,7 @@ export function Navbar() {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-white/10 dark:bg-black/10 border-b border-white/20 dark:border-black/20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-2">
@@ -172,7 +172,7 @@ export function Navbar() {
                       <DropdownMenuItem asChild>
                         <Link to="/portal" className="flex items-center">
                           <Users className="mr-2 h-4 w-4" />
-                          <span>Participant Portal</span>
+                          <span>Participant Portal (Legacy)</span>
                         </Link>
                       </DropdownMenuItem>
                       {isAdmin && (
@@ -329,7 +329,7 @@ export function Navbar() {
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     <Users className="h-5 w-5" />
-                    <span>Participant Portal</span>
+                    <span>Participant Portal (Legacy)</span>
                   </Link>
 
                   {isAdmin && (

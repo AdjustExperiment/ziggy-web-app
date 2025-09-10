@@ -69,13 +69,11 @@ export type Database = {
           html: string | null
           id: string
           is_default: boolean
-          layout: Json
           schema: Json
           supported_tags: string[]
           template_key: string
           tournament_id: string | null
           updated_at: string
-          version: number
         }
         Insert: {
           created_at?: string
@@ -83,13 +81,11 @@ export type Database = {
           html?: string | null
           id?: string
           is_default?: boolean
-          layout?: Json
           schema?: Json
           supported_tags?: string[]
           template_key: string
           tournament_id?: string | null
           updated_at?: string
-          version?: number
         }
         Update: {
           created_at?: string
@@ -97,13 +93,11 @@ export type Database = {
           html?: string | null
           id?: string
           is_default?: boolean
-          layout?: Json
           schema?: Json
           supported_tags?: string[]
           template_key?: string
           tournament_id?: string | null
           updated_at?: string
-          version?: number
         }
         Relationships: [
           {
@@ -111,76 +105,6 @@ export type Database = {
             columns: ["tournament_id"]
             isOneToOne: false
             referencedRelation: "tournaments"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      ballot_submissions: {
-        Row: {
-          created_at: string
-          data: Json
-          id: string
-          template_id: string
-          template_version: number
-        }
-        Insert: {
-          created_at?: string
-          data: Json
-          id?: string
-          template_id: string
-          template_version?: number
-        }
-        Update: {
-          created_at?: string
-          data?: Json
-          id?: string
-          template_id?: string
-          template_version?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "ballot_submissions_template_id_fkey"
-            columns: ["template_id"]
-            isOneToOne: false
-            referencedRelation: "ballot_templates"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      template_versions: {
-        Row: {
-          created_at: string
-          html: string | null
-          id: string
-          layout: Json
-          schema: Json
-          template_id: string
-          version: number
-        }
-        Insert: {
-          created_at?: string
-          html?: string | null
-          id?: string
-          layout?: Json
-          schema?: Json
-          template_id: string
-          version: number
-        }
-        Update: {
-          created_at?: string
-          html?: string | null
-          id?: string
-          layout?: Json
-          schema?: Json
-          template_id?: string
-          version?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "template_versions_template_id_fkey"
-            columns: ["template_id"]
-            isOneToOne: false
-            referencedRelation: "ballot_templates"
             referencedColumns: ["id"]
           },
         ]
@@ -414,45 +338,7 @@ export type Database = {
             columns: ["registration_id"]
             isOneToOne: false
             referencedRelation: "tournament_registrations"
-          referencedColumns: ["id"]
-          },
-        ]
-      }
-      email_delivery_logs: {
-        Row: {
-          created_at: string
-          event_timestamp: string
-          event_type: string
-          id: string
-          metadata: Json | null
-          recipient_email: string
-          template_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          event_timestamp?: string
-          event_type: string
-          id?: string
-          metadata?: Json | null
-          recipient_email: string
-          template_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          event_timestamp?: string
-          event_type?: string
-          id?: string
-          metadata?: Json | null
-          recipient_email?: string
-          template_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "email_delivery_logs_template_id_fkey",
-            columns: ["template_id"],
-            isOneToOne: false,
-            referencedRelation: "email_templates_enhanced",
-            referencedColumns: ["id"],
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -545,10 +431,6 @@ export type Database = {
           id: string
           images: Json | null
           reply_to: string | null
-          schedule_at: string | null
-          automation_trigger: string | null
-          open_count: number
-          click_count: number
           subject: string
           template_key: string
           template_name: string
@@ -564,10 +446,6 @@ export type Database = {
           id?: string
           images?: Json | null
           reply_to?: string | null
-          schedule_at?: string | null
-          automation_trigger?: string | null
-          open_count?: number
-          click_count?: number
           subject: string
           template_key: string
           template_name: string
@@ -583,10 +461,6 @@ export type Database = {
           id?: string
           images?: Json | null
           reply_to?: string | null
-          schedule_at?: string | null
-          automation_trigger?: string | null
-          open_count?: number
-          click_count?: number
           subject?: string
           template_key?: string
           template_name?: string
@@ -966,14 +840,12 @@ export type Database = {
           id: string
           judge_id: string | null
           neg_registration_id: string
-          method: string | null
           released: boolean
           result: Json | null
           room: string | null
           round_id: string
           scheduled_time: string | null
           status: string
-          seed: Json | null
           tournament_id: string
           updated_at: string
         }
@@ -983,14 +855,12 @@ export type Database = {
           id?: string
           judge_id?: string | null
           neg_registration_id: string
-          method?: string | null
           released?: boolean
           result?: Json | null
           room?: string | null
           round_id: string
           scheduled_time?: string | null
           status?: string
-          seed?: Json | null
           tournament_id: string
           updated_at?: string
         }
@@ -1000,14 +870,12 @@ export type Database = {
           id?: string
           judge_id?: string | null
           neg_registration_id?: string
-          method?: string | null
           released?: boolean
           result?: Json | null
           room?: string | null
           round_id?: string
           scheduled_time?: string | null
           status?: string
-          seed?: Json | null
           tournament_id?: string
           updated_at?: string
         }
@@ -2054,6 +1922,42 @@ export type Database = {
           },
         ]
       }
+      tournament_role_access: {
+        Row: {
+          can_chat: boolean
+          can_view_pairings: boolean
+          can_view_rooms: boolean
+          can_view_stream: boolean
+          created_at: string
+          id: string
+          role: string
+          tournament_id: string
+          updated_at: string
+        }
+        Insert: {
+          can_chat?: boolean
+          can_view_pairings?: boolean
+          can_view_rooms?: boolean
+          can_view_stream?: boolean
+          created_at?: string
+          id?: string
+          role: string
+          tournament_id: string
+          updated_at?: string
+        }
+        Update: {
+          can_chat?: boolean
+          can_view_pairings?: boolean
+          can_view_rooms?: boolean
+          can_view_stream?: boolean
+          created_at?: string
+          id?: string
+          role?: string
+          tournament_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       tournament_staff_shares: {
         Row: {
           active: boolean
@@ -2091,6 +1995,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      tournament_tabulation_settings: {
+        Row: {
+          allow_judges_view_all_chat: boolean
+          avoid_rematches: boolean
+          club_protect: boolean
+          created_at: string
+          id: string
+          max_repeat_opponents: number
+          pairing_method: string
+          preserve_break_rounds: boolean
+          prevent_bracket_breaks: boolean
+          side_balance_target: number
+          speaker_points_method: string
+          tournament_id: string
+          updated_at: string
+        }
+        Insert: {
+          allow_judges_view_all_chat?: boolean
+          avoid_rematches?: boolean
+          club_protect?: boolean
+          created_at?: string
+          id?: string
+          max_repeat_opponents?: number
+          pairing_method?: string
+          preserve_break_rounds?: boolean
+          prevent_bracket_breaks?: boolean
+          side_balance_target?: number
+          speaker_points_method?: string
+          tournament_id: string
+          updated_at?: string
+        }
+        Update: {
+          allow_judges_view_all_chat?: boolean
+          avoid_rematches?: boolean
+          club_protect?: boolean
+          created_at?: string
+          id?: string
+          max_repeat_opponents?: number
+          pairing_method?: string
+          preserve_break_rounds?: boolean
+          prevent_bracket_breaks?: boolean
+          side_balance_target?: number
+          speaker_points_method?: string
+          tournament_id?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       tournaments: {
         Row: {
