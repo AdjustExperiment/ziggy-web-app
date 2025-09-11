@@ -62,6 +62,58 @@ export type Database = {
         }
         Relationships: []
       }
+      ballot_submissions: {
+        Row: {
+          ballot_id: string | null
+          id: string
+          judge_profile_id: string | null
+          pairing_id: string | null
+          submission_data: Json
+          submission_notes: string | null
+          submitted_at: string
+        }
+        Insert: {
+          ballot_id?: string | null
+          id?: string
+          judge_profile_id?: string | null
+          pairing_id?: string | null
+          submission_data?: Json
+          submission_notes?: string | null
+          submitted_at?: string
+        }
+        Update: {
+          ballot_id?: string | null
+          id?: string
+          judge_profile_id?: string | null
+          pairing_id?: string | null
+          submission_data?: Json
+          submission_notes?: string | null
+          submitted_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ballot_submissions_ballot_id_fkey"
+            columns: ["ballot_id"]
+            isOneToOne: false
+            referencedRelation: "ballots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ballot_submissions_judge_profile_id_fkey"
+            columns: ["judge_profile_id"]
+            isOneToOne: false
+            referencedRelation: "judge_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ballot_submissions_pairing_id_fkey"
+            columns: ["pairing_id"]
+            isOneToOne: false
+            referencedRelation: "pairings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ballot_templates: {
         Row: {
           created_at: string
@@ -719,6 +771,44 @@ export type Database = {
         }
         Relationships: []
       }
+      pairing_chat_messages: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          message_type: string | null
+          metadata: Json | null
+          pairing_id: string | null
+          sender_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          message_type?: string | null
+          metadata?: Json | null
+          pairing_id?: string | null
+          sender_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          message_type?: string | null
+          metadata?: Json | null
+          pairing_id?: string | null
+          sender_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pairing_chat_messages_pairing_id_fkey"
+            columns: ["pairing_id"]
+            isOneToOne: false
+            referencedRelation: "pairings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pairing_evidence: {
         Row: {
           created_at: string
@@ -947,6 +1037,56 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          metadata: Json | null
+          registration_id: string | null
+          status: string
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          id?: string
+          metadata?: Json | null
+          registration_id?: string | null
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          metadata?: Json | null
+          registration_id?: string | null
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_transactions_registration_id_fkey"
+            columns: ["registration_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_registrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -1111,6 +1251,63 @@ export type Database = {
             columns: ["tournament_id"]
             isOneToOne: false
             referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      refund_requests: {
+        Row: {
+          admin_notes: string | null
+          id: string
+          payment_transaction_id: string | null
+          processed_at: string | null
+          processed_by: string | null
+          reason: string
+          registration_id: string | null
+          requested_amount: number | null
+          requested_at: string
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          id?: string
+          payment_transaction_id?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
+          reason: string
+          registration_id?: string | null
+          requested_amount?: number | null
+          requested_at?: string
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          id?: string
+          payment_transaction_id?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
+          reason?: string
+          registration_id?: string | null
+          requested_amount?: number | null
+          requested_at?: string
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "refund_requests_payment_transaction_id_fkey"
+            columns: ["payment_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "payment_transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "refund_requests_registration_id_fkey"
+            columns: ["registration_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_registrations"
             referencedColumns: ["id"]
           },
         ]
