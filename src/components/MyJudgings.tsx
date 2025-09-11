@@ -9,6 +9,7 @@ import { toast } from '@/components/ui/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Gavel, MessageSquare, FileText, Lock } from 'lucide-react';
 import { BallotEntry } from './BallotEntry';
+import { PairingChat } from './PairingChat';
 
 interface AssignmentDisplay {
   id: string;
@@ -271,17 +272,14 @@ export function MyJudgings() {
                             Chat
                           </Button>
                         </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Pairing Chat</DialogTitle>
-                            <DialogDescription>
-                              Communicate with the competitors about scheduling and logistics
-                            </DialogDescription>
-                          </DialogHeader>
-                          <div className="text-center py-8 text-muted-foreground">
-                            <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                            <p>Chat functionality is being set up and will be available soon.</p>
-                          </div>
+                        <DialogContent className="max-w-4xl max-h-[80vh] p-0">
+                          <PairingChat 
+                            pairingId={assignment.pairing_id}
+                            tournamentName={assignment.tournament_name}
+                            roundName={assignment.round_name}
+                            affParticipant={assignment.aff_participant}
+                            negParticipant={assignment.neg_participant}
+                          />
                         </DialogContent>
                       </Dialog>
                     </div>

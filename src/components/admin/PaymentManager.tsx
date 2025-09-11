@@ -5,17 +5,41 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from '@/components/ui/use-toast';
-import { RefundRequest } from '@/types/database';
 import { DollarSign, CreditCard, Clock, CheckCircle } from 'lucide-react';
 
 interface PaymentTransaction {
   id: string;
   registration_id: string;
   user_id: string;
+  stripe_session_id?: string;
+  stripe_payment_intent_id?: string;
   amount: number;
+  currency: string;
   status: string;
+  metadata: any;
   created_at: string;
+  updated_at: string;
+  participant_name?: string;
+  participant_email?: string;
   tournament_name?: string;
+}
+
+interface EnhancedRefundRequest {
+  id: string;
+  registration_id: string;
+  user_id: string;
+  payment_transaction_id: string;
+  reason: string;
+  status: string;
+  requested_amount?: number;
+  admin_notes?: string;
+  processed_by?: string;
+  requested_at: string;
+  processed_at?: string;
+  participant_name?: string;
+  participant_email?: string;
+  tournament_name?: string;
+  amount?: number;
 }
 
 interface PaymentStats {
@@ -27,7 +51,7 @@ interface PaymentStats {
 
 export function PaymentManager() {
   const [transactions, setTransactions] = useState<PaymentTransaction[]>([]);
-  const [refundRequests, setRefundRequests] = useState<RefundRequest[]>([]);
+  const [refundRequests, setRefundRequests] = useState<EnhancedRefundRequest[]>([]);
   const [stats, setStats] = useState<PaymentStats>({
     totalRevenue: 0,
     pendingPayments: 0,
@@ -43,48 +67,43 @@ export function PaymentManager() {
 
   const fetchTransactions = async () => {
     try {
-      // Use tournament_registrations to get payment data since payment_transactions doesn't exist
+      // Fetch from the new payment_transactions table with registration data
       const { data, error } = await supabase
-        .from('tournament_registrations')
+        .from('payment_transactions')
         .select(`
-          id,
-          participant_name,
-          participant_email,
-          payment_status,
-          amount_paid,
-          created_at,
-          user_id,
-          tournament_id,
-          tournaments(name)
+          *,
+          tournament_registrations!inner(
+            participant_name,
+            participant_email,
+            tournaments(name)
+          )
         `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      const formattedTransactions = (data || []).map(reg => ({
-        id: reg.id,
-        registration_id: reg.id,
-        user_id: reg.user_id || '',
-        amount: reg.amount_paid || 0,
-        status: reg.payment_status,
-        created_at: reg.created_at,
-        tournament_name: reg.tournaments?.name || 'Unknown'
+      const formattedTransactions = (data || []).map((txn: any) => ({
+        ...txn,
+        amount: txn.amount / 100, // Convert from cents to dollars
+        participant_name: txn.tournament_registrations?.participant_name || 'Unknown',
+        participant_email: txn.tournament_registrations?.participant_email || 'Unknown',
+        tournament_name: txn.tournament_registrations?.tournaments?.name || 'Unknown'
       }));
 
       setTransactions(formattedTransactions);
       
       const totalRevenue = formattedTransactions
-        .filter(t => t.status === 'paid')
-        .reduce((sum, t) => sum + t.amount, 0);
+        .filter((t: PaymentTransaction) => t.status === 'paid')
+        .reduce((sum: number, t: PaymentTransaction) => sum + t.amount, 0);
       
       const pendingAmount = formattedTransactions
-        .filter(t => t.status === 'pending')
-        .reduce((sum, t) => sum + t.amount, 0);
+        .filter((t: PaymentTransaction) => t.status === 'pending')
+        .reduce((sum: number, t: PaymentTransaction) => sum + t.amount, 0);
 
       setStats({
         totalRevenue,
-        pendingPayments: formattedTransactions.filter(t => t.status === 'pending').length,
-        completedPayments: formattedTransactions.filter(t => t.status === 'paid').length,
+        pendingPayments: formattedTransactions.filter((t: PaymentTransaction) => t.status === 'pending').length,
+        completedPayments: formattedTransactions.filter((t: PaymentTransaction) => t.status === 'paid').length,
         pendingAmount
       });
     } catch (error: any) {
@@ -101,10 +120,10 @@ export function PaymentManager() {
 
   const refundPayment = async (transactionId: string) => {
     try {
-      // Update the registration payment status to refunded
+      // Update the payment transaction status to refunded
       const { error } = await supabase
-        .from('tournament_registrations')
-        .update({ payment_status: 'refunded' })
+        .from('payment_transactions')
+        .update({ status: 'refunded' })
         .eq('id', transactionId);
       
       if (error) throw error;
@@ -127,36 +146,31 @@ export function PaymentManager() {
 
   const fetchRefundRequests = async () => {
     try {
-      // Since refund_requests table doesn't exist, we'll show registrations that might need refunds
+      // Fetch from the new refund_requests table with related data
       const { data, error } = await supabase
-        .from('tournament_registrations')
+        .from('refund_requests')
         .select(`
-          id,
-          participant_name,
-          participant_email,
-          payment_status,
-          amount_paid,
-          created_at,
-          tournaments(name)
+          *,
+          tournament_registrations!inner(
+            participant_name,
+            participant_email,
+            tournaments(name)
+          ),
+          payment_transactions!inner(amount, currency)
         `)
-        .eq('payment_status', 'paid')
-        .order('created_at', { ascending: false });
+        .order('requested_at', { ascending: false });
       
       if (error) throw error;
       
-      // Create mock refund requests from paid registrations
-      const mockRefundRequests = (data || []).map(reg => ({
-        id: reg.id,
-        registration_id: reg.id,
-        user_id: '', // Not available in registration table
-        reason: 'Refund request pending admin review',
-        status: 'pending' as const,
-        requested_at: reg.created_at,
-        processed_at: null,
-        admin_notes: null
+      const formattedRequests = (data || []).map((req: any) => ({
+        ...req,
+        participant_name: req.tournament_registrations?.participant_name || 'Unknown',
+        participant_email: req.tournament_registrations?.participant_email || 'Unknown',
+        tournament_name: req.tournament_registrations?.tournaments?.name || 'Unknown',
+        amount: req.payment_transactions?.amount ? req.payment_transactions.amount / 100 : 0
       }));
       
-      setRefundRequests(mockRefundRequests);
+      setRefundRequests(formattedRequests);
     } catch (error: any) {
       console.error('Error fetching refund requests:', error);
     }
@@ -165,10 +179,26 @@ export function PaymentManager() {
   const processRefund = async (requestId: string, approved: boolean, notes?: string) => {
     try {
       if (approved) {
-        // Update the registration payment status to refunded
+        // Update the refund request status and process the refund
         const { error } = await supabase
-          .from('tournament_registrations')
-          .update({ payment_status: 'refunded' })
+          .from('refund_requests')
+          .update({ 
+            status: 'approved',
+            processed_at: new Date().toISOString(),
+            admin_notes: notes 
+          })
+          .eq('id', requestId);
+        
+        if (error) throw error;
+      } else {
+        // Update the refund request status to denied
+        const { error } = await supabase
+          .from('refund_requests')
+          .update({ 
+            status: 'denied',
+            processed_at: new Date().toISOString(),
+            admin_notes: notes 
+          })
           .eq('id', requestId);
         
         if (error) throw error;
@@ -288,7 +318,8 @@ export function PaymentManager() {
               {transactions.map((transaction) => (
                 <TableRow key={transaction.id}>
                   <TableCell className="font-medium">
-                    {transaction.registration_id}
+                    <div>{transaction.participant_name}</div>
+                    <div className="text-sm text-muted-foreground">{transaction.participant_email}</div>
                   </TableCell>
                   <TableCell>{transaction.tournament_name}</TableCell>
                   <TableCell>${transaction.amount.toFixed(2)}</TableCell>
@@ -330,7 +361,7 @@ export function PaymentManager() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Registration ID</TableHead>
+                <TableHead>Participant</TableHead>
                 <TableHead>Reason</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Requested</TableHead>
@@ -341,7 +372,9 @@ export function PaymentManager() {
               {refundRequests.map((request) => (
                 <TableRow key={request.id}>
                   <TableCell className="font-medium">
-                    {request.registration_id}
+                    <div>{request.participant_name}</div>
+                    <div className="text-sm text-muted-foreground">{request.participant_email}</div>
+                    <div className="text-sm text-muted-foreground">Amount: ${request.amount?.toFixed(2)}</div>
                   </TableCell>
                   <TableCell>{request.reason}</TableCell>
                   <TableCell>
