@@ -6,8 +6,16 @@
     <link rel="dns-prefetch" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@200;300;400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@200;300;400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet"></noscript>
+    <!-- Load fonts asynchronously with font-display swap for better performance -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@200;300;400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap&font-display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@200;300;400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap&font-display=swap" rel="stylesheet"></noscript>
+    <!-- Add loading optimization hint -->
+    <script>
+      // Ensure fonts load asynchronously 
+      if ('fontDisplay' in document.documentElement.style) {
+        document.documentElement.style.setProperty('font-display', 'swap');
+      }
+    </script>
     
     <!-- Favicons -->
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
