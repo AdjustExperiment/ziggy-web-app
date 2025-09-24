@@ -51,6 +51,7 @@ const LearnAboutDebate = React.lazy(() => import('@/pages/LearnAboutDebate'));
 const TournamentDashboard = React.lazy(() => import('@/pages/TournamentDashboard'));
 const ParticipantPortal = React.lazy(() => import('@/pages/ParticipantPortal'));
 const MyDashboard = React.lazy(() => import('@/pages/MyDashboard'));
+const ObserverDashboard = React.lazy(() => import('@/pages/ObserverDashboard'));
 
 // Loading component for Suspense fallback
 const PageLoader = () => (
@@ -137,12 +138,22 @@ function App() {
                         <UserAccount />
                       </ProtectedRoute>
                     } />
-                    <Route path="/admin/*" element={
-                      <ProtectedRoute>
-                        <AdminDashboard />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/getting-started" element={<GettingStarted />} />
+                     <Route path="/judge" element={
+                       <ProtectedRoute>
+                         <JudgeDashboard />
+                       </ProtectedRoute>
+                     } />
+                     <Route path="/observer" element={
+                       <ProtectedRoute>
+                         <ObserverDashboard />
+                       </ProtectedRoute>
+                     } />
+                     <Route path="/admin/*" element={
+                       <ProtectedRoute>
+                         <AdminDashboard />
+                       </ProtectedRoute>
+                     } />
+                     <Route path="/getting-started" element={<GettingStarted />} />
                     <Route path="/features" element={<Features />} />
                     <Route path="/about" element={<About />} />
                     <Route path="/contact" element={<Contact />} />

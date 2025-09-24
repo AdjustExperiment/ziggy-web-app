@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useOptimizedAuth } from '@/hooks/useOptimizedAuth';
 import { ThemeToggle } from './ThemeToggle';
 import { NotificationsDropdown } from './admin/NotificationsDropdown';
+import { UserNotifications } from './UserNotifications';
 import { LazyImage } from '@/components/LazyImage';
 import { 
   Calendar, 
@@ -22,7 +23,9 @@ import {
   Menu,
   X,
   ScrollText,
-  BookOpen
+  BookOpen,
+  Gavel,
+  Eye
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -147,6 +150,7 @@ export function Navbar() {
             {user ? (
               <>
                 {isAdmin && <NotificationsDropdown />}
+                <UserNotifications />
                 
                 {/* Desktop Dashboard Dropdown */}
                 <div className="hidden sm:block">
@@ -171,20 +175,34 @@ export function Navbar() {
                           <span>My Tournaments</span>
                         </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to="/portal" className="flex items-center">
-                          <Users className="mr-2 h-4 w-4" />
-                          <span>Participant Portal (Legacy)</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      {isAdmin && (
-                        <DropdownMenuItem asChild>
-                          <Link to="/admin" className="flex items-center">
-                            <Settings className="mr-2 h-4 w-4" />
-                            <span>Admin Dashboard</span>
-                          </Link>
-                        </DropdownMenuItem>
-                      )}
+                       <DropdownMenuItem asChild>
+                         <Link to="/portal" className="flex items-center">
+                           <Users className="mr-2 h-4 w-4" />
+                           <span>Participant Portal (Legacy)</span>
+                         </Link>
+                       </DropdownMenuItem>
+                       {profile?.role === 'judge' && (
+                         <DropdownMenuItem asChild>
+                           <Link to="/judge" className="flex items-center">
+                             <Gavel className="mr-2 h-4 w-4" />
+                             <span>Judge Dashboard</span>
+                           </Link>
+                         </DropdownMenuItem>
+                       )}
+                       <DropdownMenuItem asChild>
+                         <Link to="/observer" className="flex items-center">
+                           <Eye className="mr-2 h-4 w-4" />
+                           <span>Observer Dashboard</span>
+                         </Link>
+                       </DropdownMenuItem>
+                       {isAdmin && (
+                         <DropdownMenuItem asChild>
+                           <Link to="/admin" className="flex items-center">
+                             <Settings className="mr-2 h-4 w-4" />
+                             <span>Admin Dashboard</span>
+                           </Link>
+                         </DropdownMenuItem>
+                       )}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
@@ -327,25 +345,45 @@ export function Navbar() {
                     <span>My Tournaments</span>
                   </Link>
 
-                  <Link
-                    to="/portal"
-                    className="flex items-center space-x-2 px-3 py-3 rounded-md text-base font-medium hover:bg-muted touch-target"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    <Users className="h-5 w-5" />
-                    <span>Participant Portal (Legacy)</span>
-                  </Link>
+                   <Link
+                     to="/portal"
+                     className="flex items-center space-x-2 px-3 py-3 rounded-md text-base font-medium hover:bg-muted touch-target"
+                     onClick={() => setIsMobileMenuOpen(false)}
+                   >
+                     <Users className="h-5 w-5" />
+                     <span>Participant Portal (Legacy)</span>
+                   </Link>
 
-                  {isAdmin && (
-                    <Link
-                      to="/admin"
-                      className="flex items-center space-x-2 px-3 py-3 rounded-md text-base font-medium hover:bg-muted touch-target"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      <Settings className="h-5 w-5" />
-                      <span>Admin Dashboard</span>
-                    </Link>
-                  )}
+                   {profile?.role === 'judge' && (
+                     <Link
+                       to="/judge"
+                       className="flex items-center space-x-2 px-3 py-3 rounded-md text-base font-medium hover:bg-muted touch-target"
+                       onClick={() => setIsMobileMenuOpen(false)}
+                     >
+                       <Gavel className="h-5 w-5" />
+                       <span>Judge Dashboard</span>
+                     </Link>
+                   )}
+
+                   <Link
+                     to="/observer"
+                     className="flex items-center space-x-2 px-3 py-3 rounded-md text-base font-medium hover:bg-muted touch-target"
+                     onClick={() => setIsMobileMenuOpen(false)}
+                   >
+                     <Eye className="h-5 w-5" />
+                     <span>Observer Dashboard</span>
+                   </Link>
+
+                   {isAdmin && (
+                     <Link
+                       to="/admin"
+                       className="flex items-center space-x-2 px-3 py-3 rounded-md text-base font-medium hover:bg-muted touch-target"
+                       onClick={() => setIsMobileMenuOpen(false)}
+                     >
+                       <Settings className="h-5 w-5" />
+                       <span>Admin Dashboard</span>
+                     </Link>
+                   )}
 
                   <Link
                     to="/account"
