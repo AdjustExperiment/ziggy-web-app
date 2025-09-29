@@ -31,34 +31,46 @@ jobs:
       - name: Build
         run: npm run build
 
-      # Add a visible canary to <title> so we can prove freshness in responses
+      # Canary in <title> so we can see builds in-page
       - name: Insert title canary into dist/index.html
         run: |
           ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           sed -i "s#<title>\\(.*\\)</title>#<title>\\1 • build ${ts}</title>#" dist/index.html
           grep -n "<title>" dist/index.html
 
-      # Rename index.html -> app.html to avoid sticky caches bound to /index.html
+      # Avoid sticky caching tied to /index.html
       - name: Rename HTML wrapper to app.html
         run: mv dist/index.html dist/app.html
 
-      # Create index.php that streams app.html with no-cache headers
+      # index.php streams app.html + adds a tiny PHP-visible canary
       - name: Create index.php passthrough
         run: |
           cat > dist/index.php << 'PHP'
           <?php
+          header('Content-Type: text/html; charset=utf-8');
           header('Cache-Control: no-cache, no-store, must-revalidate');
           header('Pragma: no-cache');
           header('Expires: 0');
+          echo "<!-- php-ok " . gmdate('c') . " -->\n";
           readfile(__DIR__ . '/app.html');
           PHP
 
-      # .htaccess: prefer index.php, add SPA routing, and cache-bust "/" each deploy
-      - name: Add .htaccess (DirectoryIndex PHP + SPA + cache-busted /)
+      # .htaccess: prefer PHP, SPA routing, cache-busted root, and enable PHP handlers
+      - name: Add .htaccess (enable PHP + SPA + cache-busted /)
         run: |
           BUILD_TS="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           cat > dist/.htaccess << EOF
+          # Prefer PHP as index
           DirectoryIndex index.php
+
+          # Try common PHP handlers (cPanel/EasyApache & LiteSpeed variants)
+          <IfModule mime_module>
+            AddHandler application/x-httpd-ea-php82 .php
+            AddHandler application/x-httpd-ea-php81 .php
+            AddHandler application/x-httpd-php80 .php
+            AddHandler application/x-httpd-php .php
+          </IfModule>
+
           RewriteEngine On
 
           # If request is a real file/dir, serve it
@@ -74,7 +86,6 @@ jobs:
           RewriteRule . /index.php [L]
           EOF
 
-      # Marker to confirm public reachability of the docroot
       - name: Drop marker file
         run: echo "marker $(date -u +%FT%TZ)" > dist/DEPLOY_MARKER.txt
 
@@ -94,7 +105,6 @@ jobs:
             [ -n "${!v}" ] && echo "Secret $v present (len=${#v})" || { echo "::error::$v missing"; exit 1; }
           done
 
-      # Deploy with relative server-dir (typical for chrooted FTP users)
       - name: Deploy via FTPS (clean slate)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -112,7 +122,7 @@ jobs:
             **/node_modules/**
             **/.DS_Store
 
-      # ---- Post-deploy: prove what's on disk in the live folder ----
+      # ---- Post-deploy: prove what's on disk ----
       - name: Post-deploy — show remote dir + read key files
         run: |
           sudo apt-get update -y && sudo apt-get install -y lftp
@@ -130,24 +140,32 @@ jobs:
           echo "----- top of index.php on disk -----"
           cat index.php | sed -n '1,40p'
           echo "----- .htaccess on disk -----"
-          cat .htaccess | sed -n '1,80p' || echo ".htaccess not found"
+          cat .htaccess | sed -n '1,120p' || echo ".htaccess not found"
           bye
           EOF
 
-      # ---- Public checks ----
+      # ---- Public checks & diagnostics ----
       - name: Verify marker is publicly reachable
         run: |
           curl -sS -I https://newsite.ziggyonlinedebate.com/DEPLOY_MARKER.txt | (grep -q "^HTTP/.* 200" \
             && echo "✅ Marker reachable" || (echo "❌ Marker not reachable"; exit 1))
 
-      # Direct PHP passthrough page should show the fresh canary
+      # Print first lines of /index.php to see if PHP executes or raw PHP is returned
+      - name: Diagnose /index.php response (first 25 lines)
+        run: |
+          echo "----- /index.php headers -----"
+          curl -sS -I https://newsite.ziggyonlinedebate.com/index.php | sed -n '1,25p'
+          echo "----- /index.php body (first 25 lines) -----"
+          curl -sS https://newsite.ziggyonlinedebate.com/index.php | sed -n '1,25p'
+
+      # Strict pass: require canary over /index.php (PHP must execute)
       - name: Verify /index.php shows title canary
         run: |
-          curl -sS -H 'Cache-Control: no-cache' https://newsite.ziggyonlinedebate.com/index.php | grep -q "• build " \
+          curl -sS https://newsite.ziggyonlinedebate.com/index.php | grep -q "• build " \
             && echo "✅ /index.php shows title canary" \
-            || (echo "❌ /index.php missing title canary"; exit 1)
+            || (echo "❌ /index.php missing title canary (PHP likely not enabled for this subdomain)"; exit 1)
 
-      # Root (/) is rewritten to /index.php with a cache-buster, should also be fresh
+      # Root (/) uses cache-buster -> should be fresh once PHP is active
       - name: Verify ROOT (/) shows title canary with cache-buster
         run: |
           curl -sS "https://newsite.ziggyonlinedebate.com/?b=$(date -u +%s)" | grep -q "• build " \
