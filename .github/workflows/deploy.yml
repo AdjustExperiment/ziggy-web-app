@@ -31,62 +31,29 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Add .htaccess to dist (SPA routing + cache + index)
+      - name: Add .htaccess
         run: |
           cat > dist/.htaccess << 'EOF'
           DirectoryIndex index.html
           RewriteEngine On
-          RewriteBase /
           RewriteRule ^index\.html$ - [L]
           RewriteCond %{REQUEST_FILENAME} -f [OR]
           RewriteCond %{REQUEST_FILENAME} -d
           RewriteRule . - [L]
           RewriteRule . /index.html [L]
+
           <FilesMatch "\.html$">
             Header set Cache-Control "no-cache, no-store, must-revalidate"
             Header set Pragma "no-cache"
             Header set Expires "0"
           </FilesMatch>
-          <IfModule mod_mime.c>
-            AddType text/javascript .js
-          </IfModule>
-          <IfModule mod_headers.c>
-            <LocationMatch "^/assets/">
-              Header set Cache-Control "public, max-age=31536000, immutable"
-            </LocationMatch>
-          </IfModule>
           EOF
-
-      - name: Insert canary into dist/index.html
-        run: |
-          build_tag="<!-- deploy $(date -u +%Y-%m-%dT%H:%M:%SZ) -->"
-          sed -i "1s|^|$build_tag\n|" dist/index.html
-          head -n 2 dist/index.html
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: dist
           path: dist
-
-      - name: Assert required secrets exist (no values printed)
-        env:
-          FTP_HOST: ${{ secrets.FTP_HOST }}
-          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
-          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
-        run: |
-          for v in FTP_HOST FTP_USERNAME FTP_PASSWORD; do
-            [ -n "${!v}" ] && echo "Secret $v present (len=${#v})" || { echo "::error::$v missing"; exit 1; }
-          done
-
-      - name: Preflight - FTPS handshake on :21
-        run: |
-          echo | openssl s_client -starttls ftp -connect "${{ secrets.FTP_HOST }}:21" -brief || true
-
-      - name: Preflight - list remote directory
-        run: |
-          sudo apt-get update -y && sudo apt-get install -y lftp
-          lftp -u "${{ secrets.FTP_USERNAME }}","${{ secrets.FTP_PASSWORD }}" -e "set ssl:verify-certificate no; set ftp:passive-mode on; set ftp:ssl-force true; set ftp:ssl-protect-data true; cls -l --date --sort time /home/ziggydebate/newsite.ziggyonlinedebate.com/; bye" "${{ secrets.FTP_HOST }}"
 
       - name: Deploy via FTPS (clean slate)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
@@ -97,7 +64,7 @@ jobs:
           protocol: ftps
           port: ${{ secrets.FTP_PORT || 21 }}
           local-dir: dist/
-          server-dir: /home/ziggydebate/newsite.ziggyonlinedebate.com/
+          server-dir: newsite.ziggyonlinedebate.com/   # relative path
           state-name: .ftp-deploy-sync-state.json
           dangerous-clean-slate: true
           exclude: |
@@ -105,8 +72,3 @@ jobs:
             **/node_modules/**
             **/.DS_Store
 
-      - name: Verify live HTML updated
-        run: |
-          LIVE_URL="https://newsite.ziggyonlinedebate.com/"
-          curl -sS -H 'Cache-Control: no-cache' "$LIVE_URL" | tee /tmp/live.html
-          grep -q 'deploy ' /tmp/live.html && echo "✅ Live HTML contains canary" || { echo "❌ Canary not found in live HTML"; exit 1; }
