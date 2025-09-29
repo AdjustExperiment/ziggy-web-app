@@ -31,32 +31,29 @@ jobs:
       - name: Build
         run: npm run build
 
-      # CHANGE #1: add .htaccess so index.html wins and HTML won't cache
-      - name: Add .htaccess (SPA + no-cache + test header)
+      # Force index.html to be served and stop HTML caching
+      - name: Add .htaccess (SPA + no-cache)
         run: |
           cat > dist/.htaccess << 'EOF'
           DirectoryIndex index.html
-
-          # SPA routing
           RewriteEngine On
           RewriteRule ^index\.html$ - [L]
           RewriteCond %{REQUEST_FILENAME} -f [OR]
           RewriteCond %{REQUEST_FILENAME} -d
           RewriteRule . - [L]
           RewriteRule . /index.html [L]
-
-          # HTML must not be cached
           <FilesMatch "\.html$">
             Header set Cache-Control "no-cache, no-store, must-revalidate"
             Header set Pragma "no-cache"
             Header set Expires "0"
           </FilesMatch>
-
-          # Test header to prove .htaccess is applied (safe to remove later)
-          <IfModule mod_headers.c>
-            Header set X-Ziggy-Test "htaccess-works"
-          </IfModule>
           EOF
+
+      # Tiny canary so we can prove which HTML made it to the server
+      - name: Insert canary into dist/index.html
+        run: |
+          sed -i "1s|^|<!-- deploy $(date -u +%Y-%m-%dT%H:%M:%SZ) -->\n|" dist/index.html
+          head -n 2 dist/index.html
 
       - name: Upload build artifact (optional)
         uses: actions/upload-artifact@v4
@@ -74,7 +71,7 @@ jobs:
             [ -n "${!v}" ] && echo "Secret $v present (len=${#v})" || { echo "::error::$v missing"; exit 1; }
           done
 
-      # CHANGE #2: use a RELATIVE server-dir (common for chrooted FTP)
+      # Deploy with relative server-dir (common for chrooted FTP)
       - name: Deploy via FTPS (clean slate)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -92,11 +89,30 @@ jobs:
             **/node_modules/**
             **/.DS_Store
 
-      # Auto-verify that .htaccess is being read on the live site
-      - name: Verify .htaccess header is present
+      # ---- Post-deploy: prove what’s on disk in the live folder ----
+      - name: Post-deploy — show remote dir + read index.html
         run: |
-          curl -sSI https://newsite.ziggyonlinedebate.com/ | tee /tmp/headers.txt
-          echo "---- headers above ----"
-          grep -iq '^x-ziggy-test: htaccess-works' /tmp/headers.txt && echo "✅ .htaccess applied" || (echo "❌ X-Ziggy-Test header missing"; exit 1)
+          sudo apt-get update -y && sudo apt-get install -y lftp
+          lftp -u "${{ secrets.FTP_USERNAME }}","${{ secrets.FTP_PASSWORD }}" "${{ secrets.FTP_HOST }}" <<'EOF'
+          set ssl:verify-certificate no
+          set ftp:passive-mode on
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          cd newsite.ziggyonlinedebate.com/
+          echo "pwd (FTP chroot-relative):"
+          pwd
+          echo "----- directory listing (most recent first) -----"
+          cls -l --date --sort time
+          echo "----- top of index.html on disk -----"
+          get -O - index.html | sed -n '1,25p'
+          echo "----- does .htaccess exist? -----"
+          cat .htaccess | sed -n '1,25p' || echo ".htaccess not found"
+          bye
+          EOF
 
-
+      # Optional: quick live check that fetches the page without cache
+      - name: Verify live HTML changed (content grep)
+        run: |
+          curl -sS -H 'Cache-Control: no-cache' https://newsite.ziggyonlinedebate.com/ | grep -q 'deploy ' \
+            && echo "✅ Live HTML shows deploy canary" \
+            || (echo "❌ Canary not found in live HTML"; exit 1)
