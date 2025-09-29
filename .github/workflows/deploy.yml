@@ -31,17 +31,25 @@ jobs:
       - name: Build
         run: npm run build
 
-      # Force index.html to be served first and keep HTML uncached
-      - name: Add .htaccess (SPA + no-cache)
+      # .htaccess: force ROOT (/) -> /index.html, SPA rewrites, no-cache for HTML
+      - name: Add .htaccess (force / -> index.html + SPA + no-cache)
         run: |
           cat > dist/.htaccess << 'EOF'
           DirectoryIndex index.html
+
+          # If the request is exactly "/", serve index.html
           RewriteEngine On
+          RewriteCond %{REQUEST_URI} ^/$
+          RewriteRule ^$ /index.html [L]
+
+          # SPA routing for deep links
           RewriteRule ^index\.html$ - [L]
           RewriteCond %{REQUEST_FILENAME} -f [OR]
           RewriteCond %{REQUEST_FILENAME} -d
           RewriteRule . - [L]
           RewriteRule . /index.html [L]
+
+          # HTML must not be cached
           <FilesMatch "\.html$">
             Header set Cache-Control "no-cache, no-store, must-revalidate"
             Header set Pragma "no-cache"
@@ -49,14 +57,14 @@ jobs:
           </FilesMatch>
           EOF
 
-      # Visible canary in <title> (hard to strip, easy to verify)
+      # Visible canary in <title> for undeniable proof
       - name: Insert title canary into dist/index.html
         run: |
           ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           sed -i "s#<title>\\(.*\\)</title>#<title>\\1 • build ${ts}</title>#" dist/index.html
           grep -n "<title>" dist/index.html
 
-      # Simple marker file to test public reachability of this docroot
+      # Marker to confirm public reachability of docroot
       - name: Drop marker file
         run: echo "marker $(date -u +%FT%TZ)" > dist/DEPLOY_MARKER.txt
 
@@ -94,7 +102,21 @@ jobs:
             **/node_modules/**
             **/.DS_Store
 
-      # Inspect the actual files on the server right after deploy
+      # OPTIONAL: neutralize a stray index.php that could override index.html
+      - name: If index.php exists, rename so index.html takes precedence
+        run: |
+          sudo apt-get update -y && sudo apt-get install -y lftp
+          lftp -u "${{ secrets.FTP_USERNAME }}","${{ secrets.FTP_PASSWORD }}" "${{ secrets.FTP_HOST }}" <<'EOF'
+          set ssl:verify-certificate no
+          set ftp:passive-mode on
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          cd newsite.ziggyonlinedebate.com/
+          cls -1 index.php >/dev/null 2>&1 && echo "index.php found, renaming..." && mv -f index.php _index.php.bak || echo "no index.php present"
+          bye
+          EOF
+
+      # ---- Post-deploy: prove what’s on disk in the live folder ----
       - name: Post-deploy — show remote dir + read index.html
         run: |
           sudo apt-get update -y && sudo apt-get install -y lftp
@@ -121,8 +143,14 @@ jobs:
           curl -sS -I https://newsite.ziggyonlinedebate.com/DEPLOY_MARKER.txt | (grep -q "^HTTP/.* 200" \
             && echo "✅ Marker reachable" || (echo "❌ Marker not reachable"; exit 1))
 
-      - name: Verify live HTML shows title canary
+      - name: Verify /index.html shows title canary
+        run: |
+          curl -sS -H 'Cache-Control: no-cache' https://newsite.ziggyonlinedebate.com/index.html | grep -q "• build " \
+            && echo "✅ /index.html shows title canary" \
+            || (echo "❌ /index.html missing title canary"; exit 1)
+
+      - name: Verify ROOT (/) shows title canary
         run: |
           curl -sS -H 'Cache-Control: no-cache' https://newsite.ziggyonlinedebate.com/ | grep -q "• build " \
-            && echo "✅ Live HTML shows title canary" \
-            || (echo "❌ Title canary not found in live HTML"; exit 1)
+            && echo "✅ / shows title canary" \
+            || (echo "❌ ROOT (/) missing title canary"; exit 1)
