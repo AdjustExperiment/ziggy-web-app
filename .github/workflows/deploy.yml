@@ -31,40 +31,48 @@ jobs:
       - name: Build
         run: npm run build
 
-      # .htaccess: force ROOT (/) -> /index.html, SPA rewrites, no-cache for HTML
-      - name: Add .htaccess (force / -> index.html + SPA + no-cache)
-        run: |
-          cat > dist/.htaccess << 'EOF'
-          DirectoryIndex index.html
-
-          # If the request is exactly "/", serve index.html
-          RewriteEngine On
-          RewriteCond %{REQUEST_URI} ^/$
-          RewriteRule ^$ /index.html [L]
-
-          # SPA routing for deep links
-          RewriteRule ^index\.html$ - [L]
-          RewriteCond %{REQUEST_FILENAME} -f [OR]
-          RewriteCond %{REQUEST_FILENAME} -d
-          RewriteRule . - [L]
-          RewriteRule . /index.html [L]
-
-          # HTML must not be cached
-          <FilesMatch "\.html$">
-            Header set Cache-Control "no-cache, no-store, must-revalidate"
-            Header set Pragma "no-cache"
-            Header set Expires "0"
-          </FilesMatch>
-          EOF
-
-      # Visible canary in <title> for undeniable proof
+      # Add a visible canary to the title so we can prove freshness
       - name: Insert title canary into dist/index.html
         run: |
           ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           sed -i "s#<title>\\(.*\\)</title>#<title>\\1 • build ${ts}</title>#" dist/index.html
           grep -n "<title>" dist/index.html
 
-      # Marker to confirm public reachability of docroot
+      # Rename index.html -> app.html to avoid any front-end cache pinned to /index.html
+      - name: Rename HTML wrapper to app.html
+        run: mv dist/index.html dist/app.html
+
+      # Create index.php to serve app.html with no-cache headers (bypasses static caches)
+      - name: Create index.php passthrough
+        run: |
+          cat > dist/index.php << 'PHP'
+          <?php
+          header('Cache-Control: no-cache, no-store, must-revalidate');
+          header('Pragma: no-cache');
+          header('Expires: 0');
+          // stream the built HTML
+          readfile(__DIR__ . '/app.html');
+          PHP
+
+      # .htaccess: prefer index.php and keep SPA deep-link routing to index.php
+      - name: Add .htaccess (DirectoryIndex PHP + SPA)
+        run: |
+          cat > dist/.htaccess << 'EOF'
+          DirectoryIndex index.php
+
+          RewriteEngine On
+          # If request is a real file/dir, serve it
+          RewriteCond %{REQUEST_FILENAME} -f [OR]
+          RewriteCond %{REQUEST_FILENAME} -d
+          RewriteRule . - [L]
+
+          # Otherwise, send everything to index.php (serves app.html)
+          RewriteRule . /index.php [L]
+
+          # (Optional) You can still set HTML cache headers here, but PHP sends no-cache anyway.
+          EOF
+
+      # Marker to confirm public reachability of the docroot
       - name: Drop marker file
         run: echo "marker $(date -u +%FT%TZ)" > dist/DEPLOY_MARKER.txt
 
@@ -102,22 +110,8 @@ jobs:
             **/node_modules/**
             **/.DS_Store
 
-      # OPTIONAL: neutralize a stray index.php that could override index.html
-      - name: If index.php exists, rename so index.html takes precedence
-        run: |
-          sudo apt-get update -y && sudo apt-get install -y lftp
-          lftp -u "${{ secrets.FTP_USERNAME }}","${{ secrets.FTP_PASSWORD }}" "${{ secrets.FTP_HOST }}" <<'EOF'
-          set ssl:verify-certificate no
-          set ftp:passive-mode on
-          set ftp:ssl-force true
-          set ftp:ssl-protect-data true
-          cd newsite.ziggyonlinedebate.com/
-          cls -1 index.php >/dev/null 2>&1 && echo "index.php found, renaming..." && mv -f index.php _index.php.bak || echo "no index.php present"
-          bye
-          EOF
-
       # ---- Post-deploy: prove what’s on disk in the live folder ----
-      - name: Post-deploy — show remote dir + read index.html
+      - name: Post-deploy — show remote dir + read key files
         run: |
           sudo apt-get update -y && sudo apt-get install -y lftp
           lftp -u "${{ secrets.FTP_USERNAME }}","${{ secrets.FTP_PASSWORD }}" "${{ secrets.FTP_HOST }}" <<'EOF'
@@ -126,31 +120,26 @@ jobs:
           set ftp:ssl-force true
           set ftp:ssl-protect-data true
           cd newsite.ziggyonlinedebate.com/
-          echo "pwd (FTP chroot-relative):"
-          pwd
+          echo "pwd (FTP chroot-relative):"; pwd
           echo "----- directory listing (most recent first) -----"
           cls -l --date --sort time
-          echo "----- top of index.html on disk -----"
-          cat index.html | sed -n '1,40p'
-          echo "----- does .htaccess exist? -----"
-          cat .htaccess | sed -n '1,40p' || echo ".htaccess not found"
+          echo "----- top of app.html on disk -----"
+          cat app.html | sed -n '1,40p'
+          echo "----- top of index.php on disk -----"
+          cat index.php | sed -n '1,40p'
+          echo "----- .htaccess on disk -----"
+          cat .htaccess | sed -n '1,80p' || echo ".htaccess not found"
           bye
           EOF
 
-      # Public checks (no-cache fetch)
+      # Public checks (root should now be dynamic & fresh via PHP)
       - name: Verify marker is publicly reachable
         run: |
           curl -sS -I https://newsite.ziggyonlinedebate.com/DEPLOY_MARKER.txt | (grep -q "^HTTP/.* 200" \
             && echo "✅ Marker reachable" || (echo "❌ Marker not reachable"; exit 1))
 
-      - name: Verify /index.html shows title canary
-        run: |
-          curl -sS -H 'Cache-Control: no-cache' https://newsite.ziggyonlinedebate.com/index.html | grep -q "• build " \
-            && echo "✅ /index.html shows title canary" \
-            || (echo "❌ /index.html missing title canary"; exit 1)
-
-      - name: Verify ROOT (/) shows title canary
+      - name: Verify ROOT (/) shows title canary (served via index.php)
         run: |
           curl -sS -H 'Cache-Control: no-cache' https://newsite.ziggyonlinedebate.com/ | grep -q "• build " \
-            && echo "✅ / shows title canary" \
+            && echo "✅ / shows title canary (fresh)" \
             || (echo "❌ ROOT (/) missing title canary"; exit 1)
