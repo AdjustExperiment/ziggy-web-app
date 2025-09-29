@@ -31,7 +31,7 @@ jobs:
       - name: Build
         run: npm run build
 
-      # Force index.html to be served and stop HTML caching
+      # Force index.html to be served first and keep HTML uncached
       - name: Add .htaccess (SPA + no-cache)
         run: |
           cat > dist/.htaccess << 'EOF'
@@ -49,11 +49,16 @@ jobs:
           </FilesMatch>
           EOF
 
-      # Tiny canary so we can prove which HTML made it to the server
-      - name: Insert canary into dist/index.html
+      # Visible canary in <title> (hard to strip, easy to verify)
+      - name: Insert title canary into dist/index.html
         run: |
-          sed -i "1s|^|<!-- deploy $(date -u +%Y-%m-%dT%H:%M:%SZ) -->\n|" dist/index.html
-          head -n 2 dist/index.html
+          ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          sed -i "s#<title>\\(.*\\)</title>#<title>\\1 • build ${ts}</title>#" dist/index.html
+          grep -n "<title>" dist/index.html
+
+      # Simple marker file to test public reachability of this docroot
+      - name: Drop marker file
+        run: echo "marker $(date -u +%FT%TZ)" > dist/DEPLOY_MARKER.txt
 
       - name: Upload build artifact (optional)
         uses: actions/upload-artifact@v4
@@ -71,7 +76,7 @@ jobs:
             [ -n "${!v}" ] && echo "Secret $v present (len=${#v})" || { echo "::error::$v missing"; exit 1; }
           done
 
-      # Deploy with relative server-dir (common for chrooted FTP)
+      # Deploy with relative server-dir (typical for chrooted FTP users)
       - name: Deploy via FTPS (clean slate)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -89,7 +94,7 @@ jobs:
             **/node_modules/**
             **/.DS_Store
 
-      # ---- Post-deploy: prove what’s on disk in the live folder ----
+      # Inspect the actual files on the server right after deploy
       - name: Post-deploy — show remote dir + read index.html
         run: |
           sudo apt-get update -y && sudo apt-get install -y lftp
@@ -104,15 +109,20 @@ jobs:
           echo "----- directory listing (most recent first) -----"
           cls -l --date --sort time
           echo "----- top of index.html on disk -----"
-          get -O - index.html | sed -n '1,25p'
+          cat index.html | sed -n '1,40p'
           echo "----- does .htaccess exist? -----"
-          cat .htaccess | sed -n '1,25p' || echo ".htaccess not found"
+          cat .htaccess | sed -n '1,40p' || echo ".htaccess not found"
           bye
           EOF
 
-      # Optional: quick live check that fetches the page without cache
-      - name: Verify live HTML changed (content grep)
+      # Public checks (no-cache fetch)
+      - name: Verify marker is publicly reachable
         run: |
-          curl -sS -H 'Cache-Control: no-cache' https://newsite.ziggyonlinedebate.com/ | grep -q 'deploy ' \
-            && echo "✅ Live HTML shows deploy canary" \
-            || (echo "❌ Canary not found in live HTML"; exit 1)
+          curl -sS -I https://newsite.ziggyonlinedebate.com/DEPLOY_MARKER.txt | (grep -q "^HTTP/.* 200" \
+            && echo "✅ Marker reachable" || (echo "❌ Marker not reachable"; exit 1))
+
+      - name: Verify live HTML shows title canary
+        run: |
+          curl -sS -H 'Cache-Control: no-cache' https://newsite.ziggyonlinedebate.com/ | grep -q "• build " \
+            && echo "✅ Live HTML shows title canary" \
+            || (echo "❌ Title canary not found in live HTML"; exit 1)
