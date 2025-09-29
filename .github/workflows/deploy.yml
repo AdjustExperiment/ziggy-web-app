@@ -31,10 +31,13 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Add .htaccess
+      # CHANGE #1: add .htaccess so index.html wins and HTML won't cache
+      - name: Add .htaccess (SPA + no-cache + test header)
         run: |
           cat > dist/.htaccess << 'EOF'
           DirectoryIndex index.html
+
+          # SPA routing
           RewriteEngine On
           RewriteRule ^index\.html$ - [L]
           RewriteCond %{REQUEST_FILENAME} -f [OR]
@@ -42,19 +45,36 @@ jobs:
           RewriteRule . - [L]
           RewriteRule . /index.html [L]
 
+          # HTML must not be cached
           <FilesMatch "\.html$">
             Header set Cache-Control "no-cache, no-store, must-revalidate"
             Header set Pragma "no-cache"
             Header set Expires "0"
           </FilesMatch>
+
+          # Test header to prove .htaccess is applied (safe to remove later)
+          <IfModule mod_headers.c>
+            Header set X-Ziggy-Test "htaccess-works"
+          </IfModule>
           EOF
 
-      - name: Upload build artifact
+      - name: Upload build artifact (optional)
         uses: actions/upload-artifact@v4
         with:
           name: dist
           path: dist
 
+      - name: Assert FTP secrets exist (no values printed)
+        env:
+          FTP_HOST: ${{ secrets.FTP_HOST }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          for v in FTP_HOST FTP_USERNAME FTP_PASSWORD; do
+            [ -n "${!v}" ] && echo "Secret $v present (len=${#v})" || { echo "::error::$v missing"; exit 1; }
+          done
+
+      # CHANGE #2: use a RELATIVE server-dir (common for chrooted FTP)
       - name: Deploy via FTPS (clean slate)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -62,13 +82,21 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           protocol: ftps
-          port: ${{ secrets.FTP_PORT || 21 }}
+          port: 21
           local-dir: dist/
-          server-dir: newsite.ziggyonlinedebate.com/   # relative path
+          server-dir: newsite.ziggyonlinedebate.com/
           state-name: .ftp-deploy-sync-state.json
           dangerous-clean-slate: true
           exclude: |
             **/.git*
             **/node_modules/**
             **/.DS_Store
+
+      # Auto-verify that .htaccess is being read on the live site
+      - name: Verify .htaccess header is present
+        run: |
+          curl -sSI https://newsite.ziggyonlinedebate.com/ | tee /tmp/headers.txt
+          echo "---- headers above ----"
+          grep -iq '^x-ziggy-test: htaccess-works' /tmp/headers.txt && echo "✅ .htaccess applied" || (echo "❌ X-Ziggy-Test header missing"; exit 1)
+
 
