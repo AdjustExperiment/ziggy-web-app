@@ -31,18 +31,18 @@ jobs:
       - name: Build
         run: npm run build
 
-      # Add a visible canary to the title so we can prove freshness
+      # Add a visible canary to <title> so we can prove freshness in responses
       - name: Insert title canary into dist/index.html
         run: |
           ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           sed -i "s#<title>\\(.*\\)</title>#<title>\\1 • build ${ts}</title>#" dist/index.html
           grep -n "<title>" dist/index.html
 
-      # Rename index.html -> app.html to avoid any front-end cache pinned to /index.html
+      # Rename index.html -> app.html to avoid sticky caches bound to /index.html
       - name: Rename HTML wrapper to app.html
         run: mv dist/index.html dist/app.html
 
-      # Create index.php to serve app.html with no-cache headers (bypasses static caches)
+      # Create index.php that streams app.html with no-cache headers
       - name: Create index.php passthrough
         run: |
           cat > dist/index.php << 'PHP'
@@ -50,26 +50,28 @@ jobs:
           header('Cache-Control: no-cache, no-store, must-revalidate');
           header('Pragma: no-cache');
           header('Expires: 0');
-          // stream the built HTML
           readfile(__DIR__ . '/app.html');
           PHP
 
-      # .htaccess: prefer index.php and keep SPA deep-link routing to index.php
-      - name: Add .htaccess (DirectoryIndex PHP + SPA)
+      # .htaccess: prefer index.php, add SPA routing, and cache-bust "/" each deploy
+      - name: Add .htaccess (DirectoryIndex PHP + SPA + cache-busted /)
         run: |
-          cat > dist/.htaccess << 'EOF'
+          BUILD_TS="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          cat > dist/.htaccess << EOF
           DirectoryIndex index.php
-
           RewriteEngine On
+
           # If request is a real file/dir, serve it
           RewriteCond %{REQUEST_FILENAME} -f [OR]
           RewriteCond %{REQUEST_FILENAME} -d
           RewriteRule . - [L]
 
-          # Otherwise, send everything to index.php (serves app.html)
-          RewriteRule . /index.php [L]
+          # Force ROOT (/) to include a unique cache-buster each deploy
+          RewriteCond %{REQUEST_URI} ^/$
+          RewriteRule ^$ /index.php?b=${BUILD_TS} [L]
 
-          # (Optional) You can still set HTML cache headers here, but PHP sends no-cache anyway.
+          # SPA deep links -> index.php (which streams app.html)
+          RewriteRule . /index.php [L]
           EOF
 
       # Marker to confirm public reachability of the docroot
@@ -110,7 +112,7 @@ jobs:
             **/node_modules/**
             **/.DS_Store
 
-      # ---- Post-deploy: prove what’s on disk in the live folder ----
+      # ---- Post-deploy: prove what's on disk in the live folder ----
       - name: Post-deploy — show remote dir + read key files
         run: |
           sudo apt-get update -y && sudo apt-get install -y lftp
@@ -132,14 +134,22 @@ jobs:
           bye
           EOF
 
-      # Public checks (root should now be dynamic & fresh via PHP)
+      # ---- Public checks ----
       - name: Verify marker is publicly reachable
         run: |
           curl -sS -I https://newsite.ziggyonlinedebate.com/DEPLOY_MARKER.txt | (grep -q "^HTTP/.* 200" \
             && echo "✅ Marker reachable" || (echo "❌ Marker not reachable"; exit 1))
 
-      - name: Verify ROOT (/) shows title canary (served via index.php)
+      # Direct PHP passthrough page should show the fresh canary
+      - name: Verify /index.php shows title canary
         run: |
-          curl -sS -H 'Cache-Control: no-cache' https://newsite.ziggyonlinedebate.com/ | grep -q "• build " \
-            && echo "✅ / shows title canary (fresh)" \
-            || (echo "❌ ROOT (/) missing title canary"; exit 1)
+          curl -sS -H 'Cache-Control: no-cache' https://newsite.ziggyonlinedebate.com/index.php | grep -q "• build " \
+            && echo "✅ /index.php shows title canary" \
+            || (echo "❌ /index.php missing title canary"; exit 1)
+
+      # Root (/) is rewritten to /index.php with a cache-buster, should also be fresh
+      - name: Verify ROOT (/) shows title canary with cache-buster
+        run: |
+          curl -sS "https://newsite.ziggyonlinedebate.com/?b=$(date -u +%s)" | grep -q "• build " \
+            && echo "✅ / (cache-busted) shows title canary" \
+            || (echo "❌ / (cache-busted) missing title canary"; exit 1)
