@@ -75,7 +75,7 @@ jobs:
           local-dir: dist/
           server-dir: /home/ziggydebate/newsite.ziggyonlinedebate.com/
           state-name: .ftp-deploy-sync-state.json
-          # Wipe remote directory first (dangerous: deletes everything in server-dir)
+          # Wipe remote directory first. (dangerous: deletes everything in server-dir)
           dangerous-clean-slate: true
           exclude: |
             **/.git*
