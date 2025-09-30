@@ -41,40 +41,34 @@ jobs:
           sed -i "s#<title>\\(.*\\)</title>#<title>\\1 • build ${ts}</title>#" dist/index.html
           grep -n "<title>" dist/index.html
 
+      # Package EVERYTHING into a versioned release folder
       - name: Assemble release folder
         run: |
-          BUILD_ID="$(date -u +%Y%m%dT%H%M%SZ)"
-          echo "BUILD_ID=${BUILD_ID}" >> $GITHUB_ENV
+          BUILD_ID="$(date -u +%Y%m%dT%H%M%SZ)"; echo "BUILD_ID=${BUILD_ID}" >> $GITHUB_ENV
           mkdir -p dist_release/releases/${BUILD_ID}
           cp -a dist/. dist_release/releases/${BUILD_ID}/
+          # put a marker INSIDE the release so it's in docroot (releases/current)
+          echo "marker $(date -u +%FT%TZ)" > dist_release/releases/${BUILD_ID}/DEPLOY_MARKER.txt
 
+      # Per-release .htaccess for SPA routing + (best-effort) no-cache on HTML
       - name: Add .htaccess inside the release
         run: |
           cat > "dist_release/releases/${BUILD_ID}/.htaccess" << 'EOF'
           DirectoryIndex index.html
           RewriteEngine On
+          # Serve existing files/dirs directly
           RewriteCond %{REQUEST_FILENAME} -f [OR]
           RewriteCond %{REQUEST_FILENAME} -d
           RewriteRule . - [L]
+          # SPA deep-links -> index.html
           RewriteRule . /index.html [L]
+          # (If host honors headers) discourage HTML caching
           <FilesMatch "\.html$">
             Header set Cache-Control "no-cache, no-store, must-revalidate"
             Header set Pragma "no-cache"
             Header set Expires "0"
           </FilesMatch>
           EOF
-
-      - name: Add root .htaccess (optional helper)
-        run: |
-          mkdir -p dist_release
-          cat > "dist_release/.htaccess" <<EOF
-          RewriteEngine On
-          RewriteRule ^$ /releases/current/index.html [L]
-          RewriteRule . /releases/current/index.html [L]
-          EOF
-
-      - name: Drop marker file
-        run: echo "marker $(date -u +%FT%TZ)" > dist_release/DEPLOY_MARKER.txt
 
       - name: Upload build artifact (optional)
         uses: actions/upload-artifact@v4
@@ -109,7 +103,7 @@ jobs:
             **/node_modules/**
             **/.DS_Store
 
-      # ➋ Atomically refresh 'current' to match this release
+      # ➋ Atomically refresh 'current' (your docroot) to match this release
       - name: Deploy to releases/current (docroot)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -127,25 +121,8 @@ jobs:
             **/node_modules/**
             **/.DS_Store
 
-      # ➌ Root helper files (marker + redirect .htaccess)
-      - name: Deploy root helper files
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_HOST }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ftps
-          port: 21
-          local-dir: dist_release/
-          server-dir: newsite.ziggyonlinedebate.com/
-          state-name: .ftp-deploy-sync-state.root.json
-          exclude: |
-            releases/**
-            **/.git*
-            **/node_modules/**
-            **/.DS_Store
-
-      - name: Verify marker reachable (root)
+      # ---- Post-deploy sanity ----
+      - name: Verify marker reachable (served from current/)
         run: |
           curl -sS -I https://newsite.ziggyonlinedebate.com/DEPLOY_MARKER.txt | (grep -q "^HTTP/.* 200" \
             && echo "✅ Marker reachable" || (echo "❌ Marker not reachable"; exit 1))
@@ -156,6 +133,7 @@ jobs:
             && echo "✅ / shows title canary" \
             || (echo "❌ ROOT (/) missing title canary"; exit 1)
 
+  # -------- Manual rollback job --------
   rollback-current:
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
@@ -170,7 +148,6 @@ jobs:
             [ -n "${!v}" ] && echo "Secret $v present (len=${#v})" || { echo "::error::$v missing"; exit 1; }
           done
 
-      # Optional: list available releases so you can confirm the BUILD_ID
       - name: List available releases (for reference)
         run: |
           sudo apt-get update -y && sudo apt-get install -y lftp
@@ -181,23 +158,7 @@ jobs:
           bye
           EOF
 
-      # Re-point 'current' by syncing from the chosen BUILD_ID
-      - name: Roll back current to selected BUILD_ID
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_HOST }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ftps
-          port: 21
-          # We don't have the release locally; do a remote-to-remote by downloading then uploading:
-          # Simple route: fetch selected release to runner, then push to current.
-          local-dir: ./selected-release/
-          server-dir: newsite.ziggyonlinedebate.com/releases/current/
-          dangerous-clean-slate: true
-          state-name: .ftp-deploy-sync-state.rollback.json
-
-      # Pull selected release down first
+      # Download chosen release to runner
       - name: Download selected release to runner
         run: |
           sudo apt-get update -y && sudo apt-get install -y lftp
@@ -211,7 +172,7 @@ jobs:
           bye
           EOF
 
-      # Now push that copy into releases/current
+      # Push it into current (docroot)
       - name: Push selected release into current
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
