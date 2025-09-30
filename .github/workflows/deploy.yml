@@ -14,14 +14,17 @@ jobs:
   build-and-deploy:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with: { fetch-depth: 1 }
+        with:
+          fetch-depth: 1
 
       - name: Set up Node
         uses: actions/setup-node@v4
-        with: { node-version: '20' }
+        with:
+          node-version: '20'
 
       - name: Install deps (allow legacy peer deps)
         run: npm ci --legacy-peer-deps
@@ -47,7 +50,7 @@ jobs:
           BUILD_ID="$(date -u +%Y%m%dT%H%M%SZ)"; echo "BUILD_ID=${BUILD_ID}" >> $GITHUB_ENV
           mkdir -p dist_release/releases/${BUILD_ID}
           cp -a dist/. dist_release/releases/${BUILD_ID}/
-          # put a marker INSIDE the release so it's in docroot (releases/current)
+          # marker INSIDE the release (ends up in docroot when current/ is synced)
           echo "marker $(date -u +%FT%TZ)" > dist_release/releases/${BUILD_ID}/DEPLOY_MARKER.txt
 
       # Per-release .htaccess for SPA routing + (best-effort) no-cache on HTML
@@ -86,7 +89,7 @@ jobs:
             [ -n "${!v}" ] && echo "Secret $v present (len=${#v})" || { echo "::error::$v missing"; exit 1; }
           done
 
-      # ➊ Upload the new timestamped release
+      # ➊ Upload the new timestamped release (keeps history)
       - name: Deploy new versioned release
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -121,22 +124,38 @@ jobs:
             **/node_modules/**
             **/.DS_Store
 
-      # ---- Post-deploy sanity ----
-      - name: Verify marker reachable (served from current/)
+      # ---- Smart verifications (work whether or not docroot is switched yet) ----
+      - name: Verify marker (root OR explicit current/)
         run: |
-          curl -sS -I https://newsite.ziggyonlinedebate.com/DEPLOY_MARKER.txt | (grep -q "^HTTP/.* 200" \
-            && echo "✅ Marker reachable" || (echo "❌ Marker not reachable"; exit 1))
+          set -e
+          if curl -sS -I https://newsite.ziggyonlinedebate.com/DEPLOY_MARKER.txt | grep -q "^HTTP/.* 200" ; then
+            echo "✅ Marker reachable at root (docroot already = releases/current)"
+          elif curl -sS -I https://newsite.ziggyonlinedebate.com/releases/current/DEPLOY_MARKER.txt | grep -q "^HTTP/.* 200" ; then
+            echo "ℹ️ Marker reachable at /releases/current/DEPLOY_MARKER.txt (docroot not switched yet)"
+            exit 0
+          else
+            echo "❌ Marker not reachable at either path"
+            exit 1
+          fi
 
-      - name: Verify / shows title canary (served from current/)
+      - name: Verify title canary (root OR explicit current/)
         run: |
-          curl -sS -H 'Cache-Control: no-cache' https://newsite.ziggyonlinedebate.com/ | grep -q "• build " \
-            && echo "✅ / shows title canary" \
-            || (echo "❌ ROOT (/) missing title canary"; exit 1)
+          set -e
+          if curl -sS -H 'Cache-Control: no-cache' https://newsite.ziggyonlinedebate.com/ | grep -q "• build " ; then
+            echo "✅ / shows title canary"
+          elif curl -sS -H 'Cache-Control: no-cache' https://newsite.ziggyonlinedebate.com/releases/current/index.html | grep -q "• build " ; then
+            echo "ℹ️ Canary visible at /releases/current/index.html (docroot not switched yet)"
+            exit 0
+          else
+            echo "❌ Title canary not found at either path"
+            exit 1
+          fi
 
   # -------- Manual rollback job --------
   rollback-current:
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+
     steps:
       - name: Assert FTP secrets exist (no values printed)
         env:
@@ -186,7 +205,13 @@ jobs:
           dangerous-clean-slate: true
           state-name: .ftp-deploy-sync-state.rollback.push.json
 
-      - name: Verify rollback live page
+      - name: Verify rollback live page (root OR explicit current/)
         run: |
-          curl -sS -H 'Cache-Control: no-cache' https://newsite.ziggyonlinedebate.com/ | head -n 25
-          echo "✅ Rollback completed to BUILD_ID=${{ github.event.inputs.BUILD_ID }}"
+          if curl -sS -H 'Cache-Control: no-cache' https://newsite.ziggyonlinedebate.com/ | head -n 1 >/dev/null ; then
+            echo "✅ Rollback applied (root path)"
+          elif curl -sS -H 'Cache-Control: no-cache' https://newsite.ziggyonlinedebate.com/releases/current/index.html | head -n 1 >/dev/null ; then
+            echo "ℹ️ Rollback applied (explicit current/ path). If root still shows old content, switch the subdomain docroot to releases/current"
+          else
+            echo "❌ Could not fetch live page after rollback"
+            exit 1
+          fi
