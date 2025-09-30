@@ -1,4 +1,4 @@
-name: Build & Deploy (FTPS, Clean Slate)
+name: Build & Deploy (FTPS, Versioned HTML via FTP)
 
 on:
   push:
@@ -31,61 +31,49 @@ jobs:
       - name: Build
         run: npm run build
 
-      # Canary in <title> so we can see builds in-page
+      # Add a visible canary in the HTML <title>
       - name: Insert title canary into dist/index.html
         run: |
           ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           sed -i "s#<title>\\(.*\\)</title>#<title>\\1 • build ${ts}</title>#" dist/index.html
           grep -n "<title>" dist/index.html
 
-      # Avoid sticky caching tied to /index.html
-      - name: Rename HTML wrapper to app.html
-        run: mv dist/index.html dist/app.html
-
-      # index.php streams app.html + adds a tiny PHP-visible canary
-      - name: Create index.php passthrough
+      # Prepare a versioned release directory inside dist/
+      - name: Prepare versioned release dir
         run: |
-          cat > dist/index.php << 'PHP'
-          <?php
-          header('Content-Type: text/html; charset=utf-8');
-          header('Cache-Control: no-cache, no-store, must-revalidate');
-          header('Pragma: no-cache');
-          header('Expires: 0');
-          echo "<!-- php-ok " . gmdate('c') . " -->\n";
-          readfile(__DIR__ . '/app.html');
-          PHP
+          BUILD_ID="$(date -u +%Y%m%dT%H%M%SZ)"
+          echo "BUILD_ID=${BUILD_ID}" >> $GITHUB_ENV
+          mkdir -p dist/releases/${BUILD_ID}
+          # move the built HTML into the versioned folder; keep assets at top-level dist
+          mv dist/index.html dist/releases/${BUILD_ID}/index.html
 
-      # .htaccess: prefer PHP, SPA routing, cache-busted root, and enable PHP handlers
-      - name: Add .htaccess (enable PHP + SPA + cache-busted /)
+      # Write .htaccess that always points ROOT (/) to the latest release index
+      - name: Create .htaccess (versioned root + SPA)
         run: |
-          BUILD_TS="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           cat > dist/.htaccess << EOF
-          # Prefer PHP as index
-          DirectoryIndex index.php
-
-          # Try common PHP handlers (cPanel/EasyApache & LiteSpeed variants)
-          <IfModule mime_module>
-            AddHandler application/x-httpd-ea-php82 .php
-            AddHandler application/x-httpd-ea-php81 .php
-            AddHandler application/x-httpd-php80 .php
-            AddHandler application/x-httpd-php .php
-          </IfModule>
-
+          # Always serve the latest release index at root
           RewriteEngine On
 
-          # If request is a real file/dir, serve it
+          # Serve files directly if they exist (assets, icons, etc.)
           RewriteCond %{REQUEST_FILENAME} -f [OR]
           RewriteCond %{REQUEST_FILENAME} -d
           RewriteRule . - [L]
 
-          # Force ROOT (/) to include a unique cache-buster each deploy
-          RewriteCond %{REQUEST_URI} ^/$
-          RewriteRule ^$ /index.php?b=${BUILD_TS} [L]
+          # Point / to the newly deployed release
+          RewriteRule ^$ /releases/${BUILD_ID}/index.html [L]
 
-          # SPA deep links -> index.php (which streams app.html)
-          RewriteRule . /index.php [L]
+          # SPA deep-links: send everything else to the latest release index
+          RewriteRule . /releases/${BUILD_ID}/index.html [L]
+
+          # (Optional) discourage HTML caching if your host honors headers
+          <FilesMatch "\.html$">
+            Header set Cache-Control "no-cache, no-store, must-revalidate"
+            Header set Pragma "no-cache"
+            Header set Expires "0"
+          </FilesMatch>
           EOF
 
+      # Marker to confirm public reachability of the docroot
       - name: Drop marker file
         run: echo "marker $(date -u +%FT%TZ)" > dist/DEPLOY_MARKER.txt
 
@@ -105,6 +93,7 @@ jobs:
             [ -n "${!v}" ] && echo "Secret $v present (len=${#v})" || { echo "::error::$v missing"; exit 1; }
           done
 
+      # Deploy (relative path; chroot-friendly)
       - name: Deploy via FTPS (clean slate)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -122,8 +111,8 @@ jobs:
             **/node_modules/**
             **/.DS_Store
 
-      # ---- Post-deploy: prove what's on disk ----
-      - name: Post-deploy — show remote dir + read key files
+      # ---- Post-deploy: inspect what's on disk ----
+      - name: Post-deploy — show remote dir + release index
         run: |
           sudo apt-get update -y && sudo apt-get install -y lftp
           lftp -u "${{ secrets.FTP_USERNAME }}","${{ secrets.FTP_PASSWORD }}" "${{ secrets.FTP_HOST }}" <<'EOF'
@@ -133,41 +122,27 @@ jobs:
           set ftp:ssl-protect-data true
           cd newsite.ziggyonlinedebate.com/
           echo "pwd (FTP chroot-relative):"; pwd
-          echo "----- directory listing (most recent first) -----"
+          echo "----- top-level listing (most recent first) -----"
           cls -l --date --sort time
-          echo "----- top of app.html on disk -----"
-          cat app.html | sed -n '1,40p'
-          echo "----- top of index.php on disk -----"
-          cat index.php | sed -n '1,40p'
-          echo "----- .htaccess on disk -----"
-          cat .htaccess | sed -n '1,120p' || echo ".htaccess not found"
+          echo "----- latest releases/ listing -----"
+          cls -l --date --sort time releases/
+          # find the latest release folder and show its index
+          set xfer:clobber yes
+          echo "----- top of current release index.html -----"
+          # naive: just cat the most recent index.html we just uploaded (alphabetic time order)
+          # (we could parse, but for brevity list and cat newest)
           bye
           EOF
+          # Above lftp can't easily "cat newest"; fetch via curl below.
 
-      # ---- Public checks & diagnostics ----
+      # ---- Public checks ----
       - name: Verify marker is publicly reachable
         run: |
           curl -sS -I https://newsite.ziggyonlinedebate.com/DEPLOY_MARKER.txt | (grep -q "^HTTP/.* 200" \
             && echo "✅ Marker reachable" || (echo "❌ Marker not reachable"; exit 1))
 
-      # Print first lines of /index.php to see if PHP executes or raw PHP is returned
-      - name: Diagnose /index.php response (first 25 lines)
+      - name: Verify ROOT (/) shows title canary
         run: |
-          echo "----- /index.php headers -----"
-          curl -sS -I https://newsite.ziggyonlinedebate.com/index.php | sed -n '1,25p'
-          echo "----- /index.php body (first 25 lines) -----"
-          curl -sS https://newsite.ziggyonlinedebate.com/index.php | sed -n '1,25p'
-
-      # Strict pass: require canary over /index.php (PHP must execute)
-      - name: Verify /index.php shows title canary
-        run: |
-          curl -sS https://newsite.ziggyonlinedebate.com/index.php | grep -q "• build " \
-            && echo "✅ /index.php shows title canary" \
-            || (echo "❌ /index.php missing title canary (PHP likely not enabled for this subdomain)"; exit 1)
-
-      # Root (/) uses cache-buster -> should be fresh once PHP is active
-      - name: Verify ROOT (/) shows title canary with cache-buster
-        run: |
-          curl -sS "https://newsite.ziggyonlinedebate.com/?b=$(date -u +%s)" | grep -q "• build " \
-            && echo "✅ / (cache-busted) shows title canary" \
-            || (echo "❌ / (cache-busted) missing title canary"; exit 1)
+          curl -sS -H 'Cache-Control: no-cache' https://newsite.ziggyonlinedebate.com/ | grep -q "• build " \
+            && echo "✅ / shows title canary" \
+            || (echo "❌ ROOT (/) missing title canary"; exit 1)
