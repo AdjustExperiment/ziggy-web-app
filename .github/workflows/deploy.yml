@@ -1,23 +1,27 @@
-name: Build & Deploy (FTPS, Versioned HTML via FTP)
+name: Build & Deploy (FTPS, Versioned Releases with Current + Rollback)
 
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      BUILD_ID:
+        description: "Release folder to roll back to (e.g. 20250930T000436Z)"
+        required: true
+        type: string
 
 jobs:
   build-and-deploy:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
+        with: { fetch-depth: 1 }
 
       - name: Set up Node
         uses: actions/setup-node@v4
-        with:
-          node-version: '20'
+        with: { node-version: '20' }
 
       - name: Install deps (allow legacy peer deps)
         run: npm ci --legacy-peer-deps
@@ -31,41 +35,28 @@ jobs:
       - name: Build
         run: npm run build
 
-      # Add a visible canary in the HTML <title>
-      - name: Insert title canary into dist/index.html
+      - name: Insert title canary
         run: |
           ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           sed -i "s#<title>\\(.*\\)</title>#<title>\\1 • build ${ts}</title>#" dist/index.html
           grep -n "<title>" dist/index.html
 
-      # Prepare a versioned release directory inside dist/
-      - name: Prepare versioned release dir
+      - name: Assemble release folder
         run: |
           BUILD_ID="$(date -u +%Y%m%dT%H%M%SZ)"
           echo "BUILD_ID=${BUILD_ID}" >> $GITHUB_ENV
-          mkdir -p dist/releases/${BUILD_ID}
-          # move the built HTML into the versioned folder; keep assets at top-level dist
-          mv dist/index.html dist/releases/${BUILD_ID}/index.html
+          mkdir -p dist_release/releases/${BUILD_ID}
+          cp -a dist/. dist_release/releases/${BUILD_ID}/
 
-      # Write .htaccess that always points ROOT (/) to the latest release index
-      - name: Create .htaccess (versioned root + SPA)
+      - name: Add .htaccess inside the release
         run: |
-          cat > dist/.htaccess << EOF
-          # Always serve the latest release index at root
+          cat > "dist_release/releases/${BUILD_ID}/.htaccess" << 'EOF'
+          DirectoryIndex index.html
           RewriteEngine On
-
-          # Serve files directly if they exist (assets, icons, etc.)
           RewriteCond %{REQUEST_FILENAME} -f [OR]
           RewriteCond %{REQUEST_FILENAME} -d
           RewriteRule . - [L]
-
-          # Point / to the newly deployed release
-          RewriteRule ^$ /releases/${BUILD_ID}/index.html [L]
-
-          # SPA deep-links: send everything else to the latest release index
-          RewriteRule . /releases/${BUILD_ID}/index.html [L]
-
-          # (Optional) discourage HTML caching if your host honors headers
+          RewriteRule . /index.html [L]
           <FilesMatch "\.html$">
             Header set Cache-Control "no-cache, no-store, must-revalidate"
             Header set Pragma "no-cache"
@@ -73,15 +64,23 @@ jobs:
           </FilesMatch>
           EOF
 
-      # Marker to confirm public reachability of the docroot
+      - name: Add root .htaccess (optional helper)
+        run: |
+          mkdir -p dist_release
+          cat > "dist_release/.htaccess" <<EOF
+          RewriteEngine On
+          RewriteRule ^$ /releases/current/index.html [L]
+          RewriteRule . /releases/current/index.html [L]
+          EOF
+
       - name: Drop marker file
-        run: echo "marker $(date -u +%FT%TZ)" > dist/DEPLOY_MARKER.txt
+        run: echo "marker $(date -u +%FT%TZ)" > dist_release/DEPLOY_MARKER.txt
 
       - name: Upload build artifact (optional)
         uses: actions/upload-artifact@v4
         with:
-          name: dist
-          path: dist
+          name: site-release
+          path: dist_release
 
       - name: Assert FTP secrets exist (no values printed)
         env:
@@ -93,8 +92,8 @@ jobs:
             [ -n "${!v}" ] && echo "Secret $v present (len=${#v})" || { echo "::error::$v missing"; exit 1; }
           done
 
-      # Deploy (relative path; chroot-friendly)
-      - name: Deploy via FTPS (clean slate)
+      # ➊ Upload the new timestamped release
+      - name: Deploy new versioned release
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_HOST }}
@@ -102,47 +101,131 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           protocol: ftps
           port: 21
-          local-dir: dist/
-          server-dir: newsite.ziggyonlinedebate.com/
-          state-name: .ftp-deploy-sync-state.json
-          dangerous-clean-slate: true
+          local-dir: dist_release/releases/${{ env.BUILD_ID }}/
+          server-dir: newsite.ziggyonlinedebate.com/releases/${{ env.BUILD_ID }}/
+          state-name: .ftp-deploy-sync-state.release.json
           exclude: |
             **/.git*
             **/node_modules/**
             **/.DS_Store
 
-      # ---- Post-deploy: inspect what's on disk ----
-      - name: Post-deploy — show remote dir + release index
-        run: |
-          sudo apt-get update -y && sudo apt-get install -y lftp
-          lftp -u "${{ secrets.FTP_USERNAME }}","${{ secrets.FTP_PASSWORD }}" "${{ secrets.FTP_HOST }}" <<'EOF'
-          set ssl:verify-certificate no
-          set ftp:passive-mode on
-          set ftp:ssl-force true
-          set ftp:ssl-protect-data true
-          cd newsite.ziggyonlinedebate.com/
-          echo "pwd (FTP chroot-relative):"; pwd
-          echo "----- top-level listing (most recent first) -----"
-          cls -l --date --sort time
-          echo "----- latest releases/ listing -----"
-          cls -l --date --sort time releases/
-          # find the latest release folder and show its index
-          set xfer:clobber yes
-          echo "----- top of current release index.html -----"
-          # naive: just cat the most recent index.html we just uploaded (alphabetic time order)
-          # (we could parse, but for brevity list and cat newest)
-          bye
-          EOF
-          # Above lftp can't easily "cat newest"; fetch via curl below.
+      # ➋ Atomically refresh 'current' to match this release
+      - name: Deploy to releases/current (docroot)
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          port: 21
+          local-dir: dist_release/releases/${{ env.BUILD_ID }}/
+          server-dir: newsite.ziggyonlinedebate.com/releases/current/
+          dangerous-clean-slate: true
+          state-name: .ftp-deploy-sync-state.current.json
+          exclude: |
+            **/.git*
+            **/node_modules/**
+            **/.DS_Store
 
-      # ---- Public checks ----
-      - name: Verify marker is publicly reachable
+      # ➌ Root helper files (marker + redirect .htaccess)
+      - name: Deploy root helper files
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          port: 21
+          local-dir: dist_release/
+          server-dir: newsite.ziggyonlinedebate.com/
+          state-name: .ftp-deploy-sync-state.root.json
+          exclude: |
+            releases/**
+            **/.git*
+            **/node_modules/**
+            **/.DS_Store
+
+      - name: Verify marker reachable (root)
         run: |
           curl -sS -I https://newsite.ziggyonlinedebate.com/DEPLOY_MARKER.txt | (grep -q "^HTTP/.* 200" \
             && echo "✅ Marker reachable" || (echo "❌ Marker not reachable"; exit 1))
 
-      - name: Verify ROOT (/) shows title canary
+      - name: Verify / shows title canary (served from current/)
         run: |
           curl -sS -H 'Cache-Control: no-cache' https://newsite.ziggyonlinedebate.com/ | grep -q "• build " \
             && echo "✅ / shows title canary" \
             || (echo "❌ ROOT (/) missing title canary"; exit 1)
+
+  rollback-current:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Assert FTP secrets exist (no values printed)
+        env:
+          FTP_HOST: ${{ secrets.FTP_HOST }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          for v in FTP_HOST FTP_USERNAME FTP_PASSWORD; do
+            [ -n "${!v}" ] && echo "Secret $v present (len=${#v})" || { echo "::error::$v missing"; exit 1; }
+          done
+
+      # Optional: list available releases so you can confirm the BUILD_ID
+      - name: List available releases (for reference)
+        run: |
+          sudo apt-get update -y && sudo apt-get install -y lftp
+          lftp -u "${{ secrets.FTP_USERNAME }}","${{ secrets.FTP_PASSWORD }}" "${{ secrets.FTP_HOST }}" <<'EOF'
+          set ssl:verify-certificate no
+          cd newsite.ziggyonlinedebate.com/releases/
+          cls -l --date --sort time
+          bye
+          EOF
+
+      # Re-point 'current' by syncing from the chosen BUILD_ID
+      - name: Roll back current to selected BUILD_ID
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          port: 21
+          # We don't have the release locally; do a remote-to-remote by downloading then uploading:
+          # Simple route: fetch selected release to runner, then push to current.
+          local-dir: ./selected-release/
+          server-dir: newsite.ziggyonlinedebate.com/releases/current/
+          dangerous-clean-slate: true
+          state-name: .ftp-deploy-sync-state.rollback.json
+
+      # Pull selected release down first
+      - name: Download selected release to runner
+        run: |
+          sudo apt-get update -y && sudo apt-get install -y lftp
+          mkdir -p selected-release
+          lftp -u "${{ secrets.FTP_USERNAME }}","${{ secrets.FTP_PASSWORD }}" "${{ secrets.FTP_HOST }}" <<EOF
+          set ssl:verify-certificate no
+          set xfer:clobber yes
+          mirror --verbose --use-pget-n=4 --parallel=2 --delete \
+            newsite.ziggyonlinedebate.com/releases/${{ github.event.inputs.BUILD_ID }}/ \
+            selected-release/
+          bye
+          EOF
+
+      # Now push that copy into releases/current
+      - name: Push selected release into current
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          port: 21
+          local-dir: ./selected-release/
+          server-dir: newsite.ziggyonlinedebate.com/releases/current/
+          dangerous-clean-slate: true
+          state-name: .ftp-deploy-sync-state.rollback.push.json
+
+      - name: Verify rollback live page
+        run: |
+          curl -sS -H 'Cache-Control: no-cache' https://newsite.ziggyonlinedebate.com/ | head -n 25
+          echo "✅ Rollback completed to BUILD_ID=${{ github.event.inputs.BUILD_ID }}"
