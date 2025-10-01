@@ -1,4 +1,4 @@
-name: Build & Deploy (FTPS, Versioned Releases with Current + Rollback)
+name: Build & Deploy (FTPS, Versioned Releases with Current + Probes + Rollback)
 
 on:
   push:
@@ -124,18 +124,56 @@ jobs:
             **/node_modules/**
             **/.DS_Store
 
-      # ---- Smart verifications (work whether or not docroot is switched yet) ----
-      - name: Verify marker (root OR explicit current/)
+      # ---- HTTP origin diagnostics + flexible verify ----
+      - name: Create HTTP probe files (unique tokens)
+        run: |
+          PROBE_TOKEN="$(date -u +%Y%m%dT%H%M%SZ)-$RANDOM"
+          echo "root-probe ${PROBE_TOKEN}" > dist_release/HTTP_PROBE_ROOT.txt
+          echo "current-probe ${PROBE_TOKEN}" > dist_release/releases/${BUILD_ID}/HTTP_PROBE_CURRENT.txt
+          echo "PROBE_TOKEN=${PROBE_TOKEN}" >> $GITHUB_ENV
+
+      - name: Upload root probe
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          port: 21
+          local-dir: dist_release/
+          server-dir: newsite.ziggyonlinedebate.com/
+          state-name: .ftp-deploy-sync-state.probe.root.json
+          exclude: |
+            releases/**        
+            **/.git*
+            **/node_modules/**
+            **/.DS_Store
+
+      - name: Diagnose which URL path is live
         run: |
           set -e
+          echo "---- HEAD /robots.txt"; curl -sS -I https://newsite.ziggyonlinedebate.com/robots.txt | sed -n '1,20p' || true
+          echo "---- HEAD /HTTP_PROBE_ROOT.txt"; curl -sS -I https://newsite.ziggyonlinedebate.com/HTTP_PROBE_ROOT.txt | sed -n '1,20p' || true
+          echo "---- HEAD /releases/current/HTTP_PROBE_CURRENT.txt"; curl -sS -I https://newsite.ziggyonlinedebate.com/releases/current/HTTP_PROBE_CURRENT.txt | sed -n '1,20p' || true
+          echo "---- HEAD /releases/current/index.html"; curl -sS -I https://newsite.ziggyonlinedebate.com/releases/current/index.html | sed -n '1,20p' || true
+
           if curl -sS -I https://newsite.ziggyonlinedebate.com/DEPLOY_MARKER.txt | grep -q "^HTTP/.* 200" ; then
-            echo "✅ Marker reachable at root (docroot already = releases/current)"
+            echo "✅ Marker reachable at root (docroot == releases/current or root contains marker)"
           elif curl -sS -I https://newsite.ziggyonlinedebate.com/releases/current/DEPLOY_MARKER.txt | grep -q "^HTTP/.* 200" ; then
-            echo "ℹ️ Marker reachable at /releases/current/DEPLOY_MARKER.txt (docroot not switched yet)"
-            exit 0
+            echo "ℹ️ Marker reachable under /releases/current/ (docroot not switched yet)"
           else
-            echo "❌ Marker not reachable at either path"
-            exit 1
+            echo "⚠️ Marker not found; investigating probes…"
+            ROOT_OK=$(curl -sS -I https://newsite.ziggyonlinedebate.com/HTTP_PROBE_ROOT.txt | grep -q "^HTTP/.* 200" && echo yes || echo no)
+            CURR_OK=$(curl -sS -I https://newsite.ziggyonlinedebate.com/releases/current/HTTP_PROBE_CURRENT.txt | grep -q "^HTTP/.* 200" && echo yes || echo no)
+            echo "Probe results: root=${ROOT_OK}, current=${CURR_OK}"
+            if [ "$ROOT_OK" = "yes" ] || [ "$CURR_OK" = "yes" ]; then
+              echo "✅ At least one probe reachable; deploy completed. (Switch subdomain docroot to releases/current for root path.)"
+            else
+              echo "❌ Neither probe reachable. Likely wrong cPanel document root for subdomain or front proxy caching an older docroot."
+              echo "👉 In cPanel set Document Root of newsite.ziggyonlinedebate.com to:"
+              echo "   /home/ziggydebate/newsite.ziggyonlinedebate.com/releases/current"
+              exit 1
+            fi
           fi
 
       - name: Verify title canary (root OR explicit current/)
@@ -144,8 +182,7 @@ jobs:
           if curl -sS -H 'Cache-Control: no-cache' https://newsite.ziggyonlinedebate.com/ | grep -q "• build " ; then
             echo "✅ / shows title canary"
           elif curl -sS -H 'Cache-Control: no-cache' https://newsite.ziggyonlinedebate.com/releases/current/index.html | grep -q "• build " ; then
-            echo "ℹ️ Canary visible at /releases/current/index.html (docroot not switched yet)"
-            exit 0
+            echo "ℹ️ Canary visible at /releases/current/index.html (switch subdomain docroot to releases/current)"
           else
             echo "❌ Title canary not found at either path"
             exit 1
@@ -177,7 +214,6 @@ jobs:
           bye
           EOF
 
-      # Download chosen release to runner
       - name: Download selected release to runner
         run: |
           sudo apt-get update -y && sudo apt-get install -y lftp
@@ -191,7 +227,6 @@ jobs:
           bye
           EOF
 
-      # Push it into current (docroot)
       - name: Push selected release into current
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
