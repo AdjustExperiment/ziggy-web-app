@@ -31,4 +31,161 @@ jobs:
 
       - name: Generate .env.production for Vite
         run: |
-          echo "VITE_SUPABASE_PROJECT_ID=${{_
+          echo "VITE_SUPABASE_PROJECT_ID=${{ secrets.VITE_SUPABASE_PROJECT_ID }}" >> .env.production
+          echo "VITE_SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }}" >> .env.production
+          echo "VITE_SUPABASE_PUBLISHABLE_KEY=${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}" >> .env.production
+
+      - name: Build
+        run: npm run build
+
+      - name: Insert title canary
+        run: |
+          ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          sed -i "s#<title>\\(.*\\)</title>#<title>\\1 • build ${ts}</title>#" dist/index.html
+          grep -n "<title>" dist/index.html
+
+      - name: Prepare release folder
+        run: |
+          BUILD_ID="$(date -u +%Y%m%dT%H%M%SZ)"
+          echo "BUILD_ID=${BUILD_ID}" >> $GITHUB_ENV
+          mkdir -p dist_release/releases/${BUILD_ID}
+          cp -a dist/. dist_release/releases/${BUILD_ID}/
+          echo "marker $(date -u +%FT%TZ)" > dist_release/releases/${BUILD_ID}/DEPLOY_MARKER.txt
+          cat > "dist_release/releases/${BUILD_ID}/.htaccess" << 'EOF'
+          DirectoryIndex index.html
+          RewriteEngine On
+          # Serve existing files directly
+          RewriteCond %{REQUEST_FILENAME} -f [OR]
+          RewriteCond %{REQUEST_FILENAME} -d
+          RewriteRule . - [L]
+          # SPA deep-link routing
+          RewriteRule . /index.html [L]
+          <FilesMatch "\.html$">
+            Header set Cache-Control "no-cache, no-store, must-revalidate"
+            Header set Pragma "no-cache"
+            Header set Expires "0"
+          </FilesMatch>
+          EOF
+
+      - name: Upload artifact (optional)
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-release
+          path: dist_release
+
+      - name: Assert FTP secrets exist
+        env:
+          FTP_HOST: ${{ secrets.FTP_HOST }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          for v in FTP_HOST FTP_USERNAME FTP_PASSWORD; do
+            [ -n "${!v}" ] && echo "Secret $v present (len=${#v})" || { echo "::error::$v missing"; exit 1; }
+          done
+
+      # 1️⃣ Upload the new versioned release
+      - name: Deploy release folder
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          port: 21
+          local-dir: dist_release/releases/${{ env.BUILD_ID }}/
+          server-dir: newsite.ziggyonlinedebate.com/releases/${{ env.BUILD_ID }}/
+          state-name: .ftp-deploy-sync-state.release.json
+          exclude: |
+            **/.git*
+            **/node_modules/**
+            **/.DS_Store
+
+      # 2️⃣ Sync the new release into current (the live docroot)
+      - name: Deploy to releases/current (docroot)
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          port: 21
+          local-dir: dist_release/releases/${{ env.BUILD_ID }}/
+          server-dir: newsite.ziggyonlinedebate.com/releases/current/
+          dangerous-clean-slate: true
+          state-name: .ftp-deploy-sync-state.current.json
+          exclude: |
+            **/.git*
+            **/node_modules/**
+            **/.DS_Store
+
+      # 3️⃣ Tolerant verification: root or /releases/current both pass
+      - name: Verify marker (root OR /releases/current)
+        run: |
+          set -e
+          if curl -sS -I https://newsite.ziggyonlinedebate.com/DEPLOY_MARKER.txt | grep -q "^HTTP/.* 200"; then
+            echo "✅ Marker reachable at root"
+          elif curl -sS -I https://newsite.ziggyonlinedebate.com/releases/current/DEPLOY_MARKER.txt | grep -q "^HTTP/.* 200"; then
+            echo "ℹ️ Marker reachable at /releases/current/ (docroot not switched yet)"
+          else
+            echo "❌ Marker not reachable at root or /releases/current/"
+            echo "👉 Ensure Document Root = /home/ziggydebate/newsite.ziggyonlinedebate.com/releases/current"
+            exit 1
+          fi
+
+      - name: Verify title canary (root OR /releases/current)
+        run: |
+          if curl -sS -H 'Cache-Control: no-cache' https://newsite.ziggyonlinedebate.com/ | grep -q "• build "; then
+            echo "✅ / shows title canary"
+          elif curl -sS -H 'Cache-Control: no-cache' https://newsite.ziggyonlinedebate.com/releases/current/index.html | grep -q "• build "; then
+            echo "ℹ️ Canary visible at /releases/current/index.html (docroot not switched yet)"
+          else
+            echo "❌ Title canary not found at root or /releases/current/"
+            exit 1
+          fi
+
+  # 🔁 Manual rollback support
+  rollback-current:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.BUILD_ID != ''
+    runs-on: ubuntu-latest
+    steps:
+      - name: Assert FTP secrets exist
+        env:
+          FTP_HOST: ${{ secrets.FTP_HOST }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          for v in FTP_HOST FTP_USERNAME FTP_PASSWORD; do
+            [ -n "${!v}" ] && echo "Secret $v present (len=${#v})" || { echo "::error::$v missing"; exit 1; }
+          done
+
+      - name: Download selected release
+        run: |
+          sudo apt-get update -y && sudo apt-get install -y lftp
+          mkdir -p selected-release
+          lftp -u "${{ secrets.FTP_USERNAME }}","${{ secrets.FTP_PASSWORD }}" "${{ secrets.FTP_HOST }}" <<EOF
+          set ssl:verify-certificate no
+          set xfer:clobber yes
+          mirror --verbose --use-pget-n=4 --parallel=2 --delete \
+            newsite.ziggyonlinedebate.com/releases/${{ github.event.inputs.BUILD_ID }}/ \
+            selected-release/
+          bye
+          EOF
+
+      - name: Push selected release into current
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          port: 21
+          local-dir: ./selected-release/
+          server-dir: newsite.ziggyonlinedebate.com/releases/current/
+          dangerous-clean-slate: true
+          state-name: .ftp-deploy-sync-state.rollback.push.json
+
+      - name: Verify after rollback
+        run: |
+          curl -sS -I https://newsite.ziggyonlinedebate.com/ | grep -q "200" \
+            && echo "✅ Rollback applied successfully" \
+            || (echo "❌ Rollback verification failed"; exit 1)
