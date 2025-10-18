@@ -1,4 +1,4 @@
-name: Build & Deploy (FTPS, Versioned Releases + TEMP mirror to cPanel subdomain root)
+name: Build & Deploy (FTPS, Versioned Releases -> current)
 
 on:
   push:
@@ -6,8 +6,8 @@ on:
   workflow_dispatch:
     inputs:
       BUILD_ID:
-        description: "Release folder to roll back to (e.g. 20250930T000436Z)"
-        required: true
+        description: "Release folder to roll back to (e.g. 20251018T150433Z)"
+        required: false
         type: string
 
 jobs:
@@ -44,18 +44,13 @@ jobs:
           sed -i "s#<title>\\(.*\\)</title>#<title>\\1 • build ${ts}</title>#" dist/index.html
           grep -n "<title>" dist/index.html
 
-      # Package EVERYTHING into a versioned release folder
+      # Create a versioned release folder + marker + SPA .htaccess
       - name: Assemble release folder
         run: |
           BUILD_ID="$(date -u +%Y%m%dT%H%M%SZ)"; echo "BUILD_ID=${BUILD_ID}" >> $GITHUB_ENV
           mkdir -p dist_release/releases/${BUILD_ID}
           cp -a dist/. dist_release/releases/${BUILD_ID}/
-          # marker INSIDE the release (ends up in docroot when current/ is synced)
           echo "marker $(date -u +%FT%TZ)" > dist_release/releases/${BUILD_ID}/DEPLOY_MARKER.txt
-
-      # Per-release .htaccess for SPA routing + (best-effort) no-cache on HTML
-      - name: Add .htaccess inside the release
-        run: |
           cat > "dist_release/releases/${BUILD_ID}/.htaccess" << 'EOF'
           DirectoryIndex index.html
           RewriteEngine On
@@ -65,7 +60,7 @@ jobs:
           RewriteRule . - [L]
           # SPA deep-links -> index.html
           RewriteRule . /index.html [L]
-          # (If host honors headers) discourage HTML caching
+          # (If host honors headers) discourage HTML caching for HTML
           <FilesMatch "\.html$">
             Header set Cache-Control "no-cache, no-store, must-revalidate"
             Header set Pragma "no-cache"
@@ -73,13 +68,13 @@ jobs:
           </FilesMatch>
           EOF
 
-      - name: Upload build artifact (optional)
+      - name: (Optional) Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: site-release
           path: dist_release
 
-      - name: Assert FTP secrets exist (no values printed)
+      - name: Assert FTP secrets exist
         env:
           FTP_HOST: ${{ secrets.FTP_HOST }}
           FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
@@ -89,8 +84,8 @@ jobs:
             [ -n "${!v}" ] && echo "Secret $v present (len=${#v})" || { echo "::error::$v missing"; exit 1; }
           done
 
-      # ➊ Upload the new timestamped release (keeps history)
-      - name: Deploy new versioned release
+      # 1) Upload new versioned release (history is kept)
+      - name: Deploy release folder
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_HOST }}
@@ -106,8 +101,8 @@ jobs:
             **/node_modules/**
             **/.DS_Store
 
-      # ➋ Atomically refresh 'current' (intended docroot) to match this release
-      - name: Deploy to releases/current (intended docroot)
+      # 2) Sync the new release into 'current' (your actual docroot)
+      - name: Deploy to releases/current (docroot)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_HOST }}
@@ -124,27 +119,7 @@ jobs:
             **/node_modules/**
             **/.DS_Store
 
-      # ➌ TEMP: also mirror to the default cPanel subdomain root so site works now
-      #     Remove this block after you change the subdomain Document Root to /releases/current
-      - name: TEMP deploy to cPanel default subdomain root
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_HOST }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ftps
-          port: 21
-          local-dir: dist_release/releases/${{ env.BUILD_ID }}/
-          # 👇 If your cPanel shows a different docroot path, update this line accordingly
-          server-dir: public_html/newsite.ziggyonlinedebate.com/
-          dangerous-clean-slate: true
-          state-name: .ftp-deploy-sync-state.temp-public.json
-          exclude: |
-            **/.git*
-            **/node_modules/**
-            **/.DS_Store
-
-      # ---- Verify live at the root (works right now because of TEMP mirror) ----
+      # 3) Live checks at ROOT (because docroot = releases/current)
       - name: Verify marker at root
         run: |
           curl -sS -I https://newsite.ziggyonlinedebate.com/DEPLOY_MARKER.txt | (grep -q "^HTTP/.* 200" \
@@ -156,13 +131,13 @@ jobs:
             && echo "✅ / shows title canary" \
             || (echo "❌ Title canary not found at /"; exit 1)
 
-  # -------- Manual rollback job --------
+  # --- Manual rollback (optional): run from Actions tab, provide BUILD_ID ---
   rollback-current:
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.BUILD_ID != ''
     runs-on: ubuntu-latest
 
     steps:
-      - name: Assert FTP secrets exist (no values printed)
+      - name: Assert FTP secrets exist
         env:
           FTP_HOST: ${{ secrets.FTP_HOST }}
           FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
@@ -171,16 +146,6 @@ jobs:
           for v in FTP_HOST FTP_USERNAME FTP_PASSWORD; do
             [ -n "${!v}" ] && echo "Secret $v present (len=${#v})" || { echo "::error::$v missing"; exit 1; }
           done
-
-      - name: List available releases (for reference)
-        run: |
-          sudo apt-get update -y && sudo apt-get install -y lftp
-          lftp -u "${{ secrets.FTP_USERNAME }}","${{ secrets.FTP_PASSWORD }}" "${{ secrets.FTP_HOST }}" <<'EOF'
-          set ssl:verify-certificate no
-          cd newsite.ziggyonlinedebate.com/releases/
-          cls -l --date --sort time
-          bye
-          EOF
 
       - name: Download selected release to runner
         run: |
@@ -195,7 +160,7 @@ jobs:
           bye
           EOF
 
-      - name: Push selected release into current
+      - name: Push selected release into current (docroot)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_HOST }}
@@ -208,13 +173,7 @@ jobs:
           dangerous-clean-slate: true
           state-name: .ftp-deploy-sync-state.rollback.push.json
 
-      - name: Verify rollback live page (root via TEMP mirror, or current/ if docroot switched)
+      - name: Verify live page after rollback
         run: |
-          if curl -sS -H 'Cache-Control: no-cache' https://newsite.ziggyonlinedebate.com/ | head -n 1 >/dev/null ; then
-            echo "✅ Rollback applied (root path)"
-          elif curl -sS -H 'Cache-Control: no-cache' https://newsite.ziggyonlinedebate.com/releases/current/index.html | head -n 1 >/dev/null ; then
-            echo "ℹ️ Rollback applied under /releases/current/. Switch subdomain docroot to releases/current to make it live at /"
-          else
-            echo "❌ Could not fetch live page after rollback"
-            exit 1
-          fi
+          curl -sS -H 'Cache-Control: no-cache' https://newsite.ziggyonlinedebate.com/ | head -n 1 >/dev/null \
+            && echo "✅ Rollback applied at root" || (echo "❌ Could not fetch live page"; exit 1)
