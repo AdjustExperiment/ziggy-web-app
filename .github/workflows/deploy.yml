@@ -127,6 +127,15 @@ jobs:
             **/node_modules/**
             **/.DS_Store
 
+      # 🛰️ NEW: DNS sanity check (prints the IPs the runner sees)
+      - name: DNS sanity check
+        run: |
+          echo "---- DNS for subdomain ----"
+          getent ahostsv4 newsite.ziggyonlinedebate.com || true
+          echo "---- DNS for FTP host ----"
+          getent ahostsv4 "${{ secrets.FTP_HOST }}" || true
+          echo "Tip: The subdomain A record must match your cPanel server IP."
+
       # 🔎 Diagnose FTP structure + upload probe files to all candidate locations
       - name: Diagnose FTP layout + upload probes
         run: |
@@ -169,6 +178,8 @@ jobs:
 
       # 🌐 Test each URL to see which one is actually live over HTTP
       - name: Which URL actually maps to FTP?
+        env:
+          UUID: ${{ env.UUID }}
         run: |
           set -e
           hit=""; url=""
