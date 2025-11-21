@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Mail, Image, Eye, Send, Plus, Edit, Trash2, Upload, Clock } from 'lucide-react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
+import DOMPurify from 'dompurify';
 
 interface EnhancedEmailTemplate {
   id?: string;
@@ -489,7 +490,7 @@ export const EnhancedEmailTemplateManager = () => {
                     </div>
                     <div className="border rounded-md p-4 bg-muted/10 min-h-[300px]">
                       <div 
-                        dangerouslySetInnerHTML={{ __html: editingTemplate.html_content }}
+                        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(editingTemplate.html_content) }}
                         className="prose prose-sm max-w-none"
                       />
                     </div>
