@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Crown, Star, Trophy, Zap, ArrowRight } from 'lucide-react';
 import { SectionFX } from '@/components/SectionFX';
+import DOMPurify from 'dompurify';
 
 interface SponsorProfile {
   id: string;
@@ -116,7 +117,7 @@ const Sponsors = () => {
           <div 
             key={block.id} 
             className="text-lg text-muted-foreground text-center mb-8 max-w-3xl mx-auto"
-            dangerouslySetInnerHTML={{ __html: block.content.html }}
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(block.content.html) }}
           />
         );
       default:
