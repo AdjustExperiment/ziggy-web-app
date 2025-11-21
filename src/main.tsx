@@ -12,7 +12,7 @@ createRoot(document.getElementById("root")!).render(
       <OptimizedAuthProvider>
         <ThemeProvider
           attribute="class"
-          defaultTheme="dark"
+          defaultTheme="light"
           enableSystem
           disableTransitionOnChange
           storageKey="ziggy-theme"
