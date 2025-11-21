@@ -2385,42 +2385,18 @@ export type Database = {
         Args: { _round_id?: string; _tournament_id: string }
         Returns: number
       }
-      can_submit_ballot: {
-        Args: { _pairing_id: string }
-        Returns: boolean
-      }
-      is_account_locked: {
-        Args: { _user_id: string }
-        Returns: boolean
-      }
-      is_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      can_submit_ballot: { Args: { _pairing_id: string }; Returns: boolean }
+      is_account_locked: { Args: { _user_id: string }; Returns: boolean }
+      is_admin: { Args: never; Returns: boolean }
       lock_account: {
         Args: { _reason?: string; _target_user_id: string; _until?: string }
         Returns: boolean
       }
-      make_admin_by_email: {
-        Args: { target_email: string }
-        Returns: boolean
-      }
-      map_sponsor_tier_for_display: {
-        Args: { _tier: string }
-        Returns: string
-      }
-      publish_due_ballots: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      recompute_results_from_ballots: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      unlock_account: {
-        Args: { _target_user_id: string }
-        Returns: boolean
-      }
+      make_admin_by_email: { Args: { target_email: string }; Returns: boolean }
+      map_sponsor_tier_for_display: { Args: { _tier: string }; Returns: string }
+      publish_due_ballots: { Args: never; Returns: number }
+      recompute_results_from_ballots: { Args: never; Returns: number }
+      unlock_account: { Args: { _target_user_id: string }; Returns: boolean }
       user_is_competitor_for_pairing: {
         Args: { _pairing_id: string }
         Returns: boolean
