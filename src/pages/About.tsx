@@ -124,42 +124,42 @@ const About = () => {
       </section>
 
       {/* Stats Section */}
-      <section className="relative py-16 bg-black">
+      <section className="relative py-16 bg-muted/20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid gap-8 sm:grid-cols-3">
-            <Card className="bg-black border-red-500/30 shadow-elegant hover-scale text-center group">
+            <Card className="bg-card border-primary/30 shadow-elegant hover-scale text-center group">
               <CardHeader>
                 <div className="h-12 w-12 rounded-lg bg-red-500/10 flex items-center justify-center text-red-500 mb-4 mx-auto group-hover:bg-red-500/20 transition-colors">
                   <Users className="h-6 w-6" />
                 </div>
-                <CardTitle className="text-3xl font-bold text-white">13+</CardTitle>
+                <CardTitle className="text-3xl font-bold text-card-foreground">13+</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-white/70">Years of Excellence</p>
+                <p className="text-muted-foreground">Years of Excellence</p>
               </CardContent>
             </Card>
 
-            <Card className="bg-black border-red-500/30 shadow-elegant hover-scale text-center group">
+            <Card className="bg-card border-primary/30 shadow-elegant hover-scale text-center group">
               <CardHeader>
                 <div className="h-12 w-12 rounded-lg bg-red-500/10 flex items-center justify-center text-red-500 mb-4 mx-auto group-hover:bg-red-500/20 transition-colors">
                   <Globe className="h-6 w-6" />
                 </div>
-                <CardTitle className="text-3xl font-bold text-white">National</CardTitle>
+                <CardTitle className="text-3xl font-bold text-card-foreground">National</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-white/70">Competition Reach</p>
+                <p className="text-muted-foreground">Competition Reach</p>
               </CardContent>
             </Card>
 
-            <Card className="bg-black border-red-500/30 shadow-elegant hover-scale text-center group">
+            <Card className="bg-card border-primary/30 shadow-elegant hover-scale text-center group">
               <CardHeader>
                 <div className="h-12 w-12 rounded-lg bg-red-500/10 flex items-center justify-center text-red-500 mb-4 mx-auto group-hover:bg-red-500/20 transition-colors">
                   <Trophy className="h-6 w-6" />
                 </div>
-                <CardTitle className="text-3xl font-bold text-white">10</CardTitle>
+                <CardTitle className="text-3xl font-bold text-card-foreground">10</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-white/70">NCFCA National Finalists</p>
+                <p className="text-muted-foreground">NCFCA National Finalists</p>
               </CardContent>
             </Card>
           </div>
@@ -169,12 +169,12 @@ const About = () => {
       {/* Founder Section */}
       <section className="relative py-16 bg-gradient-subtle">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center relative z-10">
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-8 font-primary">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-8 font-primary">
             Founded by Excellence
           </h2>
-          <Card className="bg-black/50 border-red-500/30 shadow-elegant backdrop-blur-sm">
+          <Card className="bg-card/50 border-primary/30 shadow-elegant backdrop-blur-sm">
             <CardContent className="p-8">
-              <p className="text-lg text-white/90 leading-relaxed font-secondary">
+              <p className="text-lg text-foreground leading-relaxed font-secondary">
                 Ziggy Online Debate™ was founded in 2011 by <strong className="text-red-400">Isaac Sommers</strong>, 
                 a highly decorated alumnus of NCFCA and Stoa, former debate instructor and coach, 
                 and a graduate of Howard Payne University (Class of 2018) and Harvard Law School (Class of 2021). 

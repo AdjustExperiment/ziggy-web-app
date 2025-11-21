@@ -132,7 +132,7 @@ const Login = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center">
+    <div className="min-h-screen bg-background flex items-center justify-center">
       <div className="w-full max-w-6xl mx-auto px-4 py-8 sm:py-12">
         <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 items-center">
           {/* Left Side - Branding */}
@@ -143,74 +143,74 @@ const Login = () => {
                 alt="Debate Champions Logo" 
                 className="h-12 sm:h-16 w-auto mx-auto lg:mx-0 mb-4 rounded-full" 
               />
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-4 font-primary">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-4 font-primary">
                 Welcome Back
               </h1>
-              <p className="text-lg sm:text-xl text-white/70 mb-6 sm:mb-8">
+              <p className="text-lg sm:text-xl text-muted-foreground mb-6 sm:mb-8">
                 Access your debate tournament platform and continue your journey to excellence.
               </p>
             </div>
 
             {/* Features */}
             <div className="space-y-4">
-              <div className="flex items-center gap-3 text-white/80">
+              <div className="flex items-center gap-3 text-foreground">
                 <Shield className="h-5 w-5 text-red-500" />
                 <span>Secure authentication</span>
               </div>
-              <div className="flex items-center gap-3 text-white/80">
+              <div className="flex items-center gap-3 text-foreground">
                 <Users className="h-5 w-5 text-red-500" />
                 <span>Team collaboration tools</span>
               </div>
-              <div className="flex items-center gap-3 text-white/80">
+              <div className="flex items-center gap-3 text-foreground">
                 <User className="h-5 w-5 text-red-500" />
                 <span>Personal performance tracking</span>
               </div>
             </div>
 
             {/* Stats */}
-            <div className="hidden lg:grid grid-cols-3 gap-4 mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-white/10">
+            <div className="hidden lg:grid grid-cols-3 gap-4 mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-border">
               <div className="text-center">
-                <div className="text-xl sm:text-2xl font-bold text-white">1,342+</div>
-                <div className="text-xs sm:text-sm text-white/70">Active Users</div>
+                <div className="text-xl sm:text-2xl font-bold text-foreground">1,342+</div>
+                <div className="text-xs sm:text-sm text-muted-foreground">Active Users</div>
               </div>
               <div className="text-center">
-                <div className="text-xl sm:text-2xl font-bold text-white">156</div>
-                <div className="text-xs sm:text-sm text-white/70">Teams</div>
+                <div className="text-xl sm:text-2xl font-bold text-foreground">156</div>
+                <div className="text-xs sm:text-sm text-muted-foreground">Teams</div>
               </div>
               <div className="text-center">
-                <div className="text-xl sm:text-2xl font-bold text-white">98.7%</div>
-                <div className="text-xs sm:text-sm text-white/70">Uptime</div>
+                <div className="text-xl sm:text-2xl font-bold text-foreground">98.7%</div>
+                <div className="text-xs sm:text-sm text-muted-foreground">Uptime</div>
               </div>
             </div>
           </div>
 
           {/* Right Side - Login Forms */}
           <div className="w-full order-first lg:order-last">
-            <Card className="bg-black border-white/10 shadow-tournament">
+            <Card className="bg-card border-border shadow-tournament">
               <CardHeader className="text-center px-4 sm:px-6 py-4 sm:py-6">
-                <CardTitle className="text-xl sm:text-2xl text-white font-primary">Sign In</CardTitle>
-                <p className="text-sm sm:text-base text-white/70">Choose your account type to continue</p>
+                <CardTitle className="text-xl sm:text-2xl text-card-foreground font-primary">Sign In</CardTitle>
+                <p className="text-sm sm:text-base text-muted-foreground">Choose your account type to continue</p>
               </CardHeader>
               <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
                 <Tabs value={loginType} onValueChange={setLoginType} className="space-y-6">
-                  <TabsList className="grid w-full grid-cols-3 bg-black border border-white/10">
+                  <TabsList className="grid w-full grid-cols-3 bg-muted border border-border">
                     <TabsTrigger 
                       value="user" 
-                      className="data-[state=active]:bg-red-500 data-[state=active]:text-white text-white/70"
+                      className="data-[state=active]:bg-red-500 data-[state=active]:text-white"
                     >
                       <User className="h-4 w-4 mr-2" />
                       User
                     </TabsTrigger>
                     <TabsTrigger 
                       value="team" 
-                      className="data-[state=active]:bg-red-500 data-[state=active]:text-white text-white/70"
+                      className="data-[state=active]:bg-red-500 data-[state=active]:text-white"
                     >
                       <Users className="h-4 w-4 mr-2" />
                       ZIP
                     </TabsTrigger>
                     <TabsTrigger 
                       value="admin" 
-                      className="data-[state=active]:bg-red-500 data-[state=active]:text-white text-white/70"
+                      className="data-[state=active]:bg-red-500 data-[state=active]:text-white"
                     >
                       <Shield className="h-4 w-4 mr-2" />
                       Admin
@@ -227,9 +227,9 @@ const Login = () => {
                             </Badge>
                           </div>
                           
-                          <div className="flex items-center space-x-3 mb-4 p-3 bg-white/5 rounded-lg border border-white/10">
-                            <Building className="h-4 w-4 text-white/70" />
-                            <Label htmlFor="sponsor-toggle" className="text-white text-sm">
+                          <div className="flex items-center space-x-3 mb-4 p-3 bg-muted rounded-lg border border-border">
+                            <Building className="h-4 w-4 text-muted-foreground" />
+                            <Label htmlFor="sponsor-toggle" className="text-foreground text-sm">
                               Create sponsor account
                             </Label>
                             <Switch
@@ -250,14 +250,14 @@ const Login = () => {
                       )}
                       
                       <div className="space-y-2">
-                        <Label htmlFor="user-email" className="text-white">Email Address</Label>
+                        <Label htmlFor="user-email" className="text-foreground">Email Address</Label>
                         <div className="relative">
-                          <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/70" />
+                          <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                           <Input
                             id="user-email"
                             type="email"
                             placeholder="your.email@example.com"
-                            className="pl-10 bg-black border-white/20 text-white placeholder:text-white/70"
+                            className="pl-10 bg-background border-border text-foreground placeholder:text-muted-foreground"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
@@ -266,14 +266,14 @@ const Login = () => {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="user-password" className="text-white">Password</Label>
+                        <Label htmlFor="user-password" className="text-foreground">Password</Label>
                         <div className="relative">
-                          <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/70" />
+                          <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                           <Input
                             id="user-password"
                             type={showPassword ? "text" : "password"}
                             placeholder="Enter your password"
-                            className="pl-10 pr-10 bg-black border-white/20 text-white placeholder:text-white/70"
+                            className="pl-10 pr-10 bg-background border-border text-foreground placeholder:text-muted-foreground"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
@@ -282,7 +282,7 @@ const Login = () => {
                             type="button"
                             variant="ghost"
                             size="sm"
-                            className="absolute right-2 top-1/2 -translate-y-1/2 text-white/70 hover:text-white"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                             onClick={() => setShowPassword(!showPassword)}
                           >
                             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -292,14 +292,14 @@ const Login = () => {
                       
                       {isSignUp && (
                         <div className="space-y-2">
-                          <Label htmlFor="user-confirm-password" className="text-white">Confirm Password</Label>
+                          <Label htmlFor="user-confirm-password" className="text-foreground">Confirm Password</Label>
                           <div className="relative">
-                            <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/70" />
+                            <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                             <Input
                               id="user-confirm-password"
                               type={showPassword ? "text" : "password"}
                               placeholder="Confirm your password"
-                              className="pl-10 bg-black border-white/20 text-white placeholder:text-white/70"
+                              className="pl-10 bg-background border-border text-foreground placeholder:text-muted-foreground"
                               value={confirmPassword}
                               onChange={(e) => setConfirmPassword(e.target.value)}
                               required
@@ -309,7 +309,7 @@ const Login = () => {
                       )}
 
                       <div className="flex items-center justify-between text-sm">
-                        <label className="flex items-center gap-2 text-white/70">
+                        <label className="flex items-center gap-2 text-muted-foreground">
                           <input type="checkbox" className="rounded" />
                           Remember me
                         </label>
@@ -333,7 +333,7 @@ const Login = () => {
                       <div className="text-center">
                         <Button
                           variant="link"
-                          className="text-white/70 hover:text-white p-0 touch-target"
+                          className="text-muted-foreground hover:text-foreground p-0 touch-target"
                           type="button"
                           onClick={() => setIsSignUp(!isSignUp)}
                         >
@@ -345,7 +345,7 @@ const Login = () => {
 
                   <TabsContent value="team" className="space-y-4">
                     <div className="text-center mb-4">
-                      <p className="text-sm text-white/70 mb-3">
+                      <p className="text-sm text-muted-foreground mb-3">
                         This login is for members of the <span className="text-red-500 font-medium">Ziggy Involvement Program</span>
                       </p>
                     </div>
@@ -359,14 +359,14 @@ const Login = () => {
                       )}
                       
                       <div className="space-y-2">
-                        <Label htmlFor="team-email" className="text-white">ZIP Email</Label>
+                        <Label htmlFor="team-email" className="text-foreground">ZIP Email</Label>
                         <div className="relative">
-                          <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/70" />
+                          <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                           <Input
                             id="team-email"
                             type="email"
                             placeholder="team@university.edu"
-                            className="pl-10 bg-black border-white/20 text-white placeholder:text-white/70"
+                            className="pl-10 bg-background border-border text-foreground placeholder:text-muted-foreground"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
@@ -375,14 +375,14 @@ const Login = () => {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="team-password" className="text-white">Password</Label>
+                        <Label htmlFor="team-password" className="text-foreground">Password</Label>
                         <div className="relative">
-                          <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/70" />
+                          <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                           <Input
                             id="team-password"
                             type={showPassword ? "text" : "password"}
                             placeholder="Enter your password"
-                            className="pl-10 pr-10 bg-black border-white/20 text-white placeholder:text-white/70"
+                            className="pl-10 pr-10 bg-background border-border text-foreground placeholder:text-muted-foreground"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
