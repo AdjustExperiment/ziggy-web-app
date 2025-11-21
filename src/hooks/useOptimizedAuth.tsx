@@ -6,7 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 interface Profile {
   id: string;
   user_id: string;
-  role: 'user' | 'admin' | 'judge' | 'observer' | 'participant';
+  role: 'user' | 'admin' | 'judge' | 'observer' | 'participant'; // Populated from user_roles table
   first_name?: string;
   last_name?: string;
   state?: string;
@@ -41,18 +41,32 @@ export function OptimizedAuthProvider({ children }: { children: ReactNode }) {
     queryFn: async () => {
       if (!user?.id) return null;
       
-      const { data, error } = await supabase
+      // Fetch profile data
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', user.id)
         .single();
       
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching profile:', error);
+      if (profileError && profileError.code !== 'PGRST116') {
+        console.error('Error fetching profile:', profileError);
         return null;
       }
+
+      // Fetch user's primary role from user_roles table (security fix)
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .order('role', { ascending: true }) // Will return admin first, then judge, etc.
+        .limit(1)
+        .single();
       
-      return data as Profile;
+      // Combine profile with role from user_roles table
+      return {
+        ...profileData,
+        role: roleData?.role || 'user'
+      } as Profile;
     },
     enabled: !!user?.id,
     staleTime: 10 * 60 * 1000, // 10 minutes for profile data
