@@ -82,21 +82,21 @@ const categories = ["All", "Technology", "Innovation", "Research", "Theory", "Se
 
 export default function Blog() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-red-950">
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-primary/5">
       {/* Futuristic Header */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-gradient-to-r from-red-600/20 to-transparent"></div>
-          <div className="absolute top-20 left-20 w-64 h-64 bg-red-500/10 rounded-full blur-3xl"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-red-600/10 to-transparent"></div>
+          <div className="absolute top-20 left-20 w-64 h-64 bg-red-500/5 rounded-full blur-3xl"></div>
           <div className="absolute bottom-20 right-20 w-96 h-96 bg-red-400/5 rounded-full blur-3xl"></div>
         </div>
         
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
           <div className="text-center">
-            <h1 className="text-5xl md:text-7xl font-primary font-bold text-white mb-6">
+            <h1 className="text-5xl md:text-7xl font-primary font-bold text-foreground mb-6">
               Future<span className="text-red-500">Blog</span>
             </h1>
-            <p className="text-xl md:text-2xl font-secondary text-gray-300 mb-8 max-w-3xl mx-auto">
+            <p className="text-xl md:text-2xl font-secondary text-muted-foreground mb-8 max-w-3xl mx-auto">
               Exploring the cutting-edge intersection of technology, artificial intelligence, 
               and the future of competitive debate through advanced research and innovation.
             </p>
@@ -123,13 +123,13 @@ export default function Blog() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-16">
         {blogPosts.filter(post => post.featured).map((post) => (
           <div key={post.id} className="relative">
-            <Card className="bg-black/50 border-red-500/30 overflow-hidden backdrop-blur-sm">
+            <Card className="bg-card/50 border-primary/30 overflow-hidden backdrop-blur-sm">
               <div className="md:flex">
                 <div className="md:w-1/2 relative">
-                  <div className="h-64 md:h-full bg-gradient-to-br from-red-600/20 to-gray-900/50 flex items-center justify-center">
+                  <div className="h-64 md:h-full bg-gradient-to-br from-red-600/10 to-muted/50 flex items-center justify-center">
                     <div className="text-center">
                       <TrendingUp className="h-16 w-16 text-red-500 mx-auto mb-4" />
-                      <p className="text-gray-400 font-secondary">Featured Article Image</p>
+                      <p className="text-muted-foreground font-secondary">Featured Article Image</p>
                     </div>
                   </div>
                   <Badge className="absolute top-4 left-4 bg-red-500 hover:bg-red-600 text-white font-secondary">
@@ -141,15 +141,15 @@ export default function Blog() {
                     <Badge variant="outline" className="border-red-500/50 text-red-400 w-fit mb-2 font-secondary">
                       {post.category}
                     </Badge>
-                    <CardTitle className="text-3xl font-primary text-white mb-4 leading-tight">
+                    <CardTitle className="text-3xl font-primary text-card-foreground mb-4 leading-tight">
                       {post.title}
                     </CardTitle>
-                    <CardDescription className="text-gray-300 text-lg font-secondary leading-relaxed">
+                    <CardDescription className="text-muted-foreground text-lg font-secondary leading-relaxed">
                       {post.excerpt}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="p-0 mb-6">
-                    <div className="flex items-center gap-6 text-sm text-gray-400 font-secondary">
+                    <div className="flex items-center gap-6 text-sm text-muted-foreground font-secondary">
                       <div className="flex items-center gap-2">
                         <User className="h-4 w-4" />
                         {post.author}
@@ -180,12 +180,12 @@ export default function Blog() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {blogPosts.filter(post => !post.featured).map((post) => (
-            <Card key={post.id} className="bg-black/30 border-red-500/20 hover:border-red-500/40 transition-all duration-300 backdrop-blur-sm group">
-              <div className="h-48 bg-gradient-to-br from-red-600/10 to-gray-900/30 flex items-center justify-center relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent group-hover:from-black/70 transition-all duration-300"></div>
+            <Card key={post.id} className="bg-card/30 border-primary/20 hover:border-primary/40 transition-all duration-300 backdrop-blur-sm group">
+              <div className="h-48 bg-gradient-to-br from-red-600/10 to-muted/30 flex items-center justify-center relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-t from-background/50 to-transparent group-hover:from-background/70 transition-all duration-300"></div>
                 <div className="relative text-center z-10">
                   <MessageSquare className="h-12 w-12 text-red-400 mx-auto mb-2 group-hover:text-red-300 transition-colors" />
-                  <p className="text-gray-500 font-secondary text-sm">Article Visual</p>
+                  <p className="text-muted-foreground font-secondary text-sm">Article Visual</p>
                 </div>
                 <Badge className="absolute top-3 right-3 bg-red-500/80 hover:bg-red-500 text-white font-secondary text-xs">
                   {post.category}
@@ -193,10 +193,10 @@ export default function Blog() {
               </div>
               
               <CardHeader>
-                <CardTitle className="text-xl font-primary text-white group-hover:text-red-100 transition-colors leading-tight">
+                <CardTitle className="text-xl font-primary text-card-foreground group-hover:text-primary transition-colors leading-tight">
                   {post.title}
                 </CardTitle>
-                <CardDescription className="text-gray-400 font-secondary line-clamp-3">
+                <CardDescription className="text-muted-foreground font-secondary line-clamp-3">
                   {post.excerpt}
                 </CardDescription>
               </CardHeader>
@@ -209,7 +209,7 @@ export default function Blog() {
                     </Badge>
                   ))}
                 </div>
-                <div className="flex items-center justify-between text-sm text-gray-500 font-secondary">
+                <div className="flex items-center justify-between text-sm text-muted-foreground font-secondary">
                   <div className="flex items-center gap-2">
                     <User className="h-3 w-3" />
                     {post.author}
@@ -238,17 +238,17 @@ export default function Blog() {
       <div className="relative">
         <div className="absolute inset-0 bg-gradient-to-r from-red-600/10 to-transparent"></div>
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
-          <h2 className="text-4xl font-primary font-bold text-white mb-4">
+          <h2 className="text-4xl font-primary font-bold text-foreground mb-4">
             Stay Connected to the Future
           </h2>
-          <p className="text-xl font-secondary text-gray-300 mb-8">
+          <p className="text-xl font-secondary text-muted-foreground mb-8">
             Subscribe to receive cutting-edge insights on the evolution of debate technology and AI-powered competition analysis.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto">
             <input
               type="email"
               placeholder="Enter your email..."
-              className="flex-1 px-4 py-3 bg-black/50 border border-red-500/30 rounded-lg text-white placeholder:text-gray-400 font-secondary focus:outline-none focus:border-red-500"
+              className="flex-1 px-4 py-3 bg-background/50 border border-border rounded-lg text-foreground placeholder:text-muted-foreground font-secondary focus:outline-none focus:border-primary"
             />
             <Button className="bg-red-500 hover:bg-red-600 text-white font-secondary">
               Subscribe
