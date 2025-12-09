@@ -20,7 +20,8 @@ import {
   EyeOff,
   Zap,
   AlertTriangle,
-  CheckCircle2
+  CheckCircle2,
+  Calendar
 } from 'lucide-react';
 import { DrawGenerator, Team, PairingHistory, DrawSettings, GeneratedPairing } from '@/lib/tabulation/drawGenerator';
 
@@ -60,10 +61,14 @@ interface Pairing {
   judge_profiles?: { name: string };
 }
 
+type DrawMethod = 'random' | 'power_paired' | 'round_robin' | 'manual';
+type SideMethod = 'balance' | 'preallocated' | 'random';
+type OddBracket = 'pullup_top' | 'pullup_bottom' | 'intermediate' | 'intermediate_bubble_up_down';
+
 interface TabulationSettings {
-  draw_method: 'random' | 'power_paired' | 'round_robin' | 'manual';
-  side_method: 'balance' | 'preallocated' | 'random';
-  odd_bracket: 'pullup_top' | 'pullup_bottom' | 'intermediate' | 'intermediate_bubble_up_down';
+  draw_method: DrawMethod;
+  side_method: SideMethod;
+  odd_bracket: OddBracket;
   pullup_restriction: string;
   avoid_rematches: boolean;
   club_protect: boolean;
@@ -116,9 +121,9 @@ export function PairingGenerator({
 
       if (data) {
         setSettings({
-          draw_method: data.draw_method || 'power_paired',
-          side_method: data.side_method || 'balance',
-          odd_bracket: data.odd_bracket || 'pullup_top',
+          draw_method: (data.draw_method as DrawMethod) || 'power_paired',
+          side_method: (data.side_method as SideMethod) || 'balance',
+          odd_bracket: (data.odd_bracket as OddBracket) || 'pullup_top',
           pullup_restriction: data.pullup_restriction || 'least_to_date',
           avoid_rematches: data.avoid_rematches ?? true,
           club_protect: data.club_protect ?? true,
@@ -310,6 +315,20 @@ export function PairingGenerator({
       });
   };
 
+  // Convert TabulationSettings to DrawSettings for the generator
+  const toDrawSettings = (s: TabulationSettings): DrawSettings => ({
+    drawMethod: s.draw_method === 'manual' ? 'random' : s.draw_method,
+    sideMethod: s.side_method,
+    oddBracket: s.odd_bracket,
+    pullupRestriction: s.pullup_restriction as 'least_to_date',
+    avoidRematches: s.avoid_rematches,
+    clubProtect: s.club_protect,
+    historyPenalty: s.history_penalty,
+    institutionPenalty: s.institution_penalty,
+    sidePenalty: s.side_penalty,
+    maxRepeatOpponents: s.max_repeat_opponents,
+  });
+
   // Generate pairings using the advanced algorithm
   const generateAdvancedPairings = async (preview: boolean = false) => {
     if (!selectedRound || !settings) return;
@@ -324,7 +343,8 @@ export function PairingGenerator({
       const roundNumber = currentRound?.round_number || 1;
 
       // Generate pairings using DrawGenerator
-      const generator = new DrawGenerator(teams, history, settings, roundNumber);
+      const drawSettings = toDrawSettings(settings);
+      const generator = new DrawGenerator(teams, history, drawSettings, roundNumber);
       const generated = generator.generate();
 
       if (preview) {
@@ -353,18 +373,36 @@ export function PairingGenerator({
 
       if (error) throw error;
 
-      // Update side counts for teams
+      // Update side counts for teams - fetch current counts and increment
       for (const pairing of generated) {
-        if (!pairing.flags.includes('bye')) {
-          await supabase
+        if (!pairing.flags.includes('bye') && pairing.negTeamId) {
+          // Get current aff team data
+          const { data: affTeam } = await supabase
             .from('tournament_registrations')
-            .update({ aff_count: supabase.rpc('increment', { x: 1 }) })
-            .eq('id', pairing.affTeamId);
+            .select('aff_count')
+            .eq('id', pairing.affTeamId)
+            .single();
           
-          await supabase
+          if (affTeam) {
+            await supabase
+              .from('tournament_registrations')
+              .update({ aff_count: (affTeam.aff_count || 0) + 1 })
+              .eq('id', pairing.affTeamId);
+          }
+          
+          // Get current neg team data
+          const { data: negTeam } = await supabase
             .from('tournament_registrations')
-            .update({ neg_count: supabase.rpc('increment', { x: 1 }) })
-            .eq('id', pairing.negTeamId);
+            .select('neg_count')
+            .eq('id', pairing.negTeamId)
+            .single();
+          
+          if (negTeam) {
+            await supabase
+              .from('tournament_registrations')
+              .update({ neg_count: (negTeam.neg_count || 0) + 1 })
+              .eq('id', pairing.negTeamId);
+          }
         }
       }
 
@@ -468,81 +506,6 @@ export function PairingGenerator({
   const getTeamName = (regId: string): string => {
     const reg = registrations.find((r: any) => r.id === regId);
     return reg?.participant_name || 'Unknown';
-  };
-
-  const selectedRoundData = rounds.find(r => r.id === selectedRound);
-  const assignJudge = async (pairingId: string, judgeId: string) => {
-    try {
-      const { error } = await supabase
-        .from('pairings')
-        .update({ judge_id: judgeId === 'none' ? null : judgeId })
-        .eq('id', pairingId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Judge assigned successfully",
-      });
-
-      fetchPairings();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: "Failed to assign judge",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const togglePairingRelease = async (pairingId: string, released: boolean) => {
-    try {
-      const { error } = await supabase
-        .from('pairings')
-        .update({ released: !released })
-        .eq('id', pairingId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: `Pairing ${!released ? 'released' : 'hidden'}`,
-      });
-
-      fetchPairings();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: "Failed to update pairing visibility",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const releaseAllPairings = async () => {
-    if (!selectedRound) return;
-
-    try {
-      const { error } = await supabase
-        .from('pairings')
-        .update({ released: true })
-        .eq('round_id', selectedRound);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "All pairings released to participants",
-      });
-
-      fetchPairings();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: "Failed to release pairings",
-        variant: "destructive",
-      });
-    }
   };
 
   const selectedRoundData = rounds.find(r => r.id === selectedRound);
@@ -676,7 +639,7 @@ export function PairingGenerator({
               <div className="flex gap-2">
                 {pairings.length === 0 && selectedRoundData.status !== 'locked' && (
                   <Button
-                    onClick={generatePairings}
+                    onClick={() => generateAdvancedPairings(false)}
                     disabled={loading || registrations.length < 2}
                   >
                     <Shuffle className="h-4 w-4 mr-2" />
@@ -735,7 +698,7 @@ export function PairingGenerator({
                 <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
                 <p>No pairings generated for this round</p>
                 {registrations.length >= 2 && selectedRoundData?.status !== 'locked' && (
-                  <Button onClick={generatePairings} className="mt-4" disabled={loading}>
+                  <Button onClick={() => generateAdvancedPairings(false)} className="mt-4" disabled={loading}>
                     <Shuffle className="h-4 w-4 mr-2" />
                     Generate Pairings
                   </Button>
@@ -765,12 +728,12 @@ export function PairingGenerator({
                       </TableCell>
                       <TableCell>
                         <div className="font-medium">
-                          Affirmative Team
+                          {pairing.aff_registration?.participant_name || getTeamName(pairing.aff_registration_id)}
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="font-medium">
-                          Negative Team
+                          {pairing.neg_registration?.participant_name || getTeamName(pairing.neg_registration_id)}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -823,6 +786,11 @@ export function PairingGenerator({
                             <Badge variant="outline" className="text-xs">
                               <Calendar className="h-3 w-3 mr-1" />
                               {new Date(pairing.scheduled_time).toLocaleTimeString()}
+                            </Badge>
+                          )}
+                          {pairing.flags && pairing.flags.length > 0 && (
+                            <Badge variant="outline" className="text-xs">
+                              {pairing.flags.join(', ')}
                             </Badge>
                           )}
                         </div>
