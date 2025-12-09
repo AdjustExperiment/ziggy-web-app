@@ -220,8 +220,8 @@ export function StandingsView({ tournamentId, registrations }: StandingsViewProp
       setSyncing(true);
       
       // Call the database function to recalculate
-      const { error } = await (supabase.rpc as any)('recalc_tournament_standings', {
-        _tournament_id: tournamentId
+      const { error } = await (supabase as any).rpc('recalc_tournament_standings', {
+        p_tournament_id: tournamentId
       });
 
       if (error) throw error;
