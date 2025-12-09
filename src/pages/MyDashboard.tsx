@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { 
   Home, Trophy, Users, BarChart3, FileText, 
   ExternalLink, Calendar, MessageSquare, Gavel,
-  TrendingUp, Award, Target, Bell, Clock, CheckCircle, Settings
+  TrendingUp, Award, Target, Bell, Clock, CheckCircle, Settings, Eye
 } from 'lucide-react';
 import MyTournaments from './MyTournaments';
 import { MyPairings } from '@/components/MyPairings';
@@ -54,13 +54,32 @@ export default function MyDashboard() {
   const [judgeStats, setJudgeStats] = useState<JudgeStats>({ totalAssignments: 0, completedBallots: 0, pendingBallots: 0 });
   const [chatTournament, setChatTournament] = useState<string>('');
   const [loading, setLoading] = useState(true);
+  const [hasObserverRole, setHasObserverRole] = useState(false);
 
   useEffect(() => {
     if (user) {
       fetchDashboardData();
       fetchJudgeProfile();
+      checkObserverRole();
     }
   }, [user]);
+
+  const checkObserverRole = async () => {
+    if (!user) return;
+    
+    try {
+      const { data } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'observer')
+        .maybeSingle();
+      
+      setHasObserverRole(!!data);
+    } catch (error) {
+      console.error('Error checking observer role:', error);
+    }
+  };
 
   const fetchJudgeProfile = async () => {
     try {
@@ -206,6 +225,7 @@ export default function MyDashboard() {
     { name: 'Community Rules', href: '/rules', icon: Users },
     { name: 'FAQ & Help', href: '/faq', icon: MessageSquare },
     { name: 'Contact Support', href: '/contact', icon: ExternalLink },
+    ...(hasObserverRole ? [{ name: 'Observer Dashboard', href: '/observer', icon: Eye }] : []),
     ...(isAdmin ? [{ name: 'Admin Dashboard', href: '/admin', icon: Settings }] : []),
   ];
 

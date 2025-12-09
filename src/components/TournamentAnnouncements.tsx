@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useOptimizedAuth } from '@/hooks/useOptimizedAuth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Megaphone, Clock } from 'lucide-react';
@@ -18,11 +19,18 @@ interface TournamentAnnouncementsProps {
 }
 
 export function TournamentAnnouncements({ tournamentId }: TournamentAnnouncementsProps) {
+  const { user } = useOptimizedAuth();
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasAccess, setHasAccess] = useState(false);
 
   useEffect(() => {
-    fetchAnnouncements();
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+    
+    checkAccessAndFetch();
 
     // Real-time subscription for new announcements
     const channel = supabase
@@ -40,7 +48,110 @@ export function TournamentAnnouncements({ tournamentId }: TournamentAnnouncement
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [tournamentId]);
+  }, [tournamentId, user]);
+
+  const checkAccessAndFetch = async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      // Check if user is a participant (registered for the tournament)
+      const { data: registration } = await supabase
+        .from('tournament_registrations')
+        .select('id')
+        .eq('tournament_id', tournamentId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (registration) {
+        setHasAccess(true);
+        await fetchAnnouncements();
+        return;
+      }
+
+      // Check if user is an admin-assigned observer
+      const { data: observerRecord } = await supabase
+        .from('tournament_observers')
+        .select('id')
+        .eq('tournament_id', tournamentId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (observerRecord) {
+        setHasAccess(true);
+        await fetchAnnouncements();
+        return;
+      }
+
+      // Check if user has any approved spectate requests for pairings in this tournament
+      const { data: spectateRequests } = await supabase
+        .from('spectate_requests')
+        .select(`
+          id,
+          pairings!inner (
+            tournament_id
+          )
+        `)
+        .eq('status', 'approved')
+        .eq('requester_user_id', user.id);
+
+      const hasSpectateAccess = spectateRequests?.some(
+        (req: any) => req.pairings?.tournament_id === tournamentId
+      );
+
+      if (hasSpectateAccess) {
+        setHasAccess(true);
+        await fetchAnnouncements();
+        return;
+      }
+
+      // Check if user is a judge assigned to this tournament
+      const { data: judgeProfile } = await supabase
+        .from('judge_profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (judgeProfile) {
+        const { data: judgeAssignment } = await supabase
+          .from('pairings')
+          .select('id')
+          .eq('tournament_id', tournamentId)
+          .eq('judge_id', judgeProfile.id)
+          .limit(1)
+          .maybeSingle();
+
+        if (judgeAssignment) {
+          setHasAccess(true);
+          await fetchAnnouncements();
+          return;
+        }
+      }
+
+      // Check if user is admin
+      const { data: adminRole } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
+        .maybeSingle();
+
+      if (adminRole) {
+        setHasAccess(true);
+        await fetchAnnouncements();
+        return;
+      }
+
+      // No access
+      setHasAccess(false);
+    } catch (error) {
+      console.error('Error checking access:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchAnnouncements = async () => {
     try {
@@ -48,7 +159,7 @@ export function TournamentAnnouncements({ tournamentId }: TournamentAnnouncement
         .from('tournament_content')
         .select('announcements')
         .eq('tournament_id', tournamentId)
-        .single();
+        .maybeSingle();
 
       if (error && error.code !== 'PGRST116') throw error;
 
@@ -56,15 +167,13 @@ export function TournamentAnnouncements({ tournamentId }: TournamentAnnouncement
         // Sort by created_at descending and cast properly
         const announcementsArray = data.announcements as unknown as Announcement[];
         const sorted = [...announcementsArray].sort((a, b) => 
-          new Date(a.created_at || 0).getTime() - 
-          new Date(b.created_at || 0).getTime()
-        ).reverse();
+          new Date(b.created_at || 0).getTime() - 
+          new Date(a.created_at || 0).getTime()
+        );
         setAnnouncements(sorted.slice(0, 5)); // Show latest 5
       }
     } catch (error) {
       console.error('Error fetching announcements:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -72,7 +181,7 @@ export function TournamentAnnouncements({ tournamentId }: TournamentAnnouncement
     return null;
   }
 
-  if (announcements.length === 0) {
+  if (!hasAccess || announcements.length === 0) {
     return null;
   }
 
