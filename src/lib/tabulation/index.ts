@@ -6,7 +6,11 @@
  * - Munkres algorithm for optimal assignments
  * - Side balance tracking
  * - Conflict resolution
+ * - Break generation with AIDA rules support
+ * - Judge allocation
  */
 
 export * from './drawGenerator';
 export * from './munkres';
+export * from './breakGenerator';
+export * from './judgeAllocator';

@@ -11,6 +11,9 @@ import { PairingGenerator } from './PairingGenerator';
 import { StandingsView } from './StandingsView';
 import { BracketsManager } from './BracketsManager';
 import { ConstraintsManager } from './ConstraintsManager';
+import { BreakManagerWrapper } from './BreakManagerWrapper';
+import { ResolutionsManager } from './ResolutionsManager';
+import { CheckInManager } from './CheckInManager';
 
 interface TabulationDashboardProps {
   tournamentId: string;
@@ -22,6 +25,7 @@ export default function TabulationDashboard({ tournamentId }: TabulationDashboar
   const [rounds, setRounds] = useState<any[]>([]);
   const [registrations, setRegistrations] = useState<any[]>([]);
   const [judges, setJudges] = useState<any[]>([]);
+  const [tournament, setTournament] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -32,6 +36,16 @@ export default function TabulationDashboard({ tournamentId }: TabulationDashboar
     try {
       setLoading(true);
       
+      // Fetch tournament
+      const { data: tournamentData, error: tournamentError } = await supabase
+        .from('tournaments')
+        .select('*, debate_formats:format(*)')
+        .eq('id', tournamentId)
+        .single();
+
+      if (tournamentError) throw tournamentError;
+      setTournament(tournamentData);
+
       // Fetch rounds
       const { data: roundsData, error: roundsError } = await supabase
         .from('rounds')
@@ -101,6 +115,9 @@ export default function TabulationDashboard({ tournamentId }: TabulationDashboar
     }
   };
 
+  const showResolutions = tournament?.resolutions_enabled;
+  const showCheckIn = tournament?.check_in_enabled;
+
   return (
     <div className="container mx-auto p-6">
       <div className="mb-6">
@@ -111,13 +128,15 @@ export default function TabulationDashboard({ tournamentId }: TabulationDashboar
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-8 lg:grid-cols-8">
+        <TabsList className="flex flex-wrap gap-1">
           <TabsTrigger value="draw">Draw</TabsTrigger>
           <TabsTrigger value="competitors">Competitors</TabsTrigger>
           <TabsTrigger value="participation">Participation</TabsTrigger>
+          {showCheckIn && <TabsTrigger value="checkin">Check-In</TabsTrigger>}
           <TabsTrigger value="adjudicators">Adjudicators</TabsTrigger>
           <TabsTrigger value="results">Results</TabsTrigger>
           <TabsTrigger value="breaks">Breaks</TabsTrigger>
+          {showResolutions && <TabsTrigger value="resolutions">Resolutions</TabsTrigger>}
           <TabsTrigger value="constraints">Constraints</TabsTrigger>
           <TabsTrigger value="config">Config</TabsTrigger>
         </TabsList>
@@ -141,6 +160,12 @@ export default function TabulationDashboard({ tournamentId }: TabulationDashboar
           <ParticipationManager tournamentId={tournamentId} />
         </TabsContent>
 
+        {showCheckIn && (
+          <TabsContent value="checkin">
+            <CheckInManager tournamentId={tournamentId} />
+          </TabsContent>
+        )}
+
         <TabsContent value="adjudicators">
           <JudgePostingsView tournamentId={tournamentId} />
         </TabsContent>
@@ -153,12 +178,20 @@ export default function TabulationDashboard({ tournamentId }: TabulationDashboar
         </TabsContent>
 
         <TabsContent value="breaks">
-          <BracketsManager 
+          <BreakManagerWrapper 
             tournamentId={tournamentId}
-            rounds={rounds}
             registrations={registrations}
           />
         </TabsContent>
+
+        {showResolutions && (
+          <TabsContent value="resolutions">
+            <ResolutionsManager 
+              tournamentId={tournamentId}
+              rounds={rounds}
+            />
+          </TabsContent>
+        )}
 
         <TabsContent value="constraints">
           <ConstraintsManager 
