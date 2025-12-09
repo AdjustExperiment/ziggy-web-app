@@ -221,9 +221,13 @@ const Results = () => {
               <div className="grid gap-6">
                 {recentResults.length === 0 ? (
                   <Card className="bg-black border-white/10">
-                    <CardContent className="text-center py-8">
-                      <Trophy className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <p className="text-white/70">No recent results available</p>
+                    <CardContent className="text-center py-12">
+                      <Trophy className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                      <h3 className="text-xl font-semibold text-white mb-2">No Results Yet</h3>
+                      <p className="text-white/70 mb-6">Tournament results will appear here once competitions conclude.</p>
+                      <Button variant="outline" className="border-white/20 text-white hover:bg-white/10" asChild>
+                        <a href="/tournaments">Browse Upcoming Tournaments</a>
+                      </Button>
                     </CardContent>
                   </Card>
                 ) : (
@@ -286,9 +290,10 @@ const Results = () => {
                 </CardHeader>
                 <CardContent>
                   {topPerformers.length === 0 ? (
-                    <div className="text-center py-8">
-                      <Star className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <p className="text-white/70">No performers data available</p>
+                    <div className="text-center py-12">
+                      <Star className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold text-white mb-2">Rankings Coming Soon</h3>
+                      <p className="text-white/70">Top performers will be listed once tournament data is available.</p>
                     </div>
                   ) : (
                     <div className="space-y-4">
@@ -335,9 +340,10 @@ const Results = () => {
               <div className="grid gap-6">
                 {championships.length === 0 ? (
                   <Card className="bg-black border-white/10">
-                    <CardContent className="text-center py-8">
-                      <Trophy className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <p className="text-white/70">No championships data available</p>
+                    <CardContent className="text-center py-12">
+                      <Trophy className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                      <h3 className="text-xl font-semibold text-white mb-2">Championship History Coming Soon</h3>
+                      <p className="text-white/70">Past championship results will be displayed here.</p>
                     </CardContent>
                   </Card>
                 ) : (

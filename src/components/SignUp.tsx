@@ -1,4 +1,4 @@
-import { ExternalLink, Trophy, Users, Target, Star } from "lucide-react";
+import { Trophy, Users, Target, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -107,9 +107,9 @@ export function SignUp() {
                   }`}
                   variant={plan.popular ? 'default' : 'outline'}
                   size="lg"
-                  onClick={() => window.open('https://forms.google.com/your-form-link', '_blank')}
+                  onClick={() => window.location.href = '/tournaments'}
                 >
-                  <ExternalLink className="h-4 w-4 mr-2" />
+                  <Target className="h-4 w-4 mr-2" />
                   Get Started
                 </Button>
               </CardContent>
@@ -155,10 +155,10 @@ export function SignUp() {
             <Button 
               size="lg" 
               className="bg-gradient-accent hover:opacity-90 text-white shadow-glow text-lg px-12 py-6"
-              onClick={() => window.open('https://forms.google.com/your-tournament-registration-form', '_blank')}
+              onClick={() => window.location.href = '/tournaments'}
             >
-              <ExternalLink className="h-5 w-5 mr-2" />
-              Open Registration Form
+              <Trophy className="h-5 w-5 mr-2" />
+              Browse Tournaments
             </Button>
             
             <p className="text-sm text-muted-foreground">

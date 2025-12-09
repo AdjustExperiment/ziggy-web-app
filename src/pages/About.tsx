@@ -177,9 +177,9 @@ const About = () => {
             <CardContent className="p-8">
                 <p className="text-lg text-foreground leading-relaxed font-secondary">
                   Ziggy Online Debate™ was founded in 2011 by <strong className="text-primary">Isaac Sommers</strong>,
-                a highly decorated alumnus of NCFCA and Stoa, former debate instructor and coach, 
-                and a graduate of Howard Payne University (Class of 2018) and Harvard Law School (Class of 2021). 
-                Isaac is now working full-time as a lawyer.
+                  a highly decorated alumnus of NCFCA and Stoa, former debate instructor and coach, 
+                  and a graduate of Howard Payne University (Class of 2018) and Harvard Law School (Class of 2021). 
+                  Isaac is now working full-time as a lawyer.
               </p>
             </CardContent>
           </Card>

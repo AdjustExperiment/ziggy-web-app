@@ -20,7 +20,7 @@ export function TournamentSettingsManager({ tournamentId }: TournamentSettingsMa
         <TabsList>
           <TabsTrigger value="access">Role Access</TabsTrigger>
           <TabsTrigger value="ballot-reveal">Ballot Reveal</TabsTrigger>
-          <TabsTrigger value="tabulation">Tabulation (Beta)</TabsTrigger>
+          <TabsTrigger value="tabulation">Tabulation</TabsTrigger>
         </TabsList>
 
         <TabsContent value="access">
