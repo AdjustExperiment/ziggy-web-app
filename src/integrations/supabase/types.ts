@@ -1154,33 +1154,6 @@ export type Database = {
           },
         ]
       }
-      pairing_messages: {
-        Row: {
-          created_at: string
-          id: string
-          message: string
-          pairing_id: string
-          sender_id: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          message: string
-          pairing_id: string
-          sender_id: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          message?: string
-          pairing_id?: string
-          sender_id?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       pairings: {
         Row: {
           aff_registration_id: string
