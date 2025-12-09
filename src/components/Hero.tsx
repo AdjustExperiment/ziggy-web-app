@@ -63,12 +63,12 @@ export function Hero() {
               
               <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto lg:mx-0 font-secondary">
                 Connecting debaters worldwide. Practice with competitors from all across the country with powermatching, 
-                flexible scheduling, and affordable tournaments starting at just $30-35. Multiple debate formats including 
-                LD, TP, Parli, and Moot Court.
+                flexible scheduling, and affordable tournaments starting at just $30-35. Access exclusive member resources 
+                including coaches, sourcebooks, and training materials. Multiple formats: LD, TP, Parli, and Moot Court.
               </p>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start flex-wrap">
               <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-glow text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-6 min-h-[44px] sm:min-h-[56px] transition-all duration-300 hover:scale-105" onClick={() => window.location.href = '/tournaments'}>
                 Sign Up Now
                 <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
@@ -76,6 +76,10 @@ export function Hero() {
               
               <Button variant="outline" size="lg" className="border-border text-foreground hover:bg-accent text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-6 min-h-[44px] sm:min-h-[56px] transition-all duration-300 hover:scale-105 backdrop-blur-sm" onClick={() => window.location.href = '/login'}>
                 Members Page
+              </Button>
+
+              <Button variant="outline" size="lg" className="border-primary/50 text-primary hover:bg-primary/10 text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-6 min-h-[44px] sm:min-h-[56px] transition-all duration-300 hover:scale-105 backdrop-blur-sm" onClick={() => window.location.href = '/host-tournament'}>
+                Host Your Tournament
               </Button>
             </div>
 
