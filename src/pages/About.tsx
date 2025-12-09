@@ -89,7 +89,7 @@ const About = () => {
     {
       name: "Justus Aryani", 
       role: "Assistant Director",
-      bio: "An experienced debater and sourcebook writer in his sixth year of competition. A four-year Ziggy competitor himself, studying Computer Science and Cybersecurity at Collin College. Plans to study International Relations after graduating. Works as a Barista and plays Uillean Pipes in his spare time.",
+      bio: "Justus is a 6-year alum from NCFCA styles of debate. A four-year Ziggy competitor himself, he now studies Computer Science and Cybersecurity at Collin College. This spring, he will move to Germany to continue his studies and take up work as a refugee integration aid.\n\nIn his spare time, Justus enjoys videography, plays the Uillean Pipes, and watches an unhealthy amount of real football.",
       image: "/lovable-uploads/justus-avatar.jpg"
     }
   ];
