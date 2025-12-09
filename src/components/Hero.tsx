@@ -3,19 +3,25 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BoxedText } from "@/components/ui/boxed-text";
 import heroImage from "@/assets/hero-debate.jpg";
-
 export function Hero() {
-  return (
-    <section className="relative overflow-hidden bg-gradient-hero">
+  return <section className="relative overflow-hidden bg-gradient-hero">
       {/* Animated Background Elements */}
       <div className="absolute inset-0">
         <div className="absolute inset-0 bg-background/5" />
         
         {/* Floating Particles */}
-        <div className="absolute top-10 left-10 w-32 h-32 bg-primary/5 rounded-full blur-xl animate-float" style={{ animationDelay: '0s' }}></div>
-        <div className="absolute top-20 right-20 w-48 h-48 bg-primary/8 rounded-full blur-2xl animate-float" style={{ animationDelay: '2s' }}></div>
-        <div className="absolute bottom-20 left-20 w-40 h-40 bg-primary/6 rounded-full blur-xl animate-float" style={{ animationDelay: '4s' }}></div>
-        <div className="absolute bottom-10 right-10 w-56 h-56 bg-primary/4 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute top-10 left-10 w-32 h-32 bg-primary/5 rounded-full blur-xl animate-float" style={{
+        animationDelay: '0s'
+      }}></div>
+        <div className="absolute top-20 right-20 w-48 h-48 bg-primary/8 rounded-full blur-2xl animate-float" style={{
+        animationDelay: '2s'
+      }}></div>
+        <div className="absolute bottom-20 left-20 w-40 h-40 bg-primary/6 rounded-full blur-xl animate-float" style={{
+        animationDelay: '4s'
+      }}></div>
+        <div className="absolute bottom-10 right-10 w-56 h-56 bg-primary/4 rounded-full blur-3xl animate-float" style={{
+        animationDelay: '1s'
+      }}></div>
         
         {/* Gradient Overlays */}
         <div className="absolute inset-0 bg-gradient-to-br from-transparent via-primary/5 to-background/10"></div>
@@ -63,21 +69,12 @@ export function Hero() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start">
-              <Button 
-                size="lg" 
-                className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-glow text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-6 min-h-[44px] sm:min-h-[56px] transition-all duration-300 hover:scale-105"
-                onClick={() => window.location.href = '/tournaments'}
-              >
+              <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-glow text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-6 min-h-[44px] sm:min-h-[56px] transition-all duration-300 hover:scale-105" onClick={() => window.location.href = '/tournaments'}>
                 Sign Up Now
                 <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
               </Button>
               
-              <Button 
-                variant="outline" 
-                size="lg"
-                className="border-border text-foreground hover:bg-accent text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-6 min-h-[44px] sm:min-h-[56px] transition-all duration-300 hover:scale-105 backdrop-blur-sm"
-                onClick={() => window.location.href = '/login'}
-              >
+              <Button variant="outline" size="lg" className="border-border text-foreground hover:bg-accent text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-6 min-h-[44px] sm:min-h-[56px] transition-all duration-300 hover:scale-105 backdrop-blur-sm" onClick={() => window.location.href = '/login'}>
                 Members Page
               </Button>
             </div>
@@ -102,11 +99,7 @@ export function Hero() {
           {/* Right Image */}
           <div className="relative order-first lg:order-last">
             <div className="absolute inset-0 bg-gradient-to-t from-background/20 to-transparent rounded-3xl" />
-              <img
-                src={heroImage}
-                alt="Professional debate tournament"
-                className="rounded-3xl shadow-tournament w-full h-[300px] sm:h-[400px] lg:h-[500px] xl:h-[600px] object-cover"
-              />
+              <img alt="Professional debate tournament" src="/lovable-uploads/337a8efe-7ad1-4b3c-9e12-c8ceed8a2925.jpg" className="rounded-3xl shadow-tournament w-full h-[300px] sm:h-[400px] lg:h-[500px] xl:h-[600px] object-fill" />
             
             {/* Floating Stats Cards */}
             <div className="absolute top-2 sm:top-4 right-2 sm:right-4 bg-card/90 backdrop-blur-sm rounded-2xl p-2 sm:p-4 shadow-card border border-border/50">
@@ -125,6 +118,5 @@ export function Hero() {
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 }
