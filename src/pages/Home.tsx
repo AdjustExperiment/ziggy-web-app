@@ -9,8 +9,8 @@ import { ArrowRight, Trophy, Users, BarChart3, Target, Zap, Shield, Globe, Dolla
 const features = [
   {
     icon: <Globe className="h-6 w-6" />,
-    title: "National Competition",
-    description: "Debate students from all across the country. Easy access for rural competitors. Sign up for one or multiple debate leagues."
+    title: "Worldwide Competition",
+    description: "Debate students from around the world. Easy access for remote competitors. Sign up for one or multiple debate leagues."
   },
   {
     icon: <Target className="h-6 w-6" />,
@@ -64,8 +64,8 @@ const features = [
   },
   {
     icon: <Zap className="h-6 w-6" />,
-    title: "National Prep Group",
-    description: "Ziggy TP members can apply to an NCFCA National Prep Group. Exclusive preparation opportunities for serious competitors."
+    title: "NCFCA Prep Group",
+    description: "Ziggy TP members can apply to an NCFCA Prep Group. Exclusive preparation opportunities for serious competitors."
   }
 ];
 
@@ -88,8 +88,8 @@ const Home = () => {
               Ziggy Online Debate Features
             </h2>
             <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto font-secondary">
-              Check out everything Ziggy has to offer! From national competition to advanced scheduling, 
-              we provide comprehensive tools for debaters worldwide.
+              Check out everything Ziggy has to offer! From worldwide competition to advanced scheduling, 
+              we provide comprehensive tools for debaters everywhere.
             </p>
           </div>
 
@@ -128,7 +128,7 @@ const Home = () => {
               <CardContent className="p-6">
                 <p className="text-foreground mb-4 italic">
                   "I'm going into my third year of competition and Ziggy was one of the best decisions I made to help prepare myself. 
-                  It gave me a national perspective as each region is different in its own way."
+                  It gave me a broader perspective as each region is different in its own way."
                 </p>
                 <p className="text-primary font-medium">— Zoe Abbott, Competitor</p>
               </CardContent>
@@ -137,7 +137,7 @@ const Home = () => {
             <Card className="bg-card/80 border-border shadow-card">
               <CardContent className="p-6">
                 <p className="text-foreground mb-4 italic">
-                  "I am grateful for Ziggy because it gives you a ton of practice with arguments from all over the nation. 
+                  "I am grateful for Ziggy because it gives you a ton of practice with arguments from all over the world. 
                   If you have a small debate club then Ziggy should be a top investment for you."
                 </p>
                 <p className="text-primary font-medium">— Kaylee Dodson, Competitor</p>

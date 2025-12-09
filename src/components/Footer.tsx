@@ -94,7 +94,6 @@ export function Footer() {
 
   const quickLinks = [
     { name: 'About Us', url: '/about' },
-    { name: 'Features', url: '/features' },
     { name: 'Getting Started', url: '/getting-started' },
     { name: 'FAQ', url: '/faq' },
     { name: 'Contact', url: '/contact' },
@@ -104,7 +103,7 @@ export function Footer() {
   const competitionLinks = [
     { name: 'Tournaments', url: '/tournaments' },
     { name: 'Results', url: '/results' },
-    { name: 'Teams', url: '/teams' },
+    { name: 'Host a Tournament', url: '/host-tournament' },
     { name: 'Sign Up', url: '/signup' },
     { name: 'Sign In', url: '/login' }
   ];
@@ -127,8 +126,8 @@ export function Footer() {
             </Link>
             
             <p className="text-muted-foreground mb-6 text-sm leading-relaxed font-secondary">
-              The premier national online debate tournament platform, connecting debaters from 
-              middle school to collegiate levels since 2011.
+              Your all-in-one online debate tournament host and resource provider, 
+              connecting debaters worldwide since 2011.
             </p>
 
             <Badge className="bg-primary/10 text-primary border-primary/30 mb-4">

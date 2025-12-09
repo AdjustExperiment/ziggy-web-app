@@ -20,8 +20,8 @@ const About = () => {
     {
       id: "03",
       icon: <Globe className="h-8 w-8" />,
-      title: "National Competition", 
-      description: "Students from all across the country participate in Ziggy, giving you the opportunity to debate against top competitors nationwide."
+      title: "Worldwide Competition", 
+      description: "Students from around the world participate in Ziggy, giving you the opportunity to debate against top competitors everywhere."
     },
     {
       id: "04",
@@ -116,7 +116,7 @@ const About = () => {
             About <span className="text-primary">Ziggy Online Debate™</span>
           </h1>
           <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed max-w-3xl mx-auto font-secondary animate-fade-in">
-            A national online debate tournament for junior high, high school, and collegiate debaters. 
+            Your all-in-one online debate tournament host and resource provider. 
             We offer Team Policy, Lincoln-Douglas, Parliamentary, and Moot Court styles with 
             bespoke rules designed specifically for online tournaments.
           </p>
@@ -144,7 +144,7 @@ const About = () => {
                 <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-4 mx-auto group-hover:bg-primary/20 transition-colors">
                   <Globe className="h-6 w-6" />
                 </div>
-                <CardTitle className="text-3xl font-bold text-card-foreground">National</CardTitle>
+                <CardTitle className="text-3xl font-bold text-card-foreground">Worldwide</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">Competition Reach</p>
@@ -286,7 +286,7 @@ const About = () => {
             Why Choose <span className="text-primary">Ziggy?</span>
           </h2>
           <p className="text-xl text-muted-foreground text-center mb-16 max-w-3xl mx-auto font-secondary">
-            If you want to improve your debate skills, get national experience, 
+            If you want to improve your debate skills, get worldwide experience, 
             and access up to 10 rounds for only $25* - all from home.
           </p>
           
