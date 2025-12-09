@@ -122,8 +122,12 @@ export function PairingGenerator({
   } | null>(null);
   const [autoAssignLoading, setAutoAssignLoading] = useState(false);
 
+  // Track rounds with released pairings for Print Postings button
+  const [roundsWithReleasedPairings, setRoundsWithReleasedPairings] = useState<string[]>([]);
+
   useEffect(() => {
     fetchSettings();
+    fetchRoundsWithReleasedPairings();
   }, [tournamentId]);
 
   useEffect(() => {
@@ -131,6 +135,27 @@ export function PairingGenerator({
       fetchPairings();
     }
   }, [selectedRound]);
+
+  const fetchRoundsWithReleasedPairings = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('pairings')
+        .select('round_id')
+        .eq('tournament_id', tournamentId)
+        .eq('released', true);
+
+      if (error) {
+        console.error('[PairingGenerator] Error fetching released pairings:', error);
+        return;
+      }
+
+      const uniqueRoundIds = [...new Set(data?.map(p => p.round_id) || [])];
+      setRoundsWithReleasedPairings(uniqueRoundIds);
+      console.log('[PairingGenerator] Rounds with released pairings:', uniqueRoundIds.length);
+    } catch (error) {
+      console.error('[PairingGenerator] Error:', error);
+    }
+  };
 
   const fetchSettings = async () => {
     try {
@@ -858,15 +883,42 @@ export function PairingGenerator({
 
   const selectedRoundData = rounds.find(r => r.id === selectedRound);
 
+  // Get rounds that have released pairings for the dropdown
+  const printableRounds = rounds.filter(r => roundsWithReleasedPairings.includes(r.id));
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h2 className="text-2xl font-bold">Pairing Generator</h2>
           <p className="text-muted-foreground">Create rounds and manage pairings for debates</p>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          {/* Print Postings - Top Level Button */}
+          {printableRounds.length > 0 && (
+            <Select onValueChange={(roundId) => {
+              window.open(`/admin/print/${tournamentId}/${roundId}`, '_blank');
+            }}>
+              <SelectTrigger className="w-[180px]">
+                <div className="flex items-center">
+                  <Printer className="h-4 w-4 mr-2" />
+                  Print Postings
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                {printableRounds.map(round => (
+                  <SelectItem key={round.id} value={round.id}>
+                    {round.name}
+                  </SelectItem>
+                ))}
+                <SelectItem value="__all__" disabled>
+                  ── All Rounds ──
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+
           <Dialog open={isCreatingRound} onOpenChange={setIsCreatingRound}>
             <DialogTrigger asChild>
               <Button onClick={() => setIsCreatingRound(true)}>
