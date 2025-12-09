@@ -1,14 +1,12 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/components/ui/use-toast';
-import { Eye, Clock, CheckCircle } from 'lucide-react';
+import { Eye, Clock, CheckCircle, EyeOff, Loader2 } from 'lucide-react';
 
 interface Tournament {
   id: string;
@@ -22,6 +20,7 @@ export function BallotRevealSettings() {
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string>('');
+  const [revealing, setRevealing] = useState<string>('');
 
   useEffect(() => {
     fetchTournaments();
@@ -95,6 +94,37 @@ export function BallotRevealSettings() {
     }
   };
 
+  const revealTournamentResults = async (tournamentId: string, tournamentName: string) => {
+    if (!confirm(`Are you sure you want to reveal all results for "${tournamentName}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      setRevealing(tournamentId);
+
+      const { data, error } = await supabase.rpc('reveal_tournament_results', {
+        p_tournament_id: tournamentId
+      });
+      
+      if (error) throw error;
+
+      toast({
+        title: "Results Revealed",
+        description: `${data || 0} ballots have been revealed to competitors`,
+      });
+
+      fetchTournaments();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to reveal results",
+        variant: "destructive",
+      });
+    } finally {
+      setRevealing('');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -143,14 +173,14 @@ export function BallotRevealSettings() {
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center gap-2">
-                  <Clock className="h-5 w-5 text-blue-500" />
-                  After Tournament
+                  <EyeOff className="h-5 w-5 text-blue-500" />
+                  After Tournament (Manual)
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
-                  Ballots are revealed only after the tournament end date has passed. 
-                  Best for maintaining competitive integrity during the tournament.
+                  Ballots remain hidden until you manually reveal them using the "Reveal Results" button. 
+                  Competitors see "Results Pending" until revealed.
                 </p>
               </CardContent>
             </Card>
@@ -162,7 +192,7 @@ export function BallotRevealSettings() {
         <CardHeader>
           <CardTitle>Tournament Settings ({tournaments.length})</CardTitle>
           <CardDescription>
-            Configure ballot reveal settings for each tournament. Advanced privacy settings are in Beta.
+            Configure ballot reveal settings for each tournament. Use "Reveal Results" to manually publish all ballots.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -179,6 +209,7 @@ export function BallotRevealSettings() {
                   <TableHead>End Date</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Reveal Mode</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -215,12 +246,27 @@ export function BallotRevealSettings() {
                           </SelectItem>
                           <SelectItem value="after_tournament">
                             <div className="flex items-center gap-2">
-                              <Clock className="h-4 w-4 text-blue-500" />
+                              <EyeOff className="h-4 w-4 text-blue-500" />
                               After Tournament
                             </div>
                           </SelectItem>
                         </SelectContent>
                       </Select>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => revealTournamentResults(tournament.id, tournament.name)}
+                        disabled={revealing === tournament.id}
+                      >
+                        {revealing === tournament.id ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : (
+                          <Eye className="h-4 w-4 mr-2" />
+                        )}
+                        Reveal Results
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}

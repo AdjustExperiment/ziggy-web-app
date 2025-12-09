@@ -65,7 +65,11 @@ export function EnhancedJudgesManager() {
         .order('name');
 
       if (error) throw error;
-      setJudges(data || []);
+      // Cast status to proper type
+      setJudges((data || []).map(j => ({
+        ...j,
+        status: j.status as any
+      })));
     } catch (error: any) {
       console.error('Error fetching judges:', error);
       toast({

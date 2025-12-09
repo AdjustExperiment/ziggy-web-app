@@ -57,10 +57,11 @@ export function JudgesManager() {
         .order('name');
 
       if (error) throw error;
-      // Type cast to handle Json type for availability
+      // Type cast to handle Json type for availability and status
       const typedJudges = (data || []).map(judge => ({
         ...judge,
-        availability: judge.availability as any
+        availability: judge.availability as any,
+        status: (judge.status || 'approved') as 'pending_approval' | 'approved' | 'rejected' | 'suspended'
       }));
       setJudges(typedJudges);
     } catch (error: any) {
