@@ -187,7 +187,7 @@ export function JudgePostingsView({ tournamentId }: JudgePostingsViewProps) {
               <p className="text-yellow-800">
                 Create a judge profile to volunteer for judging assignments and access pairing chats.
               </p>
-              <Button className="mt-2" size="sm" onClick={() => window.open('/judge-dashboard', '_blank')}>
+              <Button className="mt-2" size="sm" onClick={() => window.open('/judge', '_blank')}>
                 Create Judge Profile
               </Button>
             </div>
