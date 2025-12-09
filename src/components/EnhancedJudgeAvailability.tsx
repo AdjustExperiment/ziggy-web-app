@@ -240,7 +240,7 @@ export function EnhancedJudgeAvailability() {
       <div className="text-center p-8">
         <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
         <p className="text-muted-foreground mb-4">You need a judge profile to set availability.</p>
-        <Button onClick={() => window.location.href = '/judge-dashboard'}>
+        <Button onClick={() => window.location.href = '/judge'}>
           Create Judge Profile
         </Button>
       </div>

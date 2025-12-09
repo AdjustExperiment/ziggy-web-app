@@ -189,8 +189,8 @@ export default function UserAccount() {
   };
 
   const handleCreateJudgeProfile = () => {
-    // Navigate to judge profile creation - this could be a modal or separate page
-    window.location.href = '/judge-signup';
+    // Navigate to judge dashboard where profile can be created
+    window.location.href = '/judge';
   };
 
   const isProfileComplete = profile?.first_name && profile?.last_name && profile?.state && profile?.time_zone && profile?.phone;
@@ -410,7 +410,7 @@ export default function UserAccount() {
                         and preferences through the judge dashboard.
                       </p>
                       <Button variant="outline" asChild>
-                        <a href="/judge-dashboard" target="_blank" rel="noopener noreferrer">
+                        <a href="/judge">
                           Manage Judge Profile
                         </a>
                       </Button>

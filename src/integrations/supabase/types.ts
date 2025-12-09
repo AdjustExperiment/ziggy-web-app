@@ -539,6 +539,39 @@ export type Database = {
         }
         Relationships: []
       }
+      debate_teams: {
+        Row: {
+          created_at: string | null
+          created_by: string
+          description: string | null
+          id: string
+          logo_url: string | null
+          name: string
+          school_organization: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          id?: string
+          logo_url?: string | null
+          name: string
+          school_organization?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          id?: string
+          logo_url?: string | null
+          name?: string
+          school_organization?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       elimination_seeds: {
         Row: {
           break_category_id: string | null
@@ -2397,6 +2430,67 @@ export type Database = {
         }
         Relationships: []
       }
+      team_achievements: {
+        Row: {
+          achieved_at: string | null
+          achievement_type: string
+          created_at: string | null
+          id: string
+          members: Json | null
+          position: string | null
+          prize_amount: number | null
+          registration_id: string | null
+          team_id: string
+          tournament_id: string | null
+        }
+        Insert: {
+          achieved_at?: string | null
+          achievement_type?: string
+          created_at?: string | null
+          id?: string
+          members?: Json | null
+          position?: string | null
+          prize_amount?: number | null
+          registration_id?: string | null
+          team_id: string
+          tournament_id?: string | null
+        }
+        Update: {
+          achieved_at?: string | null
+          achievement_type?: string
+          created_at?: string | null
+          id?: string
+          members?: Json | null
+          position?: string | null
+          prize_amount?: number | null
+          registration_id?: string | null
+          team_id?: string
+          tournament_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_achievements_registration_id_fkey"
+            columns: ["registration_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_registrations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_achievements_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "debate_teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_achievements_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       team_break_eligibility: {
         Row: {
           break_category_id: string
@@ -2487,6 +2581,91 @@ export type Database = {
             columns: ["tournament_id"]
             isOneToOne: false
             referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_events: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          event_type: string
+          id: string
+          is_virtual: boolean | null
+          location: string | null
+          scheduled_date: string
+          scheduled_time: string | null
+          team_id: string
+          title: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          event_type?: string
+          id?: string
+          is_virtual?: boolean | null
+          location?: string | null
+          scheduled_date: string
+          scheduled_time?: string | null
+          team_id: string
+          title: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          event_type?: string
+          id?: string
+          is_virtual?: boolean | null
+          location?: string | null
+          scheduled_date?: string
+          scheduled_time?: string | null
+          team_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_events_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "debate_teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_memberships: {
+        Row: {
+          id: string
+          is_active: boolean | null
+          joined_at: string | null
+          role: string
+          team_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          is_active?: boolean | null
+          joined_at?: string | null
+          role?: string
+          team_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          is_active?: boolean | null
+          joined_at?: string | null
+          role?: string
+          team_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_memberships_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "debate_teams"
             referencedColumns: ["id"]
           },
         ]
@@ -2756,6 +2935,7 @@ export type Database = {
           school_organization: string | null
           seed: number | null
           success_email_sent_at: string | null
+          team_id: string | null
           tournament_id: string
           updated_at: string
           user_id: string
@@ -2784,6 +2964,7 @@ export type Database = {
           school_organization?: string | null
           seed?: number | null
           success_email_sent_at?: string | null
+          team_id?: string | null
           tournament_id: string
           updated_at?: string
           user_id: string
@@ -2812,6 +2993,7 @@ export type Database = {
           school_organization?: string | null
           seed?: number | null
           success_email_sent_at?: string | null
+          team_id?: string | null
           tournament_id?: string
           updated_at?: string
           user_id?: string
@@ -2829,6 +3011,13 @@ export type Database = {
             columns: ["requested_judge_profile_id"]
             isOneToOne: false
             referencedRelation: "judge_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_registrations_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "debate_teams"
             referencedColumns: ["id"]
           },
           {

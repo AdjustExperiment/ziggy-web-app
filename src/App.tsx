@@ -15,6 +15,7 @@ const Index = React.lazy(() => import('@/pages/Index'));
 const Tournaments = React.lazy(() => import('@/pages/Tournaments'));
 const Results = React.lazy(() => import('@/pages/Results'));
 const Blog = React.lazy(() => import('@/pages/Blog'));
+const BlogPostDetail = React.lazy(() => import('@/pages/BlogPostDetail'));
 const Teams = React.lazy(() => import('@/pages/Teams'));
 const Login = React.lazy(() => import('@/pages/Login'));
 const SignUpPage = React.lazy(() => import('@/pages/SignUpPage'));
@@ -78,6 +79,7 @@ function App() {
               <Route path="/tournament/:id/register" element={<TournamentRegistration />} />
               <Route path="/results" element={<Results />} />
               <Route path="/blog" element={<Blog />} />
+              <Route path="/blog/:id" element={<BlogPostDetail />} />
               <Route path="/teams" element={<Teams />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<SignUpPage />} />
