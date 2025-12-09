@@ -15,6 +15,7 @@ import MyTournaments from './MyTournaments';
 import { MyPairings } from '@/components/MyPairings';
 import { MyJudgings } from '@/components/MyJudgings';
 import JudgeNotifications from '@/components/JudgeNotifications';
+import { UnifiedNotifications } from '@/components/UnifiedNotifications';
 import { Link } from 'react-router-dom';
 
 interface DashboardStats {
@@ -334,11 +335,11 @@ export default function MyDashboard() {
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="tournaments" className="space-y-4">
-        <TabsList className={`grid w-full ${isJudge ? 'grid-cols-7' : 'grid-cols-5'}`}>
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="tournaments">Tournaments</TabsTrigger>
           <TabsTrigger value="pairings">Pairings</TabsTrigger>
           <TabsTrigger value="judgings">{isJudge ? 'My Judging' : 'Judgings'}</TabsTrigger>
-          {isJudge && <TabsTrigger value="notifications"><Bell className="h-4 w-4 mr-1" />Notifications</TabsTrigger>}
+          <TabsTrigger value="notifications"><Bell className="h-4 w-4 mr-1" />Notifications</TabsTrigger>
           <TabsTrigger value="chat">Chat</TabsTrigger>
           <TabsTrigger value="results">Results</TabsTrigger>
           <TabsTrigger value="ballots">Ballots</TabsTrigger>
@@ -356,11 +357,9 @@ export default function MyDashboard() {
           <MyJudgings />
         </TabsContent>
 
-        {isJudge && judgeProfile && (
-          <TabsContent value="notifications">
-            <JudgeNotifications judgeProfileId={judgeProfile.id} />
-          </TabsContent>
-        )}
+        <TabsContent value="notifications">
+          <UnifiedNotifications userId={user?.id} judgeProfileId={judgeProfile?.id} />
+        </TabsContent>
 
         <TabsContent value="chat" className="space-y-4">
           {registrations.length > 0 ? (

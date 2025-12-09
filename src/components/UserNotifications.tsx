@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useOptimizedAuth } from '@/hooks/useOptimizedAuth';
 import { Button } from '@/components/ui/button';
@@ -9,10 +9,10 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Bell, Check, X } from 'lucide-react';
+import { Bell, Check, Gavel, Users } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
-interface Notification {
+interface UnifiedNotification {
   id: string;
   title: string;
   message: string;
@@ -21,28 +21,110 @@ interface Notification {
   created_at: string;
   pairing_id?: string;
   tournament_id?: string;
+  source: 'judge' | 'competitor';
 }
 
 export function UserNotifications() {
   const { user, profile } = useOptimizedAuth();
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notifications, setNotifications] = useState<UnifiedNotification[]>([]);
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [judgeProfileId, setJudgeProfileId] = useState<string | null>(null);
+
+  const fetchNotifications = useCallback(async () => {
+    if (!user) return;
+
+    try {
+      const allNotifications: UnifiedNotification[] = [];
+
+      // Fetch judge notifications if user is a judge
+      const { data: judgeProfile } = await supabase
+        .from('judge_profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (judgeProfile) {
+        setJudgeProfileId(judgeProfile.id);
+        const { data: judgeNotifs } = await supabase
+          .from('judge_notifications')
+          .select('*')
+          .eq('judge_profile_id', judgeProfile.id)
+          .order('created_at', { ascending: false })
+          .limit(20);
+
+        if (judgeNotifs) {
+          allNotifications.push(...judgeNotifs.map(n => ({
+            ...n,
+            source: 'judge' as const
+          })));
+        }
+      }
+
+      // Fetch competitor notifications for all users with registrations
+      const { data: registrations } = await supabase
+        .from('tournament_registrations')
+        .select('id')
+        .eq('user_id', user.id);
+
+      if (registrations && registrations.length > 0) {
+        const regIds = registrations.map(r => r.id);
+        const { data: competitorNotifs } = await supabase
+          .from('competitor_notifications')
+          .select('*')
+          .in('registration_id', regIds)
+          .order('created_at', { ascending: false })
+          .limit(20);
+
+        if (competitorNotifs) {
+          allNotifications.push(...competitorNotifs.map(n => ({
+            ...n,
+            source: 'competitor' as const
+          })));
+        }
+      }
+
+      // Sort by created_at descending
+      allNotifications.sort((a, b) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+
+      setNotifications(allNotifications.slice(0, 30));
+      setUnreadCount(allNotifications.filter(n => !n.is_read).length);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
 
     fetchNotifications();
     
-    // Set up real-time subscription
-    const channel = supabase
-      .channel('user-notifications')
+    // Set up real-time subscriptions
+    const judgeChannel = supabase
+      .channel('user-judge-notifications')
       .on('postgres_changes', 
         { 
           event: '*', 
           schema: 'public', 
-          table: 'judge_notifications',
-          filter: `judge_profile_id=eq.${profile?.id}`
+          table: 'judge_notifications'
+        }, 
+        () => {
+          fetchNotifications();
+        }
+      )
+      .subscribe();
+
+    const competitorChannel = supabase
+      .channel('user-competitor-notifications')
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'competitor_notifications'
         }, 
         () => {
           fetchNotifications();
@@ -51,44 +133,24 @@ export function UserNotifications() {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(judgeChannel);
+      supabase.removeChannel(competitorChannel);
     };
-  }, [user, profile?.id]);
+  }, [user, fetchNotifications]);
 
-  const fetchNotifications = async () => {
-    if (!profile?.id) return;
-
+  const markAsRead = async (notification: UnifiedNotification) => {
     try {
-      const { data, error } = await supabase
-        .from('judge_notifications')
-        .select('*')
-        .eq('judge_profile_id', profile.id)
-        .order('created_at', { ascending: false })
-        .limit(20);
-
-      if (error) throw error;
-
-      setNotifications(data || []);
-      setUnreadCount(data?.filter(n => !n.is_read).length || 0);
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const markAsRead = async (notificationId: string) => {
-    try {
+      const table = notification.source === 'judge' ? 'judge_notifications' : 'competitor_notifications';
       const { error } = await supabase
-        .from('judge_notifications')
+        .from(table)
         .update({ is_read: true })
-        .eq('id', notificationId);
+        .eq('id', notification.id);
 
       if (error) throw error;
 
       setNotifications(prev => 
         prev.map(n => 
-          n.id === notificationId ? { ...n, is_read: true } : n
+          n.id === notification.id ? { ...n, is_read: true } : n
         )
       );
       setUnreadCount(prev => Math.max(0, prev - 1));
@@ -98,16 +160,32 @@ export function UserNotifications() {
   };
 
   const markAllAsRead = async () => {
-    if (!profile?.id) return;
+    if (!user) return;
 
     try {
-      const { error } = await supabase
-        .from('judge_notifications')
-        .update({ is_read: true })
-        .eq('judge_profile_id', profile.id)
-        .eq('is_read', false);
+      // Mark judge notifications as read
+      if (judgeProfileId) {
+        await supabase
+          .from('judge_notifications')
+          .update({ is_read: true })
+          .eq('judge_profile_id', judgeProfileId)
+          .eq('is_read', false);
+      }
 
-      if (error) throw error;
+      // Mark competitor notifications as read
+      const { data: registrations } = await supabase
+        .from('tournament_registrations')
+        .select('id')
+        .eq('user_id', user.id);
+
+      if (registrations && registrations.length > 0) {
+        const regIds = registrations.map(r => r.id);
+        await supabase
+          .from('competitor_notifications')
+          .update({ is_read: true })
+          .in('registration_id', regIds)
+          .eq('is_read', false);
+      }
 
       setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
       setUnreadCount(0);
@@ -116,7 +194,7 @@ export function UserNotifications() {
     }
   };
 
-  if (!user || profile?.role !== 'judge') return null;
+  if (!user) return null;
 
   return (
     <DropdownMenu>
@@ -157,7 +235,7 @@ export function UserNotifications() {
             <div className="space-y-1">
               {notifications.map((notification) => (
                 <div
-                  key={notification.id}
+                  key={`${notification.source}-${notification.id}`}
                   className={`p-3 border-b hover:bg-muted/50 transition-colors ${
                     !notification.is_read ? 'bg-muted/20' : ''
                   }`}
@@ -165,6 +243,11 @@ export function UserNotifications() {
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
+                        {notification.source === 'judge' ? (
+                          <Gavel className="h-3 w-3 text-primary flex-shrink-0" />
+                        ) : (
+                          <Users className="h-3 w-3 text-secondary flex-shrink-0" />
+                        )}
                         <p className="font-medium text-sm truncate">
                           {notification.title}
                         </p>
@@ -183,7 +266,7 @@ export function UserNotifications() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => markAsRead(notification.id)}
+                        onClick={() => markAsRead(notification)}
                         className="ml-2 flex-shrink-0"
                       >
                         <Check className="h-3 w-3" />

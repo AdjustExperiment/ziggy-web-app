@@ -582,9 +582,52 @@ export function PairingGenerator({
 
       if (error) throw error;
 
+      // Get all pairings for this round to create notifications
+      const { data: releasedPairings } = await supabase
+        .from('pairings')
+        .select('id, aff_registration_id, neg_registration_id, room, scheduled_time')
+        .eq('round_id', selectedRound);
+
+      // Get round name
+      const round = rounds.find(r => r.id === selectedRound);
+
+      // Create notifications for all competitors
+      const notifications: any[] = [];
+      for (const pairing of releasedPairings || []) {
+        // Notification for aff team
+        if (pairing.aff_registration_id) {
+          notifications.push({
+            registration_id: pairing.aff_registration_id,
+            tournament_id: tournamentId,
+            pairing_id: pairing.id,
+            round_id: selectedRound,
+            title: `${round?.name || 'Round'} Pairing Released`,
+            message: `Your pairing has been released. Room: ${pairing.room || 'TBA'}`,
+            type: 'pairing_released'
+          });
+        }
+        // Notification for neg team
+        if (pairing.neg_registration_id && pairing.neg_registration_id !== pairing.aff_registration_id) {
+          notifications.push({
+            registration_id: pairing.neg_registration_id,
+            tournament_id: tournamentId,
+            pairing_id: pairing.id,
+            round_id: selectedRound,
+            title: `${round?.name || 'Round'} Pairing Released`,
+            message: `Your pairing has been released. Room: ${pairing.room || 'TBA'}`,
+            type: 'pairing_released'
+          });
+        }
+      }
+
+      // Insert notifications
+      if (notifications.length > 0) {
+        await supabase.from('competitor_notifications').insert(notifications);
+      }
+
       toast({
         title: "Success",
-        description: "All pairings released to participants",
+        description: "All pairings released and competitors notified",
       });
 
       fetchPairings();
