@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { RoundsManager } from './RoundsManager';
 import { TabulationPlatform } from './TabulationPlatform';
-import { JudgesManager } from './JudgesManager';
+import { EnhancedJudgesManager } from './EnhancedJudgesManager';
 import { BallotTemplatesManager } from './BallotTemplatesManager';
 import { BallotRevealSettings } from './BallotRevealSettings';
 import { DebateFormatsManager } from './DebateFormatsManager';
@@ -63,7 +63,7 @@ export function TabManager() {
         </TabsContent>
 
         <TabsContent value="judges">
-          <JudgesManager />
+          <EnhancedJudgesManager />
         </TabsContent>
 
         <TabsContent value="templates">
