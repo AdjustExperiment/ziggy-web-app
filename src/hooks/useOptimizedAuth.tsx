@@ -6,7 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 interface Profile {
   id: string;
   user_id: string;
-  role: 'user' | 'admin' | 'judge' | 'observer' | 'participant'; // Populated from user_roles table
+  role: 'user' | 'admin' | 'judge' | 'observer' | 'participant';
   first_name?: string;
   last_name?: string;
   state?: string;
@@ -15,17 +15,45 @@ interface Profile {
   phone?: string;
 }
 
+interface TournamentAdminAssignment {
+  tournament_id: string;
+  tournament_name: string;
+}
+
+interface OrganizationAdminAssignment {
+  organization_id: string;
+  organization_name: string;
+  role: 'admin' | 'owner';
+}
+
+interface AdminScope {
+  tournamentAdmins: TournamentAdminAssignment[];
+  organizationAdmins: OrganizationAdminAssignment[];
+  accessibleTournamentIds: string[];
+}
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   profile: Profile | null;
   loading: boolean;
   isAdmin: boolean;
+  adminScope: AdminScope;
+  isTournamentAdmin: (tournamentId: string) => boolean;
+  isOrgAdmin: (orgId: string) => boolean;
+  canAccessTournament: (tournamentId: string) => boolean;
+  hasAnyAdminAccess: boolean;
   signUp: (email: string, password: string, userData?: { data: { first_name?: string; last_name?: string } }) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
+
+const defaultAdminScope: AdminScope = {
+  tournamentAdmins: [],
+  organizationAdmins: [],
+  accessibleTournamentIds: [],
+};
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -41,7 +69,6 @@ export function OptimizedAuthProvider({ children }: { children: ReactNode }) {
     queryFn: async () => {
       if (!user?.id) return null;
       
-      // Fetch profile data
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
@@ -53,42 +80,105 @@ export function OptimizedAuthProvider({ children }: { children: ReactNode }) {
         return null;
       }
 
-      // Fetch user's primary role from user_roles table (security fix)
       const { data: roleData } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', user.id)
-        .order('role', { ascending: true }) // Will return admin first, then judge, etc.
+        .order('role', { ascending: true })
         .limit(1)
         .single();
       
-      // Combine profile with role from user_roles table
       return {
         ...profileData,
         role: roleData?.role || 'user'
       } as Profile;
     },
     enabled: !!user?.id,
-    staleTime: 10 * 60 * 1000, // 10 minutes for profile data
+    staleTime: 10 * 60 * 1000,
+  });
+
+  // Query for admin scope (tournament and organization admin assignments)
+  const { data: adminScope } = useQuery({
+    queryKey: ['adminScope', user?.id],
+    queryFn: async (): Promise<AdminScope> => {
+      if (!user?.id) return defaultAdminScope;
+
+      // Fetch tournament admin assignments
+      const { data: tournamentAdmins, error: taError } = await supabase
+        .from('tournament_admins')
+        .select(`
+          tournament_id,
+          tournaments!inner(name)
+        `)
+        .eq('user_id', user.id);
+
+      if (taError) {
+        console.error('Error fetching tournament admins:', taError);
+      }
+
+      // Fetch organization admin assignments
+      const { data: orgAdmins, error: oaError } = await supabase
+        .from('organization_admins')
+        .select(`
+          organization_id,
+          role,
+          organizations!inner(name)
+        `)
+        .eq('user_id', user.id);
+
+      if (oaError) {
+        console.error('Error fetching org admins:', oaError);
+      }
+
+      // Get tournaments belonging to user's organizations
+      const orgIds = (orgAdmins || []).map(oa => oa.organization_id);
+      let orgTournaments: string[] = [];
+      
+      if (orgIds.length > 0) {
+        const { data: orgTourneyData } = await supabase
+          .from('tournaments')
+          .select('id')
+          .in('organization_id', orgIds);
+        
+        orgTournaments = (orgTourneyData || []).map(t => t.id);
+      }
+
+      // Combine accessible tournament IDs
+      const directTournamentIds = (tournamentAdmins || []).map(ta => ta.tournament_id);
+      const accessibleTournamentIds = [...new Set([...directTournamentIds, ...orgTournaments])];
+
+      return {
+        tournamentAdmins: (tournamentAdmins || []).map(ta => ({
+          tournament_id: ta.tournament_id,
+          tournament_name: (ta.tournaments as any)?.name || 'Unknown',
+        })),
+        organizationAdmins: (orgAdmins || []).map(oa => ({
+          organization_id: oa.organization_id,
+          organization_name: (oa.organizations as any)?.name || 'Unknown',
+          role: oa.role as 'admin' | 'owner',
+        })),
+        accessibleTournamentIds,
+      };
+    },
+    enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000,
   });
 
   useEffect(() => {
-    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         
         if (!session?.user) {
-          // Clear profile cache when user logs out
           queryClient.setQueryData(['profile', session?.user?.id], null);
+          queryClient.setQueryData(['adminScope', session?.user?.id], defaultAdminScope);
         }
         
         setLoading(false);
       }
     );
 
-    // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -98,7 +188,6 @@ export function OptimizedAuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, [queryClient]);
 
-  
   const signUp = useCallback(async (email: string, password: string, userData?: { data: { first_name?: string; last_name?: string } }) => {
     const redirectUrl = `${window.location.origin}/`;
     
@@ -128,17 +217,38 @@ export function OptimizedAuthProvider({ children }: { children: ReactNode }) {
     if (error) {
       console.error('Error signing out:', error);
     }
-    // Clear all cached data on sign out
     queryClient.clear();
   }, [queryClient]);
 
   const refreshUser = useCallback(async () => {
     if (user?.id) {
       queryClient.invalidateQueries({ queryKey: ['profile', user.id] });
+      queryClient.invalidateQueries({ queryKey: ['adminScope', user.id] });
     }
   }, [user?.id, queryClient]);
 
   const isAdmin = useMemo(() => profile?.role === 'admin', [profile?.role]);
+  
+  const currentAdminScope = adminScope || defaultAdminScope;
+
+  const isTournamentAdmin = useCallback((tournamentId: string) => {
+    if (isAdmin) return true;
+    return currentAdminScope.accessibleTournamentIds.includes(tournamentId);
+  }, [isAdmin, currentAdminScope.accessibleTournamentIds]);
+
+  const isOrgAdmin = useCallback((orgId: string) => {
+    if (isAdmin) return true;
+    return currentAdminScope.organizationAdmins.some(oa => oa.organization_id === orgId);
+  }, [isAdmin, currentAdminScope.organizationAdmins]);
+
+  const canAccessTournament = useCallback((tournamentId: string) => {
+    if (isAdmin) return true;
+    return currentAdminScope.accessibleTournamentIds.includes(tournamentId);
+  }, [isAdmin, currentAdminScope.accessibleTournamentIds]);
+
+  const hasAnyAdminAccess = useMemo(() => {
+    return isAdmin || currentAdminScope.accessibleTournamentIds.length > 0;
+  }, [isAdmin, currentAdminScope.accessibleTournamentIds]);
 
   const value = useMemo(() => ({
     user,
@@ -146,11 +256,16 @@ export function OptimizedAuthProvider({ children }: { children: ReactNode }) {
     profile: profile || null,
     loading,
     isAdmin,
+    adminScope: currentAdminScope,
+    isTournamentAdmin,
+    isOrgAdmin,
+    canAccessTournament,
+    hasAnyAdminAccess,
     signUp,
     signIn,
     signOut,
     refreshUser,
-  }), [user, session, profile, loading, isAdmin, signUp, signIn, signOut, refreshUser]);
+  }), [user, session, profile, loading, isAdmin, currentAdminScope, isTournamentAdmin, isOrgAdmin, canAccessTournament, hasAnyAdminAccess, signUp, signIn, signOut, refreshUser]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
