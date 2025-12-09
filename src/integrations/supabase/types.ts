@@ -1133,6 +1133,77 @@ export type Database = {
           },
         ]
       }
+      organization_admins: {
+        Row: {
+          granted_at: string
+          granted_by: string | null
+          id: string
+          organization_id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          organization_id: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          organization_id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_admins_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          contact_email: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          logo_url: string | null
+          name: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          contact_email?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          logo_url?: string | null
+          name: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          contact_email?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          logo_url?: string | null
+          name?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       pages: {
         Row: {
           content: Json
@@ -1197,6 +1268,47 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "pairing_chat_messages_pairing_id_fkey"
+            columns: ["pairing_id"]
+            isOneToOne: false
+            referencedRelation: "pairings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pairing_edit_history: {
+        Row: {
+          change_reason: string | null
+          changed_at: string
+          changed_by: string
+          field_changed: string
+          id: string
+          new_value: Json | null
+          old_value: Json | null
+          pairing_id: string
+        }
+        Insert: {
+          change_reason?: string | null
+          changed_at?: string
+          changed_by: string
+          field_changed: string
+          id?: string
+          new_value?: Json | null
+          old_value?: Json | null
+          pairing_id: string
+        }
+        Update: {
+          change_reason?: string | null
+          changed_at?: string
+          changed_by?: string
+          field_changed?: string
+          id?: string
+          new_value?: Json | null
+          old_value?: Json | null
+          pairing_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pairing_edit_history_pairing_id_fkey"
             columns: ["pairing_id"]
             isOneToOne: false
             referencedRelation: "pairings"
@@ -2706,6 +2818,41 @@ export type Database = {
         }
         Relationships: []
       }
+      tournament_admins: {
+        Row: {
+          granted_at: string
+          granted_by: string | null
+          id: string
+          permissions: Json | null
+          tournament_id: string
+          user_id: string
+        }
+        Insert: {
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          permissions?: Json | null
+          tournament_id: string
+          user_id: string
+        }
+        Update: {
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          permissions?: Json | null
+          tournament_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tournament_admins_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tournament_content: {
         Row: {
           announcements: Json | null
@@ -3304,6 +3451,7 @@ export type Database = {
           max_participants: number
           name: string
           opt_outs_enabled: boolean
+          organization_id: string | null
           prize_items: string[] | null
           prize_pool: string | null
           registration_deadline: string | null
@@ -3342,6 +3490,7 @@ export type Database = {
           max_participants?: number
           name: string
           opt_outs_enabled?: boolean
+          organization_id?: string | null
           prize_items?: string[] | null
           prize_pool?: string | null
           registration_deadline?: string | null
@@ -3380,6 +3529,7 @@ export type Database = {
           max_participants?: number
           name?: string
           opt_outs_enabled?: boolean
+          organization_id?: string | null
           prize_items?: string[] | null
           prize_pool?: string | null
           registration_deadline?: string | null
@@ -3398,7 +3548,15 @@ export type Database = {
           updated_at?: string
           venue_details?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tournaments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -3433,7 +3591,12 @@ export type Database = {
         Args: { _round_id?: string; _tournament_id: string }
         Returns: number
       }
+      can_admin_tournament: {
+        Args: { _tournament_id: string }
+        Returns: boolean
+      }
       can_submit_ballot: { Args: { _pairing_id: string }; Returns: boolean }
+      get_admin_tournament_ids: { Args: never; Returns: string[] }
       get_ballot_template: {
         Args: { p_format_id?: string; p_tournament_id: string }
         Returns: string
@@ -3451,6 +3614,11 @@ export type Database = {
       }
       is_account_locked: { Args: { _user_id: string }; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
+      is_org_admin: { Args: { _organization_id: string }; Returns: boolean }
+      is_tournament_admin: {
+        Args: { _tournament_id: string }
+        Returns: boolean
+      }
       lock_account: {
         Args: { _reason?: string; _target_user_id: string; _until?: string }
         Returns: boolean
