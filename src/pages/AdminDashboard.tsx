@@ -1,12 +1,10 @@
-import React, { useState, useMemo } from 'react';
+import React from 'react';
 import { useOptimizedAuth } from '@/hooks/useOptimizedAuth';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { Routes, Route } from 'react-router-dom';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Dashboard } from '@/components/admin/Dashboard';
 import { TournamentManager } from '@/components/admin/TournamentManager';
-import { TabulationPlatform } from '@/components/admin/TabulationPlatform';
 import { PaymentManager } from '@/components/admin/PaymentManager';
 import { JudgeApplicationManager } from '@/components/admin/JudgeApplicationManager';
 import { EnhancedJudgesManager } from '@/components/admin/EnhancedJudgesManager';
@@ -19,7 +17,6 @@ import { PromoCodesManager } from '@/components/admin/PromoCodesManager';
 import { StaffRevenueCalculator } from '@/components/admin/StaffRevenueCalculator';
 import { SecurityDashboard } from '@/components/admin/SecurityDashboard';
 import { RoleAccessManager } from '@/components/admin/RoleAccessManager';
-import { BallotRevealSettings } from '@/components/admin/BallotRevealSettings';
 import { FooterContentManager } from '@/components/admin/FooterContentManager';
 import SponsorsManager from '@/components/admin/SponsorsManager';
 import { ResultsManager } from '@/components/admin/ResultsManager';
@@ -39,7 +36,6 @@ export default function AdminDashboard() {
       <Routes>
         <Route index element={<Dashboard />} />
         <Route path="tournaments" element={<TournamentManager />} />
-        <Route path="tabulation" element={<TabulationPlatform />} />
         <Route path="payments" element={<PaymentManager />} />
         <Route path="payment-links" element={<PaymentLinksManager />} />
         <Route path="applications" element={<JudgeApplicationManager />} />
@@ -53,10 +49,12 @@ export default function AdminDashboard() {
         <Route path="staff" element={<StaffRevenueCalculator />} />
         <Route path="security" element={<SecurityDashboard />} />
         <Route path="roles" element={<RoleAccessManager />} />
-        <Route path="ballot-reveal" element={<BallotRevealSettings />} />
         <Route path="footer" element={<FooterContentManager />} />
         <Route path="sponsors" element={<SponsorsManager />} />
         <Route path="results" element={<ResultsManager />} />
+        {/* Legacy routes - redirect to tournaments */}
+        <Route path="tabulation" element={<Navigate to="/admin/tournaments" replace />} />
+        <Route path="ballot-reveal" element={<Navigate to="/admin/tournaments" replace />} />
       </Routes>
     </AdminLayout>
   );
