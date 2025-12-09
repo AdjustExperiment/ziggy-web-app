@@ -23,7 +23,7 @@ const Blog = React.lazy(() => import('@/pages/Blog'));
 const Teams = React.lazy(() => import('@/pages/Teams'));
 const Login = React.lazy(() => import('@/pages/Login'));
 const SignUpPage = React.lazy(() => import('@/pages/SignUpPage'));
-const Dashboard = React.lazy(() => import('@/pages/Dashboard'));
+// Dashboard consolidated into MyDashboard
 const UserAccount = React.lazy(() => import('@/pages/UserAccount'));
 const AdminDashboard = React.lazy(() => import('@/pages/AdminDashboard'));
 const GettingStarted = React.lazy(() => import('@/pages/GettingStarted'));

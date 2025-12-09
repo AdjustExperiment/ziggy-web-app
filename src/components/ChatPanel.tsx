@@ -40,7 +40,7 @@ export function ChatPanel({ pairingId }: ChatPanelProps) {
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
-        table: 'pairing_messages',
+        table: 'pairing_chat_messages',
         filter: `pairing_id=eq.${pairingId}`
       }, () => {
         fetchMessages();
@@ -57,32 +57,26 @@ export function ChatPanel({ pairingId }: ChatPanelProps) {
 
     try {
       const { data, error } = await supabase
-        .from('pairing_messages')
-        .select('*')
+        .from('pairing_chat_messages')
+        .select(`
+          *,
+          profiles:sender_id(first_name, last_name)
+        `)
         .eq('pairing_id', pairingId)
         .order('created_at', { ascending: true });
 
       if (error) throw error;
 
-      // Get sender names from profiles
-      const messagesWithNames: Message[] = [];
-      if (data) {
-        for (const msg of data) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('first_name, last_name')
-            .eq('user_id', msg.sender_id)
-            .single();
-
-          messagesWithNames.push({
-            ...msg,
-            sender_name: profile 
-              ? `${profile.first_name || 'Anonymous'} ${profile.last_name || ''}`.trim()
-              : 'Anonymous User',
-            is_own_message: msg.sender_id === user?.id
-          });
-        }
-      }
+      const messagesWithNames = (data || []).map((msg: any) => ({
+        id: msg.id,
+        sender_id: msg.sender_id,
+        message: msg.message,
+        created_at: msg.created_at,
+        sender_name: msg.profiles 
+          ? `${msg.profiles.first_name || 'Anonymous'} ${msg.profiles.last_name || ''}`.trim()
+          : 'Anonymous User',
+        is_own_message: msg.sender_id === user?.id
+      }));
 
       setMessages(messagesWithNames);
     } catch (error: any) {
@@ -99,11 +93,12 @@ export function ChatPanel({ pairingId }: ChatPanelProps) {
       setSending(true);
 
       const { error } = await supabase
-        .from('pairing_messages')
+        .from('pairing_chat_messages')
         .insert({
           pairing_id: pairingId,
           sender_id: user.id,
-          message: newMessage.trim()
+          message: newMessage.trim(),
+          message_type: 'text'
         });
 
       if (error) throw error;

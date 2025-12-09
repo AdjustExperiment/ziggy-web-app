@@ -82,7 +82,7 @@ const menuItems = [
     title: 'System & Settings',
     items: [
       { title: 'Ballot Reveal', url: '/admin/ballot-reveal', icon: Eye },
-      { title: 'Site Editor', url: '/admin/site', icon: Palette },
+      { title: 'Website Builder', url: '/admin/site', icon: Palette },
       { title: 'Footer Content', url: '/admin/footer', icon: FileX },
       { title: 'Sponsors', url: '/admin/sponsors', icon: Building2 },
       { title: 'Security', url: '/admin/security', icon: Shield },

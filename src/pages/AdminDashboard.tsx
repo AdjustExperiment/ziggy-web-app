@@ -14,7 +14,7 @@ import { UserManager } from '@/components/admin/UserManager';
 import { EnhancedEmailTemplateManager } from '@/components/admin/EnhancedEmailTemplateManager';
 import { NotificationsManager } from '@/components/admin/NotificationsManager';
 import { BlogManager } from '@/components/admin/BlogManager';
-import { SiteEditor } from '@/components/admin/SiteEditor';
+import { WebsiteBuilder } from '@/components/admin/WebsiteBuilder';
 import { PromoCodesManager } from '@/components/admin/PromoCodesManager';
 import { StaffRevenueCalculator } from '@/components/admin/StaffRevenueCalculator';
 import { SecurityDashboard } from '@/components/admin/SecurityDashboard';
@@ -48,7 +48,7 @@ export default function AdminDashboard() {
         <Route path="emails" element={<EnhancedEmailTemplateManager />} />
         <Route path="notifications" element={<NotificationsManager />} />
         <Route path="blog" element={<BlogManager />} />
-        <Route path="site" element={<SiteEditor />} />
+        <Route path="site" element={<WebsiteBuilder />} />
         <Route path="promos" element={<PromoCodesManager />} />
         <Route path="staff" element={<StaffRevenueCalculator />} />
         <Route path="security" element={<SecurityDashboard />} />
