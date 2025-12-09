@@ -133,7 +133,7 @@ export function TournamentContentManager({
     }
   };
 
-  const addAnnouncement = () => {
+  const addAnnouncement = async () => {
     if (!newAnnouncement.title || !newAnnouncement.message) {
       toast({
         title: 'Error',
@@ -153,6 +153,38 @@ export function TournamentContentManager({
 
     setAnnouncements([announcement, ...announcements]);
     setNewAnnouncement({ title: '', message: '', priority: 'medium' });
+
+    // Send notifications to all tournament participants
+    try {
+      const { data: registrations } = await supabase
+        .from('tournament_registrations')
+        .select('id')
+        .eq('tournament_id', tournamentId);
+
+      if (registrations && registrations.length > 0) {
+        const notifications = registrations.map(reg => ({
+          registration_id: reg.id,
+          tournament_id: tournamentId,
+          title: `📢 ${newAnnouncement.title}`,
+          message: newAnnouncement.message,
+          type: 'announcement'
+        }));
+
+        await supabase.from('competitor_notifications').insert(notifications);
+        
+        toast({
+          title: 'Announcement Added',
+          description: `Notification sent to ${registrations.length} participants`,
+        });
+      }
+    } catch (error) {
+      console.error('Error sending notifications:', error);
+      // Still show success for announcement, just note notification failure
+      toast({
+        title: 'Announcement Added',
+        description: 'Note: Some notifications may not have been sent',
+      });
+    }
   };
 
   const removeAnnouncement = (id: string) => {
