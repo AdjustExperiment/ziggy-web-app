@@ -93,7 +93,7 @@ export function BracketsManager({ tournamentId, rounds, registrations }: Bracket
   };
 
   const fetchBracketPairings = async () => {
-    const { data } = await (supabase
+    const { data } = await (supabase as any)
       .from('pairings')
       .select(`
         *,
@@ -102,7 +102,7 @@ export function BracketsManager({ tournamentId, rounds, registrations }: Bracket
         neg_registration:tournament_registrations!neg_registration_id(participant_name)
       `)
       .eq('tournament_id', tournamentId)
-      .eq('is_elimination', true) as any)
+      .eq('is_elimination', true)
       .order('created_at', { ascending: true });
 
     if (data && data.length > 0) {
@@ -236,7 +236,7 @@ export function BracketsManager({ tournamentId, rounds, registrations }: Bracket
       }
 
       // Fetch newly created rounds
-      const { data: elimRounds } = await supabase
+      const { data: elimRounds } = await (supabase as any)
         .from('rounds')
         .select('*')
         .eq('tournament_id', tournamentId)
