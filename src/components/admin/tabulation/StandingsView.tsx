@@ -5,8 +5,17 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Trophy, Medal, Award, Users, TrendingUp, RotateCcw } from 'lucide-react';
-import { calculateStandings } from '@/utils/pairingAlgorithms';
+import { 
+  Trophy, 
+  Medal, 
+  Award, 
+  Users, 
+  TrendingUp, 
+  RotateCcw,
+  Download,
+  Star,
+  ArrowUpDown
+} from 'lucide-react';
 
 interface StandingsViewProps {
   tournamentId: string;
@@ -23,84 +32,161 @@ interface TeamStanding {
   avgSpeaks: number;
   opponentWins: number;
   rank: number;
+  isBreaking?: boolean;
 }
+
+type SortField = 'rank' | 'wins' | 'totalSpeaks' | 'avgSpeaks' | 'opponentWins';
+type SortOrder = 'asc' | 'desc';
 
 export function StandingsView({ tournamentId, registrations }: StandingsViewProps) {
   const { toast } = useToast();
   const [standings, setStandings] = useState<TeamStanding[]>([]);
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [sortField, setSortField] = useState<SortField>('rank');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+  const [breakSize, setBreakSize] = useState<number>(8);
 
   useEffect(() => {
     if (tournamentId && registrations.length > 0) {
-      calculateCurrentStandings();
+      fetchStandings();
     }
   }, [tournamentId, registrations]);
 
-  const calculateCurrentStandings = async () => {
+  // Fetch from tournament_standings table
+  const fetchStandings = async () => {
     try {
       setLoading(true);
 
-      // Fetch all pairings and ballots for this tournament
+      const { data: dbStandings, error } = await (supabase
+        .from('tournament_standings' as any)
+        .select(`
+          *,
+          registration:tournament_registrations(
+            id,
+            participant_name,
+            partner_name,
+            school_organization
+          )
+        `) as any)
+        .eq('tournament_id', tournamentId)
+        .order('wins', { ascending: false });
+
+      if (error) throw error;
+
+      if (dbStandings && dbStandings.length > 0) {
+        // Map DB standings to our interface
+        const mapped: TeamStanding[] = dbStandings.map((s: any, index: number) => ({
+          teamId: s.registration_id,
+          teamName: s.registration?.participant_name + 
+            (s.registration?.partner_name ? ` & ${s.registration.partner_name}` : ''),
+          school: s.registration?.school_organization || 'Independent',
+          wins: s.wins,
+          losses: s.losses,
+          totalSpeaks: parseFloat(s.speaks_total) || 0,
+          avgSpeaks: parseFloat(s.speaks_avg) || 0,
+          opponentWins: parseFloat(s.opp_strength) || 0,
+          rank: index + 1,
+        }));
+
+        // Sort and assign ranks
+        sortAndRankStandings(mapped);
+        setStandings(mapped);
+        setLastUpdated(new Date());
+      } else {
+        // Fallback: calculate from pairings
+        await calculateFromPairings();
+      }
+    } catch (error: any) {
+      console.error('Error fetching standings:', error);
+      await calculateFromPairings();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fallback calculation from pairings
+  const calculateFromPairings = async () => {
+    try {
       const { data: pairings, error: pairingsError } = await supabase
         .from('pairings')
         .select(`
           *,
-          ballots(*),
           aff_registration:tournament_registrations!aff_registration_id(*),
           neg_registration:tournament_registrations!neg_registration_id(*)
         `)
-        .eq('tournament_id', tournamentId)
-        .order('created_at');
+        .eq('tournament_id', tournamentId);
 
       if (pairingsError) throw pairingsError;
 
-      // Calculate standings using simple logic for now
-      const standingsData: TeamStanding[] = registrations.map((reg, index) => {
-        // Count wins/losses from pairings with results
-        let wins = 0;
-        let losses = 0;
-        let speaks = 0;
-        
-        pairings?.forEach((pairing: any) => {
-          if (!pairing.result?.winner) return;
-          
-          if (pairing.aff_registration_id === reg.id) {
-            if (pairing.result.winner === 'aff') wins++;
-            else losses++;
-            speaks += parseFloat(pairing.result.aff_speaks || 0);
-          } else if (pairing.neg_registration_id === reg.id) {
-            if (pairing.result.winner === 'neg') wins++;
-            else losses++;
-            speaks += parseFloat(pairing.result.neg_speaks || 0);
-          }
-        });
-        
+      // Build standings map
+      const statsMap = new Map<string, {
+        wins: number;
+        losses: number;
+        speaks: number;
+        rounds: number;
+        opponents: string[];
+      }>();
+
+      // Initialize all registrations
+      registrations.forEach((reg: any) => {
+        statsMap.set(reg.id, { wins: 0, losses: 0, speaks: 0, rounds: 0, opponents: [] });
+      });
+
+      // Process pairings with results
+      pairings?.forEach((pairing: any) => {
+        if (!pairing.result?.winner) return;
+
+        const affId = pairing.aff_registration_id;
+        const negId = pairing.neg_registration_id;
+        const winner = pairing.result.winner;
+        const affSpeaks = parseFloat(pairing.result.aff_speaks) || 0;
+        const negSpeaks = parseFloat(pairing.result.neg_speaks) || 0;
+
+        // Update AFF team stats
+        const affStats = statsMap.get(affId);
+        if (affStats) {
+          if (winner === 'aff') affStats.wins++;
+          else affStats.losses++;
+          affStats.speaks += affSpeaks;
+          affStats.rounds++;
+          affStats.opponents.push(negId);
+        }
+
+        // Update NEG team stats
+        const negStats = statsMap.get(negId);
+        if (negStats) {
+          if (winner === 'neg') negStats.wins++;
+          else negStats.losses++;
+          negStats.speaks += negSpeaks;
+          negStats.rounds++;
+          negStats.opponents.push(affId);
+        }
+      });
+
+      // Calculate opponent strength (sum of opponent wins)
+      const standingsData: TeamStanding[] = registrations.map((reg: any) => {
+        const stats = statsMap.get(reg.id) || { wins: 0, losses: 0, speaks: 0, rounds: 0, opponents: [] };
+        const oppWins = stats.opponents.reduce((sum, oppId) => {
+          const oppStats = statsMap.get(oppId);
+          return sum + (oppStats?.wins || 0);
+        }, 0);
+
         return {
           teamId: reg.id,
           teamName: reg.participant_name + (reg.partner_name ? ` & ${reg.partner_name}` : ''),
           school: reg.school_organization || 'Independent',
-          wins,
-          losses,
-          totalSpeaks: speaks,
-          avgSpeaks: speaks / Math.max(wins + losses, 1),
-          opponentWins: 0, // Simplified for now
-          rank: index + 1
+          wins: stats.wins,
+          losses: stats.losses,
+          totalSpeaks: stats.speaks,
+          avgSpeaks: stats.rounds > 0 ? stats.speaks / stats.rounds : 0,
+          opponentWins: oppWins,
+          rank: 0,
         };
       });
 
-      // Sort by wins (descending), then total speaks (descending), then opponent wins (descending)
-      standingsData.sort((a, b) => {
-        if (a.wins !== b.wins) return b.wins - a.wins;
-        if (a.totalSpeaks !== b.totalSpeaks) return b.totalSpeaks - a.totalSpeaks;
-        return b.opponentWins - a.opponentWins;
-      });
-
-      // Update ranks
-      standingsData.forEach((team, index) => {
-        team.rank = index + 1;
-      });
-
+      sortAndRankStandings(standingsData);
       setStandings(standingsData);
       setLastUpdated(new Date());
     } catch (error: any) {
@@ -110,9 +196,94 @@ export function StandingsView({ tournamentId, registrations }: StandingsViewProp
         description: "Failed to calculate standings",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
+  };
+
+  const sortAndRankStandings = (data: TeamStanding[]) => {
+    // Sort by wins (desc), then total speaks (desc), then opp wins (desc)
+    data.sort((a, b) => {
+      if (a.wins !== b.wins) return b.wins - a.wins;
+      if (a.totalSpeaks !== b.totalSpeaks) return b.totalSpeaks - a.totalSpeaks;
+      return b.opponentWins - a.opponentWins;
+    });
+
+    // Assign ranks
+    data.forEach((team, index) => {
+      team.rank = index + 1;
+      team.isBreaking = index < breakSize;
+    });
+  };
+
+  // Recalculate and sync to database
+  const syncStandings = async () => {
+    try {
+      setSyncing(true);
+      
+      // Call the database function to recalculate
+      const { error } = await (supabase.rpc as any)('recalc_tournament_standings', {
+        _tournament_id: tournamentId
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Standings recalculated and synced",
+      });
+
+      await fetchStandings();
+    } catch (error: any) {
+      console.error('Error syncing standings:', error);
+      toast({
+        title: "Error",
+        description: "Failed to sync standings",
+        variant: "destructive",
+      });
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortOrder(field === 'rank' ? 'asc' : 'desc');
+    }
+
+    const sorted = [...standings].sort((a, b) => {
+      const aVal = a[field];
+      const bVal = b[field];
+      const multiplier = sortOrder === 'asc' ? 1 : -1;
+      return (aVal - bVal) * multiplier;
+    });
+
+    setStandings(sorted);
+  };
+
+  const exportStandings = () => {
+    const csv = [
+      ['Rank', 'Team', 'School', 'Wins', 'Losses', 'Total Speaks', 'Avg Speaks', 'Opp Strength'].join(','),
+      ...standings.map(s => [
+        s.rank,
+        `"${s.teamName}"`,
+        `"${s.school}"`,
+        s.wins,
+        s.losses,
+        s.totalSpeaks.toFixed(1),
+        s.avgSpeaks.toFixed(1),
+        s.opponentWins
+      ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `standings-${tournamentId}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const getRankIcon = (rank: number) => {
@@ -124,10 +295,9 @@ export function StandingsView({ tournamentId, registrations }: StandingsViewProp
     }
   };
 
-  const getRankColor = (rank: number) => {
+  const getRankBadgeVariant = (rank: number): "default" | "secondary" | "outline" => {
     if (rank === 1) return 'default';
     if (rank === 2) return 'secondary';
-    if (rank === 3) return 'outline';
     return 'outline';
   };
 
@@ -152,7 +322,7 @@ export function StandingsView({ tournamentId, registrations }: StandingsViewProp
                 Tournament Standings
               </CardTitle>
               <CardDescription>
-                Current rankings based on wins, speaker points, and opponent strength
+                Rankings based on wins, speaker points, and opponent strength
                 {lastUpdated && (
                   <span className="block text-xs mt-1">
                     Last updated: {lastUpdated.toLocaleString()}
@@ -160,15 +330,25 @@ export function StandingsView({ tournamentId, registrations }: StandingsViewProp
                 )}
               </CardDescription>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={calculateCurrentStandings}
-              disabled={loading}
-            >
-              <RotateCcw className="h-4 w-4 mr-2" />
-              Refresh
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={exportStandings}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Export
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={syncStandings}
+                disabled={syncing}
+              >
+                <RotateCcw className={`h-4 w-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
+                {syncing ? 'Syncing...' : 'Recalculate'}
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -229,12 +409,12 @@ export function StandingsView({ tournamentId, registrations }: StandingsViewProp
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm text-muted-foreground">Perfect Records</p>
-                        <p className="text-2xl font-bold text-yellow-500">
-                          {standings.filter(s => s.losses === 0 && s.wins >= 3).length}
+                        <p className="text-sm text-muted-foreground">Breaking Teams</p>
+                        <p className="text-2xl font-bold text-primary">
+                          {breakSize}
                         </p>
                       </div>
-                      <Medal className="h-8 w-8 text-yellow-500" />
+                      <Star className="h-8 w-8 text-primary" />
                     </div>
                   </CardContent>
                 </Card>
@@ -246,21 +426,77 @@ export function StandingsView({ tournamentId, registrations }: StandingsViewProp
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="w-16">Rank</TableHead>
+                        <TableHead className="w-16">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => handleSort('rank')}
+                            className="p-0 h-auto font-medium"
+                          >
+                            Rank
+                            <ArrowUpDown className="h-3 w-3 ml-1" />
+                          </Button>
+                        </TableHead>
                         <TableHead>Team</TableHead>
                         <TableHead>School</TableHead>
-                        <TableHead className="text-center">Record</TableHead>
-                        <TableHead className="text-center">Total Speaks</TableHead>
-                        <TableHead className="text-center">Avg Speaks</TableHead>
-                        <TableHead className="text-center">Opp Wins</TableHead>
+                        <TableHead className="text-center">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => handleSort('wins')}
+                            className="p-0 h-auto font-medium"
+                          >
+                            Record
+                            <ArrowUpDown className="h-3 w-3 ml-1" />
+                          </Button>
+                        </TableHead>
+                        <TableHead className="text-center">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => handleSort('totalSpeaks')}
+                            className="p-0 h-auto font-medium"
+                          >
+                            Total Speaks
+                            <ArrowUpDown className="h-3 w-3 ml-1" />
+                          </Button>
+                        </TableHead>
+                        <TableHead className="text-center">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => handleSort('avgSpeaks')}
+                            className="p-0 h-auto font-medium"
+                          >
+                            Avg Speaks
+                            <ArrowUpDown className="h-3 w-3 ml-1" />
+                          </Button>
+                        </TableHead>
+                        <TableHead className="text-center">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => handleSort('opponentWins')}
+                            className="p-0 h-auto font-medium"
+                          >
+                            Opp Strength
+                            <ArrowUpDown className="h-3 w-3 ml-1" />
+                          </Button>
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {standings.map((team) => (
-                        <TableRow key={team.teamId} className={team.rank <= 3 ? 'bg-muted/50' : ''}>
+                        <TableRow 
+                          key={team.teamId} 
+                          className={team.isBreaking ? 'bg-primary/5 border-l-2 border-l-primary' : ''}
+                        >
                           <TableCell>
-                            <div className="flex items-center justify-center">
+                            <div className="flex items-center justify-center gap-1">
                               {getRankIcon(team.rank)}
+                              {team.isBreaking && (
+                                <Star className="h-3 w-3 text-primary fill-primary" />
+                              )}
                             </div>
                           </TableCell>
                           <TableCell>
@@ -270,7 +506,7 @@ export function StandingsView({ tournamentId, registrations }: StandingsViewProp
                             <span className="text-sm text-muted-foreground">{team.school}</span>
                           </TableCell>
                           <TableCell className="text-center">
-                            <Badge variant={getRankColor(team.rank)}>
+                            <Badge variant={getRankBadgeVariant(team.rank)}>
                               {team.wins}-{team.losses}
                             </Badge>
                           </TableCell>
