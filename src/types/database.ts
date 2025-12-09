@@ -5,13 +5,27 @@ export interface DebateFormat {
   name: string;
   description: string | null;
   rules: any;
+  uses_resolution: boolean;
   created_at: string;
   updated_at: string;
+}
+
+export interface TournamentEvent {
+  id: string;
+  tournament_id: string;
+  format_id: string | null;
+  name: string;
+  short_code: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  debate_formats?: DebateFormat;
 }
 
 export interface Round {
   id: string;
   tournament_id: string;
+  event_id: string | null;
   name: string;
   round_number: number;
   status: string;
@@ -19,14 +33,17 @@ export interface Round {
   start_time: string | null;
   format: string | null;
   notes: string | null;
+  resolution_released: boolean;
   created_at: string;
   updated_at: string;
+  tournament_events?: TournamentEvent;
 }
 
 export interface Pairing {
   id: string;
   tournament_id: string;
   round_id: string;
+  event_id: string | null;
   aff_registration_id: string;
   neg_registration_id: string;
   judge_id: string | null;
@@ -57,6 +74,7 @@ export interface Pairing {
     name: string;
     email: string;
   };
+  ballots?: Ballot[];
 }
 
 export interface WeeklyAvailability {
@@ -76,17 +94,31 @@ export interface JudgeProfile {
   email: string;
   phone: string | null;
   experience_level: string;
+  experience_years: number;
   specializations: string[];
   availability: WeeklyAvailability;
   bio: string | null;
   qualifications: string | null;
+  status: 'pending_approval' | 'approved' | 'rejected' | 'suspended';
   created_at: string;
   updated_at: string;
+}
+
+export interface PendingJudgeInvitation {
+  id: string;
+  email: string;
+  tournament_id: string;
+  registration_id: string | null;
+  invited_by_user_id: string | null;
+  invited_at: string;
+  claimed_at: string | null;
+  claimed_by_user_id: string | null;
 }
 
 export interface BallotTemplate {
   id: string;
   tournament_id: string | null;
+  format_id: string | null;
   event_style: string;
   template_key: string;
   schema: any;
@@ -96,6 +128,7 @@ export interface BallotTemplate {
   is_default: boolean;
   created_at: string;
   updated_at: string;
+  debate_formats?: DebateFormat;
 }
 
 export interface TemplateVersion {
@@ -121,12 +154,21 @@ export interface Ballot {
   pairing_id: string;
   judge_profile_id: string;
   judge_user_id: string;
-  payload: any;
-  status: string;
+  payload: {
+    winner?: 'aff' | 'neg';
+    aff_speaks?: number;
+    neg_speaks?: number;
+    aff_feedback?: string;
+    neg_feedback?: string;
+    comments?: string;
+    [key: string]: any;
+  };
+  status: 'draft' | 'submitted';
   is_published: boolean;
   revealed_at: string | null;
   created_at: string;
   updated_at: string;
+  judge_profiles?: JudgeProfile;
 }
 
 export interface JudgeAssignment {
@@ -169,6 +211,7 @@ export interface RefundRequest {
 export interface Registration {
   id: string;
   tournament_id: string;
+  event_id: string | null;
   participant_name: string;
   participant_email: string;
   partner_name: string | null;
@@ -188,18 +231,26 @@ export interface Registration {
   success_email_sent_at: string | null;
   updated_at: string;
   user_id: string | null;
+  invited_judge_email: string | null;
+  requested_judge_profile_id: string | null;
 }
 
 // Updated Tournament interface
 export interface Tournament {
   id: string;
   name: string;
-  ballot_reveal_mode: string;
+  ballot_reveal_mode: 'auto_on_submit' | 'after_tournament';
   ballot_privacy: string;
   reveal_delay_minutes: number;
   judge_anonymity: boolean;
   end_date: string;
+  start_date: string;
   status: string;
+  format: string;
+  location: string;
+  check_in_enabled: boolean;
+  resolutions_enabled: boolean;
+  opt_outs_enabled: boolean;
   // ... other existing fields
 }
 
@@ -270,4 +321,13 @@ export interface JudgeVolunteerRequest {
   updated_at: string;
   pairing?: Pairing;
   judge_profiles?: JudgeProfile;
+}
+
+export interface JudgeTeamConflict {
+  id: string;
+  tournament_id: string;
+  judge_profile_id: string;
+  registration_id: string;
+  conflict_type: 'self' | 'family' | 'personal' | 'institutional';
+  created_at: string;
 }

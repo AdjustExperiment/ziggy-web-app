@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScheduleProposalModal } from './ScheduleProposalModal';
 import { PairingChat } from './PairingChat';
-import { SpectateRequestManager } from './SpectateRequestManager';
+import { MatchResultsCard } from './MatchResultsCard';
 import { 
   Clock, 
   MapPin, 
@@ -16,11 +16,11 @@ import {
   MessageCircle, 
   Calendar,
   FileText,
-  Eye,
   Gavel,
   Upload
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { Ballot } from '@/types/database';
 
 interface MatchDetails {
   id: string;
@@ -34,6 +34,8 @@ interface MatchDetails {
   judge_name?: string;
   user_registration_id: string;
   is_aff: boolean;
+  ballot?: Ballot | null;
+  ballot_published: boolean;
 }
 
 export function EnhancedMyMatch() {
@@ -61,7 +63,8 @@ export function EnhancedMyMatch() {
           room,
           status,
           tournaments!inner (
-            name
+            name,
+            ballot_reveal_mode
           ),
           rounds!inner (
             name
@@ -80,6 +83,16 @@ export function EnhancedMyMatch() {
             participant_name,
             school_organization,
             user_id
+          ),
+          ballots (
+            id,
+            payload,
+            status,
+            is_published,
+            revealed_at,
+            judge_profiles (
+              name
+            )
           )
         `)
         .eq('tournament_id', tournamentId)
@@ -91,6 +104,7 @@ export function EnhancedMyMatch() {
       if (data) {
         const isAff = data.aff_registration.user_id === user.id;
         const userRegistrationId = isAff ? data.aff_registration.id : data.neg_registration.id;
+        const ballot = data.ballots?.[0] || null;
 
         setMatch({
           id: data.id,
@@ -111,7 +125,13 @@ export function EnhancedMyMatch() {
           status: data.status,
           judge_name: data.judge_profiles?.name,
           user_registration_id: userRegistrationId,
-          is_aff: isAff
+          is_aff: isAff,
+          ballot: ballot ? {
+            ...ballot,
+            payload: ballot.payload as any,
+            judge_profiles: ballot.judge_profiles as any
+          } : null,
+          ballot_published: ballot?.is_published || false
         });
       }
     } catch (error) {
@@ -254,6 +274,15 @@ export function EnhancedMyMatch() {
         </CardContent>
       </Card>
 
+      {/* Match Results Card */}
+      <MatchResultsCard
+        ballot={match.ballot}
+        isPublished={match.ballot_published}
+        affTeam={match.aff_team}
+        negTeam={match.neg_team}
+        isAff={match.is_aff}
+      />
+
       {/* Chat Panel */}
       {showChat && (
         <Card>
@@ -271,8 +300,6 @@ export function EnhancedMyMatch() {
           </CardContent>
         </Card>
       )}
-
-      {/* Remove Spectate Requests section since we don't have the full pairing data needed */}
 
       {/* Schedule Proposal Modal */}
       <ScheduleProposalModal

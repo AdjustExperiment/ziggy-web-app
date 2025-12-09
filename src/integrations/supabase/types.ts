@@ -66,87 +66,6 @@ export type Database = {
           },
         ]
       }
-      adjudicator_feedback: {
-        Row: {
-          comments: string | null
-          created_at: string
-          id: string
-          is_submitted: boolean
-          pairing_id: string
-          score: number | null
-          source_judge_id: string | null
-          source_registration_id: string | null
-          source_type: string
-          target_judge_id: string
-          tournament_id: string
-          updated_at: string
-        }
-        Insert: {
-          comments?: string | null
-          created_at?: string
-          id?: string
-          is_submitted?: boolean
-          pairing_id: string
-          score?: number | null
-          source_judge_id?: string | null
-          source_registration_id?: string | null
-          source_type: string
-          target_judge_id: string
-          tournament_id: string
-          updated_at?: string
-        }
-        Update: {
-          comments?: string | null
-          created_at?: string
-          id?: string
-          is_submitted?: boolean
-          pairing_id?: string
-          score?: number | null
-          source_judge_id?: string | null
-          source_registration_id?: string | null
-          source_type?: string
-          target_judge_id?: string
-          tournament_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "adjudicator_feedback_pairing_id_fkey"
-            columns: ["pairing_id"]
-            isOneToOne: false
-            referencedRelation: "pairings"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "adjudicator_feedback_source_judge_id_fkey"
-            columns: ["source_judge_id"]
-            isOneToOne: false
-            referencedRelation: "judge_profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "adjudicator_feedback_source_registration_id_fkey"
-            columns: ["source_registration_id"]
-            isOneToOne: false
-            referencedRelation: "tournament_registrations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "adjudicator_feedback_target_judge_id_fkey"
-            columns: ["target_judge_id"]
-            isOneToOne: false
-            referencedRelation: "judge_profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "adjudicator_feedback_tournament_id_fkey"
-            columns: ["tournament_id"]
-            isOneToOne: false
-            referencedRelation: "tournaments"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       admin_notifications: {
         Row: {
           action_text: string | null
@@ -251,6 +170,7 @@ export type Database = {
         Row: {
           created_at: string
           event_style: string
+          format_id: string | null
           html: string | null
           id: string
           is_default: boolean
@@ -263,6 +183,7 @@ export type Database = {
         Insert: {
           created_at?: string
           event_style: string
+          format_id?: string | null
           html?: string | null
           id?: string
           is_default?: boolean
@@ -275,6 +196,7 @@ export type Database = {
         Update: {
           created_at?: string
           event_style?: string
+          format_id?: string | null
           html?: string | null
           id?: string
           is_default?: boolean
@@ -285,6 +207,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "ballot_templates_format_id_fkey"
+            columns: ["format_id"]
+            isOneToOne: false
+            referencedRelation: "debate_formats"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "ballot_templates_tournament_id_fkey"
             columns: ["tournament_id"]
@@ -902,6 +831,7 @@ export type Database = {
           phone: string | null
           qualifications: string | null
           specializations: string[]
+          status: string
           updated_at: string
           user_id: string | null
         }
@@ -917,6 +847,7 @@ export type Database = {
           phone?: string | null
           qualifications?: string | null
           specializations?: string[]
+          status?: string
           updated_at?: string
           user_id?: string | null
         }
@@ -932,6 +863,7 @@ export type Database = {
           phone?: string | null
           qualifications?: string | null
           specializations?: string[]
+          status?: string
           updated_at?: string
           user_id?: string | null
         }
@@ -1254,6 +1186,7 @@ export type Database = {
           aff_registration_id: string
           bracket: number | null
           created_at: string
+          event_id: string | null
           flags: string[]
           id: string
           judge_id: string | null
@@ -1273,6 +1206,7 @@ export type Database = {
           aff_registration_id: string
           bracket?: number | null
           created_at?: string
+          event_id?: string | null
           flags?: string[]
           id?: string
           judge_id?: string | null
@@ -1292,6 +1226,7 @@ export type Database = {
           aff_registration_id?: string
           bracket?: number | null
           created_at?: string
+          event_id?: string | null
           flags?: string[]
           id?: string
           judge_id?: string | null
@@ -1313,6 +1248,13 @@ export type Database = {
             columns: ["aff_registration_id"]
             isOneToOne: false
             referencedRelation: "tournament_registrations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pairings_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_events"
             referencedColumns: ["id"]
           },
           {
@@ -1476,6 +1418,54 @@ export type Database = {
             columns: ["registration_id"]
             isOneToOne: false
             referencedRelation: "tournament_registrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pending_judge_invitations: {
+        Row: {
+          claimed_at: string | null
+          claimed_by_user_id: string | null
+          email: string
+          id: string
+          invited_at: string
+          invited_by_user_id: string | null
+          registration_id: string | null
+          tournament_id: string
+        }
+        Insert: {
+          claimed_at?: string | null
+          claimed_by_user_id?: string | null
+          email: string
+          id?: string
+          invited_at?: string
+          invited_by_user_id?: string | null
+          registration_id?: string | null
+          tournament_id: string
+        }
+        Update: {
+          claimed_at?: string | null
+          claimed_by_user_id?: string | null
+          email?: string
+          id?: string
+          invited_at?: string
+          invited_by_user_id?: string | null
+          registration_id?: string | null
+          tournament_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pending_judge_invitations_registration_id_fkey"
+            columns: ["registration_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_registrations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pending_judge_invitations_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
             referencedColumns: ["id"]
           },
         ]
@@ -1858,6 +1848,7 @@ export type Database = {
       rounds: {
         Row: {
           created_at: string
+          event_id: string | null
           id: string
           name: string
           resolution_released: boolean
@@ -1869,6 +1860,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          event_id?: string | null
           id?: string
           name: string
           resolution_released?: boolean
@@ -1880,6 +1872,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          event_id?: string | null
           id?: string
           name?: string
           resolution_released?: boolean
@@ -1890,6 +1883,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "rounds_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_events"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "rounds_tournament_id_fkey"
             columns: ["tournament_id"]
@@ -2539,6 +2539,54 @@ export type Database = {
           },
         ]
       }
+      tournament_events: {
+        Row: {
+          created_at: string
+          format_id: string | null
+          id: string
+          is_active: boolean
+          name: string
+          short_code: string
+          tournament_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          format_id?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          short_code: string
+          tournament_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          format_id?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          short_code?: string
+          tournament_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tournament_events_format_id_fkey"
+            columns: ["format_id"]
+            isOneToOne: false
+            referencedRelation: "debate_formats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_events_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tournament_observers: {
         Row: {
           created_at: string
@@ -2617,7 +2665,9 @@ export type Database = {
           created_at: string
           dietary_requirements: string | null
           emergency_contact: string | null
+          event_id: string | null
           id: string
+          invited_judge_email: string | null
           is_active: boolean
           last_reminder_sent_at: string | null
           neg_count: number
@@ -2643,7 +2693,9 @@ export type Database = {
           created_at?: string
           dietary_requirements?: string | null
           emergency_contact?: string | null
+          event_id?: string | null
           id?: string
+          invited_judge_email?: string | null
           is_active?: boolean
           last_reminder_sent_at?: string | null
           neg_count?: number
@@ -2669,7 +2721,9 @@ export type Database = {
           created_at?: string
           dietary_requirements?: string | null
           emergency_contact?: string | null
+          event_id?: string | null
           id?: string
+          invited_judge_email?: string | null
           is_active?: boolean
           last_reminder_sent_at?: string | null
           neg_count?: number
@@ -2689,6 +2743,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "tournament_registrations_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_events"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "tournament_registrations_requested_judge_profile_id_fkey"
             columns: ["requested_judge_profile_id"]
@@ -3056,6 +3117,10 @@ export type Database = {
         Returns: number
       }
       can_submit_ballot: { Args: { _pairing_id: string }; Returns: boolean }
+      get_ballot_template: {
+        Args: { p_format_id?: string; p_tournament_id: string }
+        Returns: string
+      }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
@@ -3081,6 +3146,10 @@ export type Database = {
         Returns: number
       }
       recompute_results_from_ballots: { Args: never; Returns: number }
+      reveal_tournament_results: {
+        Args: { p_tournament_id: string }
+        Returns: number
+      }
       unlock_account: { Args: { _target_user_id: string }; Returns: boolean }
       user_is_competitor_for_pairing: {
         Args: { _pairing_id: string }
