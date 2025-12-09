@@ -44,7 +44,7 @@ export function Navbar() {
     : user?.email?.split('@')[0] || 'User';
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-white/10 dark:bg-black/10 border-b border-white/20 dark:border-black/20">
+    <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border">
       <div className="w-full px-4 sm:px-6">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
@@ -52,7 +52,7 @@ export function Navbar() {
               <LazyImage 
                 src="/lovable-uploads/760b99f2-12c5-4e29-8b02-5d93d41f41a9.png" 
                 alt="Ziggy" 
-                className="h-8 w-8 rounded-full border-2 border-white" 
+                className="h-8 w-8 rounded-full border-2 border-border" 
               />
               <span className="text-lg sm:text-xl font-bold">Ziggy Online Debate</span>
             </Link>

@@ -1,6 +1,7 @@
 import { ArrowRight, Trophy, Users, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { BoxedText } from "@/components/ui/boxed-text";
 import heroImage from "@/assets/hero-debate.jpg";
 
 export function Hero() {
@@ -8,7 +9,7 @@ export function Hero() {
     <section className="relative overflow-hidden bg-gradient-hero">
       {/* Animated Background Elements */}
       <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-background/10" />
+        <div className="absolute inset-0 bg-background/5" />
         
         {/* Floating Particles */}
         <div className="absolute top-10 left-10 w-32 h-32 bg-primary/5 rounded-full blur-xl animate-float" style={{ animationDelay: '0s' }}></div>
@@ -17,8 +18,8 @@ export function Hero() {
         <div className="absolute bottom-10 right-10 w-56 h-56 bg-primary/4 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }}></div>
         
         {/* Gradient Overlays */}
-        <div className="absolute inset-0 bg-gradient-to-br from-transparent via-primary/5 to-background/20"></div>
-        <div className="absolute inset-0 bg-gradient-to-tl from-primary/10 via-transparent to-background/15"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-transparent via-primary/5 to-background/10"></div>
+        <div className="absolute inset-0 bg-gradient-to-tl from-primary/5 via-transparent to-background/10"></div>
         
         {/* Noise Texture */}
         <div className="absolute inset-0 opacity-[0.015] bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8ZmlsdGVyIGlkPSJub2lzZSI+CiAgICA8ZmVUdXJidWxlbmNlIGJhc2VGcmVxdWVuY3k9IjAuOSIgbnVtT2N0YXZlcz0iMSIgc2VlZD0iMiIvPgogICAgPGZlQ29sb3JNYXRyaXggdmFsdWVzPSIwIDAgMCAwIDAgMCAwIDAgMCAwIDAgMCAwIDAgMCAwIDAgMCAxIDAiLz4KICA8L2ZpbHRlcj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWx0ZXI9InVybCgjbm9pc2UpIi8+Cjwvc3ZnPg==')]"></div>
@@ -29,15 +30,28 @@ export function Hero() {
           {/* Left Content */}
           <div className="space-y-6 sm:space-y-8 text-center lg:text-left">
             <div className="space-y-4 sm:space-y-6">
-              <Badge className="bg-card/10 text-foreground border-border hover:bg-card/20 text-sm sm:text-base backdrop-blur-sm">
+              <Badge className="bg-card/20 text-foreground border-border hover:bg-card/30 text-sm sm:text-base backdrop-blur-sm">
                 <span className="inline-block w-2 h-2 bg-primary rounded-full mr-2"></span>
                 Founded 2011 • $2.4M+ in Scholarships
               </Badge>
               
+              {/* Boxed Text Headline */}
               <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-primary leading-tight">
-                The Best Online
-                <span className="block bg-gradient-accent bg-clip-text text-transparent">
-                  Debate Tournament
+                <span className="flex flex-wrap items-center justify-center lg:justify-start gap-2 sm:gap-3 mb-2">
+                  <BoxedText variant="bordered" size="hero" shape="default">
+                    The Best
+                  </BoxedText>
+                  <BoxedText variant="ghost" size="hero">
+                    Online
+                  </BoxedText>
+                </span>
+                <span className="flex flex-wrap items-center justify-center lg:justify-start gap-2 sm:gap-3">
+                  <BoxedText variant="filled" size="hero" shape="default">
+                    Debate
+                  </BoxedText>
+                  <BoxedText variant="bordered" size="hero">
+                    Tournament
+                  </BoxedText>
                 </span>
               </h1>
               

@@ -129,7 +129,7 @@ const About = () => {
           <div className="grid gap-8 sm:grid-cols-3">
             <Card className="bg-card border-primary/30 shadow-elegant hover-scale text-center group">
               <CardHeader>
-                <div className="h-12 w-12 rounded-lg bg-red-500/10 flex items-center justify-center text-red-500 mb-4 mx-auto group-hover:bg-red-500/20 transition-colors">
+                <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-4 mx-auto group-hover:bg-primary/20 transition-colors">
                   <Users className="h-6 w-6" />
                 </div>
                 <CardTitle className="text-3xl font-bold text-card-foreground">13+</CardTitle>
@@ -141,7 +141,7 @@ const About = () => {
 
             <Card className="bg-card border-primary/30 shadow-elegant hover-scale text-center group">
               <CardHeader>
-                <div className="h-12 w-12 rounded-lg bg-red-500/10 flex items-center justify-center text-red-500 mb-4 mx-auto group-hover:bg-red-500/20 transition-colors">
+                <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-4 mx-auto group-hover:bg-primary/20 transition-colors">
                   <Globe className="h-6 w-6" />
                 </div>
                 <CardTitle className="text-3xl font-bold text-card-foreground">National</CardTitle>
@@ -153,7 +153,7 @@ const About = () => {
 
             <Card className="bg-card border-primary/30 shadow-elegant hover-scale text-center group">
               <CardHeader>
-                <div className="h-12 w-12 rounded-lg bg-red-500/10 flex items-center justify-center text-red-500 mb-4 mx-auto group-hover:bg-red-500/20 transition-colors">
+                <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-4 mx-auto group-hover:bg-primary/20 transition-colors">
                   <Trophy className="h-6 w-6" />
                 </div>
                 <CardTitle className="text-3xl font-bold text-card-foreground">10</CardTitle>
@@ -174,8 +174,8 @@ const About = () => {
           </h2>
           <Card className="bg-card/50 border-primary/30 shadow-elegant backdrop-blur-sm">
             <CardContent className="p-8">
-              <p className="text-lg text-foreground leading-relaxed font-secondary">
-                Ziggy Online Debate™ was founded in 2011 by <strong className="text-red-400">Isaac Sommers</strong>, 
+                <p className="text-lg text-foreground leading-relaxed font-secondary">
+                  Ziggy Online Debate™ was founded in 2011 by <strong className="text-primary">Isaac Sommers</strong>,
                 a highly decorated alumnus of NCFCA and Stoa, former debate instructor and coach, 
                 and a graduate of Howard Payne University (Class of 2018) and Harvard Law School (Class of 2021). 
                 Isaac is now working full-time as a lawyer.
@@ -186,10 +186,10 @@ const About = () => {
       </section>
 
       {/* How Ziggy Works */}
-      <section className="relative py-16 bg-black">
+      <section className="relative py-16 bg-muted/20">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 relative z-10">
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-12 text-center font-primary">
-            How <span className="text-red-500">Ziggy</span> Works
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-12 text-center font-primary">
+            How <span className="text-primary">Ziggy</span> Works
           </h2>
           
           {/* How Ziggy Works Graphic */}
@@ -197,24 +197,24 @@ const About = () => {
             <img 
               src="/lovable-uploads/8b363ad9-c2c5-4087-bc19-215b5ac99e68.png" 
               alt="How Ziggy Works - Comprehensive overview of Ziggy Online Debate platform process including tournament formats, judging, scheduling, and recognition system"
-              className="w-full rounded-lg shadow-elegant border border-red-500/20"
+              className="w-full rounded-lg shadow-elegant border border-primary/20"
             />
           </div>
           
           <div className="flex justify-center">
-            <Card className="bg-black border-red-500/30 shadow-elegant hover-scale max-w-2xl w-full">
+            <Card className="bg-card border-primary/30 shadow-elegant hover-scale max-w-2xl w-full">
               <CardHeader className="text-center">
-                <CardTitle className="text-xl font-bold text-white flex items-center justify-center gap-3">
-                  <MessageSquare className="h-6 w-6 text-red-500" />
+                <CardTitle className="text-xl font-bold text-card-foreground flex items-center justify-center gap-3">
+                  <MessageSquare className="h-6 w-6 text-primary" />
                   Host Your Own Tournament
                 </CardTitle>
               </CardHeader>
               <CardContent className="text-center">
-                <p className="text-white/80 leading-relaxed mb-4">
+                <p className="text-muted-foreground leading-relaxed mb-4">
                   Interested in hosting tournaments for your league, school, or debate format? 
                   We'd love to help you bring the Ziggy experience to your community!
                 </p>
-                <p className="text-red-400 font-semibold">
+                <p className="text-primary font-semibold">
                   Contact us to discuss custom tournament hosting options.
                 </p>
               </CardContent>
@@ -226,50 +226,50 @@ const About = () => {
       {/* Why Debate */}
       <section className="relative py-16 bg-gradient-subtle">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 relative z-10">
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-12 text-center font-primary">
-            Why Debate in the <span className="text-red-500">First Place?</span>
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-12 text-center font-primary">
+            Why Debate in the <span className="text-primary">First Place?</span>
           </h2>
           
           <div className="grid gap-8 lg:grid-cols-3">
-            <Card className="bg-black/50 border-red-500/30 shadow-elegant backdrop-blur-sm hover-scale">
+            <Card className="bg-card/50 border-primary/30 shadow-elegant backdrop-blur-sm hover-scale">
               <CardHeader>
-                <div className="h-12 w-12 rounded-lg bg-red-500/10 flex items-center justify-center text-red-500 mb-4">
+                <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-4">
                   <TrendingUp className="h-6 w-6" />
                 </div>
-                <CardTitle className="text-lg font-bold text-white">Academic Excellence</CardTitle>
+                <CardTitle className="text-lg font-bold text-card-foreground">Academic Excellence</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-white/80 text-sm leading-relaxed">
+                <p className="text-muted-foreground text-sm leading-relaxed">
                   Studies show debate participants have higher GPAs (2.83 vs 3.23 average), 
                   significantly higher ACT scores, and 27% higher likelihood of attending college.
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="bg-black/50 border-red-500/30 shadow-elegant backdrop-blur-sm hover-scale">
+            <Card className="bg-card/50 border-primary/30 shadow-elegant backdrop-blur-sm hover-scale">
               <CardHeader>
-                <div className="h-12 w-12 rounded-lg bg-red-500/10 flex items-center justify-center text-red-500 mb-4">
+                <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-4">
                   <Zap className="h-6 w-6" />
                 </div>
-                <CardTitle className="text-lg font-bold text-white">Essential Skills</CardTitle>
+                <CardTitle className="text-lg font-bold text-card-foreground">Essential Skills</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-white/80 text-sm leading-relaxed">
+                <p className="text-muted-foreground text-sm leading-relaxed">
                   Develops critical thinking, research, public speaking, communication, 
                   analytical, and leadership skills essential for success in any career.
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="bg-black/50 border-red-500/30 shadow-elegant backdrop-blur-sm hover-scale">
+            <Card className="bg-card/50 border-primary/30 shadow-elegant backdrop-blur-sm hover-scale">
               <CardHeader>
-                <div className="h-12 w-12 rounded-lg bg-red-500/10 flex items-center justify-center text-red-500 mb-4">
+                <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-4">
                   <Star className="h-6 w-6" />
                 </div>
-                <CardTitle className="text-lg font-bold text-white">Alumni Success</CardTitle>
+                <CardTitle className="text-lg font-bold text-card-foreground">Alumni Success</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-white/80 text-sm leading-relaxed">
+                <p className="text-muted-foreground text-sm leading-relaxed">
                   Our alumni attend T6 law schools, pursue medical and international affairs degrees, 
                   coordinate political campaigns, and run successful businesses.
                 </p>
@@ -280,35 +280,35 @@ const About = () => {
       </section>
 
       {/* Why Choose Ziggy Features */}
-      <section className="relative py-20 bg-black">
+      <section className="relative py-20 bg-muted/20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4 text-center font-primary">
-            Why Choose <span className="text-red-500">Ziggy?</span>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-4 text-center font-primary">
+            Why Choose <span className="text-primary">Ziggy?</span>
           </h2>
-          <p className="text-xl text-white/80 text-center mb-16 max-w-3xl mx-auto font-secondary">
+          <p className="text-xl text-muted-foreground text-center mb-16 max-w-3xl mx-auto font-secondary">
             If you want to improve your debate skills, get national experience, 
             and access up to 10 rounds for only $25* - all from home.
           </p>
           
           <div className="grid gap-8 lg:grid-cols-3">
             {features.map((feature, index) => (
-              <Card key={feature.id} className="bg-black border-red-500/30 shadow-elegant hover-scale group relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <Card key={feature.id} className="bg-card border-primary/30 shadow-elegant hover-scale group relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <CardHeader className="relative z-10">
                   <div className="flex items-center gap-4 mb-4">
-                    <span className="text-sm font-mono text-red-400 bg-red-500/10 px-2 py-1 rounded">
+                    <span className="text-sm font-mono text-primary bg-primary/10 px-2 py-1 rounded">
                       {feature.id}
                     </span>
-                    <div className="text-red-500 group-hover:text-red-400 transition-colors">
+                    <div className="text-primary group-hover:text-primary/80 transition-colors">
                       {feature.icon}
                     </div>
                   </div>
-                  <CardTitle className="text-xl font-bold text-white group-hover:text-red-100 transition-colors">
+                  <CardTitle className="text-xl font-bold text-card-foreground group-hover:text-foreground transition-colors">
                     {feature.title}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="relative z-10">
-                  <p className="text-white/80 leading-relaxed">
+                  <p className="text-muted-foreground leading-relaxed">
                     {feature.description}
                   </p>
                 </CardContent>
@@ -321,24 +321,24 @@ const About = () => {
       {/* Team Section */}
       <section className="relative py-16 bg-gradient-subtle">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 relative z-10">
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-12 text-center font-primary">
-            Meet Our <span className="text-red-500">Team</span>
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-12 text-center font-primary">
+            Meet Our <span className="text-primary">Team</span>
           </h2>
           
           <div className="grid gap-8 lg:grid-cols-2">
             {teamMembers.map((member, index) => (
-              <Card key={index} className="bg-black/50 border-red-500/30 shadow-elegant backdrop-blur-sm hover-scale">
+              <Card key={index} className="bg-card/50 border-primary/30 shadow-elegant backdrop-blur-sm hover-scale">
                 <CardHeader className="text-center">
-                  <div className="w-24 h-24 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 mb-4 mx-auto">
+                  <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-4 mx-auto">
                     <Users className="h-12 w-12" />
                   </div>
-                  <CardTitle className="text-xl font-bold text-white">{member.name}</CardTitle>
-                  <Badge className="bg-red-500/20 text-red-300 border-red-500/30">
+                  <CardTitle className="text-xl font-bold text-card-foreground">{member.name}</CardTitle>
+                  <Badge className="bg-primary/20 text-primary border-primary/30">
                     {member.role}
                   </Badge>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-white/80 leading-relaxed text-sm">
+                  <p className="text-muted-foreground leading-relaxed text-sm">
                     {member.bio}
                   </p>
                 </CardContent>
@@ -349,21 +349,21 @@ const About = () => {
       </section>
 
       {/* Sponsors Section */}
-      <section className="relative py-16 bg-black">
+      <section className="relative py-16 bg-muted/20">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 relative z-10">
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-12 text-center font-primary">
-            Our <span className="text-red-500">Sponsors</span>
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-12 text-center font-primary">
+            Our <span className="text-primary">Sponsors</span>
           </h2>
           
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {sponsors.map((sponsor, index) => (
-              <Card key={index} className="bg-black border-red-500/30 shadow-elegant hover-scale text-center group">
+              <Card key={index} className="bg-card border-primary/30 shadow-elegant hover-scale text-center group">
                 <CardContent className="p-6">
-                  <div className="w-16 h-16 rounded-lg bg-red-500/10 flex items-center justify-center text-red-500 mb-4 mx-auto group-hover:bg-red-500/20 transition-colors">
+                  <div className="w-16 h-16 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-4 mx-auto group-hover:bg-primary/20 transition-colors">
                     <Trophy className="h-8 w-8" />
                   </div>
-                  <h3 className="font-bold text-white mb-2">{sponsor.name}</h3>
-                  <Badge className="text-xs bg-red-500/20 text-red-300 border-red-500/30">
+                  <h3 className="font-bold text-card-foreground mb-2">{sponsor.name}</h3>
+                  <Badge className="text-xs bg-primary/20 text-primary border-primary/30">
                     {sponsor.level}
                   </Badge>
                 </CardContent>
@@ -376,35 +376,35 @@ const About = () => {
       {/* Tournament Details */}
       <section className="relative py-16 bg-gradient-subtle">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 relative z-10">
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-12 text-center font-primary">
-            Tournament <span className="text-red-500">Details</span>
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-12 text-center font-primary">
+            Tournament <span className="text-primary">Details</span>
           </h2>
           
           <div className="space-y-6">
-            <Card className="bg-black/50 border-red-500/30 shadow-elegant backdrop-blur-sm">
+            <Card className="bg-card/50 border-primary/30 shadow-elegant backdrop-blur-sm">
               <CardHeader>
-                <CardTitle className="text-xl font-bold text-white flex items-center gap-3">
-                  <Calendar className="h-6 w-6 text-red-500" />
+                <CardTitle className="text-xl font-bold text-card-foreground flex items-center gap-3">
+                  <Calendar className="h-6 w-6 text-primary" />
                   Fall Tournament
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-white/80 leading-relaxed">
+                <p className="text-muted-foreground leading-relaxed">
                   Debates start mid-September through first week of December. 
                   10 debates over 11 weeks (Thanksgiving week off). Minimum 12 teams per style.
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="bg-black/50 border-red-500/30 shadow-elegant backdrop-blur-sm">
+            <Card className="bg-card/50 border-primary/30 shadow-elegant backdrop-blur-sm">
               <CardHeader>
-                <CardTitle className="text-xl font-bold text-white flex items-center gap-3">
-                  <Calendar className="h-6 w-6 text-red-500" />
+                <CardTitle className="text-xl font-bold text-card-foreground flex items-center gap-3">
+                  <Calendar className="h-6 w-6 text-primary" />
                   Spring Tournament
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-white/80 leading-relaxed">
+                <p className="text-muted-foreground leading-relaxed">
                   TP and LD begin first week of January through mid-April. 
                   Parli and Moot Court begin second week, alternating every other week. 
                   8 debates over 16 weeks.
@@ -412,15 +412,15 @@ const About = () => {
               </CardContent>
             </Card>
 
-            <Card className="bg-black/50 border-red-500/30 shadow-elegant backdrop-blur-sm">
+            <Card className="bg-card/50 border-primary/30 shadow-elegant backdrop-blur-sm">
               <CardHeader>
-                <CardTitle className="text-xl font-bold text-white flex items-center gap-3">
-                  <DollarSign className="h-6 w-6 text-red-500" />
+                <CardTitle className="text-xl font-bold text-card-foreground flex items-center gap-3">
+                  <DollarSign className="h-6 w-6 text-primary" />
                   Pricing & Discounts
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-white/80 leading-relaxed">
+                <p className="text-muted-foreground leading-relaxed">
                   $30 per debater/style ($35 late registration in Fall). 
                   Family discounts: 4+ registrations get each additional after 3rd for only $5.
                 </p>
