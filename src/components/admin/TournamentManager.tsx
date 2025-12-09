@@ -10,8 +10,10 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
-import { CalendarIcon, Plus, X } from "lucide-react"
+import { CalendarIcon, Plus, X, ChevronRight, AlertCircle } from "lucide-react"
 import { Switch } from "@/components/ui/switch"
+import { Badge } from "@/components/ui/badge"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { toast } from '@/components/ui/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -223,33 +225,110 @@ export function TournamentManager() {
     }
   };
 
+  const activeTournamentId = tournamentId || selectedTournamentId;
+  const activeTournament = tournaments.find(t => t.id === activeTournamentId);
+  const isPlanningPhase = formData.status === 'Planning Phase';
+  const isEditingDisabled = activeTournamentId && !isPlanningPhase;
+  const [showCreateForm, setShowCreateForm] = useState(false);
+
+  const getStatusVariant = (status: string): 'default' | 'secondary' | 'destructive' | 'outline' => {
+    switch (status) {
+      case 'Ongoing': return 'default';
+      case 'Completed': return 'secondary';
+      case 'Registration Open': return 'default';
+      case 'Registration Closed': return 'outline';
+      default: return 'secondary';
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold">Tournament Manager</h2>
-
-      {!tournamentId && tournaments.length > 0 && (
-        <div>
-          <Label htmlFor="tournament-select">Select Tournament to Manage</Label>
-          <Select value={selectedTournamentId} onValueChange={setSelectedTournamentId}>
-            <SelectTrigger>
-              <SelectValue placeholder="Choose a tournament..." />
-            </SelectTrigger>
-            <SelectContent>
-              {tournaments.map((tournament) => (
-                <SelectItem key={tournament.id} value={tournament.id}>
-                  {tournament.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      {/* Tournament Header Bar */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 bg-muted/50 rounded-lg border">
+        <div className="flex items-center gap-4">
+          {activeTournamentId && activeTournament ? (
+            <>
+              <Badge variant={getStatusVariant(formData.status)} className="text-sm">
+                {formData.status}
+              </Badge>
+              <div>
+                <h2 className="text-xl font-bold">Managing: {formData.name || activeTournament.name}</h2>
+                <p className="text-sm text-muted-foreground">
+                  {formData.format} • {formData.location || 'Location TBD'}
+                </p>
+              </div>
+            </>
+          ) : (
+            <h2 className="text-xl font-bold">Tournament Manager</h2>
+          )}
         </div>
+
+        <div className="flex items-center gap-2 flex-wrap">
+          {!tournamentId && (
+            <Select 
+              value={selectedTournamentId} 
+              onValueChange={(value) => {
+                setSelectedTournamentId(value);
+                setShowCreateForm(false);
+                if (value) {
+                  fetchTournamentData(value);
+                }
+              }}
+            >
+              <SelectTrigger className="w-[250px]">
+                <SelectValue placeholder="Select a tournament..." />
+              </SelectTrigger>
+              <SelectContent>
+                {tournaments.map((tournament) => (
+                  <SelectItem key={tournament.id} value={tournament.id}>
+                    {tournament.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          
+          {activeTournamentId && (
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setSelectedTournamentId('');
+                setShowCreateForm(true);
+              }}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Create New
+            </Button>
+          )}
+
+          {!activeTournamentId && !showCreateForm && (
+            <Button onClick={() => setShowCreateForm(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Create Tournament
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Active Tournament Warning */}
+      {isEditingDisabled && (
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            This tournament is active ({formData.status}). Core settings like name, format, and dates are locked.
+            You can still update content, settings, and manage tabulation.
+          </AlertDescription>
+        </Alert>
       )}
 
-      {(tournamentId || selectedTournamentId) ? (
+      {activeTournamentId ? (
         <Tabs defaultValue="details" className="space-y-6">
           <TabsList className="flex flex-wrap gap-1">
             <TabsTrigger value="details">Details</TabsTrigger>
-            <TabsTrigger value="tabulation">Tabulation</TabsTrigger>
+            <TabsTrigger value="tabulation">
+              Tabulation
+              <ChevronRight className="h-3 w-3 ml-1" />
+            </TabsTrigger>
             <TabsTrigger value="content">Content</TabsTrigger>
             <TabsTrigger value="panels">Panels</TabsTrigger>
             <TabsTrigger value="observers">Observers</TabsTrigger>
@@ -261,33 +340,46 @@ export function TournamentManager() {
           </TabsContent>
 
           <TabsContent value="tabulation">
-            <TabulationDashboard tournamentId={tournamentId || selectedTournamentId} />
+            <TabulationDashboard tournamentId={activeTournamentId} />
           </TabsContent>
 
           <TabsContent value="content">
             <TournamentContentManager 
-              tournamentId={tournamentId || selectedTournamentId} 
+              tournamentId={activeTournamentId} 
               content={null}
               onContentUpdate={(content) => console.log('Content updated:', content)}
             />
           </TabsContent>
 
           <TabsContent value="panels">
-            <MultiJudgePanelManager tournamentId={tournamentId || selectedTournamentId} />
+            <MultiJudgePanelManager tournamentId={activeTournamentId} />
           </TabsContent>
 
           <TabsContent value="observers">
-            <TournamentObserversManager tournamentId={tournamentId || selectedTournamentId} />
+            <TournamentObserversManager tournamentId={activeTournamentId} />
           </TabsContent>
 
           <TabsContent value="settings">
-            <TournamentSettingsManager tournamentId={tournamentId || selectedTournamentId} />
+            <TournamentSettingsManager tournamentId={activeTournamentId} />
           </TabsContent>
         </Tabs>
-      ) : (
+      ) : showCreateForm ? (
         <div>
-          <h3 className="text-lg font-semibold mb-4">Create New Tournament</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold">Create New Tournament</h3>
+            <Button variant="ghost" size="sm" onClick={() => setShowCreateForm(false)}>
+              Cancel
+            </Button>
+          </div>
           {renderTournamentForm()}
+        </div>
+      ) : (
+        <div className="text-center py-12 text-muted-foreground">
+          <p className="text-lg mb-4">Select a tournament to manage or create a new one</p>
+          <Button onClick={() => setShowCreateForm(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Create Tournament
+          </Button>
         </div>
       )}
     </div>
@@ -316,6 +408,7 @@ export function TournamentManager() {
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     required
+                    disabled={isEditingDisabled}
                   />
                 </div>
 
@@ -358,6 +451,7 @@ export function TournamentManager() {
                     id="location"
                     value={formData.location || ''}
                     onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                    disabled={isEditingDisabled}
                     required
                   />
                 </div>
