@@ -22,9 +22,12 @@ import {
   Calendar,
   Printer,
   Pencil,
-  Trash2
+  Trash2,
+  Wand2
 } from 'lucide-react';
 import { DrawGenerator, Team, PairingHistory, DrawSettings, GeneratedPairing } from '@/lib/tabulation/drawGenerator';
+import { JudgeAllocator, JudgeInfo, PairingInfo, JudgeConflict, JudgeAssignment } from '@/lib/tabulation/judgeAllocator';
+import { JudgeAutoAssignModal } from './JudgeAutoAssignModal';
 
 interface PairingGeneratorProps {
   tournamentId: string;
@@ -107,6 +110,17 @@ export function PairingGenerator({
     round_number: 1,
     status: 'upcoming'
   });
+
+  // Auto-assign judges state
+  const [showAutoAssignModal, setShowAutoAssignModal] = useState(false);
+  const [proposedAssignments, setProposedAssignments] = useState<JudgeAssignment[]>([]);
+  const [assignmentSummary, setAssignmentSummary] = useState<{
+    totalAssigned: number;
+    conflictCount: number;
+    unassignedPairings: string[];
+    warnings: string[];
+  } | null>(null);
+  const [autoAssignLoading, setAutoAssignLoading] = useState(false);
 
   useEffect(() => {
     fetchSettings();
@@ -640,6 +654,203 @@ export function PairingGenerator({
     }
   };
 
+  // Auto-assign judges using the Hungarian algorithm
+  const runAutoAssignJudges = async () => {
+    if (!selectedRound || pairings.length === 0) return;
+
+    try {
+      setAutoAssignLoading(true);
+
+      // Get tournament settings
+      const { data: tournament } = await supabase
+        .from('tournaments')
+        .select('judges_per_room')
+        .eq('id', tournamentId)
+        .single();
+
+      const judgesPerRoom = tournament?.judges_per_room || 1;
+      const currentRound = rounds.find(r => r.id === selectedRound);
+      const roundDate = currentRound?.scheduled_date || undefined;
+
+      // Get judge conflicts
+      const { data: teamConflicts } = await supabase
+        .from('judge_team_conflicts')
+        .select('judge_profile_id, registration_id, conflict_type')
+        .eq('tournament_id', tournamentId);
+
+      const { data: schoolConflicts } = await supabase
+        .from('judge_school_conflicts')
+        .select('judge_profile_id, school_name, conflict_type')
+        .eq('tournament_id', tournamentId);
+
+      // Get judge availability if date is set
+      let availabilityMap: Map<string, string[]> = new Map();
+      if (roundDate) {
+        const { data: availability } = await supabase
+          .from('judge_availability')
+          .select('judge_profile_id, available_dates')
+          .eq('tournament_id', tournamentId);
+
+        availability?.forEach(a => {
+          const dates = Array.isArray(a.available_dates) ? a.available_dates : [];
+          availabilityMap.set(a.judge_profile_id, dates.map(String));
+        });
+      }
+
+      // Transform judges to JudgeInfo format
+      const judgeInfos: JudgeInfo[] = judges.map(j => ({
+        id: j.id,
+        name: j.name,
+        experienceYears: j.experience_years || 0,
+        availableDates: availabilityMap.get(j.id) || [],
+        institution: undefined // Could fetch from profiles if needed
+      }));
+
+      // Transform pairings to PairingInfo format
+      const pairingInfos: PairingInfo[] = pairings.map(p => ({
+        id: p.id,
+        affTeamId: p.aff_registration_id,
+        negTeamId: p.neg_registration_id,
+        affInstitution: (p.aff_registration as any)?.school_organization,
+        negInstitution: (p.neg_registration as any)?.school_organization,
+        scheduledTime: p.scheduled_time,
+        roomRank: p.room_rank
+      }));
+
+      // Transform conflicts to JudgeConflict format
+      const judgeConflicts: JudgeConflict[] = [];
+      
+      teamConflicts?.forEach(c => {
+        judgeConflicts.push({
+          judgeId: c.judge_profile_id,
+          teamId: c.registration_id,
+          conflictType: c.conflict_type === 'team' ? 'team' : 'personal'
+        });
+      });
+
+      schoolConflicts?.forEach(c => {
+        judgeConflicts.push({
+          judgeId: c.judge_profile_id,
+          institution: c.school_name,
+          conflictType: 'institution'
+        });
+      });
+
+      // Run the allocator
+      const allocator = new JudgeAllocator({
+        judges: judgeInfos,
+        pairings: pairingInfos,
+        conflicts: judgeConflicts,
+        judgesPerRoom,
+        roundDate
+      });
+
+      const assignments = allocator.allocate();
+      const summary = allocator.getSummary(assignments);
+
+      setProposedAssignments(assignments);
+      setAssignmentSummary(summary);
+      setShowAutoAssignModal(true);
+
+    } catch (error: any) {
+      console.error('Auto-assign error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate judge assignments",
+        variant: "destructive",
+      });
+    } finally {
+      setAutoAssignLoading(false);
+    }
+  };
+
+  // Apply auto-assigned judges to database
+  const applyJudgeAssignments = async (assignments: JudgeAssignment[]) => {
+    try {
+      setAutoAssignLoading(true);
+
+      // Get tournament settings for judges_per_room
+      const { data: tournament } = await supabase
+        .from('tournaments')
+        .select('judges_per_room')
+        .eq('id', tournamentId)
+        .single();
+
+      const judgesPerRoom = tournament?.judges_per_room || 1;
+
+      // Group assignments by pairing
+      const assignmentsByPairing = new Map<string, JudgeAssignment[]>();
+      for (const assignment of assignments) {
+        const existing = assignmentsByPairing.get(assignment.pairingId) || [];
+        existing.push(assignment);
+        assignmentsByPairing.set(assignment.pairingId, existing);
+      }
+
+      // Process each pairing
+      for (const [pairingId, pairingAssignments] of assignmentsByPairing) {
+        if (pairingAssignments.length === 0) continue;
+
+        // First judge becomes the main judge
+        const mainJudge = pairingAssignments[0];
+        await supabase
+          .from('pairings')
+          .update({ judge_id: mainJudge.judgeId })
+          .eq('id', pairingId);
+
+        // Additional judges go to panel assignments (if multi-judge)
+        if (judgesPerRoom > 1 && pairingAssignments.length > 1) {
+          const panelAssignments = pairingAssignments.slice(1).map((a, index) => ({
+            pairing_id: pairingId,
+            judge_profile_id: a.judgeId,
+            role: index === 0 ? 'chair' : 'wing',
+            status: 'assigned'
+          }));
+
+          await supabase
+            .from('pairing_judge_assignments')
+            .insert(panelAssignments);
+        }
+
+        // Create notification for judge
+        await supabase
+          .from('judge_notifications')
+          .insert({
+            judge_profile_id: mainJudge.judgeId,
+            tournament_id: tournamentId,
+            pairing_id: pairingId,
+            title: 'New Judging Assignment',
+            message: `You have been assigned to judge a debate.`,
+            type: 'assignment'
+          });
+      }
+
+      toast({
+        title: "Success",
+        description: `Applied ${assignments.length} judge assignments`,
+      });
+
+      setShowAutoAssignModal(false);
+      fetchPairings();
+    } catch (error: any) {
+      console.error('Apply assignments error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to apply judge assignments",
+        variant: "destructive",
+      });
+    } finally {
+      setAutoAssignLoading(false);
+    }
+  };
+
+  // Handle manual override in modal
+  const handleAssignmentOverride = (pairingId: string, judgeId: string, judgeName: string) => {
+    setProposedAssignments(prev => {
+      const filtered = prev.filter(a => a.pairingId !== pairingId);
+      return [...filtered, { pairingId, judgeId, judgeName, cost: 0, hasConflict: false }];
+    });
+  };
+
   const getTeamName = (regId: string): string => {
     const reg = registrations.find((r: any) => r.id === regId);
     return reg?.participant_name || 'Unknown';
@@ -933,6 +1144,16 @@ export function PairingGenerator({
                 
                 {pairings.length > 0 && (
                   <>
+                    {pairings.some(p => !p.judge_id) && selectedRoundData.status !== 'locked' && (
+                      <Button
+                        onClick={runAutoAssignJudges}
+                        disabled={autoAssignLoading || judges.length === 0}
+                        variant="outline"
+                      >
+                        <Wand2 className="h-4 w-4 mr-2" />
+                        {autoAssignLoading ? 'Assigning...' : 'Auto-Assign Judges'}
+                      </Button>
+                    )}
                     <Button
                       onClick={releaseAllPairings}
                       disabled={loading}
@@ -1082,6 +1303,19 @@ export function PairingGenerator({
           </CardContent>
         </Card>
       )}
+
+      {/* Auto-Assign Judges Modal */}
+      <JudgeAutoAssignModal
+        open={showAutoAssignModal}
+        onOpenChange={setShowAutoAssignModal}
+        assignments={proposedAssignments}
+        summary={assignmentSummary || { totalAssigned: 0, conflictCount: 0, unassignedPairings: [], warnings: [] }}
+        pairings={pairings}
+        judges={judges}
+        onApply={applyJudgeAssignments}
+        onOverride={handleAssignmentOverride}
+        loading={autoAssignLoading}
+      />
     </div>
   );
 }
