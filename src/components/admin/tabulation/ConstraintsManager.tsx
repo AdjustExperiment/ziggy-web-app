@@ -126,14 +126,14 @@ export function ConstraintsManager({ tournamentId, registrations, judges }: Cons
   };
 
   const fetchTeamConflicts = async () => {
-    const { data } = await (supabase
-      .from('team_conflicts' as any)
+    const { data } = await (supabase as any)
+      .from('team_conflicts')
       .select(`
         *,
-        team1:tournament_registrations!registration_id(participant_name),
-        team2:tournament_registrations!cannot_face_registration_id(participant_name)
+        team1:tournament_registrations!team1_id(participant_name),
+        team2:tournament_registrations!team2_id(participant_name)
       `)
-      .eq('tournament_id', tournamentId) as any);
+      .eq('tournament_id', tournamentId);
 
     if (data) {
       setTeamConflicts(data.map((c: any) => ({
@@ -145,14 +145,14 @@ export function ConstraintsManager({ tournamentId, registrations, judges }: Cons
   };
 
   const fetchJudgeTeamConflicts = async () => {
-    const { data } = await (supabase
-      .from('judge_team_conflicts' as any)
+    const { data } = await (supabase as any)
+      .from('judge_team_conflicts')
       .select(`
         *,
         judge:judge_profiles(name),
-        team:tournament_registrations(participant_name)
+        team:tournament_registrations!registration_id(participant_name)
       `)
-      .eq('tournament_id', tournamentId) as any);
+      .eq('tournament_id', tournamentId);
 
     if (data) {
       setJudgeTeamConflicts(data.map((c: any) => ({
@@ -164,13 +164,13 @@ export function ConstraintsManager({ tournamentId, registrations, judges }: Cons
   };
 
   const fetchJudgeSchoolConflicts = async () => {
-    const { data } = await (supabase
-      .from('judge_school_conflicts' as any)
+    const { data } = await (supabase as any)
+      .from('judge_school_conflicts')
       .select(`
         *,
         judge:judge_profiles(name)
       `)
-      .eq('tournament_id', tournamentId) as any);
+      .eq('tournament_id', tournamentId);
 
     if (data) {
       setJudgeSchoolConflicts(data.map((c: any) => ({

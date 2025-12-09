@@ -18,7 +18,7 @@ interface TabulationDashboardProps {
 
 export default function TabulationDashboard({ tournamentId }: TabulationDashboardProps) {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState('competitors');
+  const [activeTab, setActiveTab] = useState('draw');
   const [rounds, setRounds] = useState<any[]>([]);
   const [registrations, setRegistrations] = useState<any[]>([]);
   const [judges, setJudges] = useState<any[]>([]);
@@ -106,27 +106,23 @@ export default function TabulationDashboard({ tournamentId }: TabulationDashboar
       <div className="mb-6">
         <h1 className="text-3xl font-bold mb-2">Tabulation Dashboard</h1>
         <p className="text-muted-foreground">
-          Manage tournament participants, pairings, and standings.
+          Manage tournament draw, results, and standings.
         </p>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-8">
+        <TabsList className="grid w-full grid-cols-8 lg:grid-cols-8">
+          <TabsTrigger value="draw">Draw</TabsTrigger>
           <TabsTrigger value="competitors">Competitors</TabsTrigger>
-          <TabsTrigger value="pairings">Pairings</TabsTrigger>
           <TabsTrigger value="participation">Participation</TabsTrigger>
-          <TabsTrigger value="judges">Judges</TabsTrigger>
-          <TabsTrigger value="standings">Standings</TabsTrigger>
-          <TabsTrigger value="brackets">Brackets</TabsTrigger>
+          <TabsTrigger value="adjudicators">Adjudicators</TabsTrigger>
+          <TabsTrigger value="results">Results</TabsTrigger>
+          <TabsTrigger value="breaks">Breaks</TabsTrigger>
           <TabsTrigger value="constraints">Constraints</TabsTrigger>
-          <TabsTrigger value="rules">Rules</TabsTrigger>
+          <TabsTrigger value="config">Config</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="competitors">
-          <CompetitorDirectory tournamentId={tournamentId} />
-        </TabsContent>
-
-        <TabsContent value="pairings">
+        <TabsContent value="draw">
           <PairingGenerator 
             tournamentId={tournamentId}
             rounds={rounds}
@@ -137,22 +133,26 @@ export default function TabulationDashboard({ tournamentId }: TabulationDashboar
           />
         </TabsContent>
 
+        <TabsContent value="competitors">
+          <CompetitorDirectory tournamentId={tournamentId} />
+        </TabsContent>
+
         <TabsContent value="participation">
           <ParticipationManager tournamentId={tournamentId} />
         </TabsContent>
 
-        <TabsContent value="judges">
+        <TabsContent value="adjudicators">
           <JudgePostingsView tournamentId={tournamentId} />
         </TabsContent>
 
-        <TabsContent value="standings">
+        <TabsContent value="results">
           <StandingsView 
             tournamentId={tournamentId}
             registrations={registrations}
           />
         </TabsContent>
 
-        <TabsContent value="brackets">
+        <TabsContent value="breaks">
           <BracketsManager 
             tournamentId={tournamentId}
             rounds={rounds}
@@ -168,7 +168,7 @@ export default function TabulationDashboard({ tournamentId }: TabulationDashboar
           />
         </TabsContent>
 
-        <TabsContent value="rules">
+        <TabsContent value="config">
           <TabulationRulesManager tournamentId={tournamentId} />
         </TabsContent>
       </Tabs>
