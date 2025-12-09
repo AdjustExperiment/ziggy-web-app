@@ -3414,6 +3414,10 @@ export type Database = {
         Returns: number
       }
       unlock_account: { Args: { _target_user_id: string }; Returns: boolean }
+      user_can_view_judge_for_pairing: {
+        Args: { _judge_profile_id: string }
+        Returns: boolean
+      }
       user_is_competitor_for_pairing: {
         Args: { _pairing_id: string }
         Returns: boolean

@@ -51,7 +51,7 @@ export default function TabulationDashboard({ tournamentId }: TabulationDashboar
       console.log('[TabulationDashboard] Fetching tournament...');
       const { data: tournamentData, error: tournamentError } = await supabase
         .from('tournaments')
-        .select('*, debate_formats:format(*)')
+        .select('*')
         .eq('id', tournamentId)
         .single();
 
