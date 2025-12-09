@@ -49,9 +49,9 @@ const Contact = () => {
     setIsSubmitting(true);
     
     try {
-      // Store contact submission in database
-      const { error } = await supabase
-        .from("contact_submissions" as any)
+      // Store contact submission in database (using type assertion until types regenerate)
+      const { error } = await (supabase as any)
+        .from("contact_submissions")
         .insert({
           name: formData.name,
           email: formData.email,
