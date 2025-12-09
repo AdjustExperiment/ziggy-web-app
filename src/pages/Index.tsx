@@ -92,8 +92,8 @@ const Index = () => {
               Ziggy Online Debate Features
             </h2>
             <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto font-secondary">
-              Check out everything Ziggy has to offer! From worldwide competition to advanced scheduling, 
-              we provide comprehensive tools for debaters everywhere.
+              Check out everything Ziggy has to offer! From worldwide competition to member-exclusive resources 
+              including coaches, sourcebooks, and training materials.
             </p>
           </div>
 

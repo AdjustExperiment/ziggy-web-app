@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Trophy, Users, DollarSign, Calendar, Globe, Award, Shield, Clock, Zap, MessageSquare, TrendingUp, Star } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Trophy, Users, DollarSign, Calendar, Globe, Award, Shield, Clock, Zap, MessageSquare, TrendingUp, Star, ArrowRight, BookOpen, FileText, GraduationCap } from "lucide-react";
 import { SectionFX } from "@/components/SectionFX";
 
 const About = () => {
@@ -214,9 +215,13 @@ const About = () => {
                   Interested in hosting tournaments for your league, school, or debate format? 
                   We'd love to help you bring the Ziggy experience to your community!
                 </p>
-                <p className="text-primary font-semibold">
-                  Contact us to discuss custom tournament hosting options.
-                </p>
+                <Button 
+                  className="bg-primary text-primary-foreground hover:bg-primary/90"
+                  onClick={() => window.location.href = '/host-tournament'}
+                >
+                  Learn About Hosting
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
               </CardContent>
             </Card>
           </div>
@@ -369,6 +374,91 @@ const About = () => {
                 </CardContent>
               </Card>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Member Resources Section */}
+      <section className="relative py-16 bg-gradient-hero">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 relative z-10">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-4 text-center font-primary">
+            Member-Exclusive <span className="text-primary">Resources</span>
+          </h2>
+          <p className="text-lg text-muted-foreground text-center mb-12 max-w-3xl mx-auto font-secondary">
+            Sign up to access our comprehensive library of debate resources designed to help you succeed.
+          </p>
+          
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <Card className="bg-card/50 border-primary/30 shadow-elegant backdrop-blur-sm hover-scale text-center">
+              <CardContent className="p-6">
+                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-4 mx-auto">
+                  <Users className="h-6 w-6" />
+                </div>
+                <h3 className="font-bold text-card-foreground mb-2">Coaches Directory</h3>
+                <p className="text-muted-foreground text-sm">Connect with experienced coaches for personalized guidance.</p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-card/50 border-primary/30 shadow-elegant backdrop-blur-sm hover-scale text-center">
+              <CardContent className="p-6">
+                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-4 mx-auto">
+                  <BookOpen className="h-6 w-6" />
+                </div>
+                <h3 className="font-bold text-card-foreground mb-2">Sourcebooks</h3>
+                <p className="text-muted-foreground text-sm">Access curated research materials and case files.</p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-card/50 border-primary/30 shadow-elegant backdrop-blur-sm hover-scale text-center">
+              <CardContent className="p-6">
+                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-4 mx-auto">
+                  <Globe className="h-6 w-6" />
+                </div>
+                <h3 className="font-bold text-card-foreground mb-2">League Information</h3>
+                <p className="text-muted-foreground text-sm">Stay updated on NCFCA, Stoa, and other league news.</p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-card/50 border-primary/30 shadow-elegant backdrop-blur-sm hover-scale text-center">
+              <CardContent className="p-6">
+                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-4 mx-auto">
+                  <FileText className="h-6 w-6" />
+                </div>
+                <h3 className="font-bold text-card-foreground mb-2">Research Resources</h3>
+                <p className="text-muted-foreground text-sm">Comprehensive research databases and guides.</p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-card/50 border-primary/30 shadow-elegant backdrop-blur-sm hover-scale text-center">
+              <CardContent className="p-6">
+                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-4 mx-auto">
+                  <GraduationCap className="h-6 w-6" />
+                </div>
+                <h3 className="font-bold text-card-foreground mb-2">Training Materials</h3>
+                <p className="text-muted-foreground text-sm">Video tutorials, drills, and skill-building exercises.</p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-card/50 border-primary/30 shadow-elegant backdrop-blur-sm hover-scale text-center">
+              <CardContent className="p-6">
+                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-4 mx-auto">
+                  <TrendingUp className="h-6 w-6" />
+                </div>
+                <h3 className="font-bold text-card-foreground mb-2">Performance Analytics</h3>
+                <p className="text-muted-foreground text-sm">Track your progress and identify areas for improvement.</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="text-center mt-10">
+            <Button 
+              size="lg" 
+              className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-glow"
+              onClick={() => window.location.href = '/tournaments'}
+            >
+              Sign Up to Access Resources
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
           </div>
         </div>
       </section>
