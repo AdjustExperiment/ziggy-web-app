@@ -5,6 +5,9 @@ import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from '@/components/ui/use-toast';
 import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Info } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface RoleAccess {
   id: string;
@@ -161,18 +164,18 @@ export function RoleAccessManager() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardContent className="pt-6">
-          <div className="text-sm text-muted-foreground">
-            <p className="font-medium mb-2">Note:</p>
-            <ul className="list-disc list-inside space-y-1">
-              <li>This is currently running in demo mode</li>
-              <li>Role access settings table will be created in Phase 3</li>
-              <li>Changes are stored locally for demonstration purposes</li>
-            </ul>
-          </div>
-        </CardContent>
-      </Card>
+      <Alert className="border-amber-500 bg-amber-50 dark:bg-amber-950/20">
+        <Info className="h-4 w-4 text-amber-600" />
+        <AlertTitle className="text-amber-800 dark:text-amber-200">Demo Mode</AlertTitle>
+        <AlertDescription className="text-amber-700 dark:text-amber-300">
+          This panel is for demonstration only. Changes are stored locally and will not persist across sessions.
+          For tournament-specific role access, use the{' '}
+          <Link to="/admin?tab=tournaments" className="underline hover:no-underline">
+            Tournament Role Access Manager
+          </Link>{' '}
+          within each tournament's settings.
+        </AlertDescription>
+      </Alert>
     </div>
   );
 }

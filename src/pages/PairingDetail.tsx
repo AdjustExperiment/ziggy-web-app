@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -58,6 +59,7 @@ interface PairingDetailData {
     qualifications: string | null;
     bio: string | null;
     availability: any;
+    user_id: string | null;
   } | null;
 }
 
@@ -81,6 +83,8 @@ interface Evidence {
   uploader_name: string;
 }
 
+type UserRole = 'participant' | 'judge' | 'observer' | 'unauthorized';
+
 export default function PairingDetail() {
   const { pairingId } = useParams<{ pairingId: string }>();
   const { user } = useAuth();
@@ -94,6 +98,7 @@ export default function PairingDetail() {
   const [uploadingFile, setUploadingFile] = useState(false);
   const [userSide, setUserSide] = useState<'aff' | 'neg' | null>(null);
   const [showJudgeRequest, setShowJudgeRequest] = useState(false);
+  const [userRole, setUserRole] = useState<UserRole>('unauthorized');
 
   useEffect(() => {
     if (pairingId && user) {
@@ -115,6 +120,73 @@ export default function PairingDetail() {
       };
     }
   }, [pairingId, user]);
+
+  const determineUserRole = async (pairingData: PairingDetailData): Promise<UserRole> => {
+    if (!user) return 'unauthorized';
+
+    // Check if user is a participant
+    if (pairingData.aff_registration.user_id === user.id || 
+        pairingData.neg_registration.user_id === user.id) {
+      return 'participant';
+    }
+
+    // Check if user is the judge
+    if (pairingData.judge_profile?.user_id === user.id) {
+      return 'judge';
+    }
+
+    // Check if user is on the judge panel
+    const { data: panelAssignment } = await supabase
+      .from('pairing_judge_assignments')
+      .select('id')
+      .eq('pairing_id', pairingData.id)
+      .eq('status', 'assigned')
+      .maybeSingle();
+
+    if (panelAssignment) {
+      // Check if the current user is a judge on this panel
+      const { data: judgeProfile } = await supabase
+        .from('judge_profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (judgeProfile) {
+        const { data: isOnPanel } = await supabase
+          .from('pairing_judge_assignments')
+          .select('id')
+          .eq('pairing_id', pairingData.id)
+          .eq('judge_profile_id', judgeProfile.id)
+          .in('status', ['assigned', 'confirmed'])
+          .maybeSingle();
+
+        if (isOnPanel) return 'judge';
+      }
+    }
+
+    // Check if user has approved spectate request
+    const { data: spectateRequest } = await supabase
+      .from('spectate_requests')
+      .select('id')
+      .eq('pairing_id', pairingData.id)
+      .eq('requester_user_id', user.id)
+      .eq('status', 'approved')
+      .maybeSingle();
+
+    if (spectateRequest) return 'observer';
+
+    // Check if user is admin-assigned observer for this tournament
+    const { data: tournamentObserver } = await supabase
+      .from('tournament_observers')
+      .select('id')
+      .eq('tournament_id', pairingData.tournament_id)
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (tournamentObserver) return 'observer';
+
+    return 'unauthorized';
+  };
 
   const fetchPairingDetail = async () => {
     try {
@@ -160,7 +232,8 @@ export default function PairingDetail() {
             experience_level,
             qualifications,
             bio,
-            availability
+            availability,
+            user_id
           )
         `)
         .eq('id', pairingId)
@@ -176,6 +249,10 @@ export default function PairingDetail() {
       } else if (data.neg_registration.user_id === user?.id) {
         setUserSide('neg');
       }
+
+      // Determine user role
+      const role = await determineUserRole(data);
+      setUserRole(role);
       
     } catch (error) {
       console.error('Error fetching pairing:', error);
@@ -260,7 +337,7 @@ export default function PairingDetail() {
   };
 
   const sendMessage = async () => {
-    if (!newMessage.trim() || !user) return;
+    if (!newMessage.trim() || !user || userRole === 'observer') return;
     
     try {
       setSendingMessage(true);
@@ -294,7 +371,7 @@ export default function PairingDetail() {
   };
 
   const uploadEvidence = async (file: File, description: string) => {
-    if (!user) return;
+    if (!user || userRole === 'observer') return;
     
     try {
       setUploadingFile(true);
@@ -361,6 +438,8 @@ export default function PairingDetail() {
     return side === 'aff' ? 'default' : 'secondary';
   };
 
+  const isObserver = userRole === 'observer';
+
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -391,6 +470,17 @@ export default function PairingDetail() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
+      {/* Observer Mode Banner */}
+      {isObserver && (
+        <Alert className="mb-6 border-amber-500 bg-amber-50 dark:bg-amber-950/20">
+          <Eye className="h-4 w-4 text-amber-600" />
+          <AlertTitle className="text-amber-800 dark:text-amber-200">Observer Mode</AlertTitle>
+          <AlertDescription className="text-amber-700 dark:text-amber-300">
+            You are viewing this pairing as an observer. Chat and evidence upload features are read-only.
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div className="mb-6">
         <Button variant="ghost" asChild className="mb-4">
           <Link to={`/tournaments/${pairing.tournament.id}/postings`}>
@@ -412,11 +502,19 @@ export default function PairingDetail() {
             </div>
           </div>
           
-          {userSide && (
-            <Badge variant={getSideColor(userSide)} className="text-lg px-4 py-2">
-              You are {userSide.toUpperCase()}
-            </Badge>
-          )}
+          <div className="flex items-center gap-2">
+            {isObserver && (
+              <Badge variant="secondary" className="flex items-center gap-1">
+                <Eye className="h-3 w-3" />
+                Observer
+              </Badge>
+            )}
+            {userSide && (
+              <Badge variant={getSideColor(userSide)} className="text-lg px-4 py-2">
+                You are {userSide.toUpperCase()}
+              </Badge>
+            )}
+          </div>
         </div>
       </div>
 
@@ -474,10 +572,12 @@ export default function PairingDetail() {
                 {pairing.aff_registration.school_organization && (
                   <p className="text-sm text-muted-foreground">{pairing.aff_registration.school_organization}</p>
                 )}
-                <div className="flex items-center gap-1 mt-2">
-                  <Mail className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">{pairing.aff_registration.participant_email}</span>
-                </div>
+                {!isObserver && (
+                  <div className="flex items-center gap-1 mt-2">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm">{pairing.aff_registration.participant_email}</span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -497,10 +597,12 @@ export default function PairingDetail() {
                 {pairing.neg_registration.school_organization && (
                   <p className="text-sm text-muted-foreground">{pairing.neg_registration.school_organization}</p>
                 )}
-                <div className="flex items-center gap-1 mt-2">
-                  <Mail className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">{pairing.neg_registration.participant_email}</span>
-                </div>
+                {!isObserver && (
+                  <div className="flex items-center gap-1 mt-2">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm">{pairing.neg_registration.participant_email}</span>
+                  </div>
+                )}
               </div>
             </div>
           </CardContent>
@@ -524,19 +626,21 @@ export default function PairingDetail() {
                   </Badge>
                 </div>
                 
-                <div className="space-y-2">
-                  <div className="flex items-center gap-1">
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">{pairing.judge_profile.email}</span>
-                  </div>
-                  
-                  {pairing.judge_profile.phone && (
+                {!isObserver && (
+                  <div className="space-y-2">
                     <div className="flex items-center gap-1">
-                      <Phone className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">{pairing.judge_profile.phone}</span>
+                      <Mail className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm">{pairing.judge_profile.email}</span>
                     </div>
-                  )}
-                </div>
+                    
+                    {pairing.judge_profile.phone && (
+                      <div className="flex items-center gap-1">
+                        <Phone className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm">{pairing.judge_profile.phone}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {pairing.judge_profile.qualifications && (
                   <div>
@@ -570,9 +674,13 @@ export default function PairingDetail() {
             <CardTitle className="flex items-center gap-2">
               <MessageSquare className="h-5 w-5" />
               Pairing Chat
+              {isObserver && <Badge variant="outline" className="ml-2">Read Only</Badge>}
             </CardTitle>
             <CardDescription>
-              Communicate with your opponent about scheduling and logistics
+              {isObserver 
+                ? 'View messages between participants and judges'
+                : 'Communicate with your opponent about scheduling and logistics'
+              }
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -582,7 +690,9 @@ export default function PairingDetail() {
                 {messages.length === 0 ? (
                   <div className="text-center text-muted-foreground py-8">
                     <MessageSquare className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                    <p className="text-sm">No messages yet. Start the conversation!</p>
+                    <p className="text-sm">
+                      {isObserver ? 'No messages in this chat yet' : 'No messages yet. Start the conversation!'}
+                    </p>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -609,28 +719,30 @@ export default function PairingDetail() {
                 )}
               </ScrollArea>
 
-              {/* Message Input */}
-              <div className="flex gap-2">
-                <Textarea
-                  placeholder="Type your message..."
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  className="min-h-[40px] max-h-[120px]"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      sendMessage();
-                    }
-                  }}
-                />
-                <Button 
-                  onClick={sendMessage}
-                  disabled={!newMessage.trim() || sendingMessage}
-                  size="icon"
-                >
-                  <Send className="h-4 w-4" />
-                </Button>
-              </div>
+              {/* Message Input - Hidden for Observers */}
+              {!isObserver && (
+                <div className="flex gap-2">
+                  <Textarea
+                    placeholder="Type your message..."
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    className="min-h-[40px] max-h-[120px]"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendMessage();
+                      }
+                    }}
+                  />
+                  <Button 
+                    onClick={sendMessage}
+                    disabled={!newMessage.trim() || sendingMessage}
+                    size="icon"
+                  >
+                    <Send className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -641,15 +753,21 @@ export default function PairingDetail() {
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
               Evidence & Documents
+              {isObserver && <Badge variant="outline" className="ml-2">Read Only</Badge>}
             </CardTitle>
             <CardDescription>
-              Upload and share evidence, cases, and other materials
+              {isObserver 
+                ? 'View uploaded evidence and materials'
+                : 'Upload and share evidence, cases, and other materials'
+              }
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {/* Upload Area */}
-              <EvidenceUpload onUpload={uploadEvidence} uploading={uploadingFile} />
+              {/* Upload Area - Hidden for Observers */}
+              {!isObserver && (
+                <EvidenceUpload onUpload={uploadEvidence} uploading={uploadingFile} />
+              )}
               
               {/* Evidence List */}
               <div className="space-y-2">
@@ -670,26 +788,29 @@ export default function PairingDetail() {
                           <p className="text-xs text-muted-foreground mt-1">{file.description}</p>
                         )}
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          asChild
-                        >
-                          <a href={file.file_url} target="_blank" rel="noopener noreferrer">
-                            <Eye className="h-4 w-4" />
-                          </a>
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          asChild
-                        >
-                          <a href={file.file_url} download={file.file_name}>
-                            <Download className="h-4 w-4" />
-                          </a>
-                        </Button>
-                      </div>
+                      {/* View/Download only for non-observers */}
+                      {!isObserver && (
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            asChild
+                          >
+                            <a href={file.file_url} target="_blank" rel="noopener noreferrer">
+                              <Eye className="h-4 w-4" />
+                            </a>
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            asChild
+                          >
+                            <a href={file.file_url} download={file.file_name}>
+                              <Download className="h-4 w-4" />
+                            </a>
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   ))
                 )}
