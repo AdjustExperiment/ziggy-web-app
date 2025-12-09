@@ -7,8 +7,9 @@ import { Badge } from '@/components/ui/badge';
 import { ProfileSetup } from '@/components/auth/ProfileSetup';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Calendar, CreditCard, MapPin, Clock, User, Phone, Mail, Shield, Gavel, Settings, Plus } from 'lucide-react';
+import { Calendar, CreditCard, MapPin, Clock, User, Phone, Mail, Shield, Gavel, Settings, Plus, Edit2 } from 'lucide-react';
 import { JudgePromptBanner } from '@/components/JudgePromptBanner';
+import { JudgeProfileEditor } from '@/components/JudgeProfileEditor';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -39,6 +40,7 @@ export default function UserAccount() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [hasJudgeProfile, setHasJudgeProfile] = useState(false);
+  const [judgeProfile, setJudgeProfile] = useState<any>(null);
   const [emailChanging, setEmailChanging] = useState(false);
   const [passwordChanging, setPasswordChanging] = useState(false);
   const { toast } = useToast();
@@ -111,15 +113,20 @@ export default function UserAccount() {
     try {
       const { data, error } = await supabase
         .from('judge_profiles')
-        .select('id')
+        .select('*')
         .eq('user_id', user?.id)
         .single();
 
       if (error && error.code !== 'PGRST116') throw error;
       setHasJudgeProfile(!!data);
+      setJudgeProfile(data);
     } catch (error) {
       console.error('Error checking judge profile:', error);
     }
+  };
+
+  const refreshJudgeProfile = () => {
+    checkJudgeProfile();
   };
 
   const handleEmailChange = async () => {
@@ -392,30 +399,20 @@ export default function UserAccount() {
             </TabsContent>
 
             <TabsContent value="judge">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Gavel className="h-5 w-5" />
-                    Judge Account
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {hasJudgeProfile ? (
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="default">Judge Profile Active</Badge>
-                      </div>
-                      <p className="text-muted-foreground">
-                        You have an active judge profile. You can manage your judging availability 
-                        and preferences through the judge dashboard.
-                      </p>
-                      <Button variant="outline" asChild>
-                        <a href="/judge">
-                          Manage Judge Profile
-                        </a>
-                      </Button>
-                    </div>
-                  ) : (
+              {hasJudgeProfile && judgeProfile ? (
+                <JudgeProfileEditor 
+                  judgeProfile={judgeProfile} 
+                  onUpdate={refreshJudgeProfile} 
+                />
+              ) : (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Gavel className="h-5 w-5" />
+                      Judge Account
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
                     <div className="space-y-4">
                       <p className="text-muted-foreground">
                         You don't currently have a judge profile. Creating one allows you to:
@@ -431,9 +428,9 @@ export default function UserAccount() {
                         Create Judge Profile
                       </Button>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
 
             <TabsContent value="tournaments">

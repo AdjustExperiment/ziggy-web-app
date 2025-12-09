@@ -29,6 +29,7 @@ interface PairingWithDetails {
   judge_profiles?: {
     name: string;
     email: string;
+    alumni?: boolean;
   };
   judge_volunteer_requests?: Array<{
     id: string;
@@ -85,7 +86,7 @@ export function JudgePostingsView({ tournamentId }: JudgePostingsViewProps) {
           round:rounds(name, round_number),
           aff_registration:tournament_registrations!aff_registration_id(participant_name, school_organization),
           neg_registration:tournament_registrations!neg_registration_id(participant_name, school_organization),
-          judge_profiles(name, email)
+          judge_profiles(name, email, alumni)
         `)
         .eq('tournament_id', tournamentId)
         .eq('released', true)
@@ -251,7 +252,7 @@ export function JudgePostingsView({ tournamentId }: JudgePostingsViewProps) {
                           )}
                           {isAssigned && (
                             <div className="text-sm">
-                              <strong>Judge:</strong> {pairing.judge_profiles?.name}
+                              <strong>Judge:</strong> {pairing.judge_profiles?.alumni && <span className="text-amber-600 font-medium">[A] </span>}{pairing.judge_profiles?.name}
                             </div>
                           )}
                         </div>

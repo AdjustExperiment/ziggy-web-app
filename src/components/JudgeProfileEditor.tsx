@@ -21,6 +21,7 @@ interface JudgeProfile {
   qualifications: string;
   bio: string;
   specializations?: string[];
+  alumni?: boolean;
 }
 
 interface JudgeProfileEditorProps {
@@ -50,7 +51,8 @@ export function JudgeProfileEditor({ judgeProfile, onUpdate }: JudgeProfileEdito
     experience_years: judgeProfile.experience_years || 0,
     qualifications: judgeProfile.qualifications || '',
     bio: judgeProfile.bio || '',
-    specializations: judgeProfile.specializations || []
+    specializations: judgeProfile.specializations || [],
+    alumni: judgeProfile.alumni || false
   });
 
   const handleSave = async () => {
@@ -65,7 +67,8 @@ export function JudgeProfileEditor({ judgeProfile, onUpdate }: JudgeProfileEdito
           experience_years: formData.experience_years,
           qualifications: formData.qualifications || null,
           bio: formData.bio || null,
-          specializations: formData.specializations
+          specializations: formData.specializations,
+          alumni: formData.alumni
         })
         .eq('id', judgeProfile.id);
 
@@ -106,7 +109,8 @@ export function JudgeProfileEditor({ judgeProfile, onUpdate }: JudgeProfileEdito
       experience_years: judgeProfile.experience_years || 0,
       qualifications: judgeProfile.qualifications || '',
       bio: judgeProfile.bio || '',
-      specializations: judgeProfile.specializations || []
+      specializations: judgeProfile.specializations || [],
+      alumni: judgeProfile.alumni || false
     });
     setIsEditing(false);
   };
@@ -162,7 +166,7 @@ export function JudgeProfileEditor({ judgeProfile, onUpdate }: JudgeProfileEdito
             
             <div>
               <h4 className="font-medium mb-2">Experience</h4>
-              <div className="flex gap-2 items-center">
+              <div className="flex gap-2 items-center flex-wrap">
                 <Badge variant="outline" className="capitalize">
                   {judgeProfile.experience_level}
                 </Badge>
@@ -170,6 +174,11 @@ export function JudgeProfileEditor({ judgeProfile, onUpdate }: JudgeProfileEdito
                   <span className="text-sm text-muted-foreground">
                     {judgeProfile.experience_years} years
                   </span>
+                )}
+                {judgeProfile.alumni && (
+                  <Badge variant="secondary" className="bg-amber-100 text-amber-800">
+                    [A] Alumni
+                  </Badge>
                 )}
               </div>
             </div>
@@ -296,6 +305,17 @@ export function JudgeProfileEditor({ judgeProfile, onUpdate }: JudgeProfileEdito
                 placeholder="Tell competitors about your judging philosophy..."
                 rows={4}
               />
+            </div>
+
+            <div className="flex items-center space-x-2 pt-2 border-t">
+              <Checkbox
+                id="alumni"
+                checked={formData.alumni}
+                onCheckedChange={(checked) => setFormData({ ...formData, alumni: !!checked })}
+              />
+              <Label htmlFor="alumni" className="text-sm font-normal cursor-pointer">
+                I am an alumni (former debate competitor)
+              </Label>
             </div>
           </div>
         )}

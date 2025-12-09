@@ -60,6 +60,7 @@ interface PairingDetailData {
     bio: string | null;
     availability: any;
     user_id: string | null;
+    alumni?: boolean;
   } | null;
 }
 
@@ -233,7 +234,8 @@ export default function PairingDetail() {
             qualifications,
             bio,
             availability,
-            user_id
+            user_id,
+            alumni
           )
         `)
         .eq('id', pairingId)
@@ -619,11 +621,19 @@ export default function PairingDetail() {
           <CardContent>
             {pairing.judge_profile ? (
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-medium text-lg">{pairing.judge_profile.name}</h4>
-                  <Badge variant={getJudgeExperienceColor(pairing.judge_profile.experience_level)}>
-                    {pairing.judge_profile.experience_level}
-                  </Badge>
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <h4 className="font-medium text-lg">
+                    {pairing.judge_profile.alumni && <span className="text-amber-600">[A] </span>}
+                    {pairing.judge_profile.name}
+                  </h4>
+                  <div className="flex gap-2">
+                    {pairing.judge_profile.alumni && (
+                      <Badge variant="secondary" className="bg-amber-100 text-amber-800">Alumni</Badge>
+                    )}
+                    <Badge variant={getJudgeExperienceColor(pairing.judge_profile.experience_level)}>
+                      {pairing.judge_profile.experience_level}
+                    </Badge>
+                  </div>
                 </div>
                 
                 {!isObserver && (
