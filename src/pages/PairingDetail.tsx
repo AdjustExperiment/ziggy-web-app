@@ -103,9 +103,9 @@ export default function PairingDetail() {
       
       // Set up realtime subscription for messages
       const channel = supabase
-        .channel('pairing_messages')
+        .channel('pairing_chat_messages')
         .on('postgres_changes', 
-          { event: 'INSERT', schema: 'public', table: 'pairing_messages', filter: `pairing_id=eq.${pairingId}` },
+          { event: 'INSERT', schema: 'public', table: 'pairing_chat_messages', filter: `pairing_id=eq.${pairingId}` },
           () => { fetchMessages(); }
         )
         .subscribe();
@@ -192,7 +192,7 @@ export default function PairingDetail() {
   const fetchMessages = async () => {
     try {
       const { data, error } = await supabase
-        .from('pairing_messages')
+        .from('pairing_chat_messages')
         .select('*')
         .eq('pairing_id', pairingId)
         .order('created_at', { ascending: true });
@@ -207,7 +207,7 @@ export default function PairingDetail() {
             .from('profiles')
             .select('first_name, last_name')
             .eq('user_id', msg.sender_id)
-            .single();
+            .maybeSingle();
           
           messagesWithNames.push({
             ...msg,
@@ -266,7 +266,7 @@ export default function PairingDetail() {
       setSendingMessage(true);
       
       const { error } = await supabase
-        .from('pairing_messages')
+        .from('pairing_chat_messages')
         .insert({
           pairing_id: pairingId,
           sender_id: user.id,
