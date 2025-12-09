@@ -29,36 +29,10 @@ export default function Rules() {
   }, []);
 
   const fetchRulesContent = async () => {
-    try {
-      // Try to fetch from WordPress API first
-      const response = await fetch('https://ziggyonlinedebate.com/wp-json/wp/v2/pages?slug=rules');
-      const data = await response.json();
-      
-      if (data && data[0] && data[0].content && data[0].content.rendered) {
-        const content = data[0].content.rendered;
-        const parsedRules = parseRulesFromHTML(content);
-        setRules(parsedRules);
-        
-        // Update last modified date if available
-        if (data[0].modified) {
-          const date = new Date(data[0].modified);
-          setLastUpdated(date.toLocaleDateString('en-US', { 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
-          }));
-        }
-      } else {
-        // Fallback to static rules if API fails
-        setRules(getStaticRules());
-      }
-    } catch (error) {
-      console.error('Error fetching rules:', error);
-      // Use static fallback
-      setRules(getStaticRules());
-    } finally {
-      setIsLoading(false);
-    }
+    // Use static rules directly - external WordPress API is unreliable
+    // This ensures instant loading without skeleton flicker
+    setRules(getStaticRules());
+    setIsLoading(false);
   };
 
   const parseRulesFromHTML = (html: string): Rule[] => {

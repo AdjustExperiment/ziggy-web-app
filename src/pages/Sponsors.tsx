@@ -35,7 +35,8 @@ interface SiteBlock {
 }
 
 const Sponsors = () => {
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [dataFetched, setDataFetched] = useState(false);
   const [siteBlocks, setSiteBlocks] = useState<SiteBlock[]>([]);
   const [approvedSponsors, setApprovedSponsors] = useState<{ [key: string]: SponsorApplication[] }>({});
   const [platformPartners, setPlatformPartners] = useState<SponsorProfile[]>([]);
@@ -45,15 +46,14 @@ const Sponsors = () => {
   }, []);
 
   const fetchData = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-
-      // Fetch site blocks for editable content
+      // Fetch site blocks for editable content (use maybeSingle to avoid errors)
       const { data: pageData } = await supabase
         .from('site_pages')
         .select('id')
         .eq('slug', 'sponsors')
-        .single();
+        .maybeSingle();
 
       if (pageData) {
         const { data: blocksData } = await supabase
@@ -100,6 +100,7 @@ const Sponsors = () => {
       console.error('Error fetching sponsors:', error);
     } finally {
       setLoading(false);
+      setDataFetched(true);
     }
   };
 
@@ -218,13 +219,7 @@ const Sponsors = () => {
     </Card>
   );
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
+  // Show content immediately, with inline loading indicator if needed
 
   const tiers = ['platinum', 'gold', 'silver', 'bronze'];
 
