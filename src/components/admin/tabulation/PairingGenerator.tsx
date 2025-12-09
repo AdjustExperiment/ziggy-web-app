@@ -7,7 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { toast } from '@/components/ui/use-toast';
 import { 
   Plus, 
@@ -18,11 +19,10 @@ import {
   Shuffle,
   Eye,
   EyeOff,
-  Zap,
-  AlertTriangle,
-  CheckCircle2,
   Calendar,
-  Printer
+  Printer,
+  Pencil,
+  Trash2
 } from 'lucide-react';
 import { DrawGenerator, Team, PairingHistory, DrawSettings, GeneratedPairing } from '@/lib/tabulation/drawGenerator';
 
@@ -90,6 +90,7 @@ export function PairingGenerator({
   const [pairings, setPairings] = useState<Pairing[]>([]);
   const [selectedRound, setSelectedRound] = useState<string>('');
   const [isCreatingRound, setIsCreatingRound] = useState(false);
+  const [isEditingRound, setIsEditingRound] = useState(false);
   const [loading, setLoading] = useState(false);
   const [settings, setSettings] = useState<TabulationSettings | null>(null);
   const [previewPairings, setPreviewPairings] = useState<GeneratedPairing[]>([]);
@@ -98,6 +99,13 @@ export function PairingGenerator({
     name: '',
     scheduled_date: '',
     round_number: rounds.length + 1
+  });
+  const [editRound, setEditRound] = useState({
+    id: '',
+    name: '',
+    scheduled_date: '',
+    round_number: 1,
+    status: 'upcoming'
   });
 
   useEffect(() => {
@@ -206,6 +214,91 @@ export function PairingGenerator({
       toast({
         title: "Error",
         description: error.message || "Failed to create round",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const openEditRound = (round: any) => {
+    setEditRound({
+      id: round.id,
+      name: round.name,
+      scheduled_date: round.scheduled_date ? round.scheduled_date.split('T')[0] : '',
+      round_number: round.round_number,
+      status: round.status
+    });
+    setIsEditingRound(true);
+  };
+
+  const updateRound = async () => {
+    try {
+      setLoading(true);
+      const { error } = await supabase
+        .from('rounds')
+        .update({
+          name: editRound.name,
+          round_number: editRound.round_number,
+          scheduled_date: editRound.scheduled_date || null,
+          status: editRound.status
+        })
+        .eq('id', editRound.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Round updated successfully",
+      });
+
+      setIsEditingRound(false);
+      onRoundsUpdate();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update round",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteRound = async (roundId: string) => {
+    try {
+      setLoading(true);
+      
+      // First delete all pairings for this round
+      const { error: pairingsError } = await supabase
+        .from('pairings')
+        .delete()
+        .eq('round_id', roundId);
+
+      if (pairingsError) throw pairingsError;
+
+      // Then delete the round
+      const { error } = await supabase
+        .from('rounds')
+        .delete()
+        .eq('id', roundId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Round deleted successfully",
+      });
+
+      if (selectedRound === roundId) {
+        setSelectedRound('');
+        setPairings([]);
+      }
+      onRoundsUpdate();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete round",
         variant: "destructive",
       });
     } finally {
@@ -581,36 +674,197 @@ export function PairingGenerator({
         </div>
       </div>
 
+      {/* Edit Round Dialog */}
+      <Dialog open={isEditingRound} onOpenChange={setIsEditingRound}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Round</DialogTitle>
+            <DialogDescription>
+              Update round details
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="edit-round-name">Round Name</Label>
+              <Input
+                id="edit-round-name"
+                value={editRound.name}
+                onChange={(e) => setEditRound({...editRound, name: e.target.value})}
+                placeholder="e.g., Round 1, Quarterfinals"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="edit-round-number">Round Number</Label>
+              <Input
+                id="edit-round-number"
+                type="number"
+                value={editRound.round_number}
+                onChange={(e) => setEditRound({...editRound, round_number: parseInt(e.target.value)})}
+                min="1"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="edit-scheduled-date">Scheduled Date (Optional)</Label>
+              <Input
+                id="edit-scheduled-date"
+                type="date"
+                value={editRound.scheduled_date}
+                onChange={(e) => setEditRound({...editRound, scheduled_date: e.target.value})}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-status">Status</Label>
+              <Select 
+                value={editRound.status} 
+                onValueChange={(value) => setEditRound({...editRound, status: value})}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="upcoming">Upcoming</SelectItem>
+                  <SelectItem value="in_progress">In Progress</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="locked">Locked</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditingRound(false)}>
+              Cancel
+            </Button>
+            <Button onClick={updateRound} disabled={loading || !editRound.name}>
+              {loading ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Round Selection */}
       <Card>
         <CardHeader>
           <CardTitle>Round Management</CardTitle>
-          <CardDescription>Select a round to manage pairings</CardDescription>
+          <CardDescription>Select a round to manage pairings, or edit/delete existing rounds</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div>
-            <Label htmlFor="round-select">Select Round</Label>
-            <Select value={selectedRound} onValueChange={setSelectedRound}>
-              <SelectTrigger>
-                <SelectValue placeholder="Choose a round..." />
-              </SelectTrigger>
-              <SelectContent>
+          {rounds.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Round</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Pairings</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {rounds.map((round) => (
-                  <SelectItem key={round.id} value={round.id}>
-                    <div className="flex items-center gap-2">
-                      <span>{round.name}</span>
-                      <Badge variant={round.status === 'locked' ? 'destructive' : 'secondary'}>
+                  <TableRow 
+                    key={round.id} 
+                    className={selectedRound === round.id ? 'bg-muted/50' : ''}
+                  >
+                    <TableCell>
+                      <div className="font-medium">{round.name}</div>
+                      <div className="text-sm text-muted-foreground">Round {round.round_number}</div>
+                    </TableCell>
+                    <TableCell>
+                      {round.scheduled_date ? (
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3 text-muted-foreground" />
+                          {new Date(round.scheduled_date).toLocaleDateString()}
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground">Not scheduled</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={round.status === 'locked' ? 'destructive' : round.status === 'completed' ? 'default' : 'secondary'}>
+                        {round.status === 'locked' && <Lock className="h-3 w-3 mr-1" />}
                         {round.status}
                       </Badge>
-                    </div>
-                  </SelectItem>
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant={selectedRound === round.id ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setSelectedRound(selectedRound === round.id ? '' : round.id)}
+                      >
+                        <Users className="h-3 w-3 mr-1" />
+                        {selectedRound === round.id ? 'Hide' : 'View'}
+                      </Button>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => openEditRound(round)}
+                          disabled={round.status === 'locked'}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              disabled={round.status === 'locked'}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Round</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete "{round.name}"? This will also delete all pairings associated with this round. This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => deleteRound(round.id)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Delete Round
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onToggleRoundLock(round.id, round.status !== 'locked')}
+                        >
+                          {round.status === 'locked' ? (
+                            <Unlock className="h-4 w-4" />
+                          ) : (
+                            <Lock className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </SelectContent>
-            </Select>
-          </div>
+              </TableBody>
+            </Table>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>No rounds created yet</p>
+              <p className="text-sm">Create your first round to start generating pairings</p>
+            </div>
+          )}
 
           {selectedRoundData && (
-            <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+            <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border">
               <div className="flex items-center gap-4">
                 <div>
                   <div className="font-medium">{selectedRoundData.name}</div>
@@ -621,20 +875,6 @@ export function PairingGenerator({
                     )}
                   </div>
                 </div>
-                
-                <Badge variant={selectedRoundData.status === 'locked' ? 'destructive' : 'secondary'}>
-                  {selectedRoundData.status === 'locked' ? (
-                    <>
-                      <Lock className="h-3 w-3 mr-1" />
-                      Locked
-                    </>
-                  ) : (
-                    <>
-                      <Unlock className="h-3 w-3 mr-1" />
-                      {selectedRoundData.status}
-                    </>
-                  )}
-                </Badge>
               </div>
 
               <div className="flex gap-2">
@@ -670,23 +910,6 @@ export function PairingGenerator({
                     </Button>
                   </>
                 )}
-                
-                <Button
-                  onClick={() => onToggleRoundLock(selectedRoundData.id, selectedRoundData.status !== 'locked')}
-                  variant={selectedRoundData.status === 'locked' ? 'outline' : 'secondary'}
-                >
-                  {selectedRoundData.status === 'locked' ? (
-                    <>
-                      <Unlock className="h-4 w-4 mr-2" />
-                      Unlock Round
-                    </>
-                  ) : (
-                    <>
-                      <Lock className="h-4 w-4 mr-2" />
-                      Lock Round
-                    </>
-                  )}
-                </Button>
               </div>
             </div>
           )}
