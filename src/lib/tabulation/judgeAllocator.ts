@@ -12,6 +12,7 @@ export interface JudgeInfo {
   experienceYears: number;
   availableDates: string[];
   institution?: string;
+  specializations?: string[];
 }
 
 export interface PairingInfo {
@@ -37,6 +38,7 @@ export interface JudgeAllocationOptions {
   conflicts: JudgeConflict[];
   judgesPerRoom: number;
   roundDate?: string;
+  formatKey?: string | null;
 }
 
 export interface JudgeAssignment {
@@ -60,6 +62,7 @@ export class JudgeAllocator {
   private conflicts: JudgeConflict[];
   private judgesPerRoom: number;
   private roundDate?: string;
+  private formatKey?: string | null;
 
   constructor(options: JudgeAllocationOptions) {
     this.judges = options.judges;
@@ -67,6 +70,7 @@ export class JudgeAllocator {
     this.conflicts = options.conflicts;
     this.judgesPerRoom = options.judgesPerRoom;
     this.roundDate = options.roundDate;
+    this.formatKey = options.formatKey;
   }
 
   /**
@@ -134,19 +138,34 @@ export class JudgeAllocator {
   }
 
   /**
-   * Filter judges available for this round's date
+   * Filter judges available for this round's date and format
    */
   private filterAvailableJudges(): JudgeInfo[] {
-    if (!this.roundDate) {
-      return this.judges;
+    let filtered = this.judges;
+
+    // Filter by format specialization if specified
+    if (this.formatKey) {
+      filtered = filtered.filter(judge => {
+        // If judge has no specializations, assume they can judge any format
+        if (!judge.specializations || judge.specializations.length === 0) {
+          return true;
+        }
+        // Check if judge's specializations include this format
+        return judge.specializations.includes(this.formatKey!);
+      });
     }
 
-    return this.judges.filter(judge => {
-      if (!judge.availableDates || judge.availableDates.length === 0) {
-        return true; // Assume available if no dates specified
-      }
-      return judge.availableDates.includes(this.roundDate!);
-    });
+    // Filter by date availability
+    if (this.roundDate) {
+      filtered = filtered.filter(judge => {
+        if (!judge.availableDates || judge.availableDates.length === 0) {
+          return true; // Assume available if no dates specified
+        }
+        return judge.availableDates.includes(this.roundDate!);
+      });
+    }
+
+    return filtered;
   }
 
   /**

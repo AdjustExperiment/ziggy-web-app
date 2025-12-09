@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 interface SpreadsheetViewProps {
   tournamentId: string;
+  eventId?: string | null;
 }
 
 interface TeamRow {
@@ -40,7 +41,7 @@ interface RoundResult {
 
 type SortKey = 'name' | 'school' | 'wins' | 'losses' | 'avgSpeaks' | 'totalSpeaks' | 'affCount' | 'negCount';
 
-export function SpreadsheetView({ tournamentId }: SpreadsheetViewProps) {
+export function SpreadsheetView({ tournamentId, eventId }: SpreadsheetViewProps) {
   const [teams, setTeams] = useState<TeamRow[]>([]);
   const [rounds, setRounds] = useState<{ id: string; name: string; round_number: number }[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,19 +52,25 @@ export function SpreadsheetView({ tournamentId }: SpreadsheetViewProps) {
 
   useEffect(() => {
     fetchData();
-  }, [tournamentId]);
+  }, [tournamentId, eventId]);
 
   const fetchData = async () => {
     setLoading(true);
     console.log('[SpreadsheetView] Fetching data for tournament:', tournamentId);
     
     try {
-      // Fetch rounds
-      const { data: roundsData, error: roundsError } = await supabase
+      // Fetch rounds (filtered by event if specified)
+      let roundsQuery = supabase
         .from('rounds')
         .select('id, name, round_number')
         .eq('tournament_id', tournamentId)
         .order('round_number');
+
+      if (eventId) {
+        roundsQuery = roundsQuery.eq('event_id', eventId);
+      }
+
+      const { data: roundsData, error: roundsError } = await roundsQuery;
 
       if (roundsError) {
         console.error('[SpreadsheetView] Error fetching rounds:', roundsError);
@@ -72,11 +79,17 @@ export function SpreadsheetView({ tournamentId }: SpreadsheetViewProps) {
       console.log('[SpreadsheetView] Fetched rounds:', roundsData?.length);
       setRounds(roundsData || []);
 
-      // Fetch registrations
-      const { data: registrations, error: regError } = await supabase
+      // Fetch registrations (filtered by event if specified)
+      let regQuery = supabase
         .from('tournament_registrations')
-        .select('id, participant_name, school_organization, is_active, aff_count, neg_count')
+        .select('id, participant_name, school_organization, is_active, aff_count, neg_count, event_id')
         .eq('tournament_id', tournamentId);
+
+      if (eventId) {
+        regQuery = regQuery.eq('event_id', eventId);
+      }
+
+      const { data: registrations, error: regError } = await regQuery;
 
       if (regError) {
         console.error('[SpreadsheetView] Error fetching registrations:', regError);

@@ -36,6 +36,8 @@ interface PairingGeneratorProps {
   judges: any[];
   onRoundsUpdate: () => void;
   onToggleRoundLock: (roundId: string, locked: boolean) => void;
+  eventId?: string | null;
+  formatKey?: string | null;
 }
 
 interface Round {
@@ -88,7 +90,9 @@ export function PairingGenerator({
   registrations, 
   judges,
   onRoundsUpdate,
-  onToggleRoundLock 
+  onToggleRoundLock,
+  eventId,
+  formatKey
 }: PairingGeneratorProps) {
   const [pairings, setPairings] = useState<Pairing[]>([]);
   const [selectedRound, setSelectedRound] = useState<string>('');
@@ -254,7 +258,8 @@ export function PairingGenerator({
           name: newRound.name,
           round_number: newRound.round_number,
           scheduled_date: newRound.scheduled_date || null,
-          status: 'upcoming'
+          status: 'upcoming',
+          event_id: eventId || null
         }]);
 
       if (error) throw error;

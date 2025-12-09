@@ -27,6 +27,15 @@ interface Tournament {
   registration_fee: number;
 }
 
+interface TournamentEvent {
+  id: string;
+  name: string;
+  short_code: string;
+  debate_formats?: {
+    name: string;
+  } | null;
+}
+
 interface FormData {
   participantName: string;
   email: string;
@@ -77,6 +86,11 @@ export default function TournamentRegistration() {
   const [selectedRole, setSelectedRole] = useState<'competitor' | 'judge'>('competitor');
   const [roleConflict, setRoleConflict] = useState<string | null>(null);
   const [checkingConflict, setCheckingConflict] = useState(false);
+  
+  // Event/Format selection state
+  const [events, setEvents] = useState<TournamentEvent[]>([]);
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [eventConflict, setEventConflict] = useState<string | null>(null);
 
   useEffect(() => {
     // Check if user is authenticated when component mounts
@@ -158,6 +172,21 @@ export default function TournamentRegistration() {
         }
 
         setTournament(data);
+        
+        // Fetch tournament events
+        const { data: eventsData } = await supabase
+          .from('tournament_events')
+          .select('*, debate_formats(*)')
+          .eq('tournament_id', id)
+          .eq('is_active', true)
+          .order('name');
+        
+        setEvents(eventsData || []);
+        
+        // Auto-select if only one event
+        if (eventsData && eventsData.length === 1) {
+          setSelectedEventId(eventsData[0].id);
+        }
         
         // Fetch payment links for this tournament
         await fetchPaymentLinks(data.id);
@@ -254,6 +283,27 @@ export default function TournamentRegistration() {
     setIsSubmitting(true);
 
     try {
+      // Check for duplicate event registration
+      if (selectedEventId) {
+        const { data: existingReg } = await supabase
+          .from('tournament_registrations')
+          .select('id')
+          .eq('tournament_id', tournament?.id)
+          .eq('user_id', user.id)
+          .eq('event_id', selectedEventId)
+          .maybeSingle();
+        
+        if (existingReg) {
+          toast({
+            title: "Already Registered",
+            description: "You are already registered for this event/format.",
+            variant: "destructive",
+          });
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
       const registrationData = {
         tournament_id: tournament?.id,
         participant_name: formData.participantName,
@@ -272,7 +322,8 @@ export default function TournamentRegistration() {
         payment_status: 'pending',
         user_id: user?.id,
         requested_judge_profile_id: judgeValidation.judgeProfile?.id || null,
-        amount_paid: Math.max(0, (tournament?.registration_fee || 0) - discountAmount)
+        amount_paid: Math.max(0, (tournament?.registration_fee || 0) - discountAmount),
+        event_id: selectedEventId || null
       };
 
       const { data, error } = await supabase
@@ -436,16 +487,54 @@ export default function TournamentRegistration() {
     </Card>
   );
 
+  const renderEventSelection = () => {
+    if (events.length <= 1) return null;
+    
+    return (
+      <div className="space-y-4 mb-6">
+        <h3 className="text-lg font-semibold">Select Event/Format *</h3>
+        <Select 
+          value={selectedEventId || ''} 
+          onValueChange={(value) => setSelectedEventId(value)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Choose your event/format" />
+          </SelectTrigger>
+          <SelectContent>
+            {events.map((event) => (
+              <SelectItem key={event.id} value={event.id}>
+                {event.name} ({event.short_code})
+                {event.debate_formats?.name && ` - ${event.debate_formats.name}`}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {eventConflict && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{eventConflict}</AlertDescription>
+          </Alert>
+        )}
+      </div>
+    );
+  };
+
   const renderRegistrationForm = () => (
     <Card>
       <CardHeader>
         <CardTitle>Tournament Registration</CardTitle>
         <CardDescription>
           Complete your registration for {tournament?.name}
+          {selectedEventId && events.length > 1 && (
+            <> - {events.find(e => e.id === selectedEventId)?.name}</>
+          )}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Event Selection (if multiple events) */}
+          {renderEventSelection()}
+
           {/* Personal Information */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Personal Information</h3>
@@ -641,7 +730,7 @@ export default function TournamentRegistration() {
           <Button 
             type="submit" 
             className="w-full" 
-            disabled={isSubmitting || judgeValidation.status === 'not_found'}
+            disabled={isSubmitting || judgeValidation.status === 'not_found' || (events.length > 1 && !selectedEventId)}
           >
             {isSubmitting ? 'Submitting...' : 'Submit Registration'}
           </Button>
