@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { 
   Home, Trophy, Users, BarChart3, FileText, 
   ExternalLink, Calendar, MessageSquare, Gavel,
-  TrendingUp, Award, Target, Bell, Clock, CheckCircle
+  TrendingUp, Award, Target, Bell, Clock, CheckCircle, Settings
 } from 'lucide-react';
 import MyTournaments from './MyTournaments';
 import { MyPairings } from '@/components/MyPairings';
@@ -39,7 +39,7 @@ interface JudgeStats {
 }
 
 export default function MyDashboard() {
-  const { user } = useOptimizedAuth();
+  const { user, isAdmin } = useOptimizedAuth();
   const [stats, setStats] = useState<DashboardStats>({
     totalTournaments: 0,
     activePairings: 0,
@@ -205,6 +205,7 @@ export default function MyDashboard() {
     { name: 'Community Rules', href: '/rules', icon: Users },
     { name: 'FAQ & Help', href: '/faq', icon: MessageSquare },
     { name: 'Contact Support', href: '/contact', icon: ExternalLink },
+    ...(isAdmin ? [{ name: 'Admin Dashboard', href: '/admin', icon: Settings }] : []),
   ];
 
   const isJudge = !!judgeProfile;
