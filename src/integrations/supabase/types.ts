@@ -66,6 +66,87 @@ export type Database = {
           },
         ]
       }
+      adjudicator_feedback: {
+        Row: {
+          comments: string | null
+          created_at: string
+          id: string
+          is_submitted: boolean
+          pairing_id: string
+          score: number | null
+          source_judge_id: string | null
+          source_registration_id: string | null
+          source_type: string
+          target_judge_id: string
+          tournament_id: string
+          updated_at: string
+        }
+        Insert: {
+          comments?: string | null
+          created_at?: string
+          id?: string
+          is_submitted?: boolean
+          pairing_id: string
+          score?: number | null
+          source_judge_id?: string | null
+          source_registration_id?: string | null
+          source_type: string
+          target_judge_id: string
+          tournament_id: string
+          updated_at?: string
+        }
+        Update: {
+          comments?: string | null
+          created_at?: string
+          id?: string
+          is_submitted?: boolean
+          pairing_id?: string
+          score?: number | null
+          source_judge_id?: string | null
+          source_registration_id?: string | null
+          source_type?: string
+          target_judge_id?: string
+          tournament_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adjudicator_feedback_pairing_id_fkey"
+            columns: ["pairing_id"]
+            isOneToOne: false
+            referencedRelation: "pairings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "adjudicator_feedback_source_judge_id_fkey"
+            columns: ["source_judge_id"]
+            isOneToOne: false
+            referencedRelation: "judge_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "adjudicator_feedback_source_registration_id_fkey"
+            columns: ["source_registration_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_registrations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "adjudicator_feedback_target_judge_id_fkey"
+            columns: ["target_judge_id"]
+            isOneToOne: false
+            referencedRelation: "judge_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "adjudicator_feedback_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       admin_notifications: {
         Row: {
           action_text: string | null
@@ -404,6 +485,7 @@ export type Database = {
           name: string
           rules: Json
           updated_at: string
+          uses_resolution: boolean
         }
         Insert: {
           created_at?: string
@@ -413,6 +495,7 @@ export type Database = {
           name: string
           rules?: Json
           updated_at?: string
+          uses_resolution?: boolean
         }
         Update: {
           created_at?: string
@@ -422,6 +505,7 @@ export type Database = {
           name?: string
           rules?: Json
           updated_at?: string
+          uses_resolution?: boolean
         }
         Relationships: []
       }
@@ -1261,6 +1345,61 @@ export type Database = {
           },
         ]
       }
+      participant_checkins: {
+        Row: {
+          checked_in_at: string
+          checked_in_by: string | null
+          checked_out_at: string | null
+          created_at: string
+          id: string
+          judge_profile_id: string | null
+          registration_id: string | null
+          tournament_id: string
+        }
+        Insert: {
+          checked_in_at?: string
+          checked_in_by?: string | null
+          checked_out_at?: string | null
+          created_at?: string
+          id?: string
+          judge_profile_id?: string | null
+          registration_id?: string | null
+          tournament_id: string
+        }
+        Update: {
+          checked_in_at?: string
+          checked_in_by?: string | null
+          checked_out_at?: string | null
+          created_at?: string
+          id?: string
+          judge_profile_id?: string | null
+          registration_id?: string | null
+          tournament_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "participant_checkins_judge_profile_id_fkey"
+            columns: ["judge_profile_id"]
+            isOneToOne: false
+            referencedRelation: "judge_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "participant_checkins_registration_id_fkey"
+            columns: ["registration_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_registrations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "participant_checkins_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_links: {
         Row: {
           created_at: string
@@ -1566,6 +1705,60 @@ export type Database = {
           },
         ]
       }
+      resolutions: {
+        Row: {
+          created_at: string
+          id: string
+          info_slide: string | null
+          is_released: boolean
+          released_at: string | null
+          resolution_text: string
+          round_id: string | null
+          seq: number
+          tournament_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          info_slide?: string | null
+          is_released?: boolean
+          released_at?: string | null
+          resolution_text: string
+          round_id?: string | null
+          seq?: number
+          tournament_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          info_slide?: string | null
+          is_released?: boolean
+          released_at?: string | null
+          resolution_text?: string
+          round_id?: string | null
+          seq?: number
+          tournament_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resolutions_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "rounds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "resolutions_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       results_recent: {
         Row: {
           created_at: string
@@ -1667,6 +1860,7 @@ export type Database = {
           created_at: string
           id: string
           name: string
+          resolution_released: boolean
           round_number: number
           scheduled_date: string | null
           status: string
@@ -1677,6 +1871,7 @@ export type Database = {
           created_at?: string
           id?: string
           name: string
+          resolution_released?: boolean
           round_number: number
           scheduled_date?: string | null
           status?: string
@@ -1687,6 +1882,7 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
+          resolution_released?: boolean
           round_number?: number
           scheduled_date?: string | null
           status?: string
@@ -2716,6 +2912,7 @@ export type Database = {
           auto_schedule_rounds: boolean | null
           ballot_reveal_mode: string
           cash_prize_total: number | null
+          check_in_enabled: boolean
           created_at: string
           created_by: string | null
           current_participants: number
@@ -2734,6 +2931,7 @@ export type Database = {
           registration_deadline: string | null
           registration_fee: number | null
           registration_open: boolean | null
+          resolutions_enabled: boolean
           round_count: number | null
           round_interval_days: number | null
           round_schedule_type: string | null
@@ -2752,6 +2950,7 @@ export type Database = {
           auto_schedule_rounds?: boolean | null
           ballot_reveal_mode?: string
           cash_prize_total?: number | null
+          check_in_enabled?: boolean
           created_at?: string
           created_by?: string | null
           current_participants?: number
@@ -2770,6 +2969,7 @@ export type Database = {
           registration_deadline?: string | null
           registration_fee?: number | null
           registration_open?: boolean | null
+          resolutions_enabled?: boolean
           round_count?: number | null
           round_interval_days?: number | null
           round_schedule_type?: string | null
@@ -2788,6 +2988,7 @@ export type Database = {
           auto_schedule_rounds?: boolean | null
           ballot_reveal_mode?: string
           cash_prize_total?: number | null
+          check_in_enabled?: boolean
           created_at?: string
           created_by?: string | null
           current_participants?: number
@@ -2806,6 +3007,7 @@ export type Database = {
           registration_deadline?: string | null
           registration_fee?: number | null
           registration_open?: boolean | null
+          resolutions_enabled?: boolean
           round_count?: number | null
           round_interval_days?: number | null
           round_schedule_type?: string | null

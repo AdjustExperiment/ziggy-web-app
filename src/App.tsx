@@ -49,7 +49,7 @@ const SponsorDashboard = React.lazy(() => import('@/pages/SponsorDashboard'));
 const Sponsors = React.lazy(() => import('@/pages/Sponsors'));
 const LearnAboutDebate = React.lazy(() => import('@/pages/LearnAboutDebate'));
 const TournamentDashboard = React.lazy(() => import('@/pages/TournamentDashboard'));
-const ParticipantPortal = React.lazy(() => import('@/pages/ParticipantPortal'));
+// ParticipantPortal consolidated into MyDashboard
 const MyDashboard = React.lazy(() => import('@/pages/MyDashboard'));
 const ObserverDashboard = React.lazy(() => import('@/pages/ObserverDashboard'));
 
@@ -116,11 +116,7 @@ function App() {
                         <TournamentDashboard />
                       </ProtectedRoute>
                     } />
-                    <Route path="/portal" element={
-                      <ProtectedRoute>
-                        <ParticipantPortal />
-                      </ProtectedRoute>
-                    } />
+                    <Route path="/portal" element={<Navigate to="/dashboard" replace />} />
                     <Route path="/pairings/:pairingId" element={
                       <ProtectedRoute>
                         <PairingDetail />

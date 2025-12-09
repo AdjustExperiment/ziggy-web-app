@@ -186,15 +186,7 @@ export default function TournamentRounds() {
         <p className="text-muted-foreground mt-2">Tournament rounds and pairings</p>
       </div>
 
-      {userRegistration && tournament.opt_outs_enabled && (
-        <div className="mb-8">
-          <RoundOptOutManager
-            tournamentId={tournamentId!}
-            registrationId={userRegistration.id}
-            optOutsEnabled={tournament.opt_outs_enabled}
-          />
-        </div>
-      )}
+      {/* Opt-out manager moved to Participation tab only */}
 
       <Tabs defaultValue="rounds" className="space-y-6">
         <TabsList>
