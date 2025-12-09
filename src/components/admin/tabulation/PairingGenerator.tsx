@@ -755,7 +755,8 @@ export function PairingGenerator({
         name: j.name,
         experienceYears: j.experience_years || 0,
         availableDates: availabilityMap.get(j.id) || [],
-        institution: undefined // Could fetch from profiles if needed
+        institution: undefined, // Could fetch from profiles if needed
+        specializations: j.specializations || []
       }));
 
       // Transform pairings to PairingInfo format
@@ -794,7 +795,8 @@ export function PairingGenerator({
         pairings: pairingInfos,
         conflicts: judgeConflicts,
         judgesPerRoom,
-        roundDate
+        roundDate,
+        formatKey
       });
 
       const assignments = allocator.allocate();
