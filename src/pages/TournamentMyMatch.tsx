@@ -2,6 +2,7 @@ import React from 'react';
 import { useParams } from 'react-router-dom';
 import { BackButton } from '@/components/ui/back-button';
 import { EnhancedMyMatch } from '@/components/EnhancedMyMatch';
+import { TournamentAnnouncements } from '@/components/TournamentAnnouncements';
 
 export default function TournamentMyMatch() {
   const { tournamentId } = useParams<{ tournamentId: string }>();
@@ -23,6 +24,9 @@ export default function TournamentMyMatch() {
             Manage your match details, chat, and schedule proposals
           </p>
         </div>
+
+        {/* Tournament Announcements */}
+        <TournamentAnnouncements tournamentId={tournamentId} />
 
         <EnhancedMyMatch />
       </div>

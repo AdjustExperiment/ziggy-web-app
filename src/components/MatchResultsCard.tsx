@@ -45,9 +45,12 @@ export function MatchResultsCard({
 
   const winner = ballot.payload?.winner;
   const isWinner = (winner === 'aff' && isAff) || (winner === 'neg' && !isAff);
-  const affSpeaks = ballot.payload?.aff_speaks;
-  const negSpeaks = ballot.payload?.neg_speaks;
-  const feedback = isAff ? ballot.payload?.aff_feedback : ballot.payload?.neg_feedback;
+  // Support both naming conventions: aff_speaks/neg_speaks and aff_points/neg_points
+  const affSpeaks = ballot.payload?.aff_speaks ?? ballot.payload?.aff_points;
+  const negSpeaks = ballot.payload?.neg_speaks ?? ballot.payload?.neg_points;
+  const feedback = isAff 
+    ? (ballot.payload?.aff_feedback ?? ballot.payload?.aff_comments) 
+    : (ballot.payload?.neg_feedback ?? ballot.payload?.neg_comments);
   const comments = ballot.payload?.comments;
 
   return (
