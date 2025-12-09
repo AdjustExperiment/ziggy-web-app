@@ -21,7 +21,8 @@ import {
   Zap,
   AlertTriangle,
   CheckCircle2,
-  Calendar
+  Calendar,
+  Printer
 } from 'lucide-react';
 import { DrawGenerator, Team, PairingHistory, DrawSettings, GeneratedPairing } from '@/lib/tabulation/drawGenerator';
 
@@ -648,14 +649,26 @@ export function PairingGenerator({
                 )}
                 
                 {pairings.length > 0 && (
-                  <Button
-                    onClick={releaseAllPairings}
-                    disabled={loading}
-                    variant="outline"
-                  >
-                    <Eye className="h-4 w-4 mr-2" />
-                    Release All
-                  </Button>
+                  <>
+                    <Button
+                      onClick={releaseAllPairings}
+                      disabled={loading}
+                      variant="outline"
+                    >
+                      <Eye className="h-4 w-4 mr-2" />
+                      Release All
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        const url = `/admin/print/${tournamentId}/${selectedRound}`;
+                        window.open(url, '_blank');
+                      }}
+                      variant="outline"
+                    >
+                      <Printer className="h-4 w-4 mr-2" />
+                      Print Postings
+                    </Button>
+                  </>
                 )}
                 
                 <Button
