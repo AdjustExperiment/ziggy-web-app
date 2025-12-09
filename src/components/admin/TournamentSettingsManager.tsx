@@ -2,6 +2,7 @@ import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TournamentRoleAccessManager } from './TournamentRoleAccessManager';
 import { TabulationSettingsManager } from './TabulationSettingsManager';
+import { TournamentBallotRevealSettings } from './TournamentBallotRevealSettings';
 
 interface TournamentSettingsManagerProps {
   tournamentId: string;
@@ -18,11 +19,16 @@ export function TournamentSettingsManager({ tournamentId }: TournamentSettingsMa
       <Tabs defaultValue="access" className="space-y-6">
         <TabsList>
           <TabsTrigger value="access">Role Access</TabsTrigger>
+          <TabsTrigger value="ballot-reveal">Ballot Reveal</TabsTrigger>
           <TabsTrigger value="tabulation">Tabulation (Beta)</TabsTrigger>
         </TabsList>
 
         <TabsContent value="access">
           <TournamentRoleAccessManager tournamentId={tournamentId} />
+        </TabsContent>
+
+        <TabsContent value="ballot-reveal">
+          <TournamentBallotRevealSettings tournamentId={tournamentId} />
         </TabsContent>
 
         <TabsContent value="tabulation">

@@ -3,21 +3,16 @@ import { NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   Trophy,
-  Calculator,
   CreditCard,
-  FileText,
   Users,
   Mail,
   Bell,
   BookOpen,
-  Settings,
   Tag,
   DollarSign,
   Shield,
   UserCog,
   FileX,
-  Eye,
-  Calendar,
   Gavel,
   UserCheck,
   Building2,
@@ -34,7 +29,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  useSidebar,
 } from '@/components/ui/sidebar';
 
 const menuItems = [
@@ -48,7 +42,6 @@ const menuItems = [
     title: 'Tournament Management',
     items: [
       { title: 'Tournaments', url: '/admin/tournaments', icon: Trophy },
-      { title: 'Tabulation', url: '/admin/tabulation', icon: Calculator },
       { title: 'Results', url: '/admin/results', icon: BarChart3 },
     ]
   },
@@ -81,7 +74,6 @@ const menuItems = [
   {
     title: 'System & Settings',
     items: [
-      { title: 'Ballot Reveal', url: '/admin/ballot-reveal', icon: Eye },
       { title: 'Website Builder', url: '/admin/site', icon: Palette },
       { title: 'Footer Content', url: '/admin/footer', icon: FileX },
       { title: 'Sponsors', url: '/admin/sponsors', icon: Building2 },

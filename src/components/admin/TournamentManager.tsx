@@ -22,6 +22,7 @@ import MultiJudgePanelManager from './MultiJudgePanelManager';
 import { TournamentContentManager } from './TournamentContentManager';
 import { TournamentObserversManager } from './TournamentObserversManager';
 import { TournamentSettingsManager } from './TournamentSettingsManager';
+import TabulationDashboard from './tabulation/TabulationDashboard';
 
 interface Tournament {
   id: string;
@@ -246,16 +247,21 @@ export function TournamentManager() {
 
       {(tournamentId || selectedTournamentId) ? (
         <Tabs defaultValue="details" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="details">Tournament Details</TabsTrigger>
+          <TabsList className="flex flex-wrap gap-1">
+            <TabsTrigger value="details">Details</TabsTrigger>
+            <TabsTrigger value="tabulation">Tabulation</TabsTrigger>
             <TabsTrigger value="content">Content</TabsTrigger>
-            <TabsTrigger value="panels">Multi-Judge Panels</TabsTrigger>
+            <TabsTrigger value="panels">Panels</TabsTrigger>
             <TabsTrigger value="observers">Observers</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
 
           <TabsContent value="details">
             {renderTournamentForm()}
+          </TabsContent>
+
+          <TabsContent value="tabulation">
+            <TabulationDashboard tournamentId={tournamentId || selectedTournamentId} />
           </TabsContent>
 
           <TabsContent value="content">
