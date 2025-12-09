@@ -154,15 +154,15 @@ const Login = () => {
             {/* Features */}
             <div className="space-y-4">
               <div className="flex items-center gap-3 text-foreground">
-                <Shield className="h-5 w-5 text-red-500" />
+                <Shield className="h-5 w-5 text-primary" />
                 <span>Secure authentication</span>
               </div>
               <div className="flex items-center gap-3 text-foreground">
-                <Users className="h-5 w-5 text-red-500" />
+                <Users className="h-5 w-5 text-primary" />
                 <span>Team collaboration tools</span>
               </div>
               <div className="flex items-center gap-3 text-foreground">
-                <User className="h-5 w-5 text-red-500" />
+                <User className="h-5 w-5 text-primary" />
                 <span>Personal performance tracking</span>
               </div>
             </div>
@@ -196,21 +196,21 @@ const Login = () => {
                   <TabsList className="grid w-full grid-cols-3 bg-muted border border-border">
                     <TabsTrigger 
                       value="user" 
-                      className="data-[state=active]:bg-red-500 data-[state=active]:text-white"
+                      className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
                     >
                       <User className="h-4 w-4 mr-2" />
                       User
                     </TabsTrigger>
                     <TabsTrigger 
                       value="team" 
-                      className="data-[state=active]:bg-red-500 data-[state=active]:text-white"
+                      className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
                     >
                       <Users className="h-4 w-4 mr-2" />
                       ZIP
                     </TabsTrigger>
                     <TabsTrigger 
                       value="admin" 
-                      className="data-[state=active]:bg-red-500 data-[state=active]:text-white"
+                      className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
                     >
                       <Shield className="h-4 w-4 mr-2" />
                       Admin
@@ -313,14 +313,14 @@ const Login = () => {
                           <input type="checkbox" className="rounded" />
                           Remember me
                         </label>
-                        <Button variant="link" className="text-red-500 hover:text-red-400 p-0" type="button">
+                        <Button variant="link" className="text-primary hover:text-primary/80 p-0" type="button">
                           Forgot password?
                         </Button>
                       </div>
 
                       <Button 
                         type="submit" 
-                        className="w-full bg-red-500 hover:bg-red-600 text-white touch-target" 
+                        className="w-full bg-primary hover:bg-primary/90 text-primary-foreground touch-target" 
                         disabled={formLoading}
                       >
                         {formLoading ? (
@@ -345,8 +345,8 @@ const Login = () => {
 
                   <TabsContent value="team" className="space-y-4">
                     <div className="text-center mb-4">
-                      <p className="text-sm text-muted-foreground mb-3">
-                        This login is for members of the <span className="text-red-500 font-medium">Ziggy Involvement Program</span>
+                        <p className="text-sm text-muted-foreground mb-3">
+                        This login is for members of the <span className="text-primary font-medium">Ziggy Involvement Program</span>
                       </p>
                     </div>
                     <form onSubmit={handleSubmit} className="space-y-4">
