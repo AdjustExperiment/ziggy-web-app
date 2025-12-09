@@ -954,6 +954,7 @@ export type Database = {
       }
       judge_profiles: {
         Row: {
+          alumni: boolean
           availability: Json
           bio: string | null
           created_at: string
@@ -970,6 +971,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          alumni?: boolean
           availability?: Json
           bio?: string | null
           created_at?: string
@@ -986,6 +988,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          alumni?: boolean
           availability?: Json
           bio?: string | null
           created_at?: string
@@ -2833,6 +2836,57 @@ export type Database = {
           },
           {
             foreignKeyName: "tournament_events_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tournament_judge_registrations: {
+        Row: {
+          created_at: string
+          id: string
+          judge_profile_id: string
+          notes: string | null
+          registered_at: string
+          status: string
+          tournament_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          judge_profile_id: string
+          notes?: string | null
+          registered_at?: string
+          status?: string
+          tournament_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          judge_profile_id?: string
+          notes?: string | null
+          registered_at?: string
+          status?: string
+          tournament_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tournament_judge_registrations_judge_profile_id_fkey"
+            columns: ["judge_profile_id"]
+            isOneToOne: false
+            referencedRelation: "judge_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_judge_registrations_tournament_id_fkey"
             columns: ["tournament_id"]
             isOneToOne: false
             referencedRelation: "tournaments"

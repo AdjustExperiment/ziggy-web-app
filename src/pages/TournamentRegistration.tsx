@@ -14,10 +14,12 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from '@/components/ui/use-toast';
 import PaymentButtons from '@/components/PaymentButtons';
 import { Registration } from '@/types/database';
-import { AlertCircle, CheckCircle, Info } from 'lucide-react';
+import { AlertCircle, CheckCircle, Info, Users, Gavel } from 'lucide-react';
 import PromoCodeInput from '@/components/PromoCodeInput';
 import { Separator } from '@/components/ui/separator';
 import { AuthModal } from '@/components/AuthModal';
+import { JudgeRegistration } from '@/components/JudgeRegistration';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 interface Tournament {
   id: string;
@@ -70,13 +72,67 @@ export default function TournamentRegistration() {
   const [discountAmount, setDiscountAmount] = useState(0);
   const [appliedPromoCode, setAppliedPromoCode] = useState('');
   const [paymentLinks, setPaymentLinks] = useState<{paypal?: string, venmo?: string}>({});
+  
+  // Role selection state
+  const [selectedRole, setSelectedRole] = useState<'competitor' | 'judge'>('competitor');
+  const [roleConflict, setRoleConflict] = useState<string | null>(null);
+  const [checkingConflict, setCheckingConflict] = useState(false);
 
   useEffect(() => {
     // Check if user is authenticated when component mounts
     if (!user) {
       setShowSignInModal(true);
+    } else if (id) {
+      checkRoleConflict();
     }
-  }, [user]);
+  }, [user, id]);
+
+  // Check for existing registrations when role changes
+  useEffect(() => {
+    if (user && id) {
+      checkRoleConflict();
+    }
+  }, [selectedRole]);
+
+  const checkRoleConflict = async () => {
+    if (!user || !id) return;
+    
+    setCheckingConflict(true);
+    setRoleConflict(null);
+    
+    try {
+      if (selectedRole === 'competitor') {
+        // Check if already registered as judge
+        const { data: judgeReg } = await supabase
+          .from('tournament_judge_registrations')
+          .select('id')
+          .eq('tournament_id', id)
+          .eq('user_id', user.id)
+          .neq('status', 'withdrawn')
+          .maybeSingle();
+        
+        if (judgeReg) {
+          setRoleConflict('You are already registered as a judge for this tournament. You cannot register as both a competitor and a judge in the same tournament.');
+        }
+      } else {
+        // Check if already registered as competitor
+        const { data: competitorReg } = await supabase
+          .from('tournament_registrations')
+          .select('id')
+          .eq('tournament_id', id)
+          .eq('user_id', user.id)
+          .maybeSingle();
+        
+        if (competitorReg) {
+          setRoleConflict('You are already registered as a competitor for this tournament. You cannot register as both a competitor and a judge in the same tournament.');
+        }
+      }
+    } catch (error) {
+      console.error('Error checking role conflict:', error);
+    } finally {
+      setCheckingConflict(false);
+    }
+  };
 
   useEffect(() => {
     const fetchTournament = async () => {
@@ -319,6 +375,65 @@ export default function TournamentRegistration() {
         // Refresh the page or handle success as needed
       }}
     />
+  );
+
+  const renderRoleSelection = () => (
+    <Card className="mb-6">
+      <CardHeader>
+        <CardTitle className="text-lg">How would you like to participate?</CardTitle>
+        <CardDescription>
+          Select whether you're registering as a competitor or a judge for this tournament.
+          Note: You can only register in one role per tournament.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <RadioGroup
+          value={selectedRole}
+          onValueChange={(value) => setSelectedRole(value as 'competitor' | 'judge')}
+          className="grid grid-cols-1 md:grid-cols-2 gap-4"
+        >
+          <div className={`relative flex cursor-pointer rounded-lg border p-4 ${selectedRole === 'competitor' ? 'border-primary bg-primary/5' : 'border-border'}`}>
+            <RadioGroupItem value="competitor" id="competitor" className="sr-only" />
+            <label htmlFor="competitor" className="flex items-start gap-3 cursor-pointer w-full">
+              <Users className="h-5 w-5 mt-0.5 text-primary" />
+              <div>
+                <div className="font-medium">Competitor</div>
+                <div className="text-sm text-muted-foreground">
+                  Register to compete in debate rounds
+                </div>
+              </div>
+            </label>
+          </div>
+          
+          <div className={`relative flex cursor-pointer rounded-lg border p-4 ${selectedRole === 'judge' ? 'border-primary bg-primary/5' : 'border-border'}`}>
+            <RadioGroupItem value="judge" id="judge" className="sr-only" />
+            <label htmlFor="judge" className="flex items-start gap-3 cursor-pointer w-full">
+              <Gavel className="h-5 w-5 mt-0.5 text-primary" />
+              <div>
+                <div className="font-medium">Judge</div>
+                <div className="text-sm text-muted-foreground">
+                  Register to judge debate rounds
+                </div>
+              </div>
+            </label>
+          </div>
+        </RadioGroup>
+
+        {checkingConflict && (
+          <div className="mt-4 flex items-center gap-2 text-muted-foreground">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+            <span className="text-sm">Checking registration status...</span>
+          </div>
+        )}
+
+        {roleConflict && (
+          <Alert variant="destructive" className="mt-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{roleConflict}</AlertDescription>
+          </Alert>
+        )}
+      </CardContent>
+    </Card>
   );
 
   const renderRegistrationForm = () => (
@@ -611,7 +726,22 @@ export default function TournamentRegistration() {
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
-            {step === 1 && renderRegistrationForm()}
+            {step === 1 && (
+              <>
+                {renderRoleSelection()}
+                {!roleConflict && selectedRole === 'competitor' && renderRegistrationForm()}
+                {!roleConflict && selectedRole === 'judge' && tournament && user && (
+                  <JudgeRegistration
+                    tournamentId={tournament.id}
+                    tournamentName={tournament.name}
+                    userId={user.id}
+                    userEmail={user.email || ''}
+                    onSuccess={() => navigate('/my-tournaments')}
+                    onCancel={() => navigate(`/tournament/${id}`)}
+                  />
+                )}
+              </>
+            )}
             {step === 3 && renderPaymentStep()}
           </div>
           
