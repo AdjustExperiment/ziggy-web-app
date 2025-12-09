@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useAuth } from '@/hooks/useAuth';
+import { useOptimizedAuth } from '@/hooks/useOptimizedAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { SpectateRequestManager } from '@/components/SpectateRequestManager';
@@ -70,7 +70,7 @@ interface Round {
 
 export default function TournamentPostings() {
   const { tournamentId } = useParams<{ tournamentId: string }>();
-  const { user } = useAuth();
+  const { user, isAdmin } = useOptimizedAuth();
   const { toast } = useToast();
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [rounds, setRounds] = useState<Round[]>([]);
@@ -267,13 +267,16 @@ export default function TournamentPostings() {
     );
   };
 
+  // Admins see all pairings, regular users see only their own
+  const displayPairings = isAdmin ? allPairings : pairings;
+  
   const filteredPairings = selectedRound === 'all' 
-    ? pairings 
-    : pairings.filter(p => p.round.id === selectedRound);
+    ? displayPairings 
+    : displayPairings.filter(p => p.round.id === selectedRound);
 
   const groupedPairings = rounds.map(round => ({
     round,
-    pairings: pairings.filter(p => p.round.id === round.id)
+    pairings: displayPairings.filter(p => p.round.id === round.id)
   })).filter(group => group.pairings.length > 0);
 
   if (loading) {
@@ -381,7 +384,7 @@ export default function TournamentPostings() {
           )}
 
           {/* Pairings Display */}
-          {!userRegistrationId ? (
+          {!userRegistrationId && !isAdmin ? (
             <Card>
               <CardContent className="text-center py-8">
                 <Trophy className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -396,7 +399,7 @@ export default function TournamentPostings() {
                 </Button>
               </CardContent>
             </Card>
-          ) : filteredPairings.length === 0 ? (
+          ) : (isAdmin ? allPairings : filteredPairings).length === 0 ? (
             <Card>
               <CardContent className="text-center py-8">
                 <Trophy className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
