@@ -189,6 +189,49 @@ export function BallotEntry({
       }
 
       if (status === 'submitted') {
+        // Check if tournament has auto_on_submit mode and notify competitors
+        const { data: pairing } = await supabase
+          .from('pairings')
+          .select(`
+            tournament_id,
+            aff_registration_id,
+            neg_registration_id,
+            rounds(name),
+            tournaments(ballot_reveal_mode)
+          `)
+          .eq('id', assignment.pairing_id)
+          .single();
+
+        if (pairing && (pairing.tournaments as any)?.ballot_reveal_mode === 'auto_on_submit') {
+          const roundName = (pairing.rounds as any)?.name || 'your round';
+          const notifications: any[] = [];
+          
+          if (pairing.aff_registration_id) {
+            notifications.push({
+              registration_id: pairing.aff_registration_id,
+              tournament_id: pairing.tournament_id,
+              pairing_id: assignment.pairing_id,
+              title: 'Ballot Submitted',
+              message: `Results for ${roundName} are now available. View your ballot feedback.`,
+              type: 'result_published'
+            });
+          }
+          if (pairing.neg_registration_id && pairing.neg_registration_id !== pairing.aff_registration_id) {
+            notifications.push({
+              registration_id: pairing.neg_registration_id,
+              tournament_id: pairing.tournament_id,
+              pairing_id: assignment.pairing_id,
+              title: 'Ballot Submitted',
+              message: `Results for ${roundName} are now available. View your ballot feedback.`,
+              type: 'result_published'
+            });
+          }
+
+          if (notifications.length > 0) {
+            await supabase.from('competitor_notifications').insert(notifications);
+          }
+        }
+
         onBallotSubmitted();
         onClose();
       }

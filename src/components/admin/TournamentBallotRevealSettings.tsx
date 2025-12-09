@@ -79,6 +79,46 @@ export function TournamentBallotRevealSettings({ tournamentId }: TournamentBallo
       
       if (error) throw error;
 
+      // Fetch pairings with submitted ballots and notify competitors
+      const { data: pairings } = await supabase
+        .from('pairings')
+        .select(`
+          id,
+          aff_registration_id,
+          neg_registration_id,
+          rounds(name)
+        `)
+        .eq('tournament_id', tournamentId);
+
+      const notifications: any[] = [];
+      for (const pairing of pairings || []) {
+        const roundName = (pairing.rounds as any)?.name || 'your round';
+        if (pairing.aff_registration_id) {
+          notifications.push({
+            registration_id: pairing.aff_registration_id,
+            tournament_id: tournamentId,
+            pairing_id: pairing.id,
+            title: 'Results Published',
+            message: `Results for ${roundName} are now available. View your ballot feedback.`,
+            type: 'result_published'
+          });
+        }
+        if (pairing.neg_registration_id && pairing.neg_registration_id !== pairing.aff_registration_id) {
+          notifications.push({
+            registration_id: pairing.neg_registration_id,
+            tournament_id: tournamentId,
+            pairing_id: pairing.id,
+            title: 'Results Published',
+            message: `Results for ${roundName} are now available. View your ballot feedback.`,
+            type: 'result_published'
+          });
+        }
+      }
+
+      if (notifications.length > 0) {
+        await supabase.from('competitor_notifications').insert(notifications);
+      }
+
       toast({
         title: "Results Revealed",
         description: `${data || 0} ballots have been revealed to competitors`,
