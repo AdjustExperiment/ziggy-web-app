@@ -59,12 +59,6 @@ export function Navbar() {
             
             {/* Desktop Navigation */}
             <div className="hidden lg:flex ml-8 items-baseline space-x-6">
-              {user && (
-                <Link to="/tournaments" className="flex items-center space-x-1 text-sm hover:text-primary transition-colors">
-                  <Trophy className="h-4 w-4" />
-                  <span>Tournaments</span>
-                </Link>
-              )}
 
               {/* Tournaments Dropdown */}
               <DropdownMenu>

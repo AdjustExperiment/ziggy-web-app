@@ -11,8 +11,6 @@ import {
   Youtube, 
   MessageCircle,
   Mail,
-  MapPin,
-  Phone,
   ExternalLink
 } from 'lucide-react';
 
@@ -26,7 +24,7 @@ interface FooterUpdate {
 export function Footer() {
   const [footerUpdate, setFooterUpdate] = useState<FooterUpdate>({
     title: 'Latest Update',
-    content: 'Spring 2024 registration is now open! Join hundreds of debaters competing nationally.',
+    content: 'Tournament registration is now open! Join hundreds of debaters competing nationally.',
     link_url: '/tournaments',
     link_text: 'Register Now'
   });
@@ -140,10 +138,6 @@ export function Footer() {
               <div className="flex items-center space-x-2">
                 <Mail className="h-4 w-4 text-primary" />
                 <span>contact@ziggyonlinedebate.com</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Phone className="h-4 w-4 text-primary" />
-                <span>(555) 123-ZIGGY</span>
               </div>
             </div>
           </div>

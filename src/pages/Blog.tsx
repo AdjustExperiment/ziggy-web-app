@@ -108,7 +108,7 @@ export default function Blog() {
                   className={`${
                     category === "All" 
                       ? "bg-red-500 hover:bg-red-600 text-white" 
-                      : "border-red-500/50 text-white hover:bg-red-500 hover:text-white"
+                      : "border-red-500/50 text-foreground hover:bg-red-500 hover:text-white"
                   } font-secondary`}
                 >
                   {category}
@@ -129,7 +129,6 @@ export default function Blog() {
                   <div className="h-64 md:h-full bg-gradient-to-br from-red-600/10 to-muted/50 flex items-center justify-center">
                     <div className="text-center">
                       <TrendingUp className="h-16 w-16 text-red-500 mx-auto mb-4" />
-                      <p className="text-muted-foreground font-secondary">Featured Article Image</p>
                     </div>
                   </div>
                   <Badge className="absolute top-4 left-4 bg-red-500 hover:bg-red-600 text-white font-secondary">
@@ -165,7 +164,10 @@ export default function Blog() {
                     </div>
                   </CardContent>
                   <CardFooter className="p-0">
-                    <Button className="bg-red-500 hover:bg-red-600 text-white font-secondary">
+                    <Button 
+                      className="bg-red-500 hover:bg-red-600 text-white font-secondary"
+                      onClick={() => window.location.href = `/blog/${post.id}`}
+                    >
                       Read Full Article <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </CardFooter>
@@ -184,8 +186,7 @@ export default function Blog() {
               <div className="h-48 bg-gradient-to-br from-red-600/10 to-muted/30 flex items-center justify-center relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-t from-background/50 to-transparent group-hover:from-background/70 transition-all duration-300"></div>
                 <div className="relative text-center z-10">
-                  <MessageSquare className="h-12 w-12 text-red-400 mx-auto mb-2 group-hover:text-red-300 transition-colors" />
-                  <p className="text-muted-foreground font-secondary text-sm">Article Visual</p>
+                  <MessageSquare className="h-12 w-12 text-red-400 mx-auto group-hover:text-red-300 transition-colors" />
                 </div>
                 <Badge className="absolute top-3 right-3 bg-red-500/80 hover:bg-red-500 text-white font-secondary text-xs">
                   {post.category}
@@ -225,7 +226,10 @@ export default function Blog() {
                 <Button variant="ghost" className="text-red-400 hover:text-red-300 hover:bg-red-500/10 font-secondary p-2">
                   <Share2 className="h-4 w-4" />
                 </Button>
-                <Button className="bg-red-500/10 hover:bg-red-500 text-white hover:text-white border-red-500/30 font-secondary">
+                <Button 
+                  className="bg-red-500/10 hover:bg-red-500 text-foreground hover:text-white border-red-500/30 font-secondary"
+                  onClick={() => window.location.href = `/blog/${post.id}`}
+                >
                   Read More <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </CardFooter>

@@ -204,9 +204,11 @@ const Login = () => {
                     <TabsTrigger 
                       value="team" 
                       className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                      title="Ziggy Involvement Program - For club members and volunteers"
                     >
                       <Users className="h-4 w-4 mr-2" />
-                      ZIP
+                      <span className="hidden sm:inline">ZIP Member</span>
+                      <span className="sm:hidden">ZIP</span>
                     </TabsTrigger>
                     <TabsTrigger 
                       value="admin" 

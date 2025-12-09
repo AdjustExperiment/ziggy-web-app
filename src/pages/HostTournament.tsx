@@ -79,15 +79,15 @@ const HostTournament = () => {
     <div className="min-h-screen bg-background relative overflow-hidden">
       <SectionFX variant="hero" intensity="medium" />
       
-      {/* Coming Soon Banner */}
+      {/* Announcement Banner */}
       <div className="bg-primary text-primary-foreground py-3 text-center relative z-20">
         <div className="flex items-center justify-center gap-2">
           <Sparkles className="h-5 w-5 animate-pulse" />
-          <span className="font-semibold">Coming Soon: Self-Service Tournament Hosting</span>
+          <span className="font-semibold">Host Your Tournament With Ziggy</span>
           <Sparkles className="h-5 w-5 animate-pulse" />
         </div>
         <p className="text-sm text-primary-foreground/80 mt-1">
-          Contact us now to be among the first to host your tournament on our platform!
+          Contact us to get started with tournament hosting on our platform!
         </p>
       </div>
 

@@ -4,16 +4,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Mail, MessageCircle, Phone, Clock, Send, ExternalLink } from "lucide-react";
+import { Mail, MessageCircle, Clock, Send, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 // Contact configuration - easily editable
 const CONTACT_CONFIG = {
-  email: "contact@debateweekly.org",
-  phone: "+1 (555) 123-4567",
-  googleChat: "debateweekly@chat.google.com",
-  messenger: "https://m.me/debateweekly",
+  email: "contact@ziggyonlinedebate.com",
+  googleChat: "ziggyonlinedebate@chat.google.com",
+  messenger: "https://m.me/ziggyonlinedebate",
   responseTime: "2 hours",
 };
 
@@ -96,18 +95,19 @@ const Contact = () => {
       actionLabel: CONTACT_CONFIG.email,
     },
     {
-      icon: Phone,
-      title: "Text / Call",
-      description: "Text or call us for quick support",
-      action: `sms:${CONTACT_CONFIG.phone}`,
-      actionLabel: CONTACT_CONFIG.phone,
-    },
-    {
       icon: MessageCircle,
       title: "Google Chat",
       description: "Chat with us on Google",
       action: `https://chat.google.com/dm/${CONTACT_CONFIG.googleChat}`,
       actionLabel: "Open Chat",
+      external: true,
+    },
+    {
+      icon: MessageCircle,
+      title: "Messenger",
+      description: "Message us on Facebook",
+      action: CONTACT_CONFIG.messenger,
+      actionLabel: "Open Messenger",
       external: true,
     },
     {
