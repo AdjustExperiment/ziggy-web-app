@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from '@/components/ui/use-toast';
-import { Users, Plus, Edit2, Trash2, Eye, EyeOff } from 'lucide-react';
+import { Users, Plus, Edit2, Trash2, Eye, EyeOff, Printer } from 'lucide-react';
 import { Pairing, Round, Registration } from '@/types/database';
 import { parseFormat, validateFormat } from '@/lib/formats';
 import { generateSwissPairings, TeamRecord } from '@/lib/pairings/swiss';
@@ -575,109 +575,123 @@ export function PairingsManager() {
                     Manage debate pairings for the selected round
                   </CardDescription>
                 </div>
-                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button onClick={openCreateDialog}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Pairing
+                <div className="flex gap-2">
+                  {pairings.length > 0 && (
+                    <Button
+                      onClick={() => {
+                        const url = `/admin/print/${selectedTournament}/${selectedRound}`;
+                        window.open(url, '_blank');
+                      }}
+                      variant="outline"
+                    >
+                      <Printer className="h-4 w-4 mr-2" />
+                      Print Postings
                     </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-2xl">
-                    <DialogHeader>
-                      <DialogTitle>
-                        {editingPairing ? 'Edit Pairing' : 'Create New Pairing'}
-                      </DialogTitle>
-                      <DialogDescription>
-                        Set up a debate pairing between two teams
-                      </DialogDescription>
-                    </DialogHeader>
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
+                  )}
+                  <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button onClick={openCreateDialog}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Pairing
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl">
+                      <DialogHeader>
+                        <DialogTitle>
+                          {editingPairing ? 'Edit Pairing' : 'Create New Pairing'}
+                        </DialogTitle>
+                        <DialogDescription>
+                          Set up a debate pairing between two teams
+                        </DialogDescription>
+                      </DialogHeader>
+                      <form onSubmit={handleSubmit} className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label>Affirmative Team</Label>
+                            <Select
+                              value={formData.aff_registration_id}
+                              onValueChange={(value) => setFormData(prev => ({ ...prev, aff_registration_id: value }))}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select AFF team" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {registrations.map(reg => (
+                                  <SelectItem key={reg.id} value={reg.id}>
+                                    {reg.participant_name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label>Negative Team</Label>
+                            <Select
+                              value={formData.neg_registration_id}
+                              onValueChange={(value) => setFormData(prev => ({ ...prev, neg_registration_id: value }))}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select NEG team" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {registrations.map(reg => (
+                                  <SelectItem key={reg.id} value={reg.id}>
+                                    {reg.participant_name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
                         <div>
-                          <Label>Affirmative Team</Label>
+                          <Label>Judge (Optional)</Label>
                           <Select
-                            value={formData.aff_registration_id}
-                            onValueChange={(value) => setFormData(prev => ({ ...prev, aff_registration_id: value }))}
+                            value={formData.judge_id}
+                            onValueChange={(value) => setFormData(prev => ({ ...prev, judge_id: value }))}
                           >
                             <SelectTrigger>
-                              <SelectValue placeholder="Select AFF team" />
+                              <SelectValue placeholder="Select judge" />
                             </SelectTrigger>
                             <SelectContent>
-                              {registrations.map(reg => (
-                                <SelectItem key={reg.id} value={reg.id}>
-                                  {reg.participant_name}
+                              <SelectItem value="none">No judge assigned</SelectItem>
+                              {judges.map(judge => (
+                                <SelectItem key={judge.id} value={judge.id}>
+                                  {judge.name}
                                 </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
                         </div>
-                        <div>
-                          <Label>Negative Team</Label>
-                          <Select
-                            value={formData.neg_registration_id}
-                            onValueChange={(value) => setFormData(prev => ({ ...prev, neg_registration_id: value }))}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select NEG team" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {registrations.map(reg => (
-                                <SelectItem key={reg.id} value={reg.id}>
-                                  {reg.participant_name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label>Room</Label>
+                            <Input
+                              value={formData.room}
+                              onChange={(e) => setFormData(prev => ({ ...prev, room: e.target.value }))}
+                              placeholder="Room assignment"
+                            />
+                          </div>
+                          <div>
+                            <Label>Scheduled Time</Label>
+                            <Input
+                              type="datetime-local"
+                              value={formData.scheduled_time}
+                              onChange={(e) => setFormData(prev => ({ ...prev, scheduled_time: e.target.value }))}
+                            />
+                          </div>
                         </div>
-                      </div>
-                      <div>
-                        <Label>Judge (Optional)</Label>
-                        <Select
-                          value={formData.judge_id}
-                          onValueChange={(value) => setFormData(prev => ({ ...prev, judge_id: value }))}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select judge" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">No judge assigned</SelectItem>
-                            {judges.map(judge => (
-                              <SelectItem key={judge.id} value={judge.id}>
-                                {judge.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label>Room</Label>
-                          <Input
-                            value={formData.room}
-                            onChange={(e) => setFormData(prev => ({ ...prev, room: e.target.value }))}
-                            placeholder="Room assignment"
-                          />
+                        <div className="flex justify-end gap-2 pt-4">
+                          <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                            Cancel
+                          </Button>
+                          <Button type="submit">
+                            {editingPairing ? 'Update' : 'Create'} Pairing
+                          </Button>
                         </div>
-                        <div>
-                          <Label>Scheduled Time</Label>
-                          <Input
-                            type="datetime-local"
-                            value={formData.scheduled_time}
-                            onChange={(e) => setFormData(prev => ({ ...prev, scheduled_time: e.target.value }))}
-                          />
-                        </div>
-                      </div>
-                      <div className="flex justify-end gap-2 pt-4">
-                        <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                          Cancel
-                        </Button>
-                        <Button type="submit">
-                          {editingPairing ? 'Update' : 'Create'} Pairing
-                        </Button>
-                      </div>
-                    </form>
-                  </DialogContent>
-                </Dialog>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
+                </div>
               </div>
             </CardHeader>
             <CardContent>

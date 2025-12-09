@@ -52,6 +52,7 @@ const TournamentDashboard = React.lazy(() => import('@/pages/TournamentDashboard
 // ParticipantPortal consolidated into MyDashboard
 const MyDashboard = React.lazy(() => import('@/pages/MyDashboard'));
 const ObserverDashboard = React.lazy(() => import('@/pages/ObserverDashboard'));
+const PrintPostings = React.lazy(() => import('@/pages/PrintPostings'));
 
 // Loading component for Suspense fallback
 const PageLoader = () => (
@@ -147,6 +148,11 @@ function App() {
                      <Route path="/admin/*" element={
                        <ProtectedRoute>
                          <AdminDashboard />
+                       </ProtectedRoute>
+                     } />
+                     <Route path="/admin/print/:tournamentId/:roundId" element={
+                       <ProtectedRoute>
+                         <PrintPostings />
                        </ProtectedRoute>
                      } />
                      <Route path="/getting-started" element={<GettingStarted />} />

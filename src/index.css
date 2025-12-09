@@ -392,3 +392,364 @@ All colors MUST be HSL.
     }
   }
 }
+
+/* ===== PRINT STYLES ===== */
+@media print {
+  @page {
+    size: landscape;
+    margin: 0.5in;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+    font-family: 'Unbounded', 'Hagrid', 'Arial', sans-serif;
+    font-size: 11pt;
+    line-height: 1.4;
+  }
+
+  .no-print,
+  nav,
+  footer:not(.print-footer),
+  .navbar,
+  .sidebar,
+  button:not(.print-button) {
+    display: none !important;
+  }
+
+  .print-container {
+    padding: 0;
+    max-width: 100%;
+  }
+
+  .print-header {
+    text-align: center;
+    margin-bottom: 0.5in;
+    border-bottom: 2px solid #333;
+    padding-bottom: 0.25in;
+  }
+
+  .print-tournament-name {
+    font-size: 20pt;
+    font-weight: bold;
+    margin: 0 0 4pt 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .print-event-name {
+    font-size: 14pt;
+    font-weight: 600;
+    margin: 0 0 4pt 0;
+    color: #444;
+  }
+
+  .print-round-name {
+    font-size: 16pt;
+    font-weight: bold;
+    margin: 0 0 4pt 0;
+    text-transform: uppercase;
+  }
+
+  .print-date {
+    font-size: 10pt;
+    color: #666;
+    margin: 0;
+  }
+
+  .print-resolution {
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    padding: 8pt 12pt;
+    margin-bottom: 0.25in;
+    font-size: 10pt;
+    font-style: italic;
+  }
+
+  .print-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 0.25in;
+  }
+
+  .print-table th {
+    background: #333 !important;
+    color: white !important;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 9pt;
+    letter-spacing: 0.5px;
+    padding: 8pt 10pt;
+    text-align: left;
+    border: 1px solid #333;
+  }
+
+  .print-th-room {
+    width: 10%;
+    text-align: center !important;
+  }
+
+  .print-th-team {
+    width: 28%;
+  }
+
+  .print-th-judge {
+    width: 24%;
+  }
+
+  .print-th-time {
+    width: 10%;
+    text-align: center !important;
+  }
+
+  .print-table td {
+    border: 1px solid #333;
+    padding: 8pt 10pt;
+    vertical-align: top;
+    font-size: 11pt;
+  }
+
+  .print-td-room {
+    text-align: center;
+    font-weight: bold;
+    font-size: 14pt;
+  }
+
+  .print-td-time {
+    text-align: center;
+  }
+
+  .print-team-name {
+    font-weight: 600;
+    font-size: 11pt;
+  }
+
+  .print-team-school {
+    font-size: 9pt;
+    color: #666;
+    font-style: italic;
+  }
+
+  .print-row-even {
+    background: white !important;
+  }
+
+  .print-row-odd {
+    background: #f9f9f9 !important;
+  }
+
+  .print-footer {
+    text-align: center;
+    font-size: 8pt;
+    color: #666;
+    border-top: 1px solid #ccc;
+    padding-top: 8pt;
+    margin-top: 0.25in;
+  }
+
+  .print-no-postings {
+    text-align: center;
+    padding: 1in 0;
+    font-size: 14pt;
+    color: #666;
+  }
+}
+
+/* Screen styles for print preview page */
+.print-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: hsl(var(--background));
+  min-height: 100vh;
+}
+
+.print-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  border-bottom: 2px solid hsl(var(--border));
+  padding-bottom: 1rem;
+}
+
+.print-tournament-name {
+  font-size: 2rem;
+  font-weight: bold;
+  margin: 0 0 0.25rem 0;
+  color: hsl(var(--foreground));
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.print-event-name {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 0.25rem 0;
+  color: hsl(var(--primary));
+}
+
+.print-round-name {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin: 0 0 0.25rem 0;
+  text-transform: uppercase;
+  color: hsl(var(--foreground));
+}
+
+.print-date {
+  font-size: 0.875rem;
+  color: hsl(var(--muted-foreground));
+  margin: 0;
+}
+
+.print-resolution {
+  background: hsl(var(--muted));
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.5rem;
+  padding: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.875rem;
+}
+
+.print-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1.5rem;
+}
+
+.print-table th {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  font-weight: bold;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.5px;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border: 1px solid hsl(var(--border));
+}
+
+.print-th-room {
+  width: 10%;
+  text-align: center !important;
+}
+
+.print-th-team {
+  width: 28%;
+}
+
+.print-th-judge {
+  width: 24%;
+}
+
+.print-th-time {
+  width: 10%;
+  text-align: center !important;
+}
+
+.print-table td {
+  border: 1px solid hsl(var(--border));
+  padding: 0.75rem 1rem;
+  vertical-align: top;
+  font-size: 0.875rem;
+  color: hsl(var(--foreground));
+}
+
+.print-td-room {
+  text-align: center;
+  font-weight: bold;
+  font-size: 1.125rem;
+}
+
+.print-td-time {
+  text-align: center;
+}
+
+.print-team-name {
+  font-weight: 600;
+}
+
+.print-team-school {
+  font-size: 0.75rem;
+  color: hsl(var(--muted-foreground));
+  font-style: italic;
+}
+
+.print-row-even {
+  background: hsl(var(--background));
+}
+
+.print-row-odd {
+  background: hsl(var(--muted));
+}
+
+.print-footer {
+  text-align: center;
+  font-size: 0.75rem;
+  color: hsl(var(--muted-foreground));
+  border-top: 1px solid hsl(var(--border));
+  padding-top: 1rem;
+  margin-top: 1.5rem;
+}
+
+.print-no-postings {
+  text-align: center;
+  padding: 3rem 0;
+  font-size: 1.125rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.print-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid hsl(var(--border));
+}
+
+.print-button {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border: none;
+  padding: 0.75rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.print-button:hover {
+  opacity: 0.9;
+}
+
+.print-button-secondary {
+  background: hsl(var(--secondary));
+  color: hsl(var(--secondary-foreground));
+  border: 1px solid hsl(var(--border));
+  padding: 0.75rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.print-button-secondary:hover {
+  opacity: 0.9;
+}
+
+.print-loading,
+.print-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  color: hsl(var(--muted-foreground));
+}
