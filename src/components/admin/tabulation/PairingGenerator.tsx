@@ -204,19 +204,41 @@ export function PairingGenerator({
     if (!selectedRound) return;
 
     try {
+      // Fetch pairings without judge_profiles to avoid RLS issues
       const { data, error } = await supabase
         .from('pairings')
         .select(`
           *,
           aff_registration:tournament_registrations!aff_registration_id(participant_name, school_organization),
-          neg_registration:tournament_registrations!neg_registration_id(participant_name, school_organization),
-          judge_profiles(name)
+          neg_registration:tournament_registrations!neg_registration_id(participant_name, school_organization)
         `)
         .eq('round_id', selectedRound)
         .order('room_rank', { ascending: true, nullsFirst: false });
 
       if (error) throw error;
-      setPairings(data || []);
+
+      // Fetch judge names separately for pairings that have judges assigned
+      const judgeIds = [...new Set((data || []).map(p => p.judge_id).filter(Boolean))];
+      let judgeMap: Record<string, string> = {};
+      
+      if (judgeIds.length > 0) {
+        const { data: judgeData } = await supabase
+          .from('judge_profiles')
+          .select('id, name')
+          .in('id', judgeIds);
+        
+        if (judgeData) {
+          judgeMap = Object.fromEntries(judgeData.map(j => [j.id, j.name]));
+        }
+      }
+
+      // Merge judge names into pairings
+      const pairingsWithJudges = (data || []).map(p => ({
+        ...p,
+        judge_profiles: p.judge_id ? { name: judgeMap[p.judge_id] || 'Unknown' } : null
+      }));
+
+      setPairings(pairingsWithJudges);
     } catch (error: any) {
       console.error('Error fetching pairings:', error);
     }
