@@ -25,6 +25,7 @@ import { TournamentContentManager } from './TournamentContentManager';
 import { TournamentObserversManager } from './TournamentObserversManager';
 import { TournamentSettingsManager } from './TournamentSettingsManager';
 import TabulationDashboard from './tabulation/TabulationDashboard';
+import { useOptimizedAuth } from '@/hooks/useOptimizedAuth';
 
 interface Tournament {
   id: string;
@@ -51,6 +52,7 @@ interface Tournament {
 export function TournamentManager() {
   const { tournamentId } = useParams();
   const navigate = useNavigate();
+  const { isAdmin, adminScope } = useOptimizedAuth();
   const [formData, setFormData] = useState<Tournament>({
     id: '',
     name: '',
@@ -90,14 +92,24 @@ export function TournamentManager() {
 
   const fetchTournaments = async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('tournaments')
         .select(`
           id, name, description, start_date, end_date, location, status, opt_outs_enabled,
           format, registration_fee, max_participants, current_participants, registration_deadline,
           cash_prize_total, prize_pool, prize_items, sponsors, tournament_info, registration_open
-        `)
-        .order('name');
+        `);
+
+      // Filter to accessible tournaments for non-global admins
+      if (!isAdmin && adminScope.accessibleTournamentIds.length > 0) {
+        query = query.in('id', adminScope.accessibleTournamentIds);
+      } else if (!isAdmin && adminScope.accessibleTournamentIds.length === 0) {
+        // No access to any tournaments
+        setTournaments([]);
+        return;
+      }
+
+      const { data, error } = await query.order('name');
 
       if (error) throw error;
       setTournaments((data || []).map(t => ({
@@ -288,24 +300,29 @@ export function TournamentManager() {
             </Select>
           )}
           
-          {activeTournamentId && (
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                setSelectedTournamentId('');
-                setShowCreateForm(true);
-              }}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Create New
-            </Button>
-          )}
+          {/* Only global admins or org admins can create tournaments */}
+          {(isAdmin || adminScope.organizationAdmins.length > 0) && (
+            <>
+              {activeTournamentId && (
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setSelectedTournamentId('');
+                    setShowCreateForm(true);
+                  }}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create New
+                </Button>
+              )}
 
-          {!activeTournamentId && !showCreateForm && (
-            <Button onClick={() => setShowCreateForm(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Create Tournament
-            </Button>
+              {!activeTournamentId && !showCreateForm && (
+                <Button onClick={() => setShowCreateForm(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Tournament
+                </Button>
+              )}
+            </>
           )}
         </div>
       </div>
