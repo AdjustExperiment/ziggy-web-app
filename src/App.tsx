@@ -46,6 +46,9 @@ const TournamentDashboard = React.lazy(() => import('@/pages/TournamentDashboard
 const MyDashboard = React.lazy(() => import('@/pages/MyDashboard'));
 const ObserverDashboard = React.lazy(() => import('@/pages/ObserverDashboard'));
 const PrintPostings = React.lazy(() => import('@/pages/PrintPostings'));
+const HostTournament = React.lazy(() => import('@/pages/HostTournament'));
+const ClubPartners = React.lazy(() => import('@/pages/ClubPartners'));
+const Ambassador = React.lazy(() => import('@/pages/Ambassador'));
 
 // Loading component for Suspense fallback
 const PageLoader = () => (
@@ -155,6 +158,9 @@ function App() {
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/rules" element={<Rules />} />
               <Route path="/learn-about-debate" element={<LearnAboutDebate />} />
+              <Route path="/host-tournament" element={<HostTournament />} />
+              <Route path="/club-partners" element={<ClubPartners />} />
+              <Route path="/ambassador" element={<Ambassador />} />
               <Route path="/terms" element={<Navigate to="/rules" replace />} />
               <Route path="/analytics" element={<Analytics />} />
               <Route path="*" element={<NotFound />} />

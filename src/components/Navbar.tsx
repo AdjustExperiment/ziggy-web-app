@@ -66,12 +66,81 @@ export function Navbar() {
                 </Link>
               )}
 
-              {/* About Dropdown */}
+              {/* Tournaments Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="flex items-center space-x-1 text-xs hover:text-primary transition-colors p-0 h-auto">
+                    <Trophy className="h-4 w-4" />
+                    <span>Tournaments</span>
+                    <ChevronDown className="h-3 w-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="z-[60]">
+                  <DropdownMenuItem asChild>
+                    <Link to="/tournaments" className="flex items-center">
+                      <Trophy className="mr-2 h-4 w-4" />
+                      <span>Browse Tournaments</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/results" className="flex items-center">
+                      <BarChart3 className="mr-2 h-4 w-4" />
+                      <span>Results</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/host-tournament" className="flex items-center">
+                      <Calendar className="mr-2 h-4 w-4" />
+                      <span>Host a Tournament</span>
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Partners Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="flex items-center space-x-1 text-xs hover:text-primary transition-colors p-0 h-auto">
+                    <Users className="h-4 w-4" />
+                    <span>Partners</span>
+                    <ChevronDown className="h-3 w-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="z-[60]">
+                  <DropdownMenuItem asChild>
+                    <Link to="/club-partners" className="flex items-center">
+                      <Users className="mr-2 h-4 w-4" />
+                      <span>Club Partners</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/ambassador" className="flex items-center">
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Ambassador Program</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/sponsors" className="flex items-center">
+                      <Trophy className="mr-2 h-4 w-4" />
+                      <span>Sponsors</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/sponsor" className="flex items-center">
+                      <Users className="mr-2 h-4 w-4" />
+                      <span>Become a Sponsor</span>
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Resources Dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="flex items-center space-x-1 text-xs hover:text-primary transition-colors p-0 h-auto">
                     <Info className="h-4 w-4" />
-                    <span>About</span>
+                    <span>Resources</span>
                     <ChevronDown className="h-3 w-3" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -83,33 +152,9 @@ export function Navbar() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link to="/features" className="flex items-center">
-                      <Trophy className="mr-2 h-4 w-4" />
-                      <span>Features</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
                     <Link to="/getting-started" className="flex items-center">
                       <FileText className="mr-2 h-4 w-4" />
                       <span>Getting Started</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/contact" className="flex items-center">
-                      <Users className="mr-2 h-4 w-4" />
-                      <span>Contact</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/sponsor" className="flex items-center">
-                      <Users className="mr-2 h-4 w-4" />
-                      <span>Become a Sponsor</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/faq" className="flex items-center">
-                      <HelpCircle className="mr-2 h-4 w-4" />
-                      <span>FAQ</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
@@ -124,22 +169,25 @@ export function Navbar() {
                       <span>Rules</span>
                     </Link>
                   </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/faq" className="flex items-center">
+                      <HelpCircle className="mr-2 h-4 w-4" />
+                      <span>FAQ</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/contact" className="flex items-center">
+                      <Users className="mr-2 h-4 w-4" />
+                      <span>Contact</span>
+                    </Link>
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-
-              <Link to="/results" className="flex items-center space-x-1 text-xs hover:text-primary transition-colors">
-                <BarChart3 className="h-4 w-4" />
-                <span>Results</span>
-              </Link>
 
               <Link to="/blog" className="flex items-center space-x-1 text-xs hover:text-primary transition-colors">
                 <FileText className="h-4 w-4" />
                 <span>Blog</span>
-              </Link>
-
-              <Link to="/sponsors" className="flex items-center space-x-1 text-xs hover:text-primary transition-colors">
-                <Users className="h-4 w-4" />
-                <span>Sponsors</span>
               </Link>
             </div>
           </div>

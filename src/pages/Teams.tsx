@@ -96,7 +96,7 @@ const teamStats = [
 
 const recentAchievements = [
   {
-    tournament: "National Championship",
+    tournament: "Championship Finals",
     position: "1st Place",
     date: "March 2024",
     members: ["Sarah Chen", "Michael Rodriguez"],
