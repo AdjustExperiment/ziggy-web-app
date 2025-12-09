@@ -20,6 +20,7 @@ import {
 interface StandingsViewProps {
   tournamentId: string;
   registrations: any[];
+  eventId?: string | null;
 }
 
 interface TeamStanding {
@@ -38,7 +39,7 @@ interface TeamStanding {
 type SortField = 'rank' | 'wins' | 'totalSpeaks' | 'avgSpeaks' | 'opponentWins';
 type SortOrder = 'asc' | 'desc';
 
-export function StandingsView({ tournamentId, registrations }: StandingsViewProps) {
+export function StandingsView({ tournamentId, registrations, eventId }: StandingsViewProps) {
   const { toast } = useToast();
   const [standings, setStandings] = useState<TeamStanding[]>([]);
   const [loading, setLoading] = useState(true);
@@ -109,7 +110,7 @@ export function StandingsView({ tournamentId, registrations }: StandingsViewProp
   // Fallback calculation from pairings
   const calculateFromPairings = async () => {
     try {
-      const { data: pairings, error: pairingsError } = await supabase
+      let query = supabase
         .from('pairings')
         .select(`
           *,
@@ -117,6 +118,13 @@ export function StandingsView({ tournamentId, registrations }: StandingsViewProp
           neg_registration:tournament_registrations!neg_registration_id(*)
         `)
         .eq('tournament_id', tournamentId);
+
+      // Filter by event if specified
+      if (eventId) {
+        query = query.eq('event_id', eventId);
+      }
+
+      const { data: pairings, error: pairingsError } = await query;
 
       if (pairingsError) throw pairingsError;
 

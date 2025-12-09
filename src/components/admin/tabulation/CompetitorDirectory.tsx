@@ -30,9 +30,10 @@ interface CompetitorStats {
 
 interface CompetitorDirectoryProps {
   tournamentId: string;
+  eventId?: string | null;
 }
 
-export function CompetitorDirectory({ tournamentId }: CompetitorDirectoryProps) {
+export function CompetitorDirectory({ tournamentId, eventId }: CompetitorDirectoryProps) {
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [competitorStats, setCompetitorStats] = useState<Map<string, CompetitorStats>>(new Map());
@@ -48,14 +49,20 @@ export function CompetitorDirectory({ tournamentId }: CompetitorDirectoryProps) 
       fetchRegistrations();
       fetchCompetitorStats();
     }
-  }, [tournamentId]);
+  }, [tournamentId, eventId]);
 
   const fetchRegistrations = async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('tournament_registrations')
-        .select('id, participant_name, participant_email, school_organization, partner_name, payment_status, emergency_contact')
+        .select('id, participant_name, participant_email, school_organization, partner_name, payment_status, emergency_contact, event_id')
         .eq('tournament_id', tournamentId);
+
+      if (eventId) {
+        query = query.eq('event_id', eventId);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setRegistrations(data || []);

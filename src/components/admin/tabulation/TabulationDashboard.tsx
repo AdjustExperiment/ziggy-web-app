@@ -23,6 +23,18 @@ interface TabulationDashboardProps {
   tournamentId: string;
 }
 
+interface TournamentEvent {
+  id: string;
+  name: string;
+  short_code: string;
+  format_id: string | null;
+  debate_formats?: {
+    id: string;
+    name: string;
+    key: string;
+  } | null;
+}
+
 export default function TabulationDashboard({ tournamentId }: TabulationDashboardProps) {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('draw');
@@ -32,6 +44,10 @@ export default function TabulationDashboard({ tournamentId }: TabulationDashboar
   const [tournament, setTournament] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [fetchErrors, setFetchErrors] = useState<string[]>([]);
+  
+  // Multi-format support
+  const [events, setEvents] = useState<TournamentEvent[]>([]);
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
 
   useEffect(() => {
     if (tournamentId) {
@@ -61,6 +77,22 @@ export default function TabulationDashboard({ tournamentId }: TabulationDashboar
       } else {
         console.log('[TabulationDashboard] Tournament fetched:', tournamentData?.name);
         setTournament(tournamentData);
+      }
+
+      // Fetch tournament events
+      console.log('[TabulationDashboard] Fetching events...');
+      const { data: eventsData, error: eventsError } = await supabase
+        .from('tournament_events')
+        .select('*, debate_formats(*)')
+        .eq('tournament_id', tournamentId)
+        .eq('is_active', true)
+        .order('name');
+
+      if (eventsError) {
+        console.error('[TabulationDashboard] Events fetch error:', eventsError);
+      } else {
+        console.log('[TabulationDashboard] Events fetched:', eventsData?.length);
+        setEvents(eventsData || []);
       }
 
       // Fetch rounds
@@ -162,9 +194,23 @@ export default function TabulationDashboard({ tournamentId }: TabulationDashboar
     }
   };
 
+  // Filter data by selected event
+  const filteredRounds = selectedEventId 
+    ? rounds.filter(r => r.event_id === selectedEventId)
+    : rounds;
+  
+  const filteredRegistrations = selectedEventId
+    ? registrations.filter(r => r.event_id === selectedEventId)
+    : registrations;
+
+  // Get the selected event's format key for judge filtering
+  const selectedEvent = events.find(e => e.id === selectedEventId);
+  const selectedFormatKey = selectedEvent?.debate_formats?.key || null;
+
   const showResolutions = tournament?.resolutions_enabled;
   const showCheckIn = tournament?.check_in_enabled;
   const isPlanningPhase = tournament?.status === 'Planning Phase';
+  const hasMultipleEvents = events.length > 1;
 
   if (loading) {
     return (
@@ -189,6 +235,42 @@ export default function TabulationDashboard({ tournamentId }: TabulationDashboar
           </Badge>
         )}
       </div>
+
+      {/* Event/Format Selector (for multi-format tournaments) */}
+      {hasMultipleEvents && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-sm font-medium text-muted-foreground mr-2">Event:</span>
+          <Badge 
+            variant={!selectedEventId ? 'default' : 'outline'}
+            className="cursor-pointer hover:bg-primary/80"
+            onClick={() => setSelectedEventId(null)}
+          >
+            All Events
+          </Badge>
+          {events.map(event => (
+            <Badge 
+              key={event.id}
+              variant={selectedEventId === event.id ? 'default' : 'outline'}
+              className="cursor-pointer hover:bg-primary/80"
+              onClick={() => setSelectedEventId(event.id)}
+            >
+              {event.short_code}
+            </Badge>
+          ))}
+        </div>
+      )}
+
+      {/* Selected Event Info */}
+      {selectedEventId && selectedEvent && (
+        <Alert>
+          <Info className="h-4 w-4" />
+          <AlertTitle>Viewing: {selectedEvent.name}</AlertTitle>
+          <AlertDescription>
+            Showing data filtered to {selectedEvent.short_code} format only. 
+            {selectedEvent.debate_formats?.name && ` (${selectedEvent.debate_formats.name})`}
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Planning Phase Warning */}
       {isPlanningPhase && (
@@ -222,14 +304,18 @@ export default function TabulationDashboard({ tournamentId }: TabulationDashboar
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="pt-4">
-            <div className="text-2xl font-bold">{registrations.length}</div>
-            <p className="text-sm text-muted-foreground">Competitors</p>
+            <div className="text-2xl font-bold">{filteredRegistrations.length}</div>
+            <p className="text-sm text-muted-foreground">
+              Competitors {selectedEventId && `(${selectedEvent?.short_code})`}
+            </p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4">
-            <div className="text-2xl font-bold">{rounds.length}</div>
-            <p className="text-sm text-muted-foreground">Rounds</p>
+            <div className="text-2xl font-bold">{filteredRounds.length}</div>
+            <p className="text-sm text-muted-foreground">
+              Rounds {selectedEventId && `(${selectedEvent?.short_code})`}
+            </p>
           </CardContent>
         </Card>
         <Card>
@@ -241,7 +327,7 @@ export default function TabulationDashboard({ tournamentId }: TabulationDashboar
         <Card>
           <CardContent className="pt-4">
             <div className="text-2xl font-bold">
-              {rounds.filter(r => r.status === 'completed').length}/{rounds.length}
+              {filteredRounds.filter(r => r.status === 'completed').length}/{filteredRounds.length}
             </div>
             <p className="text-sm text-muted-foreground">Completed</p>
           </CardContent>
@@ -266,20 +352,28 @@ export default function TabulationDashboard({ tournamentId }: TabulationDashboar
         <TabsContent value="draw">
           <PairingGenerator 
             tournamentId={tournamentId}
-            rounds={rounds}
-            registrations={registrations}
+            rounds={filteredRounds}
+            registrations={filteredRegistrations}
             judges={judges}
             onRoundsUpdate={handleRoundsUpdate}
             onToggleRoundLock={handleToggleRoundLock}
+            eventId={selectedEventId}
+            formatKey={selectedFormatKey}
           />
         </TabsContent>
 
         <TabsContent value="competitors">
-          <CompetitorDirectory tournamentId={tournamentId} />
+          <CompetitorDirectory 
+            tournamentId={tournamentId} 
+            eventId={selectedEventId}
+          />
         </TabsContent>
 
         <TabsContent value="spreadsheet">
-          <SpreadsheetView tournamentId={tournamentId} />
+          <SpreadsheetView 
+            tournamentId={tournamentId} 
+            eventId={selectedEventId}
+          />
         </TabsContent>
 
         <TabsContent value="participation">
@@ -299,14 +393,15 @@ export default function TabulationDashboard({ tournamentId }: TabulationDashboar
         <TabsContent value="results">
           <StandingsView 
             tournamentId={tournamentId}
-            registrations={registrations}
+            registrations={filteredRegistrations}
+            eventId={selectedEventId}
           />
         </TabsContent>
 
         <TabsContent value="breaks">
           <BreakManagerWrapper 
             tournamentId={tournamentId}
-            registrations={registrations}
+            registrations={filteredRegistrations}
           />
         </TabsContent>
 
@@ -314,7 +409,7 @@ export default function TabulationDashboard({ tournamentId }: TabulationDashboar
           <TabsContent value="resolutions">
             <ResolutionsManager 
               tournamentId={tournamentId}
-              rounds={rounds}
+              rounds={filteredRounds}
             />
           </TabsContent>
         )}
@@ -322,7 +417,7 @@ export default function TabulationDashboard({ tournamentId }: TabulationDashboar
         <TabsContent value="constraints">
           <ConstraintsManager 
             tournamentId={tournamentId}
-            registrations={registrations}
+            registrations={filteredRegistrations}
             judges={judges}
           />
         </TabsContent>
