@@ -11,15 +11,19 @@ import { MyJudgings } from '@/components/MyJudgings';
 import JudgeAvailability from '@/components/JudgeAvailability';
 import WeeklyAvailabilityTab from '@/components/WeeklyAvailabilityTab';
 import JudgeNotifications from '@/components/JudgeNotifications';
+import { JudgeProfileEditor } from '@/components/JudgeProfileEditor';
 
 interface JudgeProfile {
   id: string;
   name: string;
   email: string;
+  phone?: string;
   experience_level: string;
+  experience_years?: number;
   qualifications: string;
   bio: string;
   availability?: any;
+  specializations?: string[];
 }
 
 interface JudgeStats {
@@ -44,9 +48,17 @@ export default function JudgeDashboard() {
   useEffect(() => {
     if (user) {
       fetchJudgeProfile();
-      fetchJudgeStats();
     }
   }, [user]);
+
+  // Fetch stats once judge profile is available
+  useEffect(() => {
+    if (judgeProfile?.id) {
+      fetchJudgeStats();
+    } else {
+      setLoading(false);
+    }
+  }, [judgeProfile?.id]);
 
   const fetchJudgeProfile = async () => {
     try {
@@ -312,60 +324,10 @@ export default function JudgeDashboard() {
         </TabsContent>
 
         <TabsContent value="profile">
-          <Card>
-            <CardHeader>
-              <CardTitle>Profile Management</CardTitle>
-              <CardDescription>
-                View and update your judge profile information
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <h4 className="font-medium mb-2">Personal Information</h4>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="font-medium">Name:</span> {judgeProfile.name}
-                    </div>
-                    <div>
-                      <span className="font-medium">Email:</span> {judgeProfile.email}
-                    </div>
-                  </div>
-                </div>
-                
-                <div>
-                  <h4 className="font-medium mb-2">Experience Level</h4>
-                  <Badge variant="outline" className="capitalize">
-                    {judgeProfile.experience_level}
-                  </Badge>
-                </div>
-
-                {judgeProfile.qualifications && (
-                  <div>
-                    <h4 className="font-medium mb-2">Qualifications</h4>
-                    <p className="text-sm text-muted-foreground bg-muted p-3 rounded">
-                      {judgeProfile.qualifications}
-                    </p>
-                  </div>
-                )}
-
-                {judgeProfile.bio && (
-                  <div>
-                    <h4 className="font-medium mb-2">Biography</h4>
-                    <p className="text-sm text-muted-foreground bg-muted p-3 rounded">
-                      {judgeProfile.bio}
-                    </p>
-                  </div>
-                )}
-
-                <div className="pt-4">
-                  <p className="text-sm text-muted-foreground">
-                    To update your profile information, please contact the tournament administrators.
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <JudgeProfileEditor 
+            judgeProfile={judgeProfile} 
+            onUpdate={fetchJudgeProfile} 
+          />
         </TabsContent>
       </Tabs>
     </div>
