@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 
 interface TabulationSettings {
   id?: string;
@@ -21,6 +22,13 @@ interface TabulationSettings {
   side_balance_target: number;
   speaker_points_method: string;
   allow_judges_view_all_chat: boolean;
+  draw_method: string;
+  side_method: string;
+  odd_bracket: string;
+  pullup_restriction: string;
+  history_penalty: number;
+  institution_penalty: number;
+  side_penalty: number;
 }
 
 interface TabulationSettingsManagerProps {
@@ -39,6 +47,13 @@ export function TabulationSettingsManager({ tournamentId }: TabulationSettingsMa
     side_balance_target: 50,
     speaker_points_method: 'standard',
     allow_judges_view_all_chat: false,
+    draw_method: 'power_paired',
+    side_method: 'balance',
+    odd_bracket: 'pullup_top',
+    pullup_restriction: 'least_to_date',
+    history_penalty: 1000,
+    institution_penalty: 500,
+    side_penalty: 100,
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -55,20 +70,12 @@ export function TabulationSettingsManager({ tournamentId }: TabulationSettingsMa
         .from('tournament_tabulation_settings')
         .select('*')
         .eq('tournament_id', tournamentId)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') throw error;
-
-      if (data) {
-        setSettings(data);
-      }
+      if (error) throw error;
+      if (data) setSettings(prev => ({ ...prev, ...data }));
     } catch (error: any) {
       console.error('Error fetching tabulation settings:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load tabulation settings",
-        variant: "destructive",
-      });
     } finally {
       setLoading(false);
     }
@@ -82,18 +89,9 @@ export function TabulationSettingsManager({ tournamentId }: TabulationSettingsMa
         .upsert(settings, { onConflict: 'tournament_id' });
 
       if (error) throw error;
-
-      toast({
-        title: "Settings Saved",
-        description: "Tabulation settings have been saved successfully.",
-      });
+      toast({ title: "Settings Saved", description: "Tabulation settings saved successfully." });
     } catch (error: any) {
-      console.error('Error saving tabulation settings:', error);
-      toast({
-        title: "Error",
-        description: "Failed to save tabulation settings",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: "Failed to save settings", variant: "destructive" });
     } finally {
       setSaving(false);
     }
@@ -104,89 +102,66 @@ export function TabulationSettingsManager({ tournamentId }: TabulationSettingsMa
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <div className="flex items-center justify-center p-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>;
   }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <Badge variant="secondary">Beta Feature</Badge>
-        <Button onClick={handleSave} disabled={saving}>
-          {saving ? 'Saving...' : 'Save Settings'}
-        </Button>
+        <Badge variant="secondary">Advanced Tabulation</Badge>
+        <Button onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Save Settings'}</Button>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Pairing Configuration</CardTitle>
-          <CardDescription>
-            Configure how pairings are generated for this tournament
-          </CardDescription>
+          <CardTitle>Draw Generation</CardTitle>
+          <CardDescription>Configure power pairing algorithms</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="pairing-method">Pairing Method</Label>
-              <Select
-                value={settings.pairing_method}
-                onValueChange={(value) => updateSetting('pairing_method', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
+              <Label>Draw Method</Label>
+              <Select value={settings.draw_method} onValueChange={(v) => updateSetting('draw_method', v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="swiss">Swiss System</SelectItem>
-                  <SelectItem value="elimination">Single Elimination</SelectItem>
+                  <SelectItem value="power_paired">Power Paired</SelectItem>
+                  <SelectItem value="random">Random</SelectItem>
                   <SelectItem value="round_robin">Round Robin</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-
             <div className="space-y-2">
-              <Label htmlFor="speaker-points">Speaker Points Method</Label>
-              <Select
-                value={settings.speaker_points_method}
-                onValueChange={(value) => updateSetting('speaker_points_method', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
+              <Label>Side Allocation</Label>
+              <Select value={settings.side_method} onValueChange={(v) => updateSetting('side_method', v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="standard">Standard (20-30)</SelectItem>
-                  <SelectItem value="high_low">High-Low (25-30)</SelectItem>
-                  <SelectItem value="percentile">Percentile</SelectItem>
+                  <SelectItem value="balance">Balance</SelectItem>
+                  <SelectItem value="random">Random</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
+        </CardContent>
+      </Card>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>Optimization Weights</CardTitle>
+          <CardDescription>Fine-tune the Munkres algorithm</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="max-repeat">Max Repeat Opponents</Label>
-              <Input
-                id="max-repeat"
-                type="number"
-                min="0"
-                max="10"
-                value={settings.max_repeat_opponents}
-                onChange={(e) => updateSetting('max_repeat_opponents', parseInt(e.target.value) || 0)}
-              />
+              <Label>History Penalty</Label>
+              <Input type="number" value={settings.history_penalty} onChange={(e) => updateSetting('history_penalty', parseInt(e.target.value) || 0)} />
             </div>
-
             <div className="space-y-2">
-              <Label htmlFor="side-balance">Side Balance Target (%)</Label>
-              <Input
-                id="side-balance"
-                type="number"
-                min="0"
-                max="100"
-                value={settings.side_balance_target}
-                onChange={(e) => updateSetting('side_balance_target', parseInt(e.target.value) || 50)}
-              />
+              <Label>Institution Penalty</Label>
+              <Input type="number" value={settings.institution_penalty} onChange={(e) => updateSetting('institution_penalty', parseInt(e.target.value) || 0)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Side Penalty</Label>
+              <Input type="number" value={settings.side_penalty} onChange={(e) => updateSetting('side_penalty', parseInt(e.target.value) || 0)} />
             </div>
           </div>
         </CardContent>
@@ -195,84 +170,16 @@ export function TabulationSettingsManager({ tournamentId }: TabulationSettingsMa
       <Card>
         <CardHeader>
           <CardTitle>Pairing Constraints</CardTitle>
-          <CardDescription>
-            Configure constraints and restrictions for pairing generation
-          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label>Avoid Rematches</Label>
-              <p className="text-sm text-muted-foreground">
-                Prevent teams from facing the same opponent multiple times
-              </p>
-            </div>
-            <Switch
-              checked={settings.avoid_rematches}
-              onCheckedChange={(value) => updateSetting('avoid_rematches', value)}
-            />
+            <div><Label>Avoid Rematches</Label><p className="text-sm text-muted-foreground">Prevent repeat opponents</p></div>
+            <Switch checked={settings.avoid_rematches} onCheckedChange={(v) => updateSetting('avoid_rematches', v)} />
           </div>
-
+          <Separator />
           <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label>Club Protection</Label>
-              <p className="text-sm text-muted-foreground">
-                Avoid pairing teams from the same institution
-              </p>
-            </div>
-            <Switch
-              checked={settings.club_protect}
-              onCheckedChange={(value) => updateSetting('club_protect', value)}
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label>Preserve Break Rounds</Label>
-              <p className="text-sm text-muted-foreground">
-                Maintain break order for elimination rounds
-              </p>
-            </div>
-            <Switch
-              checked={settings.preserve_break_rounds}
-              onCheckedChange={(value) => updateSetting('preserve_break_rounds', value)}
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label>Prevent Bracket Breaks</Label>
-              <p className="text-sm text-muted-foreground">
-                Avoid pairing competitors from different skill brackets
-              </p>
-            </div>
-            <Switch
-              checked={settings.prevent_bracket_breaks}
-              onCheckedChange={(value) => updateSetting('prevent_bracket_breaks', value)}
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Communication Settings</CardTitle>
-          <CardDescription>
-            Configure judge and participant communication options
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label>Allow Judges to View All Chat</Label>
-              <p className="text-sm text-muted-foreground">
-                Permit judges to access all tournament chat channels
-              </p>
-            </div>
-            <Switch
-              checked={settings.allow_judges_view_all_chat}
-              onCheckedChange={(value) => updateSetting('allow_judges_view_all_chat', value)}
-            />
+            <div><Label>Club Protection</Label><p className="text-sm text-muted-foreground">Avoid same-institution matchups</p></div>
+            <Switch checked={settings.club_protect} onCheckedChange={(v) => updateSetting('club_protect', v)} />
           </div>
         </CardContent>
       </Card>

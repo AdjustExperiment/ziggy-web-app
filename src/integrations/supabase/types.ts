@@ -14,6 +14,58 @@ export type Database = {
   }
   public: {
     Tables: {
+      adjudicator_conflicts: {
+        Row: {
+          conflict_type: string
+          created_at: string
+          id: string
+          institution: string | null
+          judge_profile_id: string
+          registration_id: string | null
+          tournament_id: string | null
+        }
+        Insert: {
+          conflict_type?: string
+          created_at?: string
+          id?: string
+          institution?: string | null
+          judge_profile_id: string
+          registration_id?: string | null
+          tournament_id?: string | null
+        }
+        Update: {
+          conflict_type?: string
+          created_at?: string
+          id?: string
+          institution?: string | null
+          judge_profile_id?: string
+          registration_id?: string | null
+          tournament_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adjudicator_conflicts_judge_profile_id_fkey"
+            columns: ["judge_profile_id"]
+            isOneToOne: false
+            referencedRelation: "judge_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "adjudicator_conflicts_registration_id_fkey"
+            columns: ["registration_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_registrations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "adjudicator_conflicts_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       admin_notifications: {
         Row: {
           action_text: string | null
@@ -259,6 +311,53 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      break_categories: {
+        Row: {
+          break_size: number
+          created_at: string
+          id: string
+          is_general: boolean
+          name: string
+          priority: number
+          rule: string
+          slug: string
+          tournament_id: string
+          updated_at: string
+        }
+        Insert: {
+          break_size?: number
+          created_at?: string
+          id?: string
+          is_general?: boolean
+          name: string
+          priority?: number
+          rule?: string
+          slug: string
+          tournament_id: string
+          updated_at?: string
+        }
+        Update: {
+          break_size?: number
+          created_at?: string
+          id?: string
+          is_general?: boolean
+          name?: string
+          priority?: number
+          rule?: string
+          slug?: string
+          tournament_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "break_categories_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       championships: {
         Row: {
@@ -926,45 +1025,57 @@ export type Database = {
       pairings: {
         Row: {
           aff_registration_id: string
+          bracket: number | null
           created_at: string
+          flags: string[]
           id: string
           judge_id: string | null
           neg_registration_id: string
           released: boolean
           result: Json | null
           room: string | null
+          room_rank: number | null
           round_id: string
           scheduled_time: string | null
+          side_locked: boolean
           status: string
           tournament_id: string
           updated_at: string
         }
         Insert: {
           aff_registration_id: string
+          bracket?: number | null
           created_at?: string
+          flags?: string[]
           id?: string
           judge_id?: string | null
           neg_registration_id: string
           released?: boolean
           result?: Json | null
           room?: string | null
+          room_rank?: number | null
           round_id: string
           scheduled_time?: string | null
+          side_locked?: boolean
           status?: string
           tournament_id: string
           updated_at?: string
         }
         Update: {
           aff_registration_id?: string
+          bracket?: number | null
           created_at?: string
+          flags?: string[]
           id?: string
           judge_id?: string | null
           neg_registration_id?: string
           released?: boolean
           result?: Json | null
           room?: string | null
+          room_rank?: number | null
           round_id?: string
           scheduled_time?: string | null
+          side_locked?: boolean
           status?: string
           tournament_id?: string
           updated_at?: string
@@ -1873,6 +1984,51 @@ export type Database = {
         }
         Relationships: []
       }
+      team_break_eligibility: {
+        Row: {
+          break_category_id: string
+          break_rank: number | null
+          created_at: string
+          id: string
+          is_eligible: boolean
+          registration_id: string
+          remark: string | null
+        }
+        Insert: {
+          break_category_id: string
+          break_rank?: number | null
+          created_at?: string
+          id?: string
+          is_eligible?: boolean
+          registration_id: string
+          remark?: string | null
+        }
+        Update: {
+          break_category_id?: string
+          break_rank?: number | null
+          created_at?: string
+          id?: string
+          is_eligible?: boolean
+          registration_id?: string
+          remark?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_break_eligibility_break_category_id_fkey"
+            columns: ["break_category_id"]
+            isOneToOne: false
+            referencedRelation: "break_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_break_eligibility_registration_id_fkey"
+            columns: ["registration_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_registrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       top_performers: {
         Row: {
           created_at: string
@@ -2068,12 +2224,15 @@ export type Database = {
       tournament_registrations: {
         Row: {
           additional_info: Json | null
+          aff_count: number
           amount_paid: number | null
           created_at: string
           dietary_requirements: string | null
           emergency_contact: string | null
           id: string
+          is_active: boolean
           last_reminder_sent_at: string | null
+          neg_count: number
           participant_email: string
           participant_name: string
           partner_name: string | null
@@ -2083,6 +2242,7 @@ export type Database = {
           reminder_count: number
           requested_judge_profile_id: string | null
           school_organization: string | null
+          seed: number | null
           success_email_sent_at: string | null
           tournament_id: string
           updated_at: string
@@ -2090,12 +2250,15 @@ export type Database = {
         }
         Insert: {
           additional_info?: Json | null
+          aff_count?: number
           amount_paid?: number | null
           created_at?: string
           dietary_requirements?: string | null
           emergency_contact?: string | null
           id?: string
+          is_active?: boolean
           last_reminder_sent_at?: string | null
+          neg_count?: number
           participant_email: string
           participant_name: string
           partner_name?: string | null
@@ -2105,6 +2268,7 @@ export type Database = {
           reminder_count?: number
           requested_judge_profile_id?: string | null
           school_organization?: string | null
+          seed?: number | null
           success_email_sent_at?: string | null
           tournament_id: string
           updated_at?: string
@@ -2112,12 +2276,15 @@ export type Database = {
         }
         Update: {
           additional_info?: Json | null
+          aff_count?: number
           amount_paid?: number | null
           created_at?: string
           dietary_requirements?: string | null
           emergency_contact?: string | null
           id?: string
+          is_active?: boolean
           last_reminder_sent_at?: string | null
+          neg_count?: number
           participant_email?: string
           participant_name?: string
           partner_name?: string | null
@@ -2127,6 +2294,7 @@ export type Database = {
           reminder_count?: number
           requested_judge_profile_id?: string | null
           school_organization?: string | null
+          seed?: number | null
           success_email_sent_at?: string | null
           tournament_id?: string
           updated_at?: string
@@ -2229,12 +2397,19 @@ export type Database = {
           avoid_rematches: boolean
           club_protect: boolean
           created_at: string
+          draw_method: string
+          history_penalty: number
           id: string
+          institution_penalty: number
           max_repeat_opponents: number
+          odd_bracket: string
           pairing_method: string
           preserve_break_rounds: boolean
           prevent_bracket_breaks: boolean
+          pullup_restriction: string
           side_balance_target: number
+          side_method: string
+          side_penalty: number
           speaker_points_method: string
           tournament_id: string
           updated_at: string
@@ -2244,12 +2419,19 @@ export type Database = {
           avoid_rematches?: boolean
           club_protect?: boolean
           created_at?: string
+          draw_method?: string
+          history_penalty?: number
           id?: string
+          institution_penalty?: number
           max_repeat_opponents?: number
+          odd_bracket?: string
           pairing_method?: string
           preserve_break_rounds?: boolean
           prevent_bracket_breaks?: boolean
+          pullup_restriction?: string
           side_balance_target?: number
+          side_method?: string
+          side_penalty?: number
           speaker_points_method?: string
           tournament_id: string
           updated_at?: string
@@ -2259,12 +2441,19 @@ export type Database = {
           avoid_rematches?: boolean
           club_protect?: boolean
           created_at?: string
+          draw_method?: string
+          history_penalty?: number
           id?: string
+          institution_penalty?: number
           max_repeat_opponents?: number
+          odd_bracket?: string
           pairing_method?: string
           preserve_break_rounds?: boolean
           prevent_bracket_breaks?: boolean
+          pullup_restriction?: string
           side_balance_target?: number
+          side_method?: string
+          side_penalty?: number
           speaker_points_method?: string
           tournament_id?: string
           updated_at?: string

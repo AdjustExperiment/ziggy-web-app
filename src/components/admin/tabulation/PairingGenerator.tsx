@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -8,22 +7,22 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from '@/components/ui/use-toast';
 import { 
   Plus, 
-  Play, 
   Lock, 
   Unlock, 
   Users, 
-  Calendar, 
   MapPin, 
   Shuffle,
   Eye,
-  EyeOff
+  EyeOff,
+  Zap,
+  AlertTriangle,
+  CheckCircle2
 } from 'lucide-react';
-import { Textarea } from '@/components/ui/textarea';
+import { DrawGenerator, Team, PairingHistory, DrawSettings, GeneratedPairing } from '@/lib/tabulation/drawGenerator';
 
 interface PairingGeneratorProps {
   tournamentId: string;
@@ -53,6 +52,25 @@ interface Pairing {
   scheduled_time?: string;
   status: string;
   released: boolean;
+  bracket?: number;
+  room_rank?: number;
+  flags?: string[];
+  aff_registration?: { participant_name: string };
+  neg_registration?: { participant_name: string };
+  judge_profiles?: { name: string };
+}
+
+interface TabulationSettings {
+  draw_method: 'random' | 'power_paired' | 'round_robin' | 'manual';
+  side_method: 'balance' | 'preallocated' | 'random';
+  odd_bracket: 'pullup_top' | 'pullup_bottom' | 'intermediate' | 'intermediate_bubble_up_down';
+  pullup_restriction: string;
+  avoid_rematches: boolean;
+  club_protect: boolean;
+  history_penalty: number;
+  institution_penalty: number;
+  side_penalty: number;
+  max_repeat_opponents: number;
 }
 
 export function PairingGenerator({ 
@@ -67,6 +85,9 @@ export function PairingGenerator({
   const [selectedRound, setSelectedRound] = useState<string>('');
   const [isCreatingRound, setIsCreatingRound] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [settings, setSettings] = useState<TabulationSettings | null>(null);
+  const [previewPairings, setPreviewPairings] = useState<GeneratedPairing[]>([]);
+  const [showPreview, setShowPreview] = useState(false);
   const [newRound, setNewRound] = useState({
     name: '',
     scheduled_date: '',
@@ -74,10 +95,57 @@ export function PairingGenerator({
   });
 
   useEffect(() => {
+    fetchSettings();
+  }, [tournamentId]);
+
+  useEffect(() => {
     if (selectedRound) {
       fetchPairings();
     }
   }, [selectedRound]);
+
+  const fetchSettings = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('tournament_tabulation_settings')
+        .select('*')
+        .eq('tournament_id', tournamentId)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (data) {
+        setSettings({
+          draw_method: data.draw_method || 'power_paired',
+          side_method: data.side_method || 'balance',
+          odd_bracket: data.odd_bracket || 'pullup_top',
+          pullup_restriction: data.pullup_restriction || 'least_to_date',
+          avoid_rematches: data.avoid_rematches ?? true,
+          club_protect: data.club_protect ?? true,
+          history_penalty: data.history_penalty ?? 1000,
+          institution_penalty: data.institution_penalty ?? 500,
+          side_penalty: data.side_penalty ?? 100,
+          max_repeat_opponents: data.max_repeat_opponents ?? 0,
+        });
+      } else {
+        // Default settings
+        setSettings({
+          draw_method: 'power_paired',
+          side_method: 'balance',
+          odd_bracket: 'pullup_top',
+          pullup_restriction: 'least_to_date',
+          avoid_rematches: true,
+          club_protect: true,
+          history_penalty: 1000,
+          institution_penalty: 500,
+          side_penalty: 100,
+          max_repeat_opponents: 0,
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching settings:', error);
+    }
+  };
 
   const fetchPairings = async () => {
     if (!selectedRound) return;
@@ -87,12 +155,12 @@ export function PairingGenerator({
         .from('pairings')
         .select(`
           *,
-          aff_registration:tournament_registrations!aff_registration_id(participant_name),
-          neg_registration:tournament_registrations!neg_registration_id(participant_name),
+          aff_registration:tournament_registrations!aff_registration_id(participant_name, school_organization),
+          neg_registration:tournament_registrations!neg_registration_id(participant_name, school_organization),
           judge_profiles(name)
         `)
         .eq('round_id', selectedRound)
-        .order('room');
+        .order('room_rank', { ascending: true, nullsFirst: false });
 
       if (error) throw error;
       setPairings(data || []);
@@ -104,7 +172,7 @@ export function PairingGenerator({
   const createRound = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('rounds')
         .insert([{
           tournament_id: tournamentId,
@@ -112,9 +180,7 @@ export function PairingGenerator({
           round_number: newRound.round_number,
           scheduled_date: newRound.scheduled_date || null,
           status: 'upcoming'
-        }])
-        .select()
-        .single();
+        }]);
 
       if (error) throw error;
 
@@ -141,37 +207,145 @@ export function PairingGenerator({
     }
   };
 
-  const generatePairings = async () => {
-    if (!selectedRound) return;
+  // Fetch historical pairings for conflict checking
+  const fetchPairingHistory = async (): Promise<PairingHistory[]> => {
+    const { data, error } = await supabase
+      .from('pairings')
+      .select('aff_registration_id, neg_registration_id, round_id')
+      .eq('tournament_id', tournamentId);
+
+    if (error || !data) return [];
+
+    // Get round numbers
+    const roundIds = [...new Set(data.map(p => p.round_id))];
+    const { data: roundsData } = await supabase
+      .from('rounds')
+      .select('id, round_number')
+      .in('id', roundIds);
+
+    const roundMap = new Map(roundsData?.map(r => [r.id, r.round_number]) || []);
+
+    return data.map(p => ({
+      affId: p.aff_registration_id,
+      negId: p.neg_registration_id,
+      roundNumber: roundMap.get(p.round_id) || 0,
+    }));
+  };
+
+  // Build teams from registrations with win/loss data
+  const buildTeams = async (): Promise<Team[]> => {
+    // Get ballot results to calculate wins
+    const { data: ballots } = await supabase
+      .from('ballots')
+      .select(`
+        pairing_id,
+        payload,
+        pairings!inner(
+          aff_registration_id,
+          neg_registration_id,
+          tournament_id
+        )
+      `)
+      .eq('pairings.tournament_id', tournamentId)
+      .eq('status', 'submitted');
+
+    // Calculate wins and speaks for each team
+    const teamStats = new Map<string, { wins: number; speaks: number; affCount: number; negCount: number }>();
+
+    for (const reg of registrations) {
+      teamStats.set(reg.id, {
+        wins: 0,
+        speaks: 0,
+        affCount: reg.aff_count || 0,
+        negCount: reg.neg_count || 0,
+      });
+    }
+
+    // Process ballots
+    if (ballots) {
+      for (const ballot of ballots) {
+        const payload = ballot.payload as any;
+        const winner = payload?.winner;
+        const affId = ballot.pairings?.aff_registration_id;
+        const negId = ballot.pairings?.neg_registration_id;
+
+        if (winner === 'aff' && affId) {
+          const stats = teamStats.get(affId);
+          if (stats) stats.wins++;
+        } else if (winner === 'neg' && negId) {
+          const stats = teamStats.get(negId);
+          if (stats) stats.wins++;
+        }
+
+        // Add speaker points
+        const affSpeaks = parseFloat(payload?.aff_speaks) || 0;
+        const negSpeaks = parseFloat(payload?.neg_speaks) || 0;
+        
+        if (affId) {
+          const stats = teamStats.get(affId);
+          if (stats) stats.speaks += affSpeaks;
+        }
+        if (negId) {
+          const stats = teamStats.get(negId);
+          if (stats) stats.speaks += negSpeaks;
+        }
+      }
+    }
+
+    return registrations
+      .filter((reg: any) => reg.is_active !== false)
+      .map((reg: any) => {
+        const stats = teamStats.get(reg.id) || { wins: 0, speaks: 0, affCount: 0, negCount: 0 };
+        return {
+          id: reg.id,
+          name: reg.participant_name,
+          institution: reg.school_organization || undefined,
+          wins: stats.wins,
+          speaks: stats.speaks,
+          affCount: stats.affCount,
+          negCount: stats.negCount,
+          pullupCount: 0,
+          isActive: reg.is_active !== false,
+        };
+      });
+  };
+
+  // Generate pairings using the advanced algorithm
+  const generateAdvancedPairings = async (preview: boolean = false) => {
+    if (!selectedRound || !settings) return;
 
     try {
       setLoading(true);
 
-      // Simple random pairing algorithm
-      const availableRegistrations = [...registrations];
-      const newPairings = [];
+      // Build team data
+      const teams = await buildTeams();
+      const history = await fetchPairingHistory();
+      const currentRound = rounds.find((r: any) => r.id === selectedRound);
+      const roundNumber = currentRound?.round_number || 1;
 
-      // Shuffle registrations
-      for (let i = availableRegistrations.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [availableRegistrations[i], availableRegistrations[j]] = [availableRegistrations[j], availableRegistrations[i]];
+      // Generate pairings using DrawGenerator
+      const generator = new DrawGenerator(teams, history, settings, roundNumber);
+      const generated = generator.generate();
+
+      if (preview) {
+        setPreviewPairings(generated);
+        setShowPreview(true);
+        return;
       }
 
-      // Create pairs
-      for (let i = 0; i < availableRegistrations.length - 1; i += 2) {
-        const aff = availableRegistrations[i];
-        const neg = availableRegistrations[i + 1];
-        
-        newPairings.push({
-          round_id: selectedRound,
-          tournament_id: tournamentId,
-          aff_registration_id: aff.id,
-          neg_registration_id: neg.id,
-          room: `Room ${Math.floor(i / 2) + 1}`,
-          status: 'scheduled',
-          released: false
-        });
-      }
+      // Create pairings in database
+      const newPairings = generated.map((p, index) => ({
+        round_id: selectedRound,
+        tournament_id: tournamentId,
+        aff_registration_id: p.affTeamId,
+        neg_registration_id: p.negTeamId || p.affTeamId, // Handle bye
+        room: `Room ${index + 1}`,
+        status: p.flags.includes('bye') ? 'bye' : 'scheduled',
+        released: false,
+        bracket: p.bracket,
+        room_rank: p.roomRank,
+        flags: p.flags,
+      }));
 
       const { error } = await supabase
         .from('pairings')
@@ -179,11 +353,27 @@ export function PairingGenerator({
 
       if (error) throw error;
 
+      // Update side counts for teams
+      for (const pairing of generated) {
+        if (!pairing.flags.includes('bye')) {
+          await supabase
+            .from('tournament_registrations')
+            .update({ aff_count: supabase.rpc('increment', { x: 1 }) })
+            .eq('id', pairing.affTeamId);
+          
+          await supabase
+            .from('tournament_registrations')
+            .update({ neg_count: supabase.rpc('increment', { x: 1 }) })
+            .eq('id', pairing.negTeamId);
+        }
+      }
+
       toast({
         title: "Success",
-        description: `Generated ${newPairings.length} pairings`,
+        description: `Generated ${generated.length} pairings using ${settings.draw_method} method`,
       });
 
+      setShowPreview(false);
       fetchPairings();
     } catch (error: any) {
       toast({
@@ -196,6 +386,91 @@ export function PairingGenerator({
     }
   };
 
+  // Confirm and save previewed pairings
+  const confirmPairings = async () => {
+    await generateAdvancedPairings(false);
+  };
+
+  const assignJudge = async (pairingId: string, judgeId: string) => {
+    try {
+      const { error } = await supabase
+        .from('pairings')
+        .update({ judge_id: judgeId === 'none' ? null : judgeId })
+        .eq('id', pairingId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Judge assigned successfully",
+      });
+
+      fetchPairings();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to assign judge",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const togglePairingRelease = async (pairingId: string, released: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('pairings')
+        .update({ released: !released })
+        .eq('id', pairingId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `Pairing ${!released ? 'released' : 'hidden'}`,
+      });
+
+      fetchPairings();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to update pairing visibility",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const releaseAllPairings = async () => {
+    if (!selectedRound) return;
+
+    try {
+      const { error } = await supabase
+        .from('pairings')
+        .update({ released: true })
+        .eq('round_id', selectedRound);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "All pairings released to participants",
+      });
+
+      fetchPairings();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to release pairings",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const getTeamName = (regId: string): string => {
+    const reg = registrations.find((r: any) => r.id === regId);
+    return reg?.participant_name || 'Unknown';
+  };
+
+  const selectedRoundData = rounds.find(r => r.id === selectedRound);
   const assignJudge = async (pairingId: string, judgeId: string) => {
     try {
       const { error } = await supabase
