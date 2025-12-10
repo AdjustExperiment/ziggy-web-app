@@ -1,7 +1,8 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
 import createGlobe from 'cobe';
 import { cn } from '@/lib/utils';
 import { WORLD_CITIES } from '@/data/capitals';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface CityLightState {
   intensity: number;
@@ -14,6 +15,12 @@ export function AnimatedGlobe({ className }: { className?: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const phiRef = useRef(0);
   const cityStatesRef = useRef<CityLightState[]>([]);
+  const isMobile = useIsMobile();
+  
+  // Reduce markers on mobile for better performance
+  const cities = useMemo(() => {
+    return isMobile ? WORLD_CITIES.slice(0, 24) : WORLD_CITIES;
+  }, [isMobile]);
 
   // City states initialization moved to init() to prevent race condition
 
@@ -43,8 +50,8 @@ export function AnimatedGlobe({ className }: { className?: string }) {
       canvas.style.height = `${size}px`;
 
       // Initialize city states BEFORE creating globe to prevent race condition
-      if (cityStatesRef.current.length === 0) {
-        cityStatesRef.current = WORLD_CITIES.map(() => ({
+      if (cityStatesRef.current.length === 0 || cityStatesRef.current.length !== cities.length) {
+        cityStatesRef.current = cities.map(() => ({
           intensity: Math.random() < 0.15 ? Math.random() * 0.5 : 0,
           direction: Math.random() < 0.2 ? 'rising' : 'idle' as const,
           delay: Math.floor(Math.random() * 180)
@@ -53,7 +60,7 @@ export function AnimatedGlobe({ className }: { className?: string }) {
 
 
       // Initialize markers with starting colors
-      const initialMarkers = WORLD_CITIES.map((city) => ({
+      const initialMarkers = cities.map((city) => ({
         location: [city.lat, city.lng] as [number, number],
         size: 0.03
       }));
@@ -78,7 +85,7 @@ export function AnimatedGlobe({ className }: { className?: string }) {
 
 
           // Update city light states and markers
-          const updatedMarkers = WORLD_CITIES.map((city, i) => {
+          const updatedMarkers = cities.map((city, i) => {
             const cityState = cityStatesRef.current[i];
             if (!cityState) return {
               location: [city.lat, city.lng] as [number, number],
@@ -123,7 +130,7 @@ export function AnimatedGlobe({ className }: { className?: string }) {
     const onResize = () => { globe?.destroy(); init(); };
     window.addEventListener('resize', onResize);
     return () => { globe?.destroy(); window.removeEventListener('resize', onResize); };
-  }, []);
+  }, [cities]);
 
   return (
     <div ref={containerRef} className={cn("relative w-full h-full flex items-center justify-center", className)}>
