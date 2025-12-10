@@ -1,36 +1,60 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import createGlobe from 'cobe';
 import { cn } from '@/lib/utils';
-import { WORLD_CAPITALS, CONNECTION_ROUTES } from '@/data/capitals';
-import { drawAnimatedArc } from '@/lib/globeUtils';
+import { WORLD_CAPITALS } from '@/data/capitals';
 
-interface ArcState { routeIndex: number; progress: number; active: boolean; }
+interface CityCard {
+  index: number;
+  visible: boolean;
+}
 
 export function AnimatedGlobe({ className }: { className?: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const arcCanvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const phiRef = useRef(0);
-  const sizeRef = useRef(0);
-  const arcsRef = useRef<ArcState[]>([
-    { routeIndex: 0, progress: 0, active: true },
-    { routeIndex: 10, progress: 0.15, active: true },
-    { routeIndex: 20, progress: 0.3, active: true },
-    { routeIndex: 30, progress: 0.45, active: true },
-    { routeIndex: 40, progress: 0.6, active: true },
-    { routeIndex: 50, progress: 0.75, active: true },
-    { routeIndex: 60, progress: 0.9, active: true },
-    { routeIndex: 70, progress: 0.1, active: true },
-    { routeIndex: 5, progress: 0.5, active: true },
-    { routeIndex: 15, progress: 0.65, active: true },
+  
+  // 4 city cards cycling randomly
+  const [cityCards, setCityCards] = useState<CityCard[]>([
+    { index: 0, visible: true },
+    { index: 21, visible: true },
+    { index: 47, visible: true },
+    { index: 67, visible: true },
   ]);
 
-  // Convert capitals to cobe marker format - size 0.06 for visibility
+  // Convert capitals to cobe marker format
   const cobeMarkers = WORLD_CAPITALS.map(city => ({
     location: [city.lat, city.lng] as [number, number],
     size: 0.06
   }));
 
+  // Cycle city cards randomly
+  useEffect(() => {
+    const getRandomCity = (exclude: number[]) => {
+      let idx;
+      do {
+        idx = Math.floor(Math.random() * WORLD_CAPITALS.length);
+      } while (exclude.includes(idx));
+      return idx;
+    };
+
+    const interval = setInterval(() => {
+      setCityCards(prev => {
+        const cardToChange = Math.floor(Math.random() * 4);
+        const currentIndices = prev.map(c => c.index);
+        const newIndex = getRandomCity(currentIndices);
+        
+        return prev.map((card, i) => 
+          i === cardToChange 
+            ? { index: newIndex, visible: true }
+            : card
+        );
+      });
+    }, 2500);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Initialize user location
   useEffect(() => {
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
@@ -40,31 +64,22 @@ export function AnimatedGlobe({ className }: { className?: string }) {
     }
   }, []);
 
+  // Initialize globe
   useEffect(() => {
-    const container = containerRef.current, canvas = canvasRef.current;
-    const arcCanvas = arcCanvasRef.current;
-    if (!container || !canvas || !arcCanvas) return;
+    const container = containerRef.current;
+    const canvas = canvasRef.current;
+    if (!container || !canvas) return;
 
     let globe: ReturnType<typeof createGlobe> | undefined;
-    let animId: number;
 
     const init = () => {
       const size = Math.min(container.offsetWidth, container.offsetHeight, 600);
-      sizeRef.current = size;
       const dpr = Math.min(window.devicePixelRatio, 2);
       
       canvas.width = size * dpr; 
       canvas.height = size * dpr;
       canvas.style.width = `${size}px`; 
       canvas.style.height = `${size}px`;
-      
-      arcCanvas.width = size * dpr; 
-      arcCanvas.height = size * dpr;
-      arcCanvas.style.width = `${size}px`; 
-      arcCanvas.style.height = `${size}px`;
-      
-      const arcCtx = arcCanvas.getContext('2d')!;
-      arcCtx.scale(dpr, dpr);
 
       globe = createGlobe(canvas, {
         devicePixelRatio: dpr, 
@@ -85,62 +100,49 @@ export function AnimatedGlobe({ className }: { className?: string }) {
           state.phi = phiRef.current;
         },
       });
-
-      const animate = () => {
-        // Arc radius calibrated to match cobe's visible globe (cobe uses 80% fill = 0.4)
-        const r = size * 0.4;
-        const theta = 0.15; // Match cobe's theta value
-        arcCtx.clearRect(0, 0, size, size);
-
-        for (const arc of arcsRef.current) {
-          if (!arc.active) continue;
-          const route = CONNECTION_ROUTES[arc.routeIndex % CONNECTION_ROUTES.length];
-          if (!route) continue;
-          const start = WORLD_CAPITALS[route[0]], end = WORLD_CAPITALS[route[1]];
-          if (!start || !end) continue;
-          
-          // Arc lifecycle:
-          // 0.0 → 1.0: Drawing the arc
-          // 1.0 → 1.4: Hold at destination (fully drawn)
-          // 1.4 → 1.7: Fade out
-          // 1.7+: Reset to new route
-          let fadeOpacity = 1;
-          if (arc.progress > 1.4) {
-            fadeOpacity = Math.max(0, 1 - (arc.progress - 1.4) * 3.33);
-          }
-          
-          drawAnimatedArc(
-            arcCtx, 
-            { lat: start.lat, lng: start.lng }, 
-            { lat: end.lat, lng: end.lng }, 
-            phiRef.current,
-            theta,
-            size, size, r, 
-            arc.progress, 
-            fadeOpacity
-          );
-          
-          arc.progress += 0.003;
-          if (arc.progress >= 1.7) { 
-            arc.progress = 0; 
-            arc.routeIndex = (arc.routeIndex + 1) % CONNECTION_ROUTES.length;
-          }
-        }
-        animId = requestAnimationFrame(animate);
-      };
-      animate();
     };
 
     init();
-    const onResize = () => { globe?.destroy(); cancelAnimationFrame(animId); init(); };
+    const onResize = () => { globe?.destroy(); init(); };
     window.addEventListener('resize', onResize);
-    return () => { globe?.destroy(); cancelAnimationFrame(animId); window.removeEventListener('resize', onResize); };
+    return () => { globe?.destroy(); window.removeEventListener('resize', onResize); };
   }, [cobeMarkers]);
+
+  // Card positions around globe
+  const cardPositions = [
+    'top-4 left-4',
+    'top-4 right-4',
+    'bottom-4 left-4',
+    'bottom-4 right-4',
+  ];
 
   return (
     <div ref={containerRef} className={cn("relative w-full h-full flex items-center justify-center", className)}>
       <canvas ref={canvasRef} className="max-w-full max-h-full" />
-      <canvas ref={arcCanvasRef} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+      
+      {/* Floating City Cards */}
+      {cityCards.map((card, i) => {
+        const city = WORLD_CAPITALS[card.index];
+        return (
+          <div
+            key={`${i}-${card.index}`}
+            className={cn(
+              "absolute pointer-events-none",
+              cardPositions[i],
+              "animate-fade-in"
+            )}
+          >
+            <div className="backdrop-blur-md bg-background/20 border border-primary/30 rounded-lg px-3 py-2 shadow-lg shadow-primary/10">
+              <p className="font-display text-sm md:text-base text-foreground font-semibold leading-tight">
+                {city.name}
+              </p>
+              <p className="font-secondary text-xs text-muted-foreground">
+                {city.country}
+              </p>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
