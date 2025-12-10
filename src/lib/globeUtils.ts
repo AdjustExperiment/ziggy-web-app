@@ -1,148 +1,111 @@
-// Convert lat/lng to 3D position on sphere
-export function latLngToXYZ(lat: number, lng: number, radius: number) {
-  const phi = (90 - lat) * (Math.PI / 180);
-  const theta = (lng + 180) * (Math.PI / 180);
-  
-  return {
-    x: -radius * Math.sin(phi) * Math.cos(theta),
-    y: radius * Math.cos(phi),
-    z: radius * Math.sin(phi) * Math.sin(theta),
-  };
-}
-
-// Project 3D point to 2D canvas coordinates
+// Project lat/lng to 2D canvas coordinates
 export function projectToCanvas(
-  lat: number,
-  lng: number,
-  globeRotation: number,
-  canvasWidth: number,
-  canvasHeight: number,
-  globeRadius: number
-): { x: number; y: number; visible: boolean } {
-  // Adjust longitude by globe rotation
-  const adjustedLng = lng - (globeRotation * 180 / Math.PI);
+  lat: number, lng: number, globeRotation: number,
+  canvasWidth: number, canvasHeight: number, globeRadius: number
+): { x: number; y: number; visible: boolean; depth: number } {
+  const latRad = lat * (Math.PI / 180);
+  const lngRad = lng * (Math.PI / 180);
+  const adjustedLng = lngRad + globeRotation;
   
-  const phi = (90 - lat) * (Math.PI / 180);
-  const theta = (adjustedLng + 180) * (Math.PI / 180);
-  
-  const x = -Math.sin(phi) * Math.cos(theta);
-  const y = Math.cos(phi);
-  const z = Math.sin(phi) * Math.sin(theta);
-  
-  // Check if point is on visible hemisphere (z > 0 means facing camera)
-  const visible = z > -0.1;
-  
-  // Project to 2D
-  const centerX = canvasWidth / 2;
-  const centerY = canvasHeight / 2;
+  const x = Math.cos(latRad) * Math.sin(adjustedLng);
+  const y = Math.sin(latRad);
+  const z = Math.cos(latRad) * Math.cos(adjustedLng);
   
   return {
-    x: centerX + x * globeRadius,
-    y: centerY - y * globeRadius,
-    visible,
+    x: canvasWidth / 2 + x * globeRadius,
+    y: canvasHeight / 2 - y * globeRadius,
+    visible: z > 0.05,
+    depth: z,
   };
 }
 
-// Great circle interpolation for smooth arcs
+// Great circle interpolation
 export function interpolateGreatCircle(
-  start: { lat: number; lng: number },
-  end: { lat: number; lng: number },
-  t: number // 0 to 1
+  start: { lat: number; lng: number }, end: { lat: number; lng: number }, t: number
 ): { lat: number; lng: number } {
-  const lat1 = start.lat * Math.PI / 180;
-  const lng1 = start.lng * Math.PI / 180;
-  const lat2 = end.lat * Math.PI / 180;
-  const lng2 = end.lng * Math.PI / 180;
-  
-  // Calculate angular distance
-  const d = Math.acos(
-    Math.sin(lat1) * Math.sin(lat2) +
-    Math.cos(lat1) * Math.cos(lat2) * Math.cos(lng2 - lng1)
-  );
-  
-  if (d < 0.0001) {
-    return { lat: start.lat, lng: start.lng };
-  }
-  
-  const A = Math.sin((1 - t) * d) / Math.sin(d);
-  const B = Math.sin(t * d) / Math.sin(d);
-  
+  const lat1 = start.lat * Math.PI / 180, lng1 = start.lng * Math.PI / 180;
+  const lat2 = end.lat * Math.PI / 180, lng2 = end.lng * Math.PI / 180;
+  const d = Math.acos(Math.sin(lat1) * Math.sin(lat2) + Math.cos(lat1) * Math.cos(lat2) * Math.cos(lng2 - lng1));
+  if (d < 0.0001) return { lat: start.lat, lng: start.lng };
+  const A = Math.sin((1 - t) * d) / Math.sin(d), B = Math.sin(t * d) / Math.sin(d);
   const x = A * Math.cos(lat1) * Math.cos(lng1) + B * Math.cos(lat2) * Math.cos(lng2);
   const y = A * Math.cos(lat1) * Math.sin(lng1) + B * Math.cos(lat2) * Math.sin(lng2);
   const z = A * Math.sin(lat1) + B * Math.sin(lat2);
-  
-  return {
-    lat: Math.atan2(z, Math.sqrt(x * x + y * y)) * 180 / Math.PI,
-    lng: Math.atan2(y, x) * 180 / Math.PI,
-  };
+  return { lat: Math.atan2(z, Math.sqrt(x * x + y * y)) * 180 / Math.PI, lng: Math.atan2(y, x) * 180 / Math.PI };
 }
 
-// Draw an animated arc between two projected points
-export function drawArc(
-  ctx: CanvasRenderingContext2D,
-  points: { x: number; y: number; visible: boolean }[],
-  progress: number, // 0 to 1
-  color: string = 'hsl(0, 72%, 51%)' // Primary red
+// Draw animated arc
+export function drawAnimatedArc(
+  ctx: CanvasRenderingContext2D, start: { lat: number; lng: number }, end: { lat: number; lng: number },
+  globeRotation: number, canvasWidth: number, canvasHeight: number, globeRadius: number, progress: number
 ) {
-  if (points.length < 2) return;
-  
-  // Filter to only visible points
-  const visibleSegments: { x: number; y: number }[][] = [];
-  let currentSegment: { x: number; y: number }[] = [];
-  
-  for (const point of points) {
-    if (point.visible) {
-      currentSegment.push({ x: point.x, y: point.y });
-    } else if (currentSegment.length > 0) {
-      visibleSegments.push(currentSegment);
-      currentSegment = [];
-    }
+  const numPoints = 40;
+  const points: { x: number; y: number; visible: boolean }[] = [];
+  const lat1 = start.lat * Math.PI / 180, lng1 = start.lng * Math.PI / 180;
+  const lat2 = end.lat * Math.PI / 180, lng2 = end.lng * Math.PI / 180;
+  const angularDist = Math.acos(Math.sin(lat1) * Math.sin(lat2) + Math.cos(lat1) * Math.cos(lat2) * Math.cos(lng2 - lng1));
+  const maxElevation = Math.min(angularDist * 0.15, 0.2);
+
+  for (let i = 0; i <= numPoints; i++) {
+    const t = i / numPoints;
+    const pos = interpolateGreatCircle(start, end, t);
+    const elevation = 4 * maxElevation * t * (1 - t);
+    const proj = projectToCanvas(pos.lat, pos.lng, globeRotation, canvasWidth, canvasHeight, globeRadius * (1 + elevation));
+    points.push(proj);
   }
-  if (currentSegment.length > 0) {
-    visibleSegments.push(currentSegment);
-  }
+
+  const visiblePoints = points.filter(p => p.visible);
+  if (visiblePoints.length < 2) return;
+
+  const pointsToDraw = Math.max(2, Math.ceil(visiblePoints.length * Math.min(progress, 1)));
   
-  // Draw each visible segment
-  for (const segment of visibleSegments) {
-    if (segment.length < 2) continue;
-    
-    const pointsToDraw = Math.ceil(segment.length * progress);
-    if (pointsToDraw < 2) continue;
-    
+  ctx.save();
+  ctx.shadowColor = 'hsla(0, 72%, 50%, 0.6)';
+  ctx.shadowBlur = 4;
+  ctx.beginPath();
+  ctx.strokeStyle = 'hsl(0, 72%, 55%)';
+  ctx.lineWidth = 1.5;
+  ctx.lineCap = 'round';
+  ctx.moveTo(visiblePoints[0].x, visiblePoints[0].y);
+  for (let i = 1; i < pointsToDraw; i++) ctx.lineTo(visiblePoints[i].x, visiblePoints[i].y);
+  ctx.stroke();
+  ctx.restore();
+
+  if (progress > 0 && progress < 1 && pointsToDraw > 0) {
+    const head = visiblePoints[pointsToDraw - 1];
+    ctx.save();
+    ctx.shadowColor = 'hsl(0, 72%, 60%)';
+    ctx.shadowBlur = 8;
     ctx.beginPath();
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 1.5;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    
-    // Create gradient along arc
-    const gradient = ctx.createLinearGradient(
-      segment[0].x, segment[0].y,
-      segment[pointsToDraw - 1].x, segment[pointsToDraw - 1].y
-    );
-    gradient.addColorStop(0, 'hsla(0, 72%, 51%, 0.3)');
-    gradient.addColorStop(0.5, 'hsla(0, 72%, 51%, 0.8)');
-    gradient.addColorStop(1, 'hsla(0, 72%, 61%, 1)');
-    ctx.strokeStyle = gradient;
-    
-    ctx.moveTo(segment[0].x, segment[0].y);
-    
-    for (let i = 1; i < pointsToDraw; i++) {
-      ctx.lineTo(segment[i].x, segment[i].y);
-    }
-    
-    ctx.stroke();
-    
-    // Draw glowing dot at the end of the arc
-    if (progress > 0 && progress < 1) {
-      const endPoint = segment[pointsToDraw - 1];
-      ctx.beginPath();
-      ctx.fillStyle = 'hsl(0, 72%, 61%)';
-      ctx.shadowColor = 'hsl(0, 72%, 51%)';
-      ctx.shadowBlur = 6;
-      ctx.arc(endPoint.x, endPoint.y, 3, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.shadowBlur = 0;
-    }
+    ctx.fillStyle = 'hsl(0, 72%, 70%)';
+    ctx.arc(head.x, head.y, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
   }
+}
+
+// Draw pulsing marker
+export function drawPulsingMarker(ctx: CanvasRenderingContext2D, x: number, y: number, pulsePhase: number, depth: number) {
+  const pulseScale = 1 + Math.sin(pulsePhase) * 0.4;
+  const opacity = 0.4 + depth * 0.6;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(x, y, 6 * pulseScale, 0, Math.PI * 2);
+  ctx.strokeStyle = `hsla(0, 72%, 50%, ${(0.5 - pulseScale * 0.15) * opacity})`;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  ctx.shadowColor = 'hsl(0, 72%, 50%)';
+  ctx.shadowBlur = 8;
+  ctx.beginPath();
+  ctx.arc(x, y, 3, 0, Math.PI * 2);
+  ctx.fillStyle = `hsla(0, 72%, 60%, ${opacity})`;
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.arc(x, y, 1.5, 0, Math.PI * 2);
+  ctx.fillStyle = `hsla(0, 72%, 85%, ${opacity})`;
+  ctx.fill();
+  ctx.restore();
 }
