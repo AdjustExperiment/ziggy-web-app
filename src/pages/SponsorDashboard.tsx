@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,10 +7,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useOptimizedAuth } from "@/hooks/useOptimizedAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Building, Upload, FileText, Trophy, Plus, Clock, CheckCircle, XCircle } from "lucide-react";
+import { Building, Upload, FileText, Trophy, Plus, Clock, CheckCircle, XCircle, Crown, Star, Zap } from "lucide-react";
+import SponsorBlogManager from "@/components/sponsor/SponsorBlogManager";
 
 interface SponsorProfile {
   id: string;
@@ -22,6 +24,12 @@ interface SponsorProfile {
   resources: any;
   created_at: string;
   updated_at: string;
+  // New approval fields
+  is_approved?: boolean;
+  approved_tier?: string | null;
+  blog_posts_limit?: number;
+  blog_posts_used?: number;
+  approved_at?: string;
 }
 
 interface SponsorApplication {
@@ -72,6 +80,21 @@ const SponsorDashboard = () => {
     offerings: "",
     requests: ""
   });
+
+  const getTierIcon = (tier: string) => {
+    switch (tier?.toLowerCase()) {
+      case 'platinum':
+        return <Zap className="h-4 w-4 text-purple-500" />;
+      case 'gold':
+        return <Crown className="h-4 w-4 text-yellow-500" />;
+      case 'silver':
+        return <Star className="h-4 w-4 text-gray-400" />;
+      case 'bronze':
+        return <Trophy className="h-4 w-4 text-orange-600" />;
+      default:
+        return null;
+    }
+  };
 
   useEffect(() => {
     if (user) {
@@ -351,12 +374,33 @@ const SponsorDashboard = () => {
             </CardContent>
           </Card>
         ) : (
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="profile">Profile</TabsTrigger>
-              <TabsTrigger value="applications">Applications</TabsTrigger>
-              <TabsTrigger value="apply">Apply for Sponsorship</TabsTrigger>
-            </TabsList>
+          <>
+            {/* Approval Status Banner */}
+            {sponsorProfile.is_approved && sponsorProfile.approved_tier && (
+              <Alert className="mb-6 border-green-500/30 bg-green-500/10">
+                <CheckCircle className="h-4 w-4 text-green-500" />
+                <AlertDescription className="flex items-center gap-2">
+                  <span>Your sponsorship is approved!</span>
+                  <Badge className="flex items-center gap-1">
+                    {getTierIcon(sponsorProfile.approved_tier)}
+                    <span className="capitalize">{sponsorProfile.approved_tier}</span>
+                  </Badge>
+                  <span className="text-muted-foreground ml-2">
+                    Blog posts: {sponsorProfile.blog_posts_used || 0} / {sponsorProfile.blog_posts_limit || 0} used
+                  </span>
+                </AlertDescription>
+              </Alert>
+            )}
+
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="profile">Profile</TabsTrigger>
+                <TabsTrigger value="applications">Applications</TabsTrigger>
+                <TabsTrigger value="blog" disabled={!sponsorProfile.is_approved}>
+                  Blog Posts
+                </TabsTrigger>
+                <TabsTrigger value="apply">Apply</TabsTrigger>
+              </TabsList>
 
             <TabsContent value="profile">
               <Card>
@@ -536,7 +580,24 @@ const SponsorDashboard = () => {
                 </CardContent>
               </Card>
             </TabsContent>
+
+            {/* Blog Posts Tab */}
+            <TabsContent value="blog">
+              {sponsorProfile && (
+                <SponsorBlogManager 
+                  sponsorProfile={{
+                    id: sponsorProfile.id,
+                    blog_posts_limit: sponsorProfile.blog_posts_limit || 0,
+                    blog_posts_used: sponsorProfile.blog_posts_used || 0,
+                    is_approved: sponsorProfile.is_approved || false,
+                    approved_tier: sponsorProfile.approved_tier || null
+                  }}
+                  onPostCreated={fetchData}
+                />
+              )}
+            </TabsContent>
           </Tabs>
+          </>
         )}
       </div>
     </div>

@@ -287,6 +287,7 @@ export type Database = {
           featured: boolean
           id: string
           slug: string
+          sponsor_id: string | null
           status: string
           tags: string[] | null
           title: string
@@ -301,6 +302,7 @@ export type Database = {
           featured?: boolean
           id?: string
           slug: string
+          sponsor_id?: string | null
           status?: string
           tags?: string[] | null
           title: string
@@ -315,12 +317,21 @@ export type Database = {
           featured?: boolean
           id?: string
           slug?: string
+          sponsor_id?: string | null
           status?: string
           tags?: string[] | null
           title?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "blog_posts_sponsor_id_fkey"
+            columns: ["sponsor_id"]
+            isOneToOne: false
+            referencedRelation: "sponsor_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       break_categories: {
         Row: {
@@ -2505,9 +2516,15 @@ export type Database = {
       }
       sponsor_profiles: {
         Row: {
+          approved_at: string | null
+          approved_by: string | null
+          approved_tier: string | null
+          blog_posts_limit: number | null
+          blog_posts_used: number | null
           created_at: string
           description: string | null
           id: string
+          is_approved: boolean | null
           is_platform_partner: boolean
           logo_url: string | null
           name: string
@@ -2518,9 +2535,15 @@ export type Database = {
           website: string | null
         }
         Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          approved_tier?: string | null
+          blog_posts_limit?: number | null
+          blog_posts_used?: number | null
           created_at?: string
           description?: string | null
           id?: string
+          is_approved?: boolean | null
           is_platform_partner?: boolean
           logo_url?: string | null
           name: string
@@ -2531,9 +2554,15 @@ export type Database = {
           website?: string | null
         }
         Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          approved_tier?: string | null
+          blog_posts_limit?: number | null
+          blog_posts_used?: number | null
           created_at?: string
           description?: string | null
           id?: string
+          is_approved?: boolean | null
           is_platform_partner?: boolean
           logo_url?: string | null
           name?: string
@@ -2542,6 +2571,36 @@ export type Database = {
           updated_at?: string
           user_id?: string
           website?: string | null
+        }
+        Relationships: []
+      }
+      sponsor_tier_settings: {
+        Row: {
+          blog_posts_limit: number
+          created_at: string | null
+          display_priority: number
+          features: Json | null
+          id: string
+          tier: string
+          updated_at: string | null
+        }
+        Insert: {
+          blog_posts_limit?: number
+          created_at?: string | null
+          display_priority?: number
+          features?: Json | null
+          id?: string
+          tier: string
+          updated_at?: string | null
+        }
+        Update: {
+          blog_posts_limit?: number
+          created_at?: string | null
+          display_priority?: number
+          features?: Json | null
+          id?: string
+          tier?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -3601,6 +3660,14 @@ export type Database = {
         Args: { p_format_id?: string; p_tournament_id: string }
         Returns: string
       }
+      get_sponsor_blog_quota: {
+        Args: { _user_id: string }
+        Returns: {
+          posts_limit: number
+          posts_remaining: number
+          posts_used: number
+        }[]
+      }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
@@ -3614,6 +3681,7 @@ export type Database = {
       }
       is_account_locked: { Args: { _user_id: string }; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
+      is_approved_sponsor: { Args: never; Returns: boolean }
       is_org_admin: { Args: { _organization_id: string }; Returns: boolean }
       is_tournament_admin: {
         Args: { _tournament_id: string }
@@ -3646,7 +3714,13 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "judge" | "observer" | "participant" | "user"
+      app_role:
+        | "admin"
+        | "judge"
+        | "observer"
+        | "participant"
+        | "user"
+        | "sponsor"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -3774,7 +3848,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "judge", "observer", "participant", "user"],
+      app_role: [
+        "admin",
+        "judge",
+        "observer",
+        "participant",
+        "user",
+        "sponsor",
+      ],
     },
   },
 } as const

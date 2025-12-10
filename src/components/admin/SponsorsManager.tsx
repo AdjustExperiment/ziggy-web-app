@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Building, CheckCircle, XCircle, Clock, Edit, Eye, ExternalLink } from "lucide-react";
 import { approveSponsorApplication, rejectSponsorApplication, updateSponsorApplication } from "@/utils/adminActions";
 import { useAuth } from "@/hooks/useAuth";
+import SponsorTierManager from "./SponsorTierManager";
 
 interface SponsorProfile {
   id: string;
@@ -267,6 +268,7 @@ const SponsorsManager = () => {
         <TabsList>
           <TabsTrigger value="applications">Applications</TabsTrigger>
           <TabsTrigger value="profiles">Profiles</TabsTrigger>
+          <TabsTrigger value="tiers">Tier Settings</TabsTrigger>
         </TabsList>
 
         <TabsContent value="applications">
@@ -476,6 +478,10 @@ const SponsorsManager = () => {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="tiers">
+          <SponsorTierManager />
         </TabsContent>
       </Tabs>
 
