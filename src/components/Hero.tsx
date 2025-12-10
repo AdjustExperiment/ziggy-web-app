@@ -1,8 +1,8 @@
-import { ArrowRight, Trophy, Users, Target } from "lucide-react";
+import { ArrowRight, Users, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BoxedText } from "@/components/ui/boxed-text";
-import heroImage from "@/assets/hero-debate.jpg";
+import { AnimatedGlobe } from "@/components/AnimatedGlobe";
 export function Hero() {
   return <section className="relative overflow-hidden bg-gradient-hero">
       {/* Animated Background Elements */}
@@ -100,20 +100,23 @@ export function Hero() {
             </div>
           </div>
 
-          {/* Right Image */}
+          {/* Animated Globe */}
           <div className="relative order-first lg:order-last">
-            <div className="absolute inset-0 bg-gradient-to-t from-background/20 to-transparent rounded-3xl" />
-              <img alt="Professional debate tournament" src="/lovable-uploads/337a8efe-7ad1-4b3c-9e12-c8ceed8a2925.jpg" className="rounded-3xl shadow-tournament w-full h-[300px] sm:h-[400px] lg:h-[500px] xl:h-[600px] object-fill" />
+            <div className="absolute inset-0 bg-gradient-to-t from-background/20 to-transparent rounded-3xl pointer-events-none z-10" />
+            
+            <AnimatedGlobe 
+              className="rounded-3xl shadow-tournament w-full h-[300px] sm:h-[400px] lg:h-[500px] xl:h-[600px]"
+            />
             
             {/* Floating Stats Cards */}
-            <div className="absolute top-2 sm:top-4 right-2 sm:right-4 bg-card/90 backdrop-blur-sm rounded-2xl p-2 sm:p-4 shadow-card border border-border/50">
+            <div className="absolute top-2 sm:top-4 right-2 sm:right-4 z-20 bg-card/90 backdrop-blur-sm rounded-2xl p-2 sm:p-4 shadow-card border border-border/50">
               <div className="flex items-center gap-1 sm:gap-2">
                 <Users className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
                 <span className="text-xs sm:text-sm font-medium text-card-foreground">Live: 1,342</span>
               </div>
             </div>
             
-            <div className="absolute bottom-2 sm:bottom-4 left-2 sm:left-4 bg-card/90 backdrop-blur-sm rounded-2xl p-2 sm:p-4 shadow-card border border-border/50">
+            <div className="absolute bottom-2 sm:bottom-4 left-2 sm:left-4 z-20 bg-card/90 backdrop-blur-sm rounded-2xl p-2 sm:p-4 shadow-card border border-border/50">
               <div className="flex items-center gap-1 sm:gap-2">
                 <Target className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
                 <span className="text-xs sm:text-sm font-medium text-card-foreground">Win Rate: 78.5%</span>
