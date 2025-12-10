@@ -1,0 +1,27 @@
+{
+  "buttons": {
+    "signUp": "Forúkọsílẹ̀ Báyìí",
+    "signIn": "Wọlé",
+    "signOut": "Jáde",
+    "learnMore": "Kọ́ Síi",
+    "register": "Forúkọsílẹ̀",
+    "viewDetails": "Wo Àlàyé",
+    "submit": "Fíránṣẹ́",
+    "cancel": "Fagilé",
+    "getStarted": "Bẹ̀rẹ̀ Báyìí",
+    "contact": "Kàn sí Wa",
+    "membersPage": "Ojú-ìwé Ọmọ Ẹgbẹ́",
+    "hostTournament": "Ṣe Ìdíje Rẹ"
+  },
+  "labels": {
+    "loading": "Ń gbéwọlé...",
+    "noResults": "Kò sí àbájáde",
+    "search": "Wá",
+    "filter": "Yọ",
+    "language": "Èdè"
+  },
+  "errors": {
+    "generic": "Nǹkan kan ṣẹlẹ̀",
+    "notFound": "A kò rí ojú-ìwé náà"
+  }
+}

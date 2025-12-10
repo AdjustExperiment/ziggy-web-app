@@ -1,0 +1,78 @@
+{
+  "hero": {
+    "badge": "Ilianzishwa 2011 • $2.4M+ katika Ufadhili",
+    "headline": {
+      "theBest": "Bora Zaidi",
+      "online": "Mtandaoni",
+      "debate": "Mjadala",
+      "tournament": "Mashindano"
+    },
+    "description": "Kuunganisha wajadili duniani kote. Fanya mazoezi na washindani kutoka nchi nzima kwa kulinganisha bora, ratiba rahisi na mashindano ya bei nafuu kuanzia $30-35 tu. Pata rasilimali za kipekee kwa wanachama. Miundo mingi: LD, TP, Parli na Moot Court.",
+    "stats": {
+      "signups": "Usajili wa Jumla",
+      "scholarships": "Ufadhili Uliotolewa",
+      "founded": "Ilianzishwa"
+    }
+  },
+  "features": {
+    "badge": "Imeangaziwa na Taasisi ya Cato",
+    "title": "Vipengele vya Ziggy Mjadala Mtandaoni",
+    "subtitle": "Angalia kila kitu Ziggy inatoa! Kutoka mashindano ya kimataifa hadi rasilimali za kipekee kwa wanachama.",
+    "worldwide": {
+      "title": "Mashindano ya Kimataifa",
+      "description": "Jadili na wanafunzi kutoka duniani kote. Upatikanaji rahisi kwa washindani wa mbali."
+    },
+    "powermatching": {
+      "title": "Kulinganisha Bora",
+      "description": "Shindana na washindani wenye viwango sawa vya ustadi kwa kutumia mfumo wetu wa kisasa."
+    },
+    "affordable": {
+      "title": "Bei Nafuu",
+      "description": "Mashindano ya Ziggy yanagharimu chini sana kuliko mashindano mengi ya ana kwa ana—$30-35 tu!"
+    },
+    "support": {
+      "title": "Msaada wa Wateja",
+      "description": "Wasiliana nasi wakati wowote. Kawaida tunajibu ndani ya masaa 2."
+    },
+    "privacy": {
+      "title": "Faragha",
+      "description": "Tunathamini faragha yako na kulinda kurasa zilizo na maelezo ya mawasiliano."
+    },
+    "flexibility": {
+      "title": "Kunyumbulika",
+      "description": "Ziggy inakuruhusu wewe na mpinzani wako kuratibu lini kujadili."
+    },
+    "awards": {
+      "title": "Tuzo na Ufadhili",
+      "description": "Washindani bora wanapata bidhaa za Ziggy bure! Tunatoa ufadhili kwa wanafunzi bora."
+    },
+    "scheduling": {
+      "title": "Upangaji wa Kisasa",
+      "description": "Chagua raundi/wiki za kujiondoa na panga kulingana na upatikanaji wako."
+    },
+    "realResults": {
+      "title": "Matokeo Halisi",
+      "description": "Wajadili wa Ziggy wana rekodi zilizothibitishwa za kufanya vizuri katika mashindano ya ligi."
+    },
+    "analytics": {
+      "title": "Uchambuzi",
+      "description": "Pata tuzo kwa timu bora na viwango kamili mwishoni mwa kila mashindano."
+    },
+    "formats": {
+      "title": "Mitindo Mingi ya Mjadala",
+      "description": "Tunatoa LD, TP, mjadala wa timu ya vijana, Parli ya timu na mtu binafsi, na Moot Court."
+    },
+    "prepGroup": {
+      "title": "Kikundi cha Maandalizi ya NCFCA",
+      "description": "Wanachama wa Ziggy TP wanaweza kuomba Kikundi cha Maandalizi ya NCFCA."
+    }
+  },
+  "testimonials": {
+    "title": "Wajadili Wetu Wanasema Nini",
+    "subtitle": "Ushuhuda wa kweli kutoka kwa washindani ambao wamepata mafanikio na Ziggy Mjadala Mtandaoni."
+  },
+  "cta": {
+    "title": "Uko Tayari Kuanza Safari Yako ya Ubingwa?",
+    "subtitle": "Jiunge na maelfu ya wajadili wanaoamini jukwaa letu kwa ubora wa mashindano."
+  }
+}

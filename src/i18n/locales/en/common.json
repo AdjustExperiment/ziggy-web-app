@@ -1,0 +1,27 @@
+{
+  "buttons": {
+    "signUp": "Sign Up Now",
+    "signIn": "Sign In",
+    "signOut": "Sign Out",
+    "learnMore": "Learn More",
+    "register": "Register",
+    "viewDetails": "View Details",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "getStarted": "Get Started Now",
+    "contact": "Contact",
+    "membersPage": "Members Page",
+    "hostTournament": "Host Your Tournament"
+  },
+  "labels": {
+    "loading": "Loading...",
+    "noResults": "No results found",
+    "search": "Search",
+    "filter": "Filter",
+    "language": "Language"
+  },
+  "errors": {
+    "generic": "Something went wrong",
+    "notFound": "Page not found"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "buttons": {
+    "signUp": "Bhalisela Manje",
+    "signIn": "Ngena",
+    "signOut": "Phuma",
+    "learnMore": "Funda Okwengeziwe",
+    "register": "Bhalisa",
+    "viewDetails": "Buka Imininingwane",
+    "submit": "Thumela",
+    "cancel": "Khansela",
+    "getStarted": "Qala Manje",
+    "contact": "Xhumana Nathi",
+    "membersPage": "Ikhasi Lamalungu",
+    "hostTournament": "Phatha Umncintiswano Wakho"
+  },
+  "labels": {
+    "loading": "Iyalayisha...",
+    "noResults": "Ayikho imiphumela",
+    "search": "Sesha",
+    "filter": "Hlunga",
+    "language": "Ulimi"
+  },
+  "errors": {
+    "generic": "Kukhona okungahambanga kahle",
+    "notFound": "Ikhasi alitholakalanga"
+  }
+}

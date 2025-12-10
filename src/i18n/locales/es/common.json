@@ -1,0 +1,27 @@
+{
+  "buttons": {
+    "signUp": "Regístrate Ahora",
+    "signIn": "Iniciar Sesión",
+    "signOut": "Cerrar Sesión",
+    "learnMore": "Más Información",
+    "register": "Registrarse",
+    "viewDetails": "Ver Detalles",
+    "submit": "Enviar",
+    "cancel": "Cancelar",
+    "getStarted": "Comenzar Ahora",
+    "contact": "Contacto",
+    "membersPage": "Página de Miembros",
+    "hostTournament": "Organiza Tu Torneo"
+  },
+  "labels": {
+    "loading": "Cargando...",
+    "noResults": "Sin resultados",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "language": "Idioma"
+  },
+  "errors": {
+    "generic": "Algo salió mal",
+    "notFound": "Página no encontrada"
+  }
+}

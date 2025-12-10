@@ -1,0 +1,78 @@
+{
+  "hero": {
+    "badge": "Fundado en 2011 • $2.4M+ en Becas",
+    "headline": {
+      "theBest": "El Mejor",
+      "online": "Torneo",
+      "debate": "de Debate",
+      "tournament": "en Línea"
+    },
+    "description": "Conectando debatientes de todo el mundo. Practica con competidores de todo el país con emparejamiento automático, horarios flexibles y torneos asequibles desde solo $30-35. Accede a recursos exclusivos para miembros incluyendo entrenadores, libros de fuentes y materiales de capacitación. Múltiples formatos: LD, TP, Parli y Moot Court.",
+    "stats": {
+      "signups": "Inscripciones Totales",
+      "scholarships": "Becas Otorgadas",
+      "founded": "Fundado"
+    }
+  },
+  "features": {
+    "badge": "Destacado por el Instituto Cato",
+    "title": "Características de Ziggy Online Debate",
+    "subtitle": "¡Descubre todo lo que Ziggy tiene para ofrecer! Desde competencia mundial hasta recursos exclusivos para miembros.",
+    "worldwide": {
+      "title": "Competencia Mundial",
+      "description": "Debate con estudiantes de todo el mundo. Fácil acceso para competidores remotos."
+    },
+    "powermatching": {
+      "title": "Emparejamiento Inteligente",
+      "description": "Debate contra competidores con niveles de habilidad similares usando nuestro sistema avanzado."
+    },
+    "affordable": {
+      "title": "Asequible",
+      "description": "Los torneos Ziggy cuestan mucho menos que la mayoría de los torneos presenciales—¡solo $30-35!"
+    },
+    "support": {
+      "title": "Soporte al Cliente",
+      "description": "Contáctanos en cualquier momento. Normalmente respondemos en 2 horas."
+    },
+    "privacy": {
+      "title": "Privacidad",
+      "description": "Valoramos tu privacidad y protegemos las páginas con información de contacto."
+    },
+    "flexibility": {
+      "title": "Flexibilidad",
+      "description": "Ziggy te permite coordinar con tu oponente cuándo debatir."
+    },
+    "awards": {
+      "title": "Premios y Becas",
+      "description": "¡Los mejores competidores obtienen artículos Ziggy gratis! Ofrecemos becas para estudiantes destacados."
+    },
+    "scheduling": {
+      "title": "Programación Avanzada",
+      "description": "Selecciona rondas/semanas para no participar y programa según tu disponibilidad."
+    },
+    "realResults": {
+      "title": "Resultados Reales",
+      "description": "Los debatientes de Ziggy tienen un historial comprobado de buen desempeño en torneos."
+    },
+    "analytics": {
+      "title": "Análisis",
+      "description": "Obtén premios para los mejores equipos y clasificaciones al final de cada torneo."
+    },
+    "formats": {
+      "title": "Múltiples Estilos de Debate",
+      "description": "Ofrecemos LD, TP, debate en equipo junior, Parli individual y en equipo, y Moot Court."
+    },
+    "prepGroup": {
+      "title": "Grupo de Preparación NCFCA",
+      "description": "Los miembros de Ziggy TP pueden aplicar al Grupo de Preparación NCFCA."
+    }
+  },
+  "testimonials": {
+    "title": "Lo Que Dicen Nuestros Debatientes",
+    "subtitle": "Testimonios reales de competidores que han tenido éxito con Ziggy Online Debate."
+  },
+  "cta": {
+    "title": "¿Listo para Comenzar tu Camino al Campeonato?",
+    "subtitle": "Únete a miles de debatientes que confían en nuestra plataforma para la excelencia competitiva."
+  }
+}

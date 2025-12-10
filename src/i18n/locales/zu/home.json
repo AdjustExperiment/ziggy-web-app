@@ -1,0 +1,78 @@
+{
+  "hero": {
+    "badge": "Yasungulwa ngo-2011 • $2.4M+ Emifundisweni",
+    "headline": {
+      "theBest": "Engcono Kakhulu",
+      "online": "Ku-Inthanethi",
+      "debate": "Inkulumo-mpikiswano",
+      "tournament": "Umqhudelwano"
+    },
+    "description": "Ukuxhuma abaphikisani emhlabeni wonke. Zijwayeze nabancintisani abavela kuwo wonke amazwe ngokufanisa okuhlakaniphile, izikhathi eziguquguqukayo kanye nemiqhudelwano eshibhile eqala ku-$30-35 kuphela. Thola izinsiza ezikhethekile zamalungu. Imifomathi eminingi: LD, TP, Parli ne-Moot Court.",
+    "stats": {
+      "signups": "Ukubhalisa Okuphelele",
+      "scholarships": "Imifundaze Enikeziwe",
+      "founded": "Yasungulwa"
+    }
+  },
+  "features": {
+    "badge": "Ifakwe yi-Cato Institute",
+    "title": "Izici ze-Ziggy Inkulumo-mpikiswano Ku-Inthanethi",
+    "subtitle": "Bona konke i-Ziggy ekunikezayo! Kusukela emqhudelwaneni womhlaba wonke kuya ezinsizeni ezikhethekile zamalungu.",
+    "worldwide": {
+      "title": "Umqhudelwano Womhlaba Wonke",
+      "description": "Phikisana nabafundi abavela emhlabeni wonke. Ukufinyelela okulula kwabancintisani abakude."
+    },
+    "powermatching": {
+      "title": "Ukufanisa Okuhlakaniphile",
+      "description": "Ncintisana nabancintisani abanezinga elifanayo lokwazi ngokusebenzisa uhlelo lwethu oluthuthukile."
+    },
+    "affordable": {
+      "title": "Intengo Ephansi",
+      "description": "Imiqhudelwano ye-Ziggy ibiza kancane kakhulu kuneminye imiqhudelwano yobuso nobuso—$30-35 kuphela!"
+    },
+    "support": {
+      "title": "Ukusekela Kwamakhasimende",
+      "description": "Xhumana nathi noma nini. Sivame ukuphendula phakathi namahora ama-2."
+    },
+    "privacy": {
+      "title": "Ubumfihlo",
+      "description": "Siyabuqaphela ubumfihlo bakho futhi sivikele amakhasi anolwazi lokuxhumana."
+    },
+    "flexibility": {
+      "title": "Ukuguquguquka",
+      "description": "I-Ziggy ikuvumela wena nomphikisi wakho ukuthi nihlelele ukuthi nizokhuluma nini."
+    },
+    "awards": {
+      "title": "Imiklomelo Nemifundaze",
+      "description": "Abancintisani abaphezulu bathola izinto ze-Ziggy zamahhala! Sinikeza imifundaze kubafundi abagqamile."
+    },
+    "scheduling": {
+      "title": "Ukuhlela Okuthuthukile",
+      "description": "Khetha amarawundi/amasonto okushiya futhi uhlele ngokuvumelana nokutholakala kwakho."
+    },
+    "realResults": {
+      "title": "Imiphumela Yangempela",
+      "description": "Abaphikisani be-Ziggy banerekhodi elifakazelwe lokwenza kahle emiqhudelwaneni yeleague."
+    },
+    "analytics": {
+      "title": "Ukuhlaziywa",
+      "description": "Thola imiklomelo yamaqembu aphezulu nezinga eliphelele ekupheleni komqhudelwano ngamunye."
+    },
+    "formats": {
+      "title": "Izitayela Eziningi Zokuphikisana",
+      "description": "Sinikeza i-LD, TP, inkulumo-mpikiswano yeqembu elincane, i-Parli yeqembu nomuntu ngamunye, ne-Moot Court."
+    },
+    "prepGroup": {
+      "title": "Iqembu Lokulungiselela i-NCFCA",
+      "description": "Amalungu e-Ziggy TP angafaka isicelo seQembu Lokulungiselela i-NCFCA."
+    }
+  },
+  "testimonials": {
+    "title": "Okushiwo Abaphikisani Bethu",
+    "subtitle": "Ubufakazi bangempela obuvela kubancintisani abaphumelele ne-Ziggy Inkulumo-mpikiswano Ku-Inthanethi."
+  },
+  "cta": {
+    "title": "Ulungele Ukuqala Uhambo Lwakho Lokuba Yiqhawe?",
+    "subtitle": "Hlangana nezinkulungwane zabaphikisani abathemba inkundla yethu yokuvelela emqhudelwaneni."
+  }
+}

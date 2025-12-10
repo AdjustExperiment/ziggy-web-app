@@ -1,0 +1,78 @@
+{
+  "hero": {
+    "badge": "创立于2011年 • 奖学金超过240万美元",
+    "headline": {
+      "theBest": "最佳",
+      "online": "在线",
+      "debate": "辩论",
+      "tournament": "比赛"
+    },
+    "description": "连接全球辩手。通过智能匹配、灵活安排和仅需30-35美元的实惠比赛，与全国各地的选手一起练习。获取会员专属资源，包括教练、资料库和培训材料。多种形式：LD、TP、Parli和模拟法庭。",
+    "stats": {
+      "signups": "总注册人数",
+      "scholarships": "已颁发奖学金",
+      "founded": "创立年份"
+    }
+  },
+  "features": {
+    "badge": "由卡托研究所推荐",
+    "title": "Ziggy在线辩论功能",
+    "subtitle": "了解Ziggy提供的一切！从全球竞赛到会员专属资源。",
+    "worldwide": {
+      "title": "全球竞争",
+      "description": "与世界各地的学生辩论。远程参赛者轻松访问。"
+    },
+    "powermatching": {
+      "title": "智能匹配",
+      "description": "使用我们的先进系统与技能水平相近的选手对战。"
+    },
+    "affordable": {
+      "title": "价格实惠",
+      "description": "Ziggy比赛费用远低于大多数线下比赛——仅需30-35美元！"
+    },
+    "support": {
+      "title": "客户支持",
+      "description": "随时联系我们。我们通常在2小时内回复。"
+    },
+    "privacy": {
+      "title": "隐私保护",
+      "description": "我们重视您的隐私，保护包含联系信息的页面。"
+    },
+    "flexibility": {
+      "title": "灵活性",
+      "description": "Ziggy让您和对手协调辩论时间。"
+    },
+    "awards": {
+      "title": "奖励与奖学金",
+      "description": "顶尖选手获得免费Ziggy周边！我们为优秀学生提供奖学金。"
+    },
+    "scheduling": {
+      "title": "高级排程",
+      "description": "选择退出的轮次/周，根据您的时间安排比赛。"
+    },
+    "realResults": {
+      "title": "实际成果",
+      "description": "Ziggy辩手在联赛比赛中有出色的表现记录。"
+    },
+    "analytics": {
+      "title": "数据分析",
+      "description": "获得顶尖团队奖励和每场比赛结束时的综合排名。"
+    },
+    "formats": {
+      "title": "多种辩论形式",
+      "description": "我们提供LD、TP、青少年团队辩论、团队和个人Parli，以及模拟法庭。"
+    },
+    "prepGroup": {
+      "title": "NCFCA预备组",
+      "description": "Ziggy TP成员可以申请加入NCFCA预备组。"
+    }
+  },
+  "testimonials": {
+    "title": "我们辩手的评价",
+    "subtitle": "来自在Ziggy在线辩论中取得成功的选手的真实评价。"
+  },
+  "cta": {
+    "title": "准备开始您的冠军之旅？",
+    "subtitle": "加入数千名信赖我们平台追求卓越竞技的辩手。"
+  }
+}

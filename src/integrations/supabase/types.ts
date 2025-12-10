@@ -1767,6 +1767,7 @@ export type Database = {
           locked_by_user_id: string | null
           locked_until: string | null
           phone: string | null
+          preferred_language: string | null
           region: string | null
           region_number: number | null
           role: string
@@ -1785,6 +1786,7 @@ export type Database = {
           locked_by_user_id?: string | null
           locked_until?: string | null
           phone?: string | null
+          preferred_language?: string | null
           region?: string | null
           region_number?: number | null
           role?: string
@@ -1803,6 +1805,7 @@ export type Database = {
           locked_by_user_id?: string | null
           locked_until?: string | null
           phone?: string | null
+          preferred_language?: string | null
           region?: string | null
           region_number?: number | null
           role?: string
