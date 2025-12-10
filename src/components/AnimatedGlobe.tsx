@@ -1,33 +1,28 @@
 import { useEffect, useRef } from 'react';
 import createGlobe from 'cobe';
 import { cn } from '@/lib/utils';
-import { WORLD_CAPITALS, CONNECTION_ROUTES } from '@/data/capitals';
-import { drawAnimatedArc } from '@/lib/globeUtils';
+import { WORLD_CITIES } from '@/data/capitals';
 
-interface ArcState { routeIndex: number; progress: number; active: boolean; }
+interface CityLightState {
+  intensity: number;
+  direction: 'rising' | 'falling' | 'idle';
+  delay: number;
+}
 
 export function AnimatedGlobe({ className }: { className?: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const arcCanvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const phiRef = useRef(0);
-  const sizeRef = useRef(0);
-  const arcsRef = useRef<ArcState[]>([
-    { routeIndex: 0, progress: 0, active: true },
-    { routeIndex: 7, progress: 0.2, active: true },
-    { routeIndex: 14, progress: 0.4, active: true },
-    { routeIndex: 21, progress: 0.6, active: true },
-    { routeIndex: 28, progress: 0.8, active: true },
-    { routeIndex: 35, progress: 1.0, active: true },
-    { routeIndex: 42, progress: 0.3, active: true },
-    { routeIndex: 49, progress: 0.7, active: true },
-  ]);
+  const cityStatesRef = useRef<CityLightState[]>([]);
 
-  // Convert capitals to cobe marker format
-  const cobeMarkers = WORLD_CAPITALS.map(city => ({
-    location: [city.lat, city.lng] as [number, number],
-    size: 0.025
-  }));
+  // Initialize city states with random staggering
+  useEffect(() => {
+    cityStatesRef.current = WORLD_CITIES.map(() => ({
+      intensity: Math.random() < 0.15 ? Math.random() * 0.5 : 0,
+      direction: Math.random() < 0.2 ? 'rising' : 'idle',
+      delay: Math.floor(Math.random() * 180)
+    }));
+  }, []);
 
   useEffect(() => {
     if ('geolocation' in navigator) {
@@ -39,30 +34,26 @@ export function AnimatedGlobe({ className }: { className?: string }) {
   }, []);
 
   useEffect(() => {
-    const container = containerRef.current, canvas = canvasRef.current;
-    const arcCanvas = arcCanvasRef.current;
-    if (!container || !canvas || !arcCanvas) return;
+    const container = containerRef.current;
+    const canvas = canvasRef.current;
+    if (!container || !canvas) return;
 
     let globe: ReturnType<typeof createGlobe> | undefined;
-    let animId: number;
 
     const init = () => {
       const size = Math.min(container.offsetWidth, container.offsetHeight, 600);
-      sizeRef.current = size;
       const dpr = Math.min(window.devicePixelRatio, 2);
       
       canvas.width = size * dpr; 
       canvas.height = size * dpr;
       canvas.style.width = `${size}px`; 
       canvas.style.height = `${size}px`;
-      
-      arcCanvas.width = size * dpr; 
-      arcCanvas.height = size * dpr;
-      arcCanvas.style.width = `${size}px`; 
-      arcCanvas.style.height = `${size}px`;
-      
-      const arcCtx = arcCanvas.getContext('2d')!;
-      arcCtx.scale(dpr, dpr);
+
+      // Initialize markers with starting colors
+      const initialMarkers = WORLD_CITIES.map((city) => ({
+        location: [city.lat, city.lng] as [number, number],
+        size: 0.02
+      }));
 
       globe = createGlobe(canvas, {
         devicePixelRatio: dpr, 
@@ -77,48 +68,62 @@ export function AnimatedGlobe({ className }: { className?: string }) {
         baseColor: [0.08, 0.08, 0.12], 
         markerColor: [0.9, 0.2, 0.2], 
         glowColor: [0.15, 0.15, 0.2],
-        markers: cobeMarkers,
+        markers: initialMarkers,
         onRender: (state) => {
           phiRef.current += 0.0008;
           state.phi = phiRef.current;
+
+          // Update city light states and markers
+          const updatedMarkers = WORLD_CITIES.map((city, i) => {
+            const cityState = cityStatesRef.current[i];
+            if (!cityState) return {
+              location: [city.lat, city.lng] as [number, number],
+              size: 0.02
+            };
+
+            // Animate intensity based on direction
+            if (cityState.direction === 'rising') {
+              cityState.intensity = Math.min(1, cityState.intensity + 0.015);
+              if (cityState.intensity >= 1) {
+                cityState.direction = 'falling';
+                cityState.delay = 20 + Math.random() * 40;
+              }
+            } else if (cityState.direction === 'falling') {
+              cityState.intensity = Math.max(0, cityState.intensity - 0.008);
+              if (cityState.intensity <= 0) {
+                cityState.direction = 'idle';
+                cityState.delay = 60 + Math.random() * 240;
+              }
+            } else if (cityState.direction === 'idle') {
+              cityState.delay--;
+              if (cityState.delay <= 0) {
+                cityState.direction = 'rising';
+              }
+            }
+
+            // Size pulses slightly with intensity
+            const pulseSize = 0.02 + cityState.intensity * 0.015;
+
+            return {
+              location: [city.lat, city.lng] as [number, number],
+              size: pulseSize
+            };
+          });
+
+          state.markers = updatedMarkers;
         },
       });
-
-      const animate = () => {
-        const r = size * 0.425;
-        arcCtx.clearRect(0, 0, size, size);
-
-        for (const arc of arcsRef.current) {
-          if (!arc.active) continue;
-          const route = CONNECTION_ROUTES[arc.routeIndex];
-          if (!route) continue;
-          const start = WORLD_CAPITALS[route[0]], end = WORLD_CAPITALS[route[1]];
-          if (!start || !end) continue;
-          
-          const fadeOpacity = arc.progress > 1.0 ? Math.max(0, 1 - (arc.progress - 1.0) * 2) : 1;
-          drawAnimatedArc(arcCtx, { lat: start.lat, lng: start.lng }, { lat: end.lat, lng: end.lng }, phiRef.current, size, size, r, Math.min(arc.progress, 1), fadeOpacity);
-          
-          arc.progress += 0.002;
-          if (arc.progress >= 1.5) { 
-            arc.progress = 0; 
-            arc.routeIndex = (arc.routeIndex + 1) % CONNECTION_ROUTES.length;
-          }
-        }
-        animId = requestAnimationFrame(animate);
-      };
-      animate();
     };
 
     init();
-    const onResize = () => { globe?.destroy(); cancelAnimationFrame(animId); init(); };
+    const onResize = () => { globe?.destroy(); init(); };
     window.addEventListener('resize', onResize);
-    return () => { globe?.destroy(); cancelAnimationFrame(animId); window.removeEventListener('resize', onResize); };
-  }, [cobeMarkers]);
+    return () => { globe?.destroy(); window.removeEventListener('resize', onResize); };
+  }, []);
 
   return (
     <div ref={containerRef} className={cn("relative w-full h-full flex items-center justify-center", className)}>
       <canvas ref={canvasRef} className="max-w-full max-h-full" />
-      <canvas ref={arcCanvasRef} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
     </div>
   );
 }
