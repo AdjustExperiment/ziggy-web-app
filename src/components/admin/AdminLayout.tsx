@@ -5,6 +5,7 @@ import { AppSidebar } from './AppSidebar';
 import { useOptimizedAuth } from '@/hooks/useOptimizedAuth';
 import { Badge } from '@/components/ui/badge';
 import { Building, Trophy } from 'lucide-react';
+import { AdminSessionTimeout } from './AdminSessionTimeout';
 
 interface AdminLayoutProps {
   children: React.ReactNode;

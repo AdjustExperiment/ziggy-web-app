@@ -1,10 +1,11 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0';
 
+const EMAIL_API_SECRET = Deno.env.get("EMAIL_API_SECRET");
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-api-secret",
 };
 
 const handler = async (req: Request): Promise<Response> => {
@@ -12,12 +13,50 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  try {
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+  const supabase = createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+  );
 
+  // Validate authorization - either shared secret or admin JWT
+  const apiSecret = req.headers.get('x-api-secret');
+  const authHeader = req.headers.get('authorization');
+  
+  let isAuthorized = false;
+  
+  // Check shared secret
+  if (apiSecret && apiSecret === EMAIL_API_SECRET) {
+    isAuthorized = true;
+  }
+  
+  // Check JWT for admin
+  if (!isAuthorized && authHeader) {
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    
+    if (!error && user) {
+      const { data: adminRole } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
+        .single();
+      
+      if (adminRole) {
+        isAuthorized = true;
+      }
+    }
+  }
+
+  if (!isAuthorized) {
+    console.error('Unauthorized access attempt to send-pending-reminders');
+    return new Response(
+      JSON.stringify({ error: 'Unauthorized' }),
+      { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+    );
+  }
+
+  try {
     console.log('Starting pending reminders job...');
 
     // Get all pending registrations that need reminders
@@ -82,16 +121,25 @@ const handler = async (req: Request): Promise<Response> => {
         if (shouldSendInitial || shouldSendRepeat) {
           console.log(`Sending reminder for registration ${registration.id}`);
           
-          // Call the send-registration-email function
-          const emailResponse = await supabase.functions.invoke('send-registration-email', {
-            body: {
-              registration_id: registration.id,
-              email_type: 'payment_pending'
+          // Call the send-registration-email function with shared secret
+          const emailResponse = await fetch(
+            `${Deno.env.get('SUPABASE_URL')}/functions/v1/send-registration-email`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-api-secret': EMAIL_API_SECRET || '',
+              },
+              body: JSON.stringify({
+                registration_id: registration.id,
+                email_type: 'payment_pending'
+              })
             }
-          });
+          );
 
-          if (emailResponse.error) {
-            console.error(`Failed to send reminder for ${registration.id}:`, emailResponse.error);
+          if (!emailResponse.ok) {
+            const errorText = await emailResponse.text();
+            console.error(`Failed to send reminder for ${registration.id}:`, errorText);
             errors++;
           } else {
             console.log(`Reminder sent for registration ${registration.id}`);

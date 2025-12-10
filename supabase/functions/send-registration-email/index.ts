@@ -1,13 +1,13 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0';
 import { Resend } from "npm:resend@2.0.0";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+const EMAIL_API_SECRET = Deno.env.get("EMAIL_API_SECRET");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-api-secret",
 };
 
 interface EmailRequest {
@@ -15,16 +15,60 @@ interface EmailRequest {
   email_type: 'registration_success' | 'payment_pending';
 }
 
+// Validate authorization - either shared secret or admin JWT
+async function validateAuthorization(req: Request, supabase: any): Promise<{ valid: boolean; error?: string }> {
+  // Check for shared secret (for internal service calls)
+  const apiSecret = req.headers.get('x-api-secret');
+  if (apiSecret && apiSecret === EMAIL_API_SECRET) {
+    return { valid: true };
+  }
+
+  // Check for JWT authorization (for admin calls)
+  const authHeader = req.headers.get('authorization');
+  if (authHeader) {
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    
+    if (error || !user) {
+      return { valid: false, error: 'Invalid token' };
+    }
+
+    // Check if user is admin
+    const { data: adminRole } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', 'admin')
+      .single();
+
+    if (adminRole) {
+      return { valid: true };
+    }
+  }
+
+  return { valid: false, error: 'Unauthorized' };
+}
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const supabase = createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+  );
+
   try {
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    // Validate authorization
+    const authResult = await validateAuthorization(req, supabase);
+    if (!authResult.valid) {
+      console.error('Authorization failed:', authResult.error);
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
 
     const { registration_id, email_type }: EmailRequest = await req.json();
 
@@ -143,11 +187,6 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Log the error
     try {
-      const supabase = createClient(
-        Deno.env.get('SUPABASE_URL') ?? '',
-        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-      );
-      
       const { registration_id, email_type } = await req.json();
       await supabase.from('email_logs').insert({
         registration_id: registration_id,
