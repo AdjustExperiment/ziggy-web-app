@@ -1703,6 +1703,59 @@ export type Database = {
           },
         ]
       }
+      pending_sponsor_invitations: {
+        Row: {
+          claimed_at: string | null
+          claimed_by_user_id: string | null
+          created_at: string
+          email: string
+          expires_at: string | null
+          id: string
+          invite_token: string
+          invited_by: string | null
+          organization_name: string
+          personal_message: string | null
+          suggested_tier: string
+          tournament_id: string | null
+        }
+        Insert: {
+          claimed_at?: string | null
+          claimed_by_user_id?: string | null
+          created_at?: string
+          email: string
+          expires_at?: string | null
+          id?: string
+          invite_token?: string
+          invited_by?: string | null
+          organization_name: string
+          personal_message?: string | null
+          suggested_tier?: string
+          tournament_id?: string | null
+        }
+        Update: {
+          claimed_at?: string | null
+          claimed_by_user_id?: string | null
+          created_at?: string
+          email?: string
+          expires_at?: string | null
+          id?: string
+          invite_token?: string
+          invited_by?: string | null
+          organization_name?: string
+          personal_message?: string | null
+          suggested_tier?: string
+          tournament_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pending_sponsor_invitations_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string

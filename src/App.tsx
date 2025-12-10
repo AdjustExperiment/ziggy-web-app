@@ -41,6 +41,7 @@ const Privacy = React.lazy(() => import('@/pages/Privacy'));
 const Rules = React.lazy(() => import('@/pages/Rules'));
 const Sponsor = React.lazy(() => import('@/pages/Sponsor'));
 const SponsorDashboard = React.lazy(() => import('@/pages/SponsorDashboard'));
+const SponsorInvite = React.lazy(() => import('@/pages/SponsorInvite'));
 const Sponsors = React.lazy(() => import('@/pages/Sponsors'));
 const LearnAboutDebate = React.lazy(() => import('@/pages/LearnAboutDebate'));
 const TournamentDashboard = React.lazy(() => import('@/pages/TournamentDashboard'));
@@ -121,6 +122,7 @@ function App() {
               } />
               <Route path="/sponsors" element={<Sponsors />} />
               <Route path="/sponsor" element={<Sponsor />} />
+              <Route path="/sponsor/invite/:token" element={<SponsorInvite />} />
               <Route path="/sponsor/dashboard" element={
                 <ProtectedRoute>
                   <SponsorDashboard />
