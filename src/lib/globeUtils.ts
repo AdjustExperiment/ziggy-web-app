@@ -1,21 +1,33 @@
-// Project lat/lng to 2D canvas coordinates
+// Project lat/lng to 2D canvas coordinates matching cobe's coordinate system
 export function projectToCanvas(
-  lat: number, lng: number, globeRotation: number,
+  lat: number, lng: number, phi: number, theta: number,
   canvasWidth: number, canvasHeight: number, globeRadius: number
 ): { x: number; y: number; visible: boolean; depth: number } {
   const latRad = lat * (Math.PI / 180);
   const lngRad = lng * (Math.PI / 180);
-  const adjustedLng = lngRad + globeRotation;
   
-  const x = Math.cos(latRad) * Math.sin(adjustedLng);
-  const y = Math.sin(latRad);
-  const z = Math.cos(latRad) * Math.cos(adjustedLng);
+  // Convert to 3D cartesian coordinates on unit sphere
+  let x = Math.cos(latRad) * Math.cos(lngRad);
+  let y = Math.sin(latRad);
+  let z = Math.cos(latRad) * Math.sin(lngRad);
+  
+  // Rotate around Y-axis by phi (horizontal rotation) - matches cobe
+  const cosP = Math.cos(phi);
+  const sinP = Math.sin(phi);
+  const x1 = x * cosP + z * sinP;
+  const z1 = -x * sinP + z * cosP;
+  
+  // Rotate around X-axis by theta (vertical tilt) - matches cobe
+  const cosT = Math.cos(theta);
+  const sinT = Math.sin(theta);
+  const y2 = y * cosT - z1 * sinT;
+  const z2 = y * sinT + z1 * cosT;
   
   return {
-    x: canvasWidth / 2 + x * globeRadius,
-    y: canvasHeight / 2 - y * globeRadius,
-    visible: z > 0.05,
-    depth: z,
+    x: canvasWidth / 2 + x1 * globeRadius,
+    y: canvasHeight / 2 - y2 * globeRadius,
+    visible: z2 > 0,
+    depth: z2,
   };
 }
 
@@ -39,7 +51,8 @@ export function drawAnimatedArc(
   ctx: CanvasRenderingContext2D,
   start: { lat: number; lng: number },
   end: { lat: number; lng: number },
-  globeRotation: number,
+  phi: number,
+  theta: number,
   canvasWidth: number,
   canvasHeight: number,
   globeRadius: number,
@@ -56,9 +69,9 @@ export function drawAnimatedArc(
     const t = i / numPoints;
     if (t > drawProgress) break;
     const pos = interpolateGreatCircle(start, end, t);
-    // Arc follows geodesic path directly on globe surface (no elevation)
-    const elevation = 1.0;
-    const p = projectToCanvas(pos.lat, pos.lng, globeRotation, canvasWidth, canvasHeight, globeRadius * elevation);
+    // Small elevation so arcs are visible above surface
+    const elevation = 1.02;
+    const p = projectToCanvas(pos.lat, pos.lng, phi, theta, canvasWidth, canvasHeight, globeRadius * elevation);
     points.push(p);
   }
 
