@@ -186,50 +186,35 @@ export default function SponsorInvite() {
 
     setClaiming(true);
     try {
-      // Check if already has sponsor profile
+      // Check if user already has a sponsor profile
       const { data: existingProfile } = await supabase
         .from("sponsor_profiles")
         .select("id")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
 
-      if (existingProfile) {
-        // Just mark invitation as claimed
-        await supabase
-          .from("pending_sponsor_invitations")
-          .update({
-            claimed_at: new Date().toISOString(),
-            claimed_by_user_id: user.id
-          })
-          .eq("id", invitation.id);
-      } else {
-        // Create sponsor profile
-        const { error: profileError } = await supabase
-          .from("sponsor_profiles")
-          .insert({
-            user_id: user.id,
-            name: invitation.organization_name,
-            is_approved: false
-          });
-
-        if (profileError) throw profileError;
-
-        // Mark invitation as claimed
-        await supabase
-          .from("pending_sponsor_invitations")
-          .update({
-            claimed_at: new Date().toISOString(),
-            claimed_by_user_id: user.id
-          })
-          .eq("id", invitation.id);
-      }
+      // Mark invitation as claimed
+      await supabase
+        .from("pending_sponsor_invitations")
+        .update({
+          claimed_at: new Date().toISOString(),
+          claimed_by_user_id: user.id
+        })
+        .eq("id", invitation.id);
 
       toast({
-        title: "Welcome aboard!",
-        description: "Your sponsor profile has been created. You can now apply to tournaments."
+        title: "Invitation claimed!",
+        description: existingProfile 
+          ? "You already have a sponsor profile. Redirecting to your dashboard."
+          : "Please complete your sponsor application."
       });
 
-      navigate("/sponsor-dashboard");
+      // Redirect to application page (or dashboard if already has profile)
+      if (existingProfile) {
+        navigate("/sponsor/dashboard");
+      } else {
+        navigate(`/sponsor/apply?org=${encodeURIComponent(invitation.organization_name)}&tier=${invitation.suggested_tier}`);
+      }
     } catch (err: any) {
       console.error("Error claiming invitation:", err);
       toast({
@@ -273,7 +258,7 @@ export default function SponsorInvite() {
               <Button variant="outline" onClick={() => navigate("/contact")}>
                 Contact Us
               </Button>
-              <Button onClick={() => navigate("/sponsor-dashboard")}>
+              <Button onClick={() => navigate("/sponsor/dashboard")}>
                 Go to Dashboard
               </Button>
             </div>
