@@ -81,6 +81,18 @@ export const finalizeScheduleProposal = async (proposalId: string, action: 'appr
 
 export const approveSponsorApplication = async (applicationId: string, adminUserId: string) => {
   try {
+    // Get the application details first
+    const { data: application, error: fetchError } = await supabase
+      .from('sponsor_applications')
+      .select('*, sponsor_profile:sponsor_profiles(id, user_id, name)')
+      .eq('id', applicationId)
+      .single();
+
+    if (fetchError) throw fetchError;
+    if (!application) throw new Error('Application not found');
+
+    // Update the application status - this triggers the sync_sponsor_approval function
+    // which handles: setting is_approved, adding sponsor role, etc.
     const { error } = await supabase
       .from('sponsor_applications')
       .update({ 
@@ -99,10 +111,21 @@ export const approveSponsorApplication = async (applicationId: string, adminUser
       .insert({
         user_id: adminUserId,
         action: 'sponsor_application_approved',
-        context: { application_id: applicationId }
+        context: { 
+          application_id: applicationId,
+          sponsor_name: application.sponsor_profile?.name,
+          tier: application.tier
+        }
       });
+
+    // Create notification for the sponsor user if they have an account
+    if (application.sponsor_profile?.user_id) {
+      // The sync_sponsor_approval trigger creates an admin_notification,
+      // but we could also create a user-specific notification here if needed
+      console.log('[approveSponsorApplication] Sponsor approved:', application.sponsor_profile.name);
+    }
     
-    return { success: true };
+    return { success: true, sponsorName: application.sponsor_profile?.name };
   } catch (error) {
     console.error('Error approving sponsor application:', error);
     throw error;
