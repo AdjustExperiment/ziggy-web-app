@@ -150,6 +150,9 @@ enabled = false
 client_id = ""
 secret = ""
 
+[functions.admin-create-user]
+verify_jwt = true
+
 [functions.send-registration-email]
 verify_jwt = false
 
@@ -157,7 +160,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.send-sponsor-invitation]
-verify_jwt = false
+verify_jwt = true
 
 [functions.seed-test-data]
 verify_jwt = true

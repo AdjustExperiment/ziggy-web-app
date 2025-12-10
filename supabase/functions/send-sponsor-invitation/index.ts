@@ -17,7 +17,54 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
   try {
+    // Verify JWT and admin role
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader) {
+      console.error('Missing authorization header');
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user: caller }, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError || !caller) {
+      console.error('Invalid token:', authError);
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Check if caller has admin role
+    const { data: adminRole, error: roleError } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', caller.id)
+      .eq('role', 'admin')
+      .single();
+
+    if (roleError || !adminRole) {
+      console.error('Caller is not an admin:', caller.id);
+      // Log failed attempt
+      await supabase.from('security_audit_logs').insert({
+        user_id: caller.id,
+        action: 'send_sponsor_invitation_denied',
+        context: { reason: 'not_admin' }
+      });
+      return new Response(
+        JSON.stringify({ error: 'Forbidden' }),
+        { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
     const { invitation_id }: SendInvitationRequest = await req.json();
 
     if (!invitation_id) {
@@ -26,11 +73,6 @@ const handler = async (req: Request): Promise<Response> => {
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
-
-    // Create Supabase client
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Fetch invitation details
     const { data: invitation, error: invitationError } = await supabase
@@ -208,7 +250,19 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    console.log(`Sponsor invitation email sent to ${invitation.email} for ${invitation.organization_name}`);
+    // Log successful invitation send
+    await supabase.from('security_audit_logs').insert({
+      user_id: caller.id,
+      action: 'sponsor_invitation_sent',
+      context: { 
+        invitation_id,
+        recipient_email: invitation.email,
+        organization_name: invitation.organization_name,
+        tier: invitation.suggested_tier
+      }
+    });
+
+    console.log(`Sponsor invitation email sent to ${invitation.email} for ${invitation.organization_name} by admin ${caller.id}`);
 
     return new Response(
       JSON.stringify({ 
