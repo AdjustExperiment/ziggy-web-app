@@ -18,6 +18,13 @@ interface BlogPost {
   created_at: string;
   author_id: string;
   featured: boolean;
+  sponsor_id: string | null;
+  sponsor_profiles?: {
+    id: string;
+    name: string;
+    logo_url: string | null;
+    website: string | null;
+  } | null;
 }
 
 export default function Blog() {
@@ -34,7 +41,10 @@ export default function Blog() {
     try {
       const { data, error } = await supabase
         .from('blog_posts')
-        .select('*')
+        .select(`
+          *,
+          sponsor_profiles:sponsor_id(id, name, logo_url, website)
+        `)
         .eq('status', 'published')
         .order('created_at', { ascending: false });
 
@@ -175,6 +185,14 @@ export default function Blog() {
                   <Badge className="absolute top-4 left-4 bg-red-500 hover:bg-red-600 text-white font-secondary">
                     Featured
                   </Badge>
+                  {featuredPost.sponsor_profiles && (
+                    <Badge className="absolute top-4 right-4 bg-purple-500/80 text-white font-secondary flex items-center gap-1">
+                      {featuredPost.sponsor_profiles.logo_url && (
+                        <img src={featuredPost.sponsor_profiles.logo_url} alt="" className="h-3 w-3 rounded-full" />
+                      )}
+                      Sponsored
+                    </Badge>
+                  )}
                 </div>
                 <div className="md:w-1/2 p-8">
                   <CardHeader className="p-0 mb-4">
@@ -234,6 +252,14 @@ export default function Blog() {
                     <MessageSquare className="h-12 w-12 text-red-400 group-hover:text-red-300 transition-colors" />
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-background/50 to-transparent group-hover:from-background/70 transition-all duration-300"></div>
+                  {post.sponsor_profiles && (
+                    <Badge className="absolute top-3 left-3 bg-purple-500/80 text-white font-secondary text-xs flex items-center gap-1">
+                      {post.sponsor_profiles.logo_url && (
+                        <img src={post.sponsor_profiles.logo_url} alt="" className="h-3 w-3 rounded-full" />
+                      )}
+                      Sponsored
+                    </Badge>
+                  )}
                   {post.tags && post.tags[0] && (
                     <Badge className="absolute top-3 right-3 bg-red-500/80 hover:bg-red-500 text-white font-secondary text-xs">
                       {post.tags[0]}

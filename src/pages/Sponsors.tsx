@@ -66,18 +66,30 @@ const Sponsors = () => {
         setSiteBlocks(blocksData || []);
       }
 
-      // Fetch approved sponsor applications grouped by tier
+      // Fetch tier settings for ordering
+      const { data: tierSettings } = await supabase
+        .from('sponsor_tier_settings')
+        .select('*')
+        .order('display_priority', { ascending: true });
+
+      // Fetch approved sponsor applications with profile data
       const { data: applicationsData } = await supabase
         .from('sponsor_applications')
         .select(`
           *,
-          sponsor_profiles(*),
+          sponsor_profiles!inner(*),
           tournaments(name, status)
         `)
         .eq('status', 'approved')
         .order('created_at', { ascending: false });
 
-      // Group by tier
+      // Create tier order map
+      const tierOrder: { [key: string]: number } = {};
+      tierSettings?.forEach((t, i) => {
+        tierOrder[t.tier.toLowerCase()] = t.display_priority || i;
+      });
+
+      // Group by tier and sort by priority
       const groupedByTier: { [key: string]: SponsorApplication[] } = {};
       applicationsData?.forEach((app) => {
         const tier = app.tier.toLowerCase();
