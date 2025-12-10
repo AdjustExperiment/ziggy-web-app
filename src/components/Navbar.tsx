@@ -25,7 +25,8 @@ import {
   ScrollText,
   BookOpen,
   Gavel,
-  Eye
+  Eye,
+  Building
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -126,6 +127,14 @@ export function Navbar() {
                       <span>Become a Sponsor</span>
                     </Link>
                   </DropdownMenuItem>
+                  {user && (
+                    <DropdownMenuItem asChild>
+                      <Link to="/sponsor/dashboard" className="flex items-center">
+                        <Building className="mr-2 h-4 w-4" />
+                        <span>Sponsor Dashboard</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
 

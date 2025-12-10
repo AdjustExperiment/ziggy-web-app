@@ -1,12 +1,23 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Crown, Star, Trophy, Zap, Users, Calendar, Target, ArrowRight } from 'lucide-react';
+import { useOptimizedAuth } from '@/hooks/useOptimizedAuth';
 import { SectionFX } from '@/components/SectionFX';
 
 const Sponsor = () => {
+  const { user } = useOptimizedAuth();
+  const navigate = useNavigate();
+
+  const handleApplyClick = () => {
+    if (user) {
+      navigate('/sponsor/dashboard');
+    } else {
+      navigate('/login', { state: { from: { pathname: '/sponsor/dashboard' } } });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
@@ -23,18 +34,16 @@ const Sponsor = () => {
             in fostering critical thinking, public speaking, and academic excellence.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a 
-              href="https://docs.google.com/forms/d/e/1FAIpQLSdWCj-1nnRKUUOD6sPsQ9Le4bY1_Ib15JyhYlzTezCRbOg6ig/viewform?usp=sf_link" 
-              target="_blank" 
-              rel="noopener noreferrer"
+            <Button 
+              size="lg" 
+              className="w-full sm:w-auto bg-primary hover:bg-primary/90"
+              onClick={handleApplyClick}
             >
-              <Button size="lg" className="w-full sm:w-auto bg-primary hover:bg-primary/90">
-                Apply Now
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-            </a>
+              Apply Now
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
             <Link to="/contact">
-              <Button variant="outline" size="lg" className="w-full sm:w-auto border-white/20 text-foreground hover:bg-white/10">
+              <Button variant="outline" size="lg" className="w-full sm:w-auto border-border text-foreground hover:bg-muted">
                 Contact Us
               </Button>
             </Link>
@@ -267,16 +276,14 @@ const Sponsor = () => {
                     Start your sponsorship journey today.
                   </p>
                   <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                    <a 
-                      href="https://docs.google.com/forms/d/e/1FAIpQLSdWCj-1nnRKUUOD6sPsQ9Le4bY1_Ib15JyhYlzTezCRbOg6ig/viewform?usp=sf_link" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
+                    <Button 
+                      size="lg" 
+                      className="w-full sm:w-auto bg-primary hover:bg-primary/90"
+                      onClick={handleApplyClick}
                     >
-                      <Button size="lg" className="w-full sm:w-auto bg-primary hover:bg-primary/90">
-                        Submit Application
-                        <ArrowRight className="ml-2 h-5 w-5" />
-                      </Button>
-                    </a>
+                      Submit Application
+                      <ArrowRight className="ml-2 h-5 w-5" />
+                    </Button>
                     <Link to="/contact">
                       <Button variant="outline" size="lg" className="w-full sm:w-auto">
                         View Guidelines
