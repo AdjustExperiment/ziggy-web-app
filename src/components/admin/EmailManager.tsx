@@ -185,8 +185,23 @@ export const EmailManager = () => {
 
   const sendTestEmail = async (templateId: string) => {
     try {
-      // This would need a test registration ID - for demo purposes
-      toast({ title: "Info", description: "Test email functionality would be implemented here" });
+      // Get current user's email
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.email) {
+        toast({ title: "Error", description: "You must be logged in to send test emails", variant: "destructive" });
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('send-test-email', {
+        body: { templateId, recipientEmail: user.email }
+      });
+
+      if (error) throw error;
+
+      toast({ 
+        title: "Test Email Sent", 
+        description: `Test email prepared for ${user.email}. Preview: "${data.preview?.subject}"` 
+      });
     } catch (error) {
       console.error('Error sending test email:', error);
       toast({ title: "Error", description: "Failed to send test email", variant: "destructive" });

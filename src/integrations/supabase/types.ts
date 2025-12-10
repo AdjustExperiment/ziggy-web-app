@@ -891,6 +891,36 @@ export type Database = {
           },
         ]
       }
+      global_settings: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          id: string
+          key: string
+          updated_at: string | null
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          id?: string
+          key: string
+          updated_at?: string | null
+          updated_by?: string | null
+          value?: Json
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          id?: string
+          key?: string
+          updated_at?: string | null
+          updated_by?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
       judge_availability: {
         Row: {
           available_dates: Json
@@ -1755,6 +1785,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      performance_metrics: {
+        Row: {
+          cls: number | null
+          connection_type: string | null
+          created_at: string | null
+          device_type: string | null
+          fcp: number | null
+          fid: number | null
+          id: string
+          inp: number | null
+          lcp: number | null
+          route: string
+          session_id: string | null
+          ttfb: number | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          cls?: number | null
+          connection_type?: string | null
+          created_at?: string | null
+          device_type?: string | null
+          fcp?: number | null
+          fid?: number | null
+          id?: string
+          inp?: number | null
+          lcp?: number | null
+          route: string
+          session_id?: string | null
+          ttfb?: number | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          cls?: number | null
+          connection_type?: string | null
+          created_at?: string | null
+          device_type?: string | null
+          fcp?: number | null
+          fid?: number | null
+          id?: string
+          inp?: number | null
+          lcp?: number | null
+          route?: string
+          session_id?: string | null
+          ttfb?: number | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -3717,6 +3798,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_interaction_logs: {
+        Row: {
+          created_at: string | null
+          device: string | null
+          id: string
+          interaction_count: number | null
+          load_time_ms: number | null
+          route: string
+          scroll_depth: number | null
+          time_on_page_ms: number | null
+          user_id: string | null
+          user_role: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          device?: string | null
+          id?: string
+          interaction_count?: number | null
+          load_time_ms?: number | null
+          route: string
+          scroll_depth?: number | null
+          time_on_page_ms?: number | null
+          user_id?: string | null
+          user_role?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          device?: string | null
+          id?: string
+          interaction_count?: number | null
+          load_time_ms?: number | null
+          route?: string
+          scroll_depth?: number | null
+          time_on_page_ms?: number | null
+          user_id?: string | null
+          user_role?: string | null
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
