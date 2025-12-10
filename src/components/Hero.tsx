@@ -102,11 +102,14 @@ export function Hero() {
             </div>
           </div>
 
-          {/* Three.js Globe */}
+          {/* Three.js Globe with Glass Card */}
           <div className="relative order-first lg:order-last">
-            <ThreeGlobe 
-              className="rounded-3xl shadow-tournament w-full h-[300px] sm:h-[400px] lg:h-[500px] xl:h-[600px]"
-            />
+            <div className="relative rounded-3xl overflow-hidden backdrop-blur-xl bg-black/20 border border-white/10 shadow-2xl">
+              <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-white/5 pointer-events-none" />
+              <ThreeGlobe 
+                className="w-full h-[300px] sm:h-[400px] lg:h-[500px] xl:h-[600px]"
+              />
+            </div>
           </div>
         </div>
       </div>
