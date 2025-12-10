@@ -87,8 +87,9 @@ export function AnimatedGlobe({ className }: { className?: string }) {
       });
 
       const animate = () => {
-        // Arc radius matches cobe's internal globe radius exactly
-        const r = size * 0.5;
+        // Arc radius calibrated to match cobe's visible globe
+        const r = size * 0.46;
+        const theta = 0.15; // Match cobe's theta value
         arcCtx.clearRect(0, 0, size, size);
 
         for (const arc of arcsRef.current) {
@@ -112,7 +113,8 @@ export function AnimatedGlobe({ className }: { className?: string }) {
             arcCtx, 
             { lat: start.lat, lng: start.lng }, 
             { lat: end.lat, lng: end.lng }, 
-            phiRef.current, 
+            phiRef.current,
+            theta,
             size, size, r, 
             arc.progress, 
             fadeOpacity
