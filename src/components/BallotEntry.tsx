@@ -56,7 +56,7 @@ export function BallotEntry({
     if (!isOpen) return;
     const timer = setTimeout(() => {
       if (canEdit) saveBallot('draft', true);
-    }, 1000);
+    }, 3000); // Increased from 1000ms to reduce API calls
     return () => clearTimeout(timer);
   }, [winner, comments, affPoints, negPoints, affRank, negRank, affFeedback, negFeedback, isOpen]);
 

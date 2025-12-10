@@ -3784,6 +3784,10 @@ export type Database = {
       is_admin: { Args: never; Returns: boolean }
       is_approved_sponsor: { Args: never; Returns: boolean }
       is_org_admin: { Args: { _organization_id: string }; Returns: boolean }
+      is_team_captain_or_coach: {
+        Args: { p_team_id: string }
+        Returns: boolean
+      }
       is_tournament_admin: {
         Args: { _tournament_id: string }
         Returns: boolean

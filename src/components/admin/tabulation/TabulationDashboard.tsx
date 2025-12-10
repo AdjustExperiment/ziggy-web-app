@@ -57,89 +57,64 @@ export default function TabulationDashboard({ tournamentId }: TabulationDashboar
 
   const fetchTournamentData = async () => {
     const errors: string[] = [];
-    console.log('[TabulationDashboard] Starting data fetch for tournament:', tournamentId);
+    console.log('[TabulationDashboard] Starting batched data fetch for tournament:', tournamentId);
     
     try {
       setLoading(true);
       setFetchErrors([]);
       
-      // Fetch tournament
-      console.log('[TabulationDashboard] Fetching tournament...');
-      const { data: tournamentData, error: tournamentError } = await supabase
-        .from('tournaments')
-        .select('*')
-        .eq('id', tournamentId)
-        .single();
+      // Batch all queries in parallel for better performance
+      const [
+        tournamentResult,
+        eventsResult,
+        roundsResult,
+        registrationsResult,
+        judgesResult
+      ] = await Promise.all([
+        supabase.from('tournaments').select('*').eq('id', tournamentId).single(),
+        supabase.from('tournament_events').select('*, debate_formats(*)').eq('tournament_id', tournamentId).eq('is_active', true).order('name'),
+        supabase.from('rounds').select('*').eq('tournament_id', tournamentId).order('round_number'),
+        supabase.from('tournament_registrations').select('*').eq('tournament_id', tournamentId).order('participant_name'),
+        supabase.from('judge_profiles').select('id, name, email, experience_level, specializations, status').order('name').limit(200) // Limit judges for performance
+      ]);
 
-      if (tournamentError) {
-        console.error('[TabulationDashboard] Tournament fetch error:', tournamentError);
-        errors.push(`Tournament: ${tournamentError.message}`);
+      // Process tournament
+      if (tournamentResult.error) {
+        console.error('[TabulationDashboard] Tournament fetch error:', tournamentResult.error);
+        errors.push(`Tournament: ${tournamentResult.error.message}`);
       } else {
-        console.log('[TabulationDashboard] Tournament fetched:', tournamentData?.name);
-        setTournament(tournamentData);
+        setTournament(tournamentResult.data);
       }
 
-      // Fetch tournament events
-      console.log('[TabulationDashboard] Fetching events...');
-      const { data: eventsData, error: eventsError } = await supabase
-        .from('tournament_events')
-        .select('*, debate_formats(*)')
-        .eq('tournament_id', tournamentId)
-        .eq('is_active', true)
-        .order('name');
-
-      if (eventsError) {
-        console.error('[TabulationDashboard] Events fetch error:', eventsError);
+      // Process events
+      if (eventsResult.error) {
+        console.error('[TabulationDashboard] Events fetch error:', eventsResult.error);
       } else {
-        console.log('[TabulationDashboard] Events fetched:', eventsData?.length);
-        setEvents(eventsData || []);
+        setEvents(eventsResult.data || []);
       }
 
-      // Fetch rounds
-      console.log('[TabulationDashboard] Fetching rounds...');
-      const { data: roundsData, error: roundsError } = await supabase
-        .from('rounds')
-        .select('*')
-        .eq('tournament_id', tournamentId)
-        .order('round_number');
-
-      if (roundsError) {
-        console.error('[TabulationDashboard] Rounds fetch error:', roundsError);
-        errors.push(`Rounds: ${roundsError.message}`);
+      // Process rounds
+      if (roundsResult.error) {
+        console.error('[TabulationDashboard] Rounds fetch error:', roundsResult.error);
+        errors.push(`Rounds: ${roundsResult.error.message}`);
       } else {
-        console.log('[TabulationDashboard] Rounds fetched:', roundsData?.length);
-        setRounds(roundsData || []);
+        setRounds(roundsResult.data || []);
       }
 
-      // Fetch registrations
-      console.log('[TabulationDashboard] Fetching registrations...');
-      const { data: registrationsData, error: registrationsError } = await supabase
-        .from('tournament_registrations')
-        .select('*')
-        .eq('tournament_id', tournamentId)
-        .order('participant_name');
-
-      if (registrationsError) {
-        console.error('[TabulationDashboard] Registrations fetch error:', registrationsError);
-        errors.push(`Registrations: ${registrationsError.message}`);
+      // Process registrations
+      if (registrationsResult.error) {
+        console.error('[TabulationDashboard] Registrations fetch error:', registrationsResult.error);
+        errors.push(`Registrations: ${registrationsResult.error.message}`);
       } else {
-        console.log('[TabulationDashboard] Registrations fetched:', registrationsData?.length);
-        setRegistrations(registrationsData || []);
+        setRegistrations(registrationsResult.data || []);
       }
 
-      // Fetch judges (tournament-specific via pairing_judge_assignments or global)
-      console.log('[TabulationDashboard] Fetching judges...');
-      const { data: judgesData, error: judgesError } = await supabase
-        .from('judge_profiles')
-        .select('*')
-        .order('name');
-
-      if (judgesError) {
-        console.error('[TabulationDashboard] Judges fetch error:', judgesError);
-        errors.push(`Judges: ${judgesError.message}`);
+      // Process judges
+      if (judgesResult.error) {
+        console.error('[TabulationDashboard] Judges fetch error:', judgesResult.error);
+        errors.push(`Judges: ${judgesResult.error.message}`);
       } else {
-        console.log('[TabulationDashboard] Judges fetched:', judgesData?.length);
-        setJudges(judgesData || []);
+        setJudges(judgesResult.data || []);
       }
 
       if (errors.length > 0) {
@@ -161,7 +136,7 @@ export default function TabulationDashboard({ tournamentId }: TabulationDashboar
       });
     } finally {
       setLoading(false);
-      console.log('[TabulationDashboard] Fetch complete. Errors:', errors.length);
+      console.log('[TabulationDashboard] Batched fetch complete. Errors:', errors.length);
     }
   };
 
