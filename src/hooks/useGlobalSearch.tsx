@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, createContext, useContext, ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useOptimizedAuth } from './useOptimizedAuth';
@@ -126,7 +126,23 @@ function parseSearchQuery(query: string): { cleanQuery: string; tags: string[] }
   return { cleanQuery, tags };
 }
 
-export function useGlobalSearch() {
+// Context type
+interface GlobalSearchContextType {
+  searchTerm: string;
+  setSearchTerm: (term: string) => void;
+  isOpen: boolean;
+  setIsOpen: (open: boolean) => void;
+  results: GlobalSearchResult[];
+  groupedResults: Record<string, GlobalSearchResult[]>;
+  recentSearches: GlobalSearchResult[];
+  addToRecent: (result: GlobalSearchResult) => void;
+  user: any;
+  isAdmin: boolean;
+}
+
+const GlobalSearchContext = createContext<GlobalSearchContextType | null>(null);
+
+export function GlobalSearchProvider({ children }: { children: ReactNode }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const { user, profile, isAdmin } = useOptimizedAuth();
@@ -325,7 +341,7 @@ export function useGlobalSearch() {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  return {
+  const value: GlobalSearchContextType = {
     searchTerm,
     setSearchTerm,
     isOpen,
@@ -334,5 +350,21 @@ export function useGlobalSearch() {
     groupedResults,
     recentSearches: getRecentSearches(),
     addToRecent,
+    user,
+    isAdmin,
   };
+
+  return (
+    <GlobalSearchContext.Provider value={value}>
+      {children}
+    </GlobalSearchContext.Provider>
+  );
+}
+
+export function useGlobalSearch() {
+  const context = useContext(GlobalSearchContext);
+  if (!context) {
+    throw new Error('useGlobalSearch must be used within GlobalSearchProvider');
+  }
+  return context;
 }

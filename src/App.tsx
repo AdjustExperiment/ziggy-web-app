@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
+import { GlobalSearchProvider } from '@/hooks/useGlobalSearch';
 
 // Conditionally load PerformanceMonitor only in development
 const PerformanceMonitor = import.meta.env.DEV 
@@ -62,9 +63,10 @@ const PageLoader = () => (
 function App() {
   return (
     <Router>
-      <Toaster />
-      <div className="min-h-screen bg-background">
-        <Navbar />
+      <GlobalSearchProvider>
+        <Toaster />
+        <div className="min-h-screen bg-background">
+          <Navbar />
         {import.meta.env.DEV && PerformanceMonitor && (
           <Suspense fallback={null}>
             <PerformanceMonitor />
@@ -176,8 +178,9 @@ function App() {
             </Routes>
           </Suspense>
         </main>
-        <Footer />
-      </div>
+          <Footer />
+        </div>
+      </GlobalSearchProvider>
     </Router>
   );
 }
