@@ -34,7 +34,7 @@ export function interpolateGreatCircle(
   return { lat: Math.atan2(z, Math.sqrt(x * x + y * y)) * 180 / Math.PI, lng: Math.atan2(y, x) * 180 / Math.PI };
 }
 
-// Draw animated arc
+// Draw animated arc - endpoints touch globe surface exactly
 export function drawAnimatedArc(
   ctx: CanvasRenderingContext2D,
   start: { lat: number; lng: number },
@@ -49,11 +49,16 @@ export function drawAnimatedArc(
   const numPoints = 40;
   const points: { x: number; y: number; visible: boolean }[] = [];
 
+  // Clamp progress for drawing to max 1.0
+  const drawProgress = Math.min(progress, 1.0);
+
   for (let i = 0; i <= numPoints; i++) {
     const t = i / numPoints;
-    if (t > progress) break;
+    if (t > drawProgress) break;
     const pos = interpolateGreatCircle(start, end, t);
-    const elevation = 1 + Math.sin(t * Math.PI) * 0.15;
+    // Use sin^2 curve: exactly 0 at t=0 and t=1, peaks at t=0.5
+    // This ensures arc endpoints touch the globe surface
+    const elevation = 1 + Math.sin(t * Math.PI) * Math.sin(t * Math.PI) * 0.12;
     const p = projectToCanvas(pos.lat, pos.lng, globeRotation, canvasWidth, canvasHeight, globeRadius * elevation);
     points.push(p);
   }
