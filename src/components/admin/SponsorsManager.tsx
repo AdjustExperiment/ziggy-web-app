@@ -14,6 +14,7 @@ import { Building, CheckCircle, XCircle, Clock, Edit, Eye, ExternalLink } from "
 import { approveSponsorApplication, rejectSponsorApplication, updateSponsorApplication } from "@/utils/adminActions";
 import { useAuth } from "@/hooks/useAuth";
 import SponsorTierManager from "./SponsorTierManager";
+import SponsorInvitationManager from "./SponsorInvitationManager";
 
 interface SponsorProfile {
   id: string;
@@ -266,10 +267,15 @@ const SponsorsManager = () => {
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
+          <TabsTrigger value="invitations">Invitations</TabsTrigger>
           <TabsTrigger value="applications">Applications</TabsTrigger>
           <TabsTrigger value="profiles">Profiles</TabsTrigger>
           <TabsTrigger value="tiers">Tier Settings</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="invitations">
+          <SponsorInvitationManager />
+        </TabsContent>
 
         <TabsContent value="applications">
           <Card>
