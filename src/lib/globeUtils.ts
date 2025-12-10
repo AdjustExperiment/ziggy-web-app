@@ -7,25 +7,27 @@ export function projectToCanvas(
   const lngRad = lng * (Math.PI / 180);
   
   // Convert to 3D cartesian coordinates on unit sphere
-  let x = Math.cos(latRad) * Math.cos(lngRad);
+  // Cobe's marker system: x = -cos(lat)*cos(lng-PI), y = sin(lat), z = cos(lat)*sin(lng-PI)
+  const adjustedLng = lngRad - Math.PI;
+  let x = -Math.cos(latRad) * Math.cos(adjustedLng);
   let y = Math.sin(latRad);
-  let z = Math.cos(latRad) * Math.sin(lngRad);
+  let z = Math.cos(latRad) * Math.sin(adjustedLng);
   
-  // Rotate around Y-axis by phi (horizontal rotation) - matches cobe
-  const cosP = Math.cos(phi);
-  const sinP = Math.sin(phi);
-  const x1 = x * cosP + z * sinP;
-  const z1 = -x * sinP + z * cosP;
+  // Apply phi rotation (around Y-axis) - matches cobe's shader
+  const cosPhi = Math.cos(phi);
+  const sinPhi = Math.sin(phi);
+  const x1 = cosPhi * x + sinPhi * z;
+  const z1 = -sinPhi * x + cosPhi * z;
   
-  // Rotate around X-axis by theta (vertical tilt) - matches cobe
-  const cosT = Math.cos(theta);
-  const sinT = Math.sin(theta);
-  const y2 = y * cosT - z1 * sinT;
-  const z2 = y * sinT + z1 * cosT;
+  // Apply theta rotation (around X-axis) - matches cobe's shader
+  const cosTheta = Math.cos(theta);
+  const sinTheta = Math.sin(theta);
+  const y1 = cosTheta * y + sinTheta * z1;
+  const z2 = -sinTheta * y + cosTheta * z1;
   
   return {
     x: canvasWidth / 2 + x1 * globeRadius,
-    y: canvasHeight / 2 - y2 * globeRadius,
+    y: canvasHeight / 2 - y1 * globeRadius,
     visible: z2 > 0,
     depth: z2,
   };

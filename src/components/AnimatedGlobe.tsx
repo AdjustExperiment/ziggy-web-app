@@ -87,8 +87,8 @@ export function AnimatedGlobe({ className }: { className?: string }) {
       });
 
       const animate = () => {
-        // Arc radius calibrated to match cobe's visible globe
-        const r = size * 0.46;
+        // Arc radius calibrated to match cobe's visible globe (cobe uses 80% fill = 0.4)
+        const r = size * 0.4;
         const theta = 0.15; // Match cobe's theta value
         arcCtx.clearRect(0, 0, size, size);
 
