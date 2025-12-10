@@ -34,12 +34,21 @@ const resources = {
 };
 
 // Dynamic language loader - loads translations on demand
-const loadLanguage = async (lng: string): Promise<void> => {
-  if (lng === 'en' || i18n.hasResourceBundle(lng, 'common')) {
-    return; // Already loaded
+const loadLanguage = async (lng: string): Promise<boolean> => {
+  console.log(`[i18n] loadLanguage called for: ${lng}`);
+  
+  if (lng === 'en') {
+    console.log(`[i18n] English already loaded (default)`);
+    return true;
+  }
+  
+  if (i18n.hasResourceBundle(lng, 'common')) {
+    console.log(`[i18n] ${lng} translations already loaded`);
+    return true;
   }
 
   try {
+    console.log(`[i18n] Loading translations for: ${lng}`);
     const [common, nav, home] = await Promise.all([
       import(`./locales/${lng}/common.json`),
       import(`./locales/${lng}/nav.json`),
@@ -49,8 +58,12 @@ const loadLanguage = async (lng: string): Promise<void> => {
     i18n.addResourceBundle(lng, 'common', common.default, true, true);
     i18n.addResourceBundle(lng, 'nav', nav.default, true, true);
     i18n.addResourceBundle(lng, 'home', home.default, true, true);
+    
+    console.log(`[i18n] Successfully loaded translations for: ${lng}`);
+    return true;
   } catch (error) {
-    console.warn(`Failed to load translations for ${lng}, falling back to English`, error);
+    console.error(`[i18n] Failed to load translations for ${lng}:`, error);
+    return false;
   }
 };
 
