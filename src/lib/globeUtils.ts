@@ -56,9 +56,8 @@ export function drawAnimatedArc(
     const t = i / numPoints;
     if (t > drawProgress) break;
     const pos = interpolateGreatCircle(start, end, t);
-    // Use sin^2 curve: exactly 0 at t=0 and t=1, peaks at t=0.5
-    // This ensures arc endpoints touch the globe surface
-    const elevation = 1 + Math.sin(t * Math.PI) * Math.sin(t * Math.PI) * 0.12;
+    // Arc follows geodesic path directly on globe surface (no elevation)
+    const elevation = 1.0;
     const p = projectToCanvas(pos.lat, pos.lng, globeRotation, canvasWidth, canvasHeight, globeRadius * elevation);
     points.push(p);
   }
