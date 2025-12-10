@@ -1,0 +1,27 @@
+{
+  "buttons": {
+    "signUp": "अभी साइन अप करें",
+    "signIn": "साइन इन करें",
+    "signOut": "साइन आउट",
+    "learnMore": "और जानें",
+    "register": "पंजीकरण करें",
+    "viewDetails": "विवरण देखें",
+    "submit": "जमा करें",
+    "cancel": "रद्द करें",
+    "getStarted": "अभी शुरू करें",
+    "contact": "संपर्क करें",
+    "membersPage": "सदस्य पृष्ठ",
+    "hostTournament": "अपना टूर्नामेंट आयोजित करें"
+  },
+  "labels": {
+    "loading": "लोड हो रहा है...",
+    "noResults": "कोई परिणाम नहीं",
+    "search": "खोजें",
+    "filter": "फ़िल्टर",
+    "language": "भाषा"
+  },
+  "errors": {
+    "generic": "कुछ गलत हो गया",
+    "notFound": "पृष्ठ नहीं मिला"
+  }
+}

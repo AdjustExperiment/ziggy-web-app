@@ -3,7 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BoxedText } from "@/components/ui/boxed-text";
 import { AnimatedGlobe } from "@/components/AnimatedGlobe";
+import { useTranslation } from "react-i18next";
+
 export function Hero() {
+  const { t } = useTranslation('home');
   return <section className="relative overflow-hidden bg-gradient-hero">
       {/* Animated Background Elements */}
       <div className="absolute inset-0">
@@ -38,33 +41,31 @@ export function Hero() {
             <div className="space-y-4 sm:space-y-6">
               <Badge className="bg-card/20 text-foreground border-border hover:bg-card/30 text-sm sm:text-base backdrop-blur-sm">
                 <span className="inline-block w-2 h-2 bg-primary rounded-full mr-2"></span>
-                Founded 2011 • $2.4M+ in Scholarships
+                {t('hero.badge')}
               </Badge>
               
               {/* Boxed Text Headline */}
               <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-primary leading-tight">
                 <span className="flex flex-wrap items-center justify-center lg:justify-start gap-2 sm:gap-3 mb-2">
                   <BoxedText variant="bordered" size="hero" shape="default">
-                    The Best
+                    {t('hero.headline.theBest')}
                   </BoxedText>
                   <BoxedText variant="ghost" size="hero">
-                    Online
+                    {t('hero.headline.online')}
                   </BoxedText>
                 </span>
                 <span className="flex flex-wrap items-center justify-center lg:justify-start gap-2 sm:gap-3">
                   <BoxedText variant="filled" size="hero" shape="default">
-                    Debate
+                    {t('hero.headline.debate')}
                   </BoxedText>
                   <BoxedText variant="bordered" size="hero">
-                    Tournament
+                    {t('hero.headline.tournament')}
                   </BoxedText>
                 </span>
               </h1>
               
               <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto lg:mx-0 font-secondary">
-                Connecting debaters worldwide. Practice with competitors from all across the country with powermatching, 
-                flexible scheduling, and affordable tournaments starting at just $30-35. Access exclusive member resources 
-                including coaches, sourcebooks, and training materials. Multiple formats: LD, TP, Parli, and Moot Court.
+                {t('hero.description')}
               </p>
             </div>
 
@@ -87,15 +88,15 @@ export function Hero() {
             <div className="grid grid-cols-3 gap-4 sm:gap-8 pt-6 sm:pt-8 border-t border-border">
               <div className="text-center">
                 <div className="text-xl sm:text-2xl font-bold text-foreground">2,712+</div>
-                <div className="text-xs sm:text-sm text-muted-foreground">Total Signups</div>
+                <div className="text-xs sm:text-sm text-muted-foreground">{t('hero.stats.signups')}</div>
               </div>
               <div className="text-center">
                 <div className="text-xl sm:text-2xl font-bold text-foreground">$2.4M+</div>
-                <div className="text-xs sm:text-sm text-muted-foreground">Scholarships Awarded</div>
+                <div className="text-xs sm:text-sm text-muted-foreground">{t('hero.stats.scholarships')}</div>
               </div>
               <div className="text-center">
                 <div className="text-xl sm:text-2xl font-bold text-foreground">2011</div>
-                <div className="text-xs sm:text-sm text-muted-foreground">Founded</div>
+                <div className="text-xs sm:text-sm text-muted-foreground">{t('hero.stats.founded')}</div>
               </div>
             </div>
           </div>

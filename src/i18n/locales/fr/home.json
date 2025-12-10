@@ -1,0 +1,78 @@
+{
+  "hero": {
+    "badge": "Fondé en 2011 • 2,4M$+ en Bourses",
+    "headline": {
+      "theBest": "Le Meilleur",
+      "online": "Tournoi",
+      "debate": "de Débat",
+      "tournament": "en Ligne"
+    },
+    "description": "Connecter les débatteurs du monde entier. Entraînez-vous avec des compétiteurs de tout le pays grâce au jumelage intelligent, aux horaires flexibles et aux tournois abordables à partir de seulement 30-35$. Accédez aux ressources exclusives des membres. Plusieurs formats: LD, TP, Parli et Moot Court.",
+    "stats": {
+      "signups": "Inscriptions Totales",
+      "scholarships": "Bourses Attribuées",
+      "founded": "Fondé"
+    }
+  },
+  "features": {
+    "badge": "Présenté par l'Institut Cato",
+    "title": "Fonctionnalités de Ziggy Online Debate",
+    "subtitle": "Découvrez tout ce que Ziggy a à offrir! De la compétition mondiale aux ressources exclusives pour les membres.",
+    "worldwide": {
+      "title": "Compétition Mondiale",
+      "description": "Débattez avec des étudiants du monde entier. Accès facile pour les compétiteurs à distance."
+    },
+    "powermatching": {
+      "title": "Jumelage Intelligent",
+      "description": "Affrontez des compétiteurs de niveaux similaires grâce à notre système avancé."
+    },
+    "affordable": {
+      "title": "Abordable",
+      "description": "Les tournois Ziggy coûtent bien moins que la plupart des tournois en personne—seulement 30-35$!"
+    },
+    "support": {
+      "title": "Support Client",
+      "description": "Contactez-nous à tout moment. Nous répondons généralement en 2 heures."
+    },
+    "privacy": {
+      "title": "Confidentialité",
+      "description": "Nous valorisons votre vie privée et protégeons les pages contenant des informations de contact."
+    },
+    "flexibility": {
+      "title": "Flexibilité",
+      "description": "Ziggy vous permet de coordonner avec votre adversaire quand débattre."
+    },
+    "awards": {
+      "title": "Prix et Bourses",
+      "description": "Les meilleurs compétiteurs reçoivent des articles Ziggy gratuits! Nous offrons des bourses aux étudiants exceptionnels."
+    },
+    "scheduling": {
+      "title": "Planification Avancée",
+      "description": "Sélectionnez les tours/semaines à éviter et planifiez selon votre disponibilité."
+    },
+    "realResults": {
+      "title": "Résultats Réels",
+      "description": "Les débatteurs Ziggy ont fait leurs preuves dans les tournois de ligue."
+    },
+    "analytics": {
+      "title": "Analyses",
+      "description": "Obtenez des prix pour les meilleures équipes et des classements à la fin de chaque tournoi."
+    },
+    "formats": {
+      "title": "Multiples Styles de Débat",
+      "description": "Nous offrons LD, TP, débat en équipe junior, Parli individuel et en équipe, et Moot Court."
+    },
+    "prepGroup": {
+      "title": "Groupe de Préparation NCFCA",
+      "description": "Les membres Ziggy TP peuvent postuler au Groupe de Préparation NCFCA."
+    }
+  },
+  "testimonials": {
+    "title": "Ce Que Disent Nos Débatteurs",
+    "subtitle": "Témoignages réels de compétiteurs qui ont réussi avec Ziggy Online Debate."
+  },
+  "cta": {
+    "title": "Prêt à Commencer Votre Parcours vers le Championnat?",
+    "subtitle": "Rejoignez des milliers de débatteurs qui font confiance à notre plateforme pour l'excellence compétitive."
+  }
+}

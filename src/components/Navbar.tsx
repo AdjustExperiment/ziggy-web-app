@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useOptimizedAuth } from '@/hooks/useOptimizedAuth';
 import { ThemeToggle } from './ThemeToggle';
+import { LanguageSelector } from './LanguageSelector';
 import { NotificationsDropdown } from './admin/NotificationsDropdown';
 import { UserNotifications } from './UserNotifications';
 import { LazyImage } from '@/components/LazyImage';
@@ -233,6 +234,7 @@ export function Navbar() {
               <Search className="h-5 w-5" />
             </Button>
 
+            <LanguageSelector />
             <ThemeToggle />
             
             {user ? (

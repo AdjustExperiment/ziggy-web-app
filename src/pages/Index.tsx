@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Trophy, Users, BarChart3, Target, Zap, Shield, Globe, DollarSign, Clock, Award, Calendar, TrendingUp } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const features = [
   {
@@ -68,6 +69,8 @@ const features = [
 ];
 
 const Index = () => {
+  const { t } = useTranslation('home');
+  
   return (
     <div className="min-h-screen">
       <Hero />
@@ -92,16 +95,15 @@ const Index = () => {
             >
               <Badge className="mb-4 bg-primary/10 text-primary border-primary/20 text-sm sm:text-base cursor-pointer hover:bg-primary/20 transition-colors">
                 <span className="inline-block w-2 h-2 bg-primary rounded-full mr-2"></span>
-                Featured by the Cato Institute
+                {t('features.badge')}
                 <ArrowRight className="ml-2 h-3 w-3" />
               </Badge>
             </a>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-4 font-primary">
-              Ziggy Online Debate Features
+              {t('features.title')}
             </h2>
             <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto font-secondary">
-              Check out everything Ziggy has to offer! From worldwide competition to member-exclusive resources 
-              including coaches, sourcebooks, and training materials.
+              {t('features.subtitle')}
             </p>
           </div>
 
@@ -136,10 +138,10 @@ const Index = () => {
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 sm:mb-16">
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-4 font-primary">
-              What Our Debaters Say
+              {t('testimonials.title')}
             </h2>
             <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto font-secondary">
-              Real testimonials from competitors who have experienced success with Ziggy Online Debate.
+              {t('testimonials.subtitle')}
             </p>
           </div>
 
@@ -189,11 +191,10 @@ const Index = () => {
         
         <div className="relative mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-4 font-primary">
-            Ready to Start Your Championship Journey?
+            {t('cta.title')}
           </h2>
           <p className="text-lg sm:text-xl text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto font-secondary">
-            Join thousands of debaters who trust our platform for competitive excellence.
-            Sign up today and take your first step toward victory.
+            {t('cta.subtitle')}
           </p>
           
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">

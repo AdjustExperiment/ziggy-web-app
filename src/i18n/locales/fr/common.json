@@ -1,0 +1,27 @@
+{
+  "buttons": {
+    "signUp": "S'inscrire Maintenant",
+    "signIn": "Se Connecter",
+    "signOut": "Se Déconnecter",
+    "learnMore": "En Savoir Plus",
+    "register": "S'inscrire",
+    "viewDetails": "Voir les Détails",
+    "submit": "Soumettre",
+    "cancel": "Annuler",
+    "getStarted": "Commencer Maintenant",
+    "contact": "Contact",
+    "membersPage": "Espace Membres",
+    "hostTournament": "Organiser Votre Tournoi"
+  },
+  "labels": {
+    "loading": "Chargement...",
+    "noResults": "Aucun résultat",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "language": "Langue"
+  },
+  "errors": {
+    "generic": "Une erreur s'est produite",
+    "notFound": "Page non trouvée"
+  }
+}

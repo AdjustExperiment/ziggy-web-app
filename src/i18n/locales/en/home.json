@@ -1,0 +1,78 @@
+{
+  "hero": {
+    "badge": "Founded 2011 • $2.4M+ in Scholarships",
+    "headline": {
+      "theBest": "The Best",
+      "online": "Online",
+      "debate": "Debate",
+      "tournament": "Tournament"
+    },
+    "description": "Connecting debaters worldwide. Practice with competitors from all across the country with powermatching, flexible scheduling, and affordable tournaments starting at just $30-35. Access exclusive member resources including coaches, sourcebooks, and training materials. Multiple formats: LD, TP, Parli, and Moot Court.",
+    "stats": {
+      "signups": "Total Signups",
+      "scholarships": "Scholarships Awarded",
+      "founded": "Founded"
+    }
+  },
+  "features": {
+    "badge": "Featured by the Cato Institute",
+    "title": "Ziggy Online Debate Features",
+    "subtitle": "Check out everything Ziggy has to offer! From worldwide competition to member-exclusive resources including coaches, sourcebooks, and training materials.",
+    "worldwide": {
+      "title": "Worldwide Competition",
+      "description": "Debate students from around the world. Easy access for remote competitors. Sign up for one or multiple debate leagues."
+    },
+    "powermatching": {
+      "title": "Powermatching",
+      "description": "Debate against other competitors with similar skill levels using our advanced matching system."
+    },
+    "affordable": {
+      "title": "Affordable",
+      "description": "Ziggy tournaments cost far less than most in-person tournaments—just $30-35! We keep costs low and avoid raising prices."
+    },
+    "support": {
+      "title": "Customer Support",
+      "description": "Contact us at any time, via text, email, Google Chat, or Facebook Messenger. We typically respond within 2 hours."
+    },
+    "privacy": {
+      "title": "Privacy",
+      "description": "We value your privacy and protect pages with contact information. We will never sell your information to anyone, period."
+    },
+    "flexibility": {
+      "title": "Flexibility",
+      "description": "Ziggy lets you and your opponent coordinate when to debate for maximum scheduling flexibility."
+    },
+    "awards": {
+      "title": "Awards & Scholarships",
+      "description": "Our top competitors get free Ziggy swag! We work with educational institutions to offer scholarship awards for top performing students."
+    },
+    "scheduling": {
+      "title": "Advanced Scheduling",
+      "description": "Select rounds/weeks to opt out of when signing up, and schedule rounds based on your availability."
+    },
+    "realResults": {
+      "title": "Real-World Results",
+      "description": "Ziggy debaters have proven track records of performing well in league tournaments with measurable success."
+    },
+    "analytics": {
+      "title": "Analytics",
+      "description": "Get prizes for top teams and comprehensive rankings at the end of each tournament."
+    },
+    "formats": {
+      "title": "Multiple Debate Styles",
+      "description": "We offer LD, TP, junior team debate, Team and Individual Parli (collegiate welcome), and Moot Court for students from various debate leagues."
+    },
+    "prepGroup": {
+      "title": "NCFCA Prep Group",
+      "description": "Ziggy TP members can apply to an NCFCA Prep Group. Exclusive preparation opportunities for serious competitors."
+    }
+  },
+  "testimonials": {
+    "title": "What Our Debaters Say",
+    "subtitle": "Real testimonials from competitors who have experienced success with Ziggy Online Debate."
+  },
+  "cta": {
+    "title": "Ready to Start Your Championship Journey?",
+    "subtitle": "Join thousands of debaters who trust our platform for competitive excellence. Sign up today and take your first step toward victory."
+  }
+}

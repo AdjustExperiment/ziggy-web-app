@@ -1,0 +1,27 @@
+{
+  "buttons": {
+    "signUp": "አሁን ይመዝገቡ",
+    "signIn": "ይግቡ",
+    "signOut": "ይውጡ",
+    "learnMore": "ተጨማሪ ይወቁ",
+    "register": "ይመዝገቡ",
+    "viewDetails": "ዝርዝሮችን ይመልከቱ",
+    "submit": "ያስገቡ",
+    "cancel": "ይሰርዙ",
+    "getStarted": "አሁን ይጀምሩ",
+    "contact": "ያግኙን",
+    "membersPage": "የአባላት ገጽ",
+    "hostTournament": "ውድድርዎን ያስተናግዱ"
+  },
+  "labels": {
+    "loading": "በመጫን ላይ...",
+    "noResults": "ውጤቶች አልተገኙም",
+    "search": "ይፈልጉ",
+    "filter": "ያጣሩ",
+    "language": "ቋንቋ"
+  },
+  "errors": {
+    "generic": "የሆነ ስህተት ተፈጥሯል",
+    "notFound": "ገጹ አልተገኘም"
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "hero": {
+    "badge": "Dá ní 2011 • $2.4M+ ní Ẹ̀bùn Ìkẹ́kọ̀ọ́",
+    "headline": {
+      "theBest": "Tó Dára Jùlọ",
+      "online": "Lórí Ayélujára",
+      "debate": "Àríyànjiyàn",
+      "tournament": "Ìdíje"
+    },
+    "description": "A ń so àwọn aláríyànjiyàn ní àgbáyé pọ̀. Dàná pẹ̀lú àwọn olùdíje láti gbogbo orílẹ̀-èdè pẹ̀lú ìbárapọ̀ ọlọ́gbọ́n, àkójọ ìgbà tó rọrùn àti àwọn ìdíje tó tó owó—$30-35 nìkan! Wọlé sí àwọn ohun èlò pàtàkì fún àwọn ọmọ ẹgbẹ́. Ọ̀pọ̀ọ̀pọ̀ ìṣọ̀nà: LD, TP, Parli àti Moot Court.",
+    "stats": {
+      "signups": "Àpapọ̀ Ìforúkọsílẹ̀",
+      "scholarships": "Ẹ̀bùn Ìkẹ́kọ̀ọ́ Tí A Fi Fún",
+      "founded": "Dá"
+    }
+  },
+  "features": {
+    "badge": "Ṣàfihàn Nípasẹ̀ Ilé-ẹ̀kọ́ Cato",
+    "title": "Àwọn Ẹ̀yà Àríyànjiyàn Ziggy Lórí Ayélujára",
+    "subtitle": "Wo ohun gbogbo tí Ziggy ń pèsè! Láti ìdíje àgbáyé sí àwọn ohun èlò pàtàkì fún àwọn ọmọ ẹgbẹ́.",
+    "worldwide": {
+      "title": "Ìdíje Àgbáyé",
+      "description": "Ṣe àríyànjiyàn pẹ̀lú àwọn akẹ́kọ̀ọ́ láti àgbáyé. Ìráyè rọrùn fún àwọn olùdíje tí ó jìnnà."
+    },
+    "powermatching": {
+      "title": "Ìbárapọ̀ Ọlọ́gbọ́n",
+      "description": "Díje pẹ̀lú àwọn olùdíje tí ó ní ìpele ọgbọ́n tó jọra nípasẹ̀ ètò wa tó ti tẹ̀síwájú."
+    },
+    "affordable": {
+      "title": "Tó Tó Owó",
+      "description": "Àwọn ìdíje Ziggy din owó ju ọ̀pọ̀lọpọ̀ àwọn ìdíje tí a ń ṣe lójúkojú—$30-35 nìkan!"
+    },
+    "support": {
+      "title": "Àtìlẹ́yìn Oníbàárà",
+      "description": "Kàn sí wa nígbàkúgbà. A máa ń dáhùn láàárín wákàtí 2."
+    },
+    "privacy": {
+      "title": "Àṣírí",
+      "description": "A mọyì àṣírí rẹ àti dáàbòbo àwọn ojú-ìwé tó ní ìròyìn kàn sí."
+    },
+    "flexibility": {
+      "title": "Àṣírọ",
+      "description": "Ziggy jẹ́ kí ìwọ àti olùdíje rẹ gbà ara yín ní ìgbà láti ṣe àríyànjiyàn."
+    },
+    "awards": {
+      "title": "Àwọn Ẹ̀bùn àti Ẹ̀bùn Ìkẹ́kọ̀ọ́",
+      "description": "Àwọn olùdíje tó dára jùlọ gba nǹkan Ziggy lọ́fẹ̀ẹ́! A pèsè àwọn ẹ̀bùn ìkẹ́kọ̀ọ́ fún àwọn akẹ́kọ̀ọ́ tó gbéṣẹ́."
+    },
+    "scheduling": {
+      "title": "Àkójọ Ìgbà Tó Ti Tẹ̀síwájú",
+      "description": "Yan àwọn ìyípo/ọ̀sẹ̀ láti má kópa àti ṣàkójọ gẹ́gẹ́ bí ìgbà tó bá rí fún ọ."
+    },
+    "realResults": {
+      "title": "Àwọn Àbájáde Gidi",
+      "description": "Àwọn aláríyànjiyàn Ziggy ti fi ìgbàlódé hàn pé wọ́n ń ṣe dáradára nínú àwọn ìdíje àjọ."
+    },
+    "analytics": {
+      "title": "Ìtúpalẹ̀",
+      "description": "Gba àwọn ẹ̀bùn fún àwọn ẹgbẹ́ tó dára jùlọ àti ìtò ní òpin ìdíje kọ̀ọ̀kan."
+    },
+    "formats": {
+      "title": "Ọ̀pọ̀lọpọ̀ Ìṣọ̀nà Àríyànjiyàn",
+      "description": "A pèsè LD, TP, àríyànjiyàn ẹgbẹ́ kékeré, Parli ẹgbẹ́ àti ẹnìkọ̀ọ̀kan, àti Moot Court."
+    },
+    "prepGroup": {
+      "title": "Ẹgbẹ́ Ìmúrasílẹ̀ NCFCA",
+      "description": "Àwọn ọmọ ẹgbẹ́ Ziggy TP lè fi ìbéèrè sílẹ̀ sí Ẹgbẹ́ Ìmúrasílẹ̀ NCFCA."
+    }
+  },
+  "testimonials": {
+    "title": "Ohun Tí Àwọn Aláríyànjiyàn Wa Sọ",
+    "subtitle": "Àwọn ẹ̀rí gidi láti ọ̀dọ̀ àwọn olùdíje tí wọ́n ti rí àṣeyọrí pẹ̀lú Ziggy Àríyànjiyàn Lórí Ayélujára."
+  },
+  "cta": {
+    "title": "Ṣé O Ṣetán Láti Bẹ̀rẹ̀ Ìrìn-àjò Rẹ Sí Àṣàyàn?",
+    "subtitle": "Darapọ̀ mọ́ ẹgbẹẹgbẹ̀rún àwọn aláríyànjiyàn tí wọ́n gbẹ́kẹ̀lé ẹ̀rọ wa fún ìdásílẹ̀ ìdíje."
+  }
+}

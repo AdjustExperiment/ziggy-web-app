@@ -1,0 +1,27 @@
+{
+  "buttons": {
+    "signUp": "立即注册",
+    "signIn": "登录",
+    "signOut": "退出",
+    "learnMore": "了解更多",
+    "register": "注册",
+    "viewDetails": "查看详情",
+    "submit": "提交",
+    "cancel": "取消",
+    "getStarted": "立即开始",
+    "contact": "联系我们",
+    "membersPage": "会员页面",
+    "hostTournament": "举办您的比赛"
+  },
+  "labels": {
+    "loading": "加载中...",
+    "noResults": "无结果",
+    "search": "搜索",
+    "filter": "筛选",
+    "language": "语言"
+  },
+  "errors": {
+    "generic": "出现错误",
+    "notFound": "页面未找到"
+  }
+}

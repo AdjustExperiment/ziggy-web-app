@@ -1,0 +1,27 @@
+{
+  "buttons": {
+    "signUp": "Jisajili Sasa",
+    "signIn": "Ingia",
+    "signOut": "Toka",
+    "learnMore": "Jifunze Zaidi",
+    "register": "Jisajili",
+    "viewDetails": "Angalia Maelezo",
+    "submit": "Wasilisha",
+    "cancel": "Ghairi",
+    "getStarted": "Anza Sasa",
+    "contact": "Wasiliana Nasi",
+    "membersPage": "Ukurasa wa Wanachama",
+    "hostTournament": "Andaa Mashindano Yako"
+  },
+  "labels": {
+    "loading": "Inapakia...",
+    "noResults": "Hakuna matokeo",
+    "search": "Tafuta",
+    "filter": "Chuja",
+    "language": "Lugha"
+  },
+  "errors": {
+    "generic": "Kitu kimeenda vibaya",
+    "notFound": "Ukurasa haujapatikana"
+  }
+}
