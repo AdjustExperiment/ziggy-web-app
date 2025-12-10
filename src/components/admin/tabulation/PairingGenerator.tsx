@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,6 +28,7 @@ import {
 import { DrawGenerator, Team, PairingHistory, DrawSettings, GeneratedPairing } from '@/lib/tabulation/drawGenerator';
 import { JudgeAllocator, JudgeInfo, PairingInfo, JudgeConflict, JudgeAssignment } from '@/lib/tabulation/judgeAllocator';
 import { JudgeAutoAssignModal } from './JudgeAutoAssignModal';
+import { ManualPairingEditor } from './ManualPairingEditor';
 
 interface PairingGeneratorProps {
   tournamentId: string;
@@ -129,9 +130,13 @@ export function PairingGenerator({
   // Track rounds with released pairings for Print Postings button
   const [roundsWithReleasedPairings, setRoundsWithReleasedPairings] = useState<string[]>([]);
 
+  // Judge conflicts for inline editor
+  const [judgeConflicts, setJudgeConflicts] = useState<{ judge_profile_id: string; type: 'team' | 'school'; registration_id?: string; school_name?: string }[]>([]);
+
   useEffect(() => {
     fetchSettings();
     fetchRoundsWithReleasedPairings();
+    fetchJudgeConflicts();
   }, [tournamentId]);
 
   useEffect(() => {
@@ -156,6 +161,52 @@ export function PairingGenerator({
       const uniqueRoundIds = [...new Set(data?.map(p => p.round_id) || [])];
       setRoundsWithReleasedPairings(uniqueRoundIds);
       console.log('[PairingGenerator] Rounds with released pairings:', uniqueRoundIds.length);
+    } catch (error) {
+      console.error('[PairingGenerator] Error:', error);
+    }
+  };
+
+  const fetchJudgeConflicts = async () => {
+    try {
+      // Fetch team conflicts
+      const { data: teamConflicts, error: teamError } = await supabase
+        .from('judge_team_conflicts')
+        .select('judge_profile_id, registration_id, conflict_type')
+        .eq('tournament_id', tournamentId);
+
+      if (teamError) {
+        console.error('[PairingGenerator] Error fetching team conflicts:', teamError);
+      }
+
+      // Fetch school conflicts
+      const { data: schoolConflicts, error: schoolError } = await supabase
+        .from('judge_school_conflicts')
+        .select('judge_profile_id, school_name, conflict_type')
+        .eq('tournament_id', tournamentId);
+
+      if (schoolError) {
+        console.error('[PairingGenerator] Error fetching school conflicts:', schoolError);
+      }
+
+      const conflicts: { judge_profile_id: string; type: 'team' | 'school'; registration_id?: string; school_name?: string }[] = [];
+
+      (teamConflicts || []).forEach(c => {
+        conflicts.push({
+          judge_profile_id: c.judge_profile_id,
+          type: 'team',
+          registration_id: c.registration_id
+        });
+      });
+
+      (schoolConflicts || []).forEach(c => {
+        conflicts.push({
+          judge_profile_id: c.judge_profile_id,
+          type: 'school',
+          school_name: c.school_name
+        });
+      });
+
+      setJudgeConflicts(conflicts);
     } catch (error) {
       console.error('[PairingGenerator] Error:', error);
     }
@@ -1261,7 +1312,7 @@ export function PairingGenerator({
         </CardContent>
       </Card>
 
-      {/* Pairings Table */}
+      {/* Pairings Editor */}
       {selectedRound && (
         <Card>
           <CardHeader>
@@ -1270,7 +1321,7 @@ export function PairingGenerator({
               Pairings ({pairings.length})
             </CardTitle>
             <CardDescription>
-              Manage debate pairings for the selected round
+              Click any cell to edit inline. Changes are saved automatically with edit history tracking.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -1286,100 +1337,52 @@ export function PairingGenerator({
                 )}
               </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Room</TableHead>
-                    <TableHead>Affirmative</TableHead>
-                    <TableHead>Negative</TableHead>
-                    <TableHead>Judge</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Visibility</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {pairings.map((pairing) => (
-                    <TableRow key={pairing.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <MapPin className="h-4 w-4 text-muted-foreground" />
-                          {pairing.room || 'TBD'}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="font-medium">
-                          {pairing.aff_registration?.participant_name || getTeamName(pairing.aff_registration_id)}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="font-medium">
-                          {pairing.neg_registration?.participant_name || getTeamName(pairing.neg_registration_id)}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                         <Select 
-                           value={pairing.judge_id || 'none'} 
-                           onValueChange={(value) => assignJudge(pairing.id, value)}
-                           disabled={selectedRoundData?.status === 'locked'}
-                         >
-                          <SelectTrigger className="w-40">
-                            <SelectValue placeholder="Assign judge" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">No judge assigned</SelectItem>
-                            {judges.map((judge) => (
-                              <SelectItem key={judge.id} value={judge.id}>
-                                {judge.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={pairing.status === 'completed' ? 'default' : 'secondary'}>
-                          {pairing.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => togglePairingRelease(pairing.id, pairing.released)}
-                          disabled={selectedRoundData?.status === 'locked'}
-                        >
-                          {pairing.released ? (
-                            <>
-                              <Eye className="h-4 w-4 mr-1" />
-                              Visible
-                            </>
-                          ) : (
-                            <>
-                              <EyeOff className="h-4 w-4 mr-1" />
-                              Hidden
-                            </>
-                          )}
-                        </Button>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          {pairing.scheduled_time && (
-                            <Badge variant="outline" className="text-xs">
-                              <Calendar className="h-3 w-3 mr-1" />
-                              {new Date(pairing.scheduled_time).toLocaleTimeString()}
-                            </Badge>
-                          )}
-                          {pairing.flags && pairing.flags.length > 0 && (
-                            <Badge variant="outline" className="text-xs">
-                              {pairing.flags.join(', ')}
-                            </Badge>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <ManualPairingEditor
+                pairings={pairings.map(p => ({
+                  id: p.id,
+                  round_id: p.round_id,
+                  aff_registration_id: p.aff_registration_id,
+                  neg_registration_id: p.neg_registration_id,
+                  judge_id: p.judge_id || null,
+                  room: p.room || null,
+                  scheduled_time: p.scheduled_time || null,
+                  status: p.status,
+                  released: p.released,
+                  bracket: p.bracket || null
+                }))}
+                registrations={registrations.map((r: any) => ({
+                  id: r.id,
+                  participant_name: r.participant_name,
+                  partner_name: r.partner_name,
+                  school_organization: r.school_organization
+                }))}
+                judges={judges.map((j: any) => ({
+                  id: j.id,
+                  name: j.name,
+                  email: j.email,
+                  experience_level: j.experience_level || 'novice',
+                  specializations: j.specializations || [],
+                  alumni: j.alumni || false
+                }))}
+                conflicts={judgeConflicts}
+                roundId={selectedRound}
+                onPairingsChange={(updated) => {
+                  setPairings(updated.map(u => {
+                    const existing = pairings.find(p => p.id === u.id);
+                    return {
+                      ...existing,
+                      ...u,
+                      aff_registration: existing?.aff_registration,
+                      neg_registration: existing?.neg_registration,
+                      judge_profiles: existing?.judge_profiles
+                    } as Pairing;
+                  }));
+                }}
+                onRefresh={fetchPairings}
+                onReleaseToggle={async (pairingId, released) => {
+                  await togglePairingRelease(pairingId, !released);
+                }}
+              />
             )}
           </CardContent>
         </Card>
