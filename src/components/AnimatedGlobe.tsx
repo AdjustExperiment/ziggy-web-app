@@ -2,7 +2,7 @@ import { useEffect, useRef, useCallback, useState } from 'react';
 import createGlobe from 'cobe';
 import { cn } from '@/lib/utils';
 import { WORLD_CAPITALS, CONNECTION_ROUTES } from '@/data/capitals';
-import { projectToCanvas, drawAnimatedArc, drawPulsingMarker } from '@/lib/globeUtils';
+import { projectToCanvas, drawAnimatedArc, drawGlowingMarker } from '@/lib/globeUtils';
 
 interface ArcState { routeIndex: number; progress: number; active: boolean; }
 interface HoveredCity { name: string; country: string; lat: number; lng: number; }
@@ -13,8 +13,8 @@ export function AnimatedGlobe({ className }: { className?: string }) {
   const markerCanvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const phiRef = useRef(0);
-  const pulseRef = useRef(0);
   const isHoveringRef = useRef(false);
+  const lastMouseXRef = useRef<number | null>(null);
   const sizeRef = useRef(0);
   const arcsRef = useRef<ArcState[]>([
     { routeIndex: 0, progress: 0, active: true },
@@ -70,11 +70,10 @@ export function AnimatedGlobe({ className }: { className?: string }) {
         const r = size * 0.4;
         arcCtx.clearRect(0, 0, size, size);
         markerCtx.clearRect(0, 0, size, size);
-        pulseRef.current += 0.06;
 
         for (const city of WORLD_CAPITALS) {
           const p = projectToCanvas(city.lat, city.lng, phiRef.current, size, size, r);
-          if (p.visible) drawPulsingMarker(markerCtx, p.x, p.y, pulseRef.current, p.depth);
+          if (p.visible) drawGlowingMarker(markerCtx, p.x, p.y, p.depth);
         }
 
         for (const arc of arcsRef.current) {
@@ -109,6 +108,14 @@ export function AnimatedGlobe({ className }: { className?: string }) {
     if (!containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left, y = e.clientY - rect.top;
+    
+    // Manual rotation when hovering - track horizontal mouse movement
+    if (isHoveringRef.current && lastMouseXRef.current !== null) {
+      const deltaX = x - lastMouseXRef.current;
+      phiRef.current -= deltaX * 0.005;
+    }
+    lastMouseXRef.current = x;
+    
     const size = sizeRef.current, r = size * 0.4;
     let closest: HoveredCity | null = null, dist = 20;
     for (const city of WORLD_CAPITALS) {
@@ -132,8 +139,8 @@ export function AnimatedGlobe({ className }: { className?: string }) {
   return (
     <div ref={containerRef} className={cn("relative w-full h-full flex items-center justify-center", className)}
       onMouseMove={handleMouseMove} 
-      onMouseEnter={() => { isHoveringRef.current = true; }}
-      onMouseLeave={() => { isHoveringRef.current = false; setHoveredCity(null); }}>
+      onMouseEnter={() => { isHoveringRef.current = true; lastMouseXRef.current = null; }}
+      onMouseLeave={() => { isHoveringRef.current = false; lastMouseXRef.current = null; setHoveredCity(null); }}>
       <canvas ref={canvasRef} className="max-w-full max-h-full" />
       <canvas ref={markerCanvasRef} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
       <canvas ref={arcCanvasRef} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
