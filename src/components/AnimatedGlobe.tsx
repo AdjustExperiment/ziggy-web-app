@@ -15,14 +15,7 @@ export function AnimatedGlobe({ className }: { className?: string }) {
   const phiRef = useRef(0);
   const cityStatesRef = useRef<CityLightState[]>([]);
 
-  // Initialize city states with random staggering
-  useEffect(() => {
-    cityStatesRef.current = WORLD_CITIES.map(() => ({
-      intensity: Math.random() < 0.15 ? Math.random() * 0.5 : 0,
-      direction: Math.random() < 0.2 ? 'rising' : 'idle',
-      delay: Math.floor(Math.random() * 180)
-    }));
-  }, []);
+  // City states initialization moved to init() to prevent race condition
 
   useEffect(() => {
     if ('geolocation' in navigator) {
@@ -48,6 +41,15 @@ export function AnimatedGlobe({ className }: { className?: string }) {
       canvas.height = size * dpr;
       canvas.style.width = `${size}px`; 
       canvas.style.height = `${size}px`;
+
+      // Initialize city states BEFORE creating globe to prevent race condition
+      if (cityStatesRef.current.length === 0) {
+        cityStatesRef.current = WORLD_CITIES.map(() => ({
+          intensity: Math.random() < 0.15 ? Math.random() * 0.5 : 0,
+          direction: Math.random() < 0.2 ? 'rising' : 'idle' as const,
+          delay: Math.floor(Math.random() * 180)
+        }));
+      }
 
       // Initialize markers with starting colors
       const initialMarkers = WORLD_CITIES.map((city) => ({
@@ -78,7 +80,7 @@ export function AnimatedGlobe({ className }: { className?: string }) {
             const cityState = cityStatesRef.current[i];
             if (!cityState) return {
               location: [city.lat, city.lng] as [number, number],
-              size: 0.02
+              size: 0.03  // Match visible marker size
             };
 
             // Animate intensity based on direction
