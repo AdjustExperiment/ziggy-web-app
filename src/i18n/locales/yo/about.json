@@ -1,0 +1,7 @@
+{
+  "title": "Nipa Ziggy", "subtitle": "Agbara fun agbegbe ariyanjiyan agbaye",
+  "mission": { "title": "Iṣẹ Wa", "content": "A gbagbọ ninu agbara ariyanjiyan lati yi awọn igbesi aye ati awọn agbegbe pada ni agbaye." },
+  "team": { "title": "Ẹgbẹ Wa", "description": "Pade awọn eniyan ti o ni itara lẹhin Ziggy" },
+  "values": { "title": "Awọn Iye Wa", "excellence": "Didara", "excellenceDesc": "A n tiraka fun didara ni gbogbo ohun ti a ṣe", "community": "Agbegbe", "communityDesc": "Kiko awọn asopọ kọja awọn aala", "innovation": "Imotuntun", "innovationDesc": "Titari awọn aala pẹlu imọ-ẹrọ" },
+  "contact": { "title": "Kan si Wa", "description": "A yoo fẹran lati gbọ lati ọdọ rẹ" }
+}

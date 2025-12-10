@@ -1,0 +1,43 @@
+{
+  "dashboard": {
+    "title": "比赛仪表盘",
+    "myMatch": "我的比赛",
+    "postings": "公告",
+    "rounds": "轮次",
+    "schedule": "日程",
+    "results": "结果"
+  },
+  "registration": {
+    "title": "注册比赛",
+    "submit": "提交注册",
+    "success": "注册成功！",
+    "participant": "参赛者姓名",
+    "email": "电子邮箱",
+    "school": "学校/组织",
+    "partner": "搭档姓名",
+    "dietary": "饮食要求",
+    "emergency": "紧急联系人"
+  },
+  "postings": {
+    "round": "轮次",
+    "room": "房间",
+    "judge": "裁判",
+    "aff": "正方",
+    "neg": "反方",
+    "time": "预定时间",
+    "status": "状态"
+  },
+  "status": {
+    "upcoming": "即将开始",
+    "active": "进行中",
+    "completed": "已完成",
+    "pending": "待定",
+    "confirmed": "已确认"
+  },
+  "payment": {
+    "title": "付款",
+    "pending": "待付款",
+    "completed": "已付款",
+    "fee": "注册费"
+  }
+}

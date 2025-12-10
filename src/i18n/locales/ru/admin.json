@@ -1,0 +1,45 @@
+{
+  "sidebar": {
+    "dashboard": "Панель",
+    "tournaments": "Турниры",
+    "users": "Пользователи",
+    "payments": "Платежи",
+    "judges": "Судьи",
+    "emails": "Письма",
+    "settings": "Настройки"
+  },
+  "actions": {
+    "save": "Сохранить",
+    "delete": "Удалить",
+    "edit": "Редактировать",
+    "create": "Создать",
+    "cancel": "Отмена",
+    "confirm": "Подтвердить",
+    "publish": "Опубликовать",
+    "archive": "Архивировать"
+  },
+  "status": {
+    "loading": "Загрузка...",
+    "saving": "Сохранение...",
+    "success": "Успех!",
+    "error": "Ошибка",
+    "noData": "Нет данных"
+  },
+  "tournament": {
+    "create": "Создать Турнир",
+    "manage": "Управление Турниром",
+    "pairings": "Пары",
+    "rounds": "Раунды",
+    "registrations": "Регистрации"
+  },
+  "users": {
+    "manage": "Управление Пользователями",
+    "roles": "Роли Пользователей",
+    "permissions": "Разрешения"
+  },
+  "analytics": {
+    "performance": "Производительность",
+    "heatmap": "Тепловая Карта UX",
+    "metrics": "Метрики"
+  }
+}

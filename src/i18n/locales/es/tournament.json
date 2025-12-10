@@ -1,0 +1,43 @@
+{
+  "dashboard": {
+    "title": "Panel del Torneo",
+    "myMatch": "Mi Partido",
+    "postings": "Publicaciones",
+    "rounds": "Rondas",
+    "schedule": "Horario",
+    "results": "Resultados"
+  },
+  "registration": {
+    "title": "Registrarse en el Torneo",
+    "submit": "Enviar Registro",
+    "success": "¡Registro exitoso!",
+    "participant": "Nombre del Participante",
+    "email": "Correo Electrónico",
+    "school": "Escuela/Organización",
+    "partner": "Nombre del Compañero",
+    "dietary": "Requisitos Dietéticos",
+    "emergency": "Contacto de Emergencia"
+  },
+  "postings": {
+    "round": "Ronda",
+    "room": "Sala",
+    "judge": "Juez",
+    "aff": "Afirmativo",
+    "neg": "Negativo",
+    "time": "Hora Programada",
+    "status": "Estado"
+  },
+  "status": {
+    "upcoming": "Próximo",
+    "active": "Activo",
+    "completed": "Completado",
+    "pending": "Pendiente",
+    "confirmed": "Confirmado"
+  },
+  "payment": {
+    "title": "Pago",
+    "pending": "Pago Pendiente",
+    "completed": "Pago Completado",
+    "fee": "Tarifa de Inscripción"
+  }
+}

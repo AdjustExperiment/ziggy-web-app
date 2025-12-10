@@ -1,0 +1,37 @@
+{
+  "dashboard": {
+    "title": "Панель Судьи",
+    "assignments": "Мои Назначения",
+    "availability": "Доступность",
+    "profile": "Профиль Судьи",
+    "notifications": "Уведомления"
+  },
+  "ballot": {
+    "title": "Бюллетень",
+    "submit": "Отправить Бюллетень",
+    "winner": "Победитель",
+    "speakerPoints": "Баллы Спикера",
+    "feedback": "Отзыв",
+    "decision": "Решение",
+    "draft": "Сохранить Черновик"
+  },
+  "status": {
+    "available": "Доступен",
+    "assigned": "Назначен",
+    "unavailable": "Недоступен",
+    "pending": "В Ожидании",
+    "confirmed": "Подтверждён"
+  },
+  "availability": {
+    "setAvailability": "Установить Доступность",
+    "maxRounds": "Макс. Раундов в День",
+    "timeSlots": "Доступные Временные Слоты",
+    "specialRequirements": "Особые Требования"
+  },
+  "conflicts": {
+    "title": "Конфликты",
+    "school": "Конфликты Школы",
+    "team": "Конфликты Команды",
+    "add": "Добавить Конфликт"
+  }
+}

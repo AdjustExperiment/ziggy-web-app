@@ -1,0 +1,37 @@
+{
+  "dashboard": {
+    "title": "Judge Dashboard",
+    "assignments": "My Assignments",
+    "availability": "Availability",
+    "profile": "Judge Profile",
+    "notifications": "Notifications"
+  },
+  "ballot": {
+    "title": "Ballot",
+    "submit": "Submit Ballot",
+    "winner": "Winner",
+    "speakerPoints": "Speaker Points",
+    "feedback": "Feedback",
+    "decision": "Decision",
+    "draft": "Save Draft"
+  },
+  "status": {
+    "available": "Available",
+    "assigned": "Assigned",
+    "unavailable": "Unavailable",
+    "pending": "Pending",
+    "confirmed": "Confirmed"
+  },
+  "availability": {
+    "setAvailability": "Set Availability",
+    "maxRounds": "Max Rounds Per Day",
+    "timeSlots": "Available Time Slots",
+    "specialRequirements": "Special Requirements"
+  },
+  "conflicts": {
+    "title": "Conflicts",
+    "school": "School Conflicts",
+    "team": "Team Conflicts",
+    "add": "Add Conflict"
+  }
+}

@@ -18,7 +18,9 @@ import {
   Building2,
   Palette,
   BarChart3,
-  Building
+  Building,
+  Activity,
+  MousePointer2
 } from 'lucide-react';
 import { useOptimizedAuth } from '@/hooks/useOptimizedAuth';
 
@@ -94,6 +96,13 @@ const menuItems: MenuSection[] = [
       { title: 'Footer Content', url: '/admin/footer', icon: FileX, globalOnly: true },
       { title: 'Sponsors', url: '/admin/sponsors', icon: Building2, globalOnly: true },
       { title: 'Security', url: '/admin/security', icon: Shield, globalOnly: true },
+    ]
+  },
+  {
+    title: 'Analytics',
+    items: [
+      { title: 'Performance', url: '/admin/performance', icon: Activity, globalOnly: true },
+      { title: 'UX Heatmap', url: '/admin/heatmap', icon: MousePointer2, globalOnly: true },
     ]
   }
 ];

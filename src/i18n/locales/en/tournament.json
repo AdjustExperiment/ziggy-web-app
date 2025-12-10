@@ -1,0 +1,43 @@
+{
+  "dashboard": {
+    "title": "Tournament Dashboard",
+    "myMatch": "My Match",
+    "postings": "Postings",
+    "rounds": "Rounds",
+    "schedule": "Schedule",
+    "results": "Results"
+  },
+  "registration": {
+    "title": "Register for Tournament",
+    "submit": "Submit Registration",
+    "success": "Registration successful!",
+    "participant": "Participant Name",
+    "email": "Email Address",
+    "school": "School/Organization",
+    "partner": "Partner Name",
+    "dietary": "Dietary Requirements",
+    "emergency": "Emergency Contact"
+  },
+  "postings": {
+    "round": "Round",
+    "room": "Room",
+    "judge": "Judge",
+    "aff": "Affirmative",
+    "neg": "Negative",
+    "time": "Scheduled Time",
+    "status": "Status"
+  },
+  "status": {
+    "upcoming": "Upcoming",
+    "active": "Active",
+    "completed": "Completed",
+    "pending": "Pending",
+    "confirmed": "Confirmed"
+  },
+  "payment": {
+    "title": "Payment",
+    "pending": "Payment Pending",
+    "completed": "Payment Completed",
+    "fee": "Registration Fee"
+  }
+}

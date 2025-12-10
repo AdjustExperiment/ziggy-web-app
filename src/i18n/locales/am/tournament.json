@@ -1,0 +1,7 @@
+{
+  "dashboard": { "title": "የውድድር ዳሽቦርድ", "myMatch": "የኔ ግጥሚያ", "postings": "ልጥፎች", "rounds": "ዙሮች", "schedule": "መርሃግብር", "results": "ውጤቶች" },
+  "registration": { "title": "ለውድድር ይመዝገቡ", "submit": "ምዝገባ ያስገቡ", "success": "ምዝገባ ተሳክቷል!", "participant": "የተሳታፊ ስም", "email": "ኢሜይል አድራሻ", "school": "ትምህርት ቤት/ድርጅት", "partner": "የአጋር ስም", "dietary": "የአመጋገብ መስፈርቶች", "emergency": "የአደጋ ጊዜ እውቂያ" },
+  "postings": { "round": "ዙር", "room": "ክፍል", "judge": "ዳኛ", "aff": "ደጋፊ", "neg": "ተቃዋሚ", "time": "የታቀደ ጊዜ", "status": "ሁኔታ" },
+  "status": { "upcoming": "መጪ", "active": "ንቁ", "completed": "ተጠናቅቋል", "pending": "በመጠባበቅ ላይ", "confirmed": "ተረጋግጧል" },
+  "payment": { "title": "ክፍያ", "pending": "ክፍያ በመጠባበቅ ላይ", "completed": "ክፍያ ተጠናቅቋል", "fee": "የምዝገባ ክፍያ" }
+}

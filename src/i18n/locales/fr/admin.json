@@ -1,0 +1,45 @@
+{
+  "sidebar": {
+    "dashboard": "Tableau de Bord",
+    "tournaments": "Tournois",
+    "users": "Utilisateurs",
+    "payments": "Paiements",
+    "judges": "Juges",
+    "emails": "Emails",
+    "settings": "Paramètres"
+  },
+  "actions": {
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "create": "Créer",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "publish": "Publier",
+    "archive": "Archiver"
+  },
+  "status": {
+    "loading": "Chargement...",
+    "saving": "Enregistrement...",
+    "success": "Succès!",
+    "error": "Erreur",
+    "noData": "Aucune donnée disponible"
+  },
+  "tournament": {
+    "create": "Créer un Tournoi",
+    "manage": "Gérer le Tournoi",
+    "pairings": "Appariements",
+    "rounds": "Tours",
+    "registrations": "Inscriptions"
+  },
+  "users": {
+    "manage": "Gérer les Utilisateurs",
+    "roles": "Rôles Utilisateur",
+    "permissions": "Permissions"
+  },
+  "analytics": {
+    "performance": "Performance",
+    "heatmap": "Carte de Chaleur UX",
+    "metrics": "Métriques"
+  }
+}

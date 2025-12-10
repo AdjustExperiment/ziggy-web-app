@@ -1,0 +1,37 @@
+{
+  "dashboard": {
+    "title": "Panel del Juez",
+    "assignments": "Mis Asignaciones",
+    "availability": "Disponibilidad",
+    "profile": "Perfil de Juez",
+    "notifications": "Notificaciones"
+  },
+  "ballot": {
+    "title": "Boleta",
+    "submit": "Enviar Boleta",
+    "winner": "Ganador",
+    "speakerPoints": "Puntos de Orador",
+    "feedback": "Comentarios",
+    "decision": "Decisión",
+    "draft": "Guardar Borrador"
+  },
+  "status": {
+    "available": "Disponible",
+    "assigned": "Asignado",
+    "unavailable": "No Disponible",
+    "pending": "Pendiente",
+    "confirmed": "Confirmado"
+  },
+  "availability": {
+    "setAvailability": "Establecer Disponibilidad",
+    "maxRounds": "Máximo de Rondas por Día",
+    "timeSlots": "Horarios Disponibles",
+    "specialRequirements": "Requisitos Especiales"
+  },
+  "conflicts": {
+    "title": "Conflictos",
+    "school": "Conflictos de Escuela",
+    "team": "Conflictos de Equipo",
+    "add": "Agregar Conflicto"
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "sidebar": {
+    "dashboard": "仪表盘",
+    "tournaments": "比赛",
+    "users": "用户",
+    "payments": "付款",
+    "judges": "裁判",
+    "emails": "邮件",
+    "settings": "设置"
+  },
+  "actions": {
+    "save": "保存",
+    "delete": "删除",
+    "edit": "编辑",
+    "create": "创建",
+    "cancel": "取消",
+    "confirm": "确认",
+    "publish": "发布",
+    "archive": "归档"
+  },
+  "status": {
+    "loading": "加载中...",
+    "saving": "保存中...",
+    "success": "成功！",
+    "error": "错误",
+    "noData": "暂无数据"
+  },
+  "tournament": {
+    "create": "创建比赛",
+    "manage": "管理比赛",
+    "pairings": "对阵",
+    "rounds": "轮次",
+    "registrations": "注册"
+  },
+  "users": {
+    "manage": "用户管理",
+    "roles": "用户角色",
+    "permissions": "权限"
+  },
+  "analytics": {
+    "performance": "性能",
+    "heatmap": "用户体验热图",
+    "metrics": "指标"
+  }
+}

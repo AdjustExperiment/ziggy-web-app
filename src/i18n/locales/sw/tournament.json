@@ -1,0 +1,7 @@
+{
+  "dashboard": { "title": "Dashibodi ya Mashindano", "myMatch": "Mechi Yangu", "postings": "Machapisho", "rounds": "Raundi", "schedule": "Ratiba", "results": "Matokeo" },
+  "registration": { "title": "Jisajili kwa Mashindano", "submit": "Wasilisha Usajili", "success": "Usajili umefanikiwa!", "participant": "Jina la Mshiriki", "email": "Barua pepe", "school": "Shule/Shirika", "partner": "Jina la Mshirika", "dietary": "Mahitaji ya Chakula", "emergency": "Mawasiliano ya Dharura" },
+  "postings": { "round": "Raundi", "room": "Chumba", "judge": "Jaji", "aff": "Upande wa Ndio", "neg": "Upande wa Hapana", "time": "Wakati Uliopangwa", "status": "Hali" },
+  "status": { "upcoming": "Inayokuja", "active": "Hai", "completed": "Imekamilika", "pending": "Inasubiri", "confirmed": "Imethibitishwa" },
+  "payment": { "title": "Malipo", "pending": "Malipo Yanasubiri", "completed": "Malipo Yamekamilika", "fee": "Ada ya Usajili" }
+}

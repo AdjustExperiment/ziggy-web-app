@@ -1,0 +1,7 @@
+{
+  "dashboard": { "title": "Idashbhodi Yejaji", "assignments": "Imisebenzi Yami", "availability": "Ukutholakala", "profile": "Iphrofayela Yejaji", "notifications": "Izaziso" },
+  "ballot": { "title": "Ivoti", "submit": "Thumela Ivoti", "winner": "Umnqobi", "speakerPoints": "Amaphuzu Okhulumayo", "feedback": "Impendulo", "decision": "Isinqumo", "draft": "Gcina Idrafti" },
+  "status": { "available": "Iyatholakala", "assigned": "Inikeziwe", "unavailable": "Ayitholakali", "pending": "Elindile", "confirmed": "Iqinisekisiwe" },
+  "availability": { "setAvailability": "Setha Ukutholakala", "maxRounds": "Amajika Amaningi Ngosuku", "timeSlots": "Izikhathi Ezitholakalayo", "specialRequirements": "Izidingo Ezikhethekile" },
+  "conflicts": { "title": "Izingxabano", "school": "Izingxabano Zesikole", "team": "Izingxabano Zeqembu", "add": "Engeza Ingxabano" }
+}

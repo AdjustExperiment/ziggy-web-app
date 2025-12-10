@@ -1,0 +1,8 @@
+{
+  "sidebar": { "dashboard": "Idashbhodi", "tournaments": "Imincintiswano", "users": "Abasebenzisi", "payments": "Izinkokhelo", "judges": "Amajaji", "emails": "Ama-imeyili", "settings": "Izilungiselelo" },
+  "actions": { "save": "Gcina", "delete": "Susa", "edit": "Hlela", "create": "Dala", "cancel": "Khansela", "confirm": "Qinisekisa", "publish": "Shicilela", "archive": "Gcina" },
+  "status": { "loading": "Iyalayisha...", "saving": "Iyagcina...", "success": "Impumelelo!", "error": "Iphutha", "noData": "Ayikho idatha" },
+  "tournament": { "create": "Dala Umncintiswano", "manage": "Phatha Umncintiswano", "pairings": "Ukuhlanganiswa", "rounds": "Amajika", "registrations": "Ukubhaliswa" },
+  "users": { "manage": "Phatha Abasebenzisi", "roles": "Izindima Zabasebenzisi", "permissions": "Izimvume" },
+  "analytics": { "performance": "Ukusebenza", "heatmap": "Imephu Yokushisa UX", "metrics": "Izilinganiso" }
+}

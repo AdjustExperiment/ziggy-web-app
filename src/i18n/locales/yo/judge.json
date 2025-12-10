@@ -1,0 +1,7 @@
+{
+  "dashboard": { "title": "Dasibodu Onidajọ", "assignments": "Awọn Iṣẹ Mi", "availability": "Wiwa", "profile": "Profaili Onidajọ", "notifications": "Awọn Iwifunni" },
+  "ballot": { "title": "Iwe Ibo", "submit": "Fi Iwe Ibo silẹ", "winner": "Olubori", "speakerPoints": "Awọn Aami Agbọrọ", "feedback": "Esi", "decision": "Ipinnu", "draft": "Fi Akọtọ pamọ" },
+  "status": { "available": "Wa", "assigned": "Ti Yan", "unavailable": "Ko si", "pending": "Nduro", "confirmed": "Ti Fidi Mulẹ" },
+  "availability": { "setAvailability": "Ṣeto Wiwa", "maxRounds": "Awọn Yika Ti o Pọju fun Ọjọ kan", "timeSlots": "Awọn Akoko Wiwa", "specialRequirements": "Awọn Ibeere Pataki" },
+  "conflicts": { "title": "Awọn Rogbodiyan", "school": "Rogbodiyan Ile-iwe", "team": "Rogbodiyan Ẹgbẹ", "add": "Fi Rogbodiyan kun" }
+}

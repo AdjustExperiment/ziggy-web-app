@@ -1,0 +1,7 @@
+{
+  "title": "Mayelana ne-Ziggy", "subtitle": "Ukuhlomisa umphakathi wezinkulumo-mpikiswano emhlabeni jikelele",
+  "mission": { "title": "Umgomo Wethu", "content": "Sikholelwa emandleni ezinkulumo-mpikiswano ukuguqula izimpilo nemiphakathi emhlabeni wonke." },
+  "team": { "title": "Ithimba Lethu", "description": "Hlangana nabantu abanothando ngemuva kwe-Ziggy" },
+  "values": { "title": "Amagugu Ethu", "excellence": "Ubungcono", "excellenceDesc": "Sizama ubungcono kukho konke esikwenzayo", "community": "Umphakathi", "communityDesc": "Ukwakha ubudlelwano ngaphesheya kwemingcele", "innovation": "Ukusungula", "innovationDesc": "Ukusunduzela imingcele ngobuchwepheshe" },
+  "contact": { "title": "Xhumana Nathi", "description": "Singathanda ukuzwa kuwe" }
+}

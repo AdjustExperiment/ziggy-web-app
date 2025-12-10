@@ -1,0 +1,37 @@
+{
+  "dashboard": {
+    "title": "裁判仪表盘",
+    "assignments": "我的任务",
+    "availability": "可用时间",
+    "profile": "裁判资料",
+    "notifications": "通知"
+  },
+  "ballot": {
+    "title": "选票",
+    "submit": "提交选票",
+    "winner": "获胜者",
+    "speakerPoints": "演讲分数",
+    "feedback": "反馈",
+    "decision": "决定",
+    "draft": "保存草稿"
+  },
+  "status": {
+    "available": "可用",
+    "assigned": "已分配",
+    "unavailable": "不可用",
+    "pending": "待定",
+    "confirmed": "已确认"
+  },
+  "availability": {
+    "setAvailability": "设置可用时间",
+    "maxRounds": "每天最大轮次",
+    "timeSlots": "可用时间段",
+    "specialRequirements": "特殊要求"
+  },
+  "conflicts": {
+    "title": "冲突",
+    "school": "学校冲突",
+    "team": "团队冲突",
+    "add": "添加冲突"
+  }
+}

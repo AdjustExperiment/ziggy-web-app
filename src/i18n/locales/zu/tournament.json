@@ -1,0 +1,7 @@
+{
+  "dashboard": { "title": "Idashbhodi Yomncintiswano", "myMatch": "Umdlalo Wami", "postings": "Izimemezelo", "rounds": "Amajika", "schedule": "Isheduli", "results": "Imiphumela" },
+  "registration": { "title": "Bhalisela Umncintiswano", "submit": "Thumela Ukubhaliswa", "success": "Ukubhaliswa kuphumelele!", "participant": "Igama Lombambi", "email": "Ikheli le-imeyili", "school": "Isikole/Inhlangano", "partner": "Igama Lomlingani", "dietary": "Izidingo Zokudla", "emergency": "Ukuxhumana Okwesimo Esiphuthumayo" },
+  "postings": { "round": "Ijika", "room": "Igumbi", "judge": "Ijaji", "aff": "Ukuvuma", "neg": "Ukuphika", "time": "Isikhathi Esihleliwe", "status": "Isimo" },
+  "status": { "upcoming": "Ezayo", "active": "Ephilayo", "completed": "Iqediwe", "pending": "Elindile", "confirmed": "Iqinisekisiwe" },
+  "payment": { "title": "Inkokhelo", "pending": "Inkokhelo Elindile", "completed": "Inkokhelo Iqediwe", "fee": "Imali Yokubhaliswa" }
+}

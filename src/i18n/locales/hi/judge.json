@@ -1,0 +1,37 @@
+{
+  "dashboard": {
+    "title": "न्यायाधीश डैशबोर्ड",
+    "assignments": "मेरे असाइनमेंट",
+    "availability": "उपलब्धता",
+    "profile": "न्यायाधीश प्रोफ़ाइल",
+    "notifications": "सूचनाएं"
+  },
+  "ballot": {
+    "title": "मतपत्र",
+    "submit": "मतपत्र जमा करें",
+    "winner": "विजेता",
+    "speakerPoints": "वक्ता अंक",
+    "feedback": "प्रतिक्रिया",
+    "decision": "निर्णय",
+    "draft": "ड्राफ्ट सहेजें"
+  },
+  "status": {
+    "available": "उपलब्ध",
+    "assigned": "असाइन किया गया",
+    "unavailable": "अनुपलब्ध",
+    "pending": "लंबित",
+    "confirmed": "पुष्टि"
+  },
+  "availability": {
+    "setAvailability": "उपलब्धता सेट करें",
+    "maxRounds": "प्रति दिन अधिकतम राउंड",
+    "timeSlots": "उपलब्ध समय स्लॉट",
+    "specialRequirements": "विशेष आवश्यकताएं"
+  },
+  "conflicts": {
+    "title": "संघर्ष",
+    "school": "स्कूल संघर्ष",
+    "team": "टीम संघर्ष",
+    "add": "संघर्ष जोड़ें"
+  }
+}

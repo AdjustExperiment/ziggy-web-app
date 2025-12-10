@@ -1,0 +1,45 @@
+{
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "tournaments": "Tournaments",
+    "users": "Users",
+    "payments": "Payments",
+    "judges": "Judges",
+    "emails": "Emails",
+    "settings": "Settings"
+  },
+  "actions": {
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "publish": "Publish",
+    "archive": "Archive"
+  },
+  "status": {
+    "loading": "Loading...",
+    "saving": "Saving...",
+    "success": "Success!",
+    "error": "Error",
+    "noData": "No data available"
+  },
+  "tournament": {
+    "create": "Create Tournament",
+    "manage": "Manage Tournament",
+    "pairings": "Pairings",
+    "rounds": "Rounds",
+    "registrations": "Registrations"
+  },
+  "users": {
+    "manage": "Manage Users",
+    "roles": "User Roles",
+    "permissions": "Permissions"
+  },
+  "analytics": {
+    "performance": "Performance",
+    "heatmap": "UX Heatmap",
+    "metrics": "Metrics"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "dashboard": { "title": "የዳኛ ዳሽቦርድ", "assignments": "የኔ ስራዎች", "availability": "ተገኝነት", "profile": "የዳኛ መገለጫ", "notifications": "ማሳወቂያዎች" },
+  "ballot": { "title": "ድምጽ", "submit": "ድምጽ ያስገቡ", "winner": "አሸናፊ", "speakerPoints": "የተናጋሪ ነጥቦች", "feedback": "አስተያየት", "decision": "ውሳኔ", "draft": "ረቂቅ አስቀምጥ" },
+  "status": { "available": "ይገኛል", "assigned": "ተመድቧል", "unavailable": "አይገኝም", "pending": "በመጠባበቅ ላይ", "confirmed": "ተረጋግጧል" },
+  "availability": { "setAvailability": "ተገኝነት አዘጋጅ", "maxRounds": "በቀን ከፍተኛ ዙሮች", "timeSlots": "የሚገኙ ጊዜዎች", "specialRequirements": "ልዩ መስፈርቶች" },
+  "conflicts": { "title": "ግጭቶች", "school": "የትምህርት ቤት ግጭቶች", "team": "የቡድን ግጭቶች", "add": "ግጭት ጨምር" }
+}

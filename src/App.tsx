@@ -5,6 +5,7 @@ import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { GlobalSearchProvider } from '@/hooks/useGlobalSearch';
+import { VitalsCollector } from '@/components/VitalsCollector';
 
 // Conditionally load PerformanceMonitor only in development
 const PerformanceMonitor = import.meta.env.DEV 
@@ -65,6 +66,7 @@ function App() {
     <Router>
       <GlobalSearchProvider>
         <Toaster />
+        <VitalsCollector />
         <div className="min-h-screen bg-background">
           <Navbar />
         {import.meta.env.DEV && PerformanceMonitor && (

@@ -1,0 +1,7 @@
+{
+  "title": "Kuhusu Ziggy", "subtitle": "Kuwezesha jumuiya ya mijadala duniani",
+  "mission": { "title": "Dhamira Yetu", "content": "Tunaamini katika nguvu ya mijadala kubadilisha maisha na jamii duniani kote." },
+  "team": { "title": "Timu Yetu", "description": "Kutana na watu wenye shauku nyuma ya Ziggy" },
+  "values": { "title": "Maadili Yetu", "excellence": "Ubora", "excellenceDesc": "Tunajitahidi kwa ubora katika kila tunachofanya", "community": "Jumuiya", "communityDesc": "Kujenga uhusiano kupitia mipaka", "innovation": "Ubunifu", "innovationDesc": "Kusukuma mipaka na teknolojia" },
+  "contact": { "title": "Wasiliana Nasi", "description": "Tungependa kusikia kutoka kwako" }
+}

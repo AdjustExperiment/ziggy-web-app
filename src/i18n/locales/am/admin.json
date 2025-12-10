@@ -1,0 +1,8 @@
+{
+  "sidebar": { "dashboard": "ዳሽቦርድ", "tournaments": "ውድድሮች", "users": "ተጠቃሚዎች", "payments": "ክፍያዎች", "judges": "ዳኞች", "emails": "ኢሜይሎች", "settings": "ቅንብሮች" },
+  "actions": { "save": "አስቀምጥ", "delete": "ሰርዝ", "edit": "አርትዕ", "create": "ፍጠር", "cancel": "ሰርዝ", "confirm": "አረጋግጥ", "publish": "አትም", "archive": "መዝገብ" },
+  "status": { "loading": "በመጫን ላይ...", "saving": "በማስቀመጥ ላይ...", "success": "ተሳክቷል!", "error": "ስህተት", "noData": "ምንም መረጃ የለም" },
+  "tournament": { "create": "ውድድር ፍጠር", "manage": "ውድድር አስተዳድር", "pairings": "ጥንዶች", "rounds": "ዙሮች", "registrations": "ምዝገባዎች" },
+  "users": { "manage": "ተጠቃሚዎችን አስተዳድር", "roles": "የተጠቃሚ ሚናዎች", "permissions": "ፈቃዶች" },
+  "analytics": { "performance": "አፈጻጸም", "heatmap": "UX ሙቀት ካርታ", "metrics": "መለኪያዎች" }
+}

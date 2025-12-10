@@ -22,6 +22,8 @@ import SponsorsManager from '@/components/admin/SponsorsManager';
 import { ResultsManager } from '@/components/admin/ResultsManager';
 import PaymentLinksManager from '@/components/admin/PaymentLinksManager';
 import { OrganizationManager } from '@/components/admin/OrganizationManager';
+import { PerformanceDashboard } from '@/components/admin/PerformanceDashboard';
+import { HeatmapDashboard } from '@/components/admin/HeatmapDashboard';
 
 // Wrapper component for global-admin-only routes
 function GlobalAdminRoute({ children }: { children: React.ReactNode }) {
@@ -95,6 +97,12 @@ export default function AdminDashboard() {
         } />
         <Route path="organizations" element={
           <GlobalAdminRoute><OrganizationManager /></GlobalAdminRoute>
+        } />
+        <Route path="performance" element={
+          <GlobalAdminRoute><PerformanceDashboard /></GlobalAdminRoute>
+        } />
+        <Route path="heatmap" element={
+          <GlobalAdminRoute><HeatmapDashboard /></GlobalAdminRoute>
         } />
 
         {/* Available to all admin types */}
