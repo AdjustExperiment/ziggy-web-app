@@ -252,7 +252,7 @@ export default function MyDashboard() {
       </div>
 
       {/* Quick Stats */}
-      <div className={`grid grid-cols-1 md:grid-cols-2 ${isJudge ? 'lg:grid-cols-7' : 'lg:grid-cols-5'} gap-4 mb-8`}>
+      <div className={`grid grid-cols-2 gap-3 sm:gap-4 ${isJudge ? 'lg:grid-cols-7' : 'lg:grid-cols-5'} mb-8`}>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Tournaments</CardTitle>
@@ -355,14 +355,35 @@ export default function MyDashboard() {
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="tournaments" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-7">
-          <TabsTrigger value="tournaments">Tournaments</TabsTrigger>
-          <TabsTrigger value="pairings">Pairings</TabsTrigger>
-          <TabsTrigger value="judgings">{isJudge ? 'My Judging' : 'Judgings'}</TabsTrigger>
-          <TabsTrigger value="notifications"><Bell className="h-4 w-4 mr-1" />Notifications</TabsTrigger>
-          <TabsTrigger value="chat">Chat</TabsTrigger>
-          <TabsTrigger value="results">Results</TabsTrigger>
-          <TabsTrigger value="ballots">Ballots</TabsTrigger>
+        <TabsList className="flex w-full overflow-x-auto gap-1 sm:grid sm:grid-cols-7 scrollbar-hide">
+          <TabsTrigger value="tournaments" className="flex-shrink-0 min-w-fit">
+            <Trophy className="h-4 w-4 sm:mr-1" />
+            <span className="hidden sm:inline">Tournaments</span>
+          </TabsTrigger>
+          <TabsTrigger value="pairings" className="flex-shrink-0 min-w-fit">
+            <Users className="h-4 w-4 sm:mr-1" />
+            <span className="hidden sm:inline">Pairings</span>
+          </TabsTrigger>
+          <TabsTrigger value="judgings" className="flex-shrink-0 min-w-fit">
+            <Gavel className="h-4 w-4 sm:mr-1" />
+            <span className="hidden sm:inline">{isJudge ? 'Judging' : 'Judgings'}</span>
+          </TabsTrigger>
+          <TabsTrigger value="notifications" className="flex-shrink-0 min-w-fit">
+            <Bell className="h-4 w-4 sm:mr-1" />
+            <span className="hidden sm:inline">Notifications</span>
+          </TabsTrigger>
+          <TabsTrigger value="chat" className="flex-shrink-0 min-w-fit">
+            <MessageSquare className="h-4 w-4 sm:mr-1" />
+            <span className="hidden sm:inline">Chat</span>
+          </TabsTrigger>
+          <TabsTrigger value="results" className="flex-shrink-0 min-w-fit">
+            <Award className="h-4 w-4 sm:mr-1" />
+            <span className="hidden sm:inline">Results</span>
+          </TabsTrigger>
+          <TabsTrigger value="ballots" className="flex-shrink-0 min-w-fit">
+            <FileText className="h-4 w-4 sm:mr-1" />
+            <span className="hidden sm:inline">Ballots</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="tournaments">

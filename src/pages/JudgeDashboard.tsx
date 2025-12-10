@@ -284,26 +284,26 @@ export default function JudgeDashboard() {
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="assignments" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="assignments" className="flex items-center gap-2">
+        <TabsList className="flex w-full overflow-x-auto gap-1 sm:grid sm:grid-cols-5 scrollbar-hide">
+          <TabsTrigger value="assignments" className="flex items-center gap-1.5 flex-shrink-0 min-w-fit">
             <Gavel className="h-4 w-4" />
-            Assignments
+            <span className="hidden sm:inline">Assignments</span>
           </TabsTrigger>
-          <TabsTrigger value="availability" className="flex items-center gap-2">
+          <TabsTrigger value="availability" className="flex items-center gap-1.5 flex-shrink-0 min-w-fit">
             <Calendar className="h-4 w-4" />
-            Availability
+            <span className="hidden sm:inline">Availability</span>
           </TabsTrigger>
-          <TabsTrigger value="weekly" className="flex items-center gap-2">
+          <TabsTrigger value="weekly" className="flex items-center gap-1.5 flex-shrink-0 min-w-fit">
             <Clock className="h-4 w-4" />
-            Weekly Schedule
+            <span className="hidden sm:inline">Weekly</span>
           </TabsTrigger>
-          <TabsTrigger value="notifications" className="flex items-center gap-2">
+          <TabsTrigger value="notifications" className="flex items-center gap-1.5 flex-shrink-0 min-w-fit">
             <Bell className="h-4 w-4" />
-            Notifications
+            <span className="hidden sm:inline">Notifications</span>
           </TabsTrigger>
-          <TabsTrigger value="profile" className="flex items-center gap-2">
+          <TabsTrigger value="profile" className="flex items-center gap-1.5 flex-shrink-0 min-w-fit">
             <Eye className="h-4 w-4" />
-            Profile
+            <span className="hidden sm:inline">Profile</span>
           </TabsTrigger>
         </TabsList>
 

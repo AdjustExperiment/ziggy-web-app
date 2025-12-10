@@ -399,6 +399,26 @@ All colors MUST be HSL.
       @apply py-12;
     }
   }
+
+  /* Scrollbar hide utility for horizontal scrolling tabs */
+  .scrollbar-hide {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Scroll snap for tab navigation */
+  .scroll-snap-x {
+    scroll-snap-type: x mandatory;
+  }
+  
+  .scroll-snap-center {
+    scroll-snap-align: center;
+  }
 }
 
 /* ===== PRINT STYLES ===== */
