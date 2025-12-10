@@ -85,40 +85,31 @@ export function drawAnimatedArc(
   ctx.lineCap = 'round';
   ctx.stroke();
 
-  // Draw pulsing head at the end of the arc
-  if (visiblePoints.length > 0) {
-    const head = visiblePoints[visiblePoints.length - 1];
-    ctx.beginPath();
-    ctx.arc(head.x, head.y, 3, 0, Math.PI * 2);
-    ctx.fillStyle = 'hsl(0, 72%, 60%)';
-    ctx.fill();
-  }
-
   ctx.restore();
 }
 
-// Draw pulsing marker
-export function drawPulsingMarker(ctx: CanvasRenderingContext2D, x: number, y: number, pulsePhase: number, depth: number) {
-  const pulseScale = 1 + Math.sin(pulsePhase) * 0.4;
-  const opacity = 0.4 + depth * 0.6;
+// Draw static glowing marker (no pulsing)
+export function drawGlowingMarker(ctx: CanvasRenderingContext2D, x: number, y: number, depth: number) {
+  const opacity = 0.5 + depth * 0.5;
 
   ctx.save();
-  ctx.beginPath();
-  ctx.arc(x, y, 6 * pulseScale, 0, Math.PI * 2);
-  ctx.strokeStyle = `hsla(0, 72%, 50%, ${(0.5 - pulseScale * 0.15) * opacity})`;
-  ctx.lineWidth = 1;
-  ctx.stroke();
-
+  
+  // Outer glow halo
   ctx.shadowColor = 'hsl(0, 72%, 50%)';
-  ctx.shadowBlur = 8;
+  ctx.shadowBlur = 12;
+  
+  // Main red dot
   ctx.beginPath();
-  ctx.arc(x, y, 3, 0, Math.PI * 2);
-  ctx.fillStyle = `hsla(0, 72%, 60%, ${opacity})`;
+  ctx.arc(x, y, 3.5, 0, Math.PI * 2);
+  ctx.fillStyle = `hsla(0, 72%, 55%, ${opacity})`;
   ctx.fill();
-
+  
+  // Bright center highlight
+  ctx.shadowBlur = 0;
   ctx.beginPath();
   ctx.arc(x, y, 1.5, 0, Math.PI * 2);
-  ctx.fillStyle = `hsla(0, 72%, 85%, ${opacity})`;
+  ctx.fillStyle = `hsla(0, 72%, 80%, ${opacity})`;
   ctx.fill();
+  
   ctx.restore();
 }
