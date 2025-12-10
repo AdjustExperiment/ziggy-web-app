@@ -7,6 +7,8 @@ import { ThemeToggle } from './ThemeToggle';
 import { NotificationsDropdown } from './admin/NotificationsDropdown';
 import { UserNotifications } from './UserNotifications';
 import { LazyImage } from '@/components/LazyImage';
+import { GlobalSearch } from './GlobalSearch';
+import { useGlobalSearch } from '@/hooks/useGlobalSearch';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Separator } from '@/components/ui/separator';
 import { 
@@ -28,7 +30,8 @@ import {
   BookOpen,
   Gavel,
   Eye,
-  Building
+  Building,
+  Search
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -41,12 +44,14 @@ import {
 export function Navbar() {
   const { user, profile, signOut, isAdmin } = useOptimizedAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+  const { setIsOpen: setSearchOpen } = useGlobalSearch();
 
   const displayName = profile?.first_name 
     ? `${profile.first_name} ${profile.last_name || ''}`.trim()
     : user?.email?.split('@')[0] || 'User';
 
   return (
+    <>
     <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border">
       <div className="w-full px-4 sm:px-6">
         <div className="flex justify-between items-center h-16">
@@ -198,6 +203,29 @@ export function Navbar() {
           </div>
           
           <div className="flex items-center space-x-2 sm:space-x-4">
+            {/* Desktop Search Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSearchOpen(true)}
+              className="hidden sm:flex items-center gap-2 text-muted-foreground hover:text-foreground"
+            >
+              <Search className="h-4 w-4" />
+              <kbd className="hidden lg:inline-flex h-5 items-center gap-1 rounded border border-border bg-muted px-1.5 text-[10px] font-medium text-muted-foreground">
+                ⌘K
+              </kbd>
+            </Button>
+
+            {/* Mobile Search Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSearchOpen(true)}
+              className="sm:hidden touch-target"
+            >
+              <Search className="h-5 w-5" />
+            </Button>
+
             <ThemeToggle />
             
             {user ? (
@@ -587,5 +615,9 @@ export function Navbar() {
         )}
       </div>
     </nav>
+    
+    {/* Global Search Dialog */}
+    <GlobalSearch />
+    </>
   );
 }
