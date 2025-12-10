@@ -1,0 +1,8 @@
+{
+  "sidebar": { "dashboard": "Dashibodi", "tournaments": "Mashindano", "users": "Watumiaji", "payments": "Malipo", "judges": "Majaji", "emails": "Barua pepe", "settings": "Mipangilio" },
+  "actions": { "save": "Hifadhi", "delete": "Futa", "edit": "Hariri", "create": "Unda", "cancel": "Ghairi", "confirm": "Thibitisha", "publish": "Chapisha", "archive": "Hifadhi" },
+  "status": { "loading": "Inapakia...", "saving": "Inahifadhi...", "success": "Imefanikiwa!", "error": "Kosa", "noData": "Hakuna data" },
+  "tournament": { "create": "Unda Mashindano", "manage": "Simamia Mashindano", "pairings": "Jozi", "rounds": "Raundi", "registrations": "Usajili" },
+  "users": { "manage": "Simamia Watumiaji", "roles": "Majukumu ya Mtumiaji", "permissions": "Ruhusa" },
+  "analytics": { "performance": "Utendaji", "heatmap": "Ramani ya Joto UX", "metrics": "Vipimo" }
+}

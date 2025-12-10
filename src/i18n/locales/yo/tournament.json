@@ -1,0 +1,7 @@
+{
+  "dashboard": { "title": "Dasibodu Idije", "myMatch": "Idije Mi", "postings": "Atẹjade", "rounds": "Yika", "schedule": "Eto", "results": "Abajade" },
+  "registration": { "title": "Forukọsilẹ fun Idije", "submit": "Fi Forukọsilẹ silẹ", "success": "Forukọsilẹ ti ṣaṣeyọri!", "participant": "Orukọ Olukopa", "email": "Adirẹsi Imeeli", "school": "Ile-iwe/Ajo", "partner": "Orukọ Alabaṣepọ", "dietary": "Awọn ibeere Ounjẹ", "emergency": "Olubasọrọ Pajawiri" },
+  "postings": { "round": "Yika", "room": "Yara", "judge": "Onidajọ", "aff": "Atilẹyin", "neg": "Ilodi", "time": "Akoko Eto", "status": "Ipo" },
+  "status": { "upcoming": "N bọ", "active": "Nṣiṣẹ", "completed": "Ti Pari", "pending": "Nduro", "confirmed": "Ti Fidi Mulẹ" },
+  "payment": { "title": "Isanwo", "pending": "Isanwo Nduro", "completed": "Isanwo Ti Pari", "fee": "Owo Forukọsilẹ" }
+}

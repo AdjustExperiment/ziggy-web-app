@@ -1,0 +1,8 @@
+{
+  "sidebar": { "dashboard": "Dasibodu", "tournaments": "Idije", "users": "Olumulo", "payments": "Isanwo", "judges": "Onidajọ", "emails": "Imeeli", "settings": "Eto" },
+  "actions": { "save": "Fipamọ", "delete": "Parẹ", "edit": "Ṣatunkọ", "create": "Ṣẹda", "cancel": "Fagilee", "confirm": "Jẹrisi", "publish": "Tẹjade", "archive": "Fipamọ" },
+  "status": { "loading": "N gba...", "saving": "N fipamọ...", "success": "Aṣeyọri!", "error": "Aṣiṣe", "noData": "Ko si data" },
+  "tournament": { "create": "Ṣẹda Idije", "manage": "Ṣakoso Idije", "pairings": "Awọn Mejeeji", "rounds": "Awọn Yika", "registrations": "Forukọsilẹ" },
+  "users": { "manage": "Ṣakoso Olumulo", "roles": "Awọn Ipa Olumulo", "permissions": "Awọn Igbanilaaye" },
+  "analytics": { "performance": "Iṣẹ", "heatmap": "Maapu Ooru UX", "metrics": "Awọn Iwọn" }
+}

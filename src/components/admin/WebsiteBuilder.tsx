@@ -22,6 +22,7 @@ import { PageEditor } from './website-builder/PageEditor';
 import { BlockEditor } from './website-builder/BlockEditor';
 import { SEOOptimizer } from './website-builder/SEOOptimizer';
 import { PreviewRenderer } from './website-builder/PreviewRenderer';
+import { GlobalSiteSettings } from './GlobalSiteSettings';
 import type { SitePage, SiteBlock } from '@/types/website-builder';
 
 export const WebsiteBuilder = () => {
@@ -376,19 +377,7 @@ export const WebsiteBuilder = () => {
           </TabsContent>
 
           <TabsContent value="settings" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Site Settings</CardTitle>
-                <CardDescription>
-                  Configure global site settings
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8 text-muted-foreground">
-                  Global site settings coming soon
-                </div>
-              </CardContent>
-            </Card>
+            <GlobalSiteSettings />
           </TabsContent>
         </Tabs>
       )}

@@ -1,0 +1,43 @@
+{
+  "dashboard": {
+    "title": "Tableau de Bord du Tournoi",
+    "myMatch": "Mon Match",
+    "postings": "Publications",
+    "rounds": "Tours",
+    "schedule": "Calendrier",
+    "results": "Résultats"
+  },
+  "registration": {
+    "title": "S'inscrire au Tournoi",
+    "submit": "Soumettre l'Inscription",
+    "success": "Inscription réussie!",
+    "participant": "Nom du Participant",
+    "email": "Adresse Email",
+    "school": "École/Organisation",
+    "partner": "Nom du Partenaire",
+    "dietary": "Exigences Alimentaires",
+    "emergency": "Contact d'Urgence"
+  },
+  "postings": {
+    "round": "Tour",
+    "room": "Salle",
+    "judge": "Juge",
+    "aff": "Affirmatif",
+    "neg": "Négatif",
+    "time": "Heure Prévue",
+    "status": "Statut"
+  },
+  "status": {
+    "upcoming": "À Venir",
+    "active": "Actif",
+    "completed": "Terminé",
+    "pending": "En Attente",
+    "confirmed": "Confirmé"
+  },
+  "payment": {
+    "title": "Paiement",
+    "pending": "Paiement en Attente",
+    "completed": "Paiement Effectué",
+    "fee": "Frais d'Inscription"
+  }
+}

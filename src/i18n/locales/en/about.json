@@ -1,0 +1,25 @@
+{
+  "title": "About Ziggy",
+  "subtitle": "Empowering the global debate community",
+  "mission": {
+    "title": "Our Mission",
+    "content": "We believe in the power of debate to transform lives and communities around the world."
+  },
+  "team": {
+    "title": "Our Team",
+    "description": "Meet the passionate individuals behind Ziggy"
+  },
+  "values": {
+    "title": "Our Values",
+    "excellence": "Excellence",
+    "excellenceDesc": "We strive for excellence in everything we do",
+    "community": "Community",
+    "communityDesc": "Building connections across borders",
+    "innovation": "Innovation",
+    "innovationDesc": "Pushing boundaries with technology"
+  },
+  "contact": {
+    "title": "Get in Touch",
+    "description": "We'd love to hear from you"
+  }
+}

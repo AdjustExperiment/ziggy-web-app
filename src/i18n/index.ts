@@ -49,15 +49,23 @@ const loadLanguage = async (lng: string): Promise<boolean> => {
 
   try {
     console.log(`[i18n] Loading translations for: ${lng}`);
-    const [common, nav, home] = await Promise.all([
+    const [common, nav, home, tournament, judge, admin, about] = await Promise.all([
       import(`./locales/${lng}/common.json`),
       import(`./locales/${lng}/nav.json`),
       import(`./locales/${lng}/home.json`),
+      import(`./locales/${lng}/tournament.json`).catch(() => ({ default: {} })),
+      import(`./locales/${lng}/judge.json`).catch(() => ({ default: {} })),
+      import(`./locales/${lng}/admin.json`).catch(() => ({ default: {} })),
+      import(`./locales/${lng}/about.json`).catch(() => ({ default: {} })),
     ]);
 
     i18n.addResourceBundle(lng, 'common', common.default, true, true);
     i18n.addResourceBundle(lng, 'nav', nav.default, true, true);
     i18n.addResourceBundle(lng, 'home', home.default, true, true);
+    i18n.addResourceBundle(lng, 'tournament', tournament.default, true, true);
+    i18n.addResourceBundle(lng, 'judge', judge.default, true, true);
+    i18n.addResourceBundle(lng, 'admin', admin.default, true, true);
+    i18n.addResourceBundle(lng, 'about', about.default, true, true);
     
     console.log(`[i18n] Successfully loaded translations for: ${lng}`);
     return true;
@@ -74,7 +82,7 @@ i18n
     resources,
     fallbackLng: 'en',
     defaultNS: 'common',
-    ns: ['common', 'nav', 'home'],
+    ns: ['common', 'nav', 'home', 'tournament', 'judge', 'admin', 'about'],
     
     detection: {
       order: ['localStorage', 'navigator', 'htmlTag'],

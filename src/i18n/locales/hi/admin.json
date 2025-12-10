@@ -1,0 +1,45 @@
+{
+  "sidebar": {
+    "dashboard": "डैशबोर्ड",
+    "tournaments": "टूर्नामेंट",
+    "users": "उपयोगकर्ता",
+    "payments": "भुगतान",
+    "judges": "न्यायाधीश",
+    "emails": "ईमेल",
+    "settings": "सेटिंग्स"
+  },
+  "actions": {
+    "save": "सहेजें",
+    "delete": "हटाएं",
+    "edit": "संपादित करें",
+    "create": "बनाएं",
+    "cancel": "रद्द करें",
+    "confirm": "पुष्टि करें",
+    "publish": "प्रकाशित करें",
+    "archive": "संग्रहित करें"
+  },
+  "status": {
+    "loading": "लोड हो रहा है...",
+    "saving": "सहेजा जा रहा है...",
+    "success": "सफल!",
+    "error": "त्रुटि",
+    "noData": "कोई डेटा उपलब्ध नहीं"
+  },
+  "tournament": {
+    "create": "टूर्नामेंट बनाएं",
+    "manage": "टूर्नामेंट प्रबंधित करें",
+    "pairings": "जोड़ियां",
+    "rounds": "राउंड",
+    "registrations": "पंजीकरण"
+  },
+  "users": {
+    "manage": "उपयोगकर्ता प्रबंधित करें",
+    "roles": "उपयोगकर्ता भूमिकाएं",
+    "permissions": "अनुमतियां"
+  },
+  "analytics": {
+    "performance": "प्रदर्शन",
+    "heatmap": "UX हीटमैप",
+    "metrics": "मेट्रिक्स"
+  }
+}

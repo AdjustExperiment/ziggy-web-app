@@ -1,0 +1,25 @@
+{
+  "title": "À Propos de Ziggy",
+  "subtitle": "Donner du pouvoir à la communauté mondiale du débat",
+  "mission": {
+    "title": "Notre Mission",
+    "content": "Nous croyons au pouvoir du débat pour transformer des vies et des communautés dans le monde entier."
+  },
+  "team": {
+    "title": "Notre Équipe",
+    "description": "Rencontrez les personnes passionnées derrière Ziggy"
+  },
+  "values": {
+    "title": "Nos Valeurs",
+    "excellence": "Excellence",
+    "excellenceDesc": "Nous visons l'excellence dans tout ce que nous faisons",
+    "community": "Communauté",
+    "communityDesc": "Construire des liens au-delà des frontières",
+    "innovation": "Innovation",
+    "innovationDesc": "Repousser les limites avec la technologie"
+  },
+  "contact": {
+    "title": "Contactez-Nous",
+    "description": "Nous serions ravis d'avoir de vos nouvelles"
+  }
+}

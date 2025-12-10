@@ -1,0 +1,7 @@
+{
+  "title": "ስለ Ziggy", "subtitle": "የዓለም አቀፍ ክርክር ማህበረሰብን ማበረታታት",
+  "mission": { "title": "ተልእኳችን", "content": "በዓለም ዙሪያ ህይወትንና ማህበረሰቦችን ለመለወጥ የክርክር ኃይል እናምናለን።" },
+  "team": { "title": "ቡድናችን", "description": "ከ Ziggy በስተጀርባ ያሉ ቁጡ ሰዎችን ይገናኙ" },
+  "values": { "title": "እሴቶቻችን", "excellence": "ልቀት", "excellenceDesc": "በምንሰራው ሁሉ ልቀትን እንፈልጋለን", "community": "ማህበረሰብ", "communityDesc": "ድንበሮችን ተሻግረው ግንኙነቶችን መገንባት", "innovation": "ፈጠራ", "innovationDesc": "በቴክኖሎጂ ድንበሮችን መግፋት" },
+  "contact": { "title": "ያግኙን", "description": "ከእርስዎ መስማት እንወዳለን" }
+}

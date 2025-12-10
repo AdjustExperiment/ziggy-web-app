@@ -1,0 +1,7 @@
+{
+  "dashboard": { "title": "Dashibodi ya Jaji", "assignments": "Kazi Zangu", "availability": "Upatikanaji", "profile": "Wasifu wa Jaji", "notifications": "Arifa" },
+  "ballot": { "title": "Kura", "submit": "Wasilisha Kura", "winner": "Mshindi", "speakerPoints": "Alama za Mzungumzaji", "feedback": "Maoni", "decision": "Uamuzi", "draft": "Hifadhi Rasimu" },
+  "status": { "available": "Inapatikana", "assigned": "Imepangiwa", "unavailable": "Haipatikani", "pending": "Inasubiri", "confirmed": "Imethibitishwa" },
+  "availability": { "setAvailability": "Weka Upatikanaji", "maxRounds": "Raundi za Juu kwa Siku", "timeSlots": "Nyakati Zinazopatikana", "specialRequirements": "Mahitaji Maalum" },
+  "conflicts": { "title": "Migogoro", "school": "Migogoro ya Shule", "team": "Migogoro ya Timu", "add": "Ongeza Mgogoro" }
+}

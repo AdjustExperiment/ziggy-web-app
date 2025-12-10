@@ -1,0 +1,37 @@
+{
+  "dashboard": {
+    "title": "Tableau de Bord du Juge",
+    "assignments": "Mes Affectations",
+    "availability": "Disponibilité",
+    "profile": "Profil de Juge",
+    "notifications": "Notifications"
+  },
+  "ballot": {
+    "title": "Bulletin",
+    "submit": "Soumettre le Bulletin",
+    "winner": "Gagnant",
+    "speakerPoints": "Points d'Orateur",
+    "feedback": "Commentaires",
+    "decision": "Décision",
+    "draft": "Enregistrer le Brouillon"
+  },
+  "status": {
+    "available": "Disponible",
+    "assigned": "Assigné",
+    "unavailable": "Indisponible",
+    "pending": "En Attente",
+    "confirmed": "Confirmé"
+  },
+  "availability": {
+    "setAvailability": "Définir la Disponibilité",
+    "maxRounds": "Maximum de Tours par Jour",
+    "timeSlots": "Créneaux Horaires Disponibles",
+    "specialRequirements": "Exigences Spéciales"
+  },
+  "conflicts": {
+    "title": "Conflits",
+    "school": "Conflits d'École",
+    "team": "Conflits d'Équipe",
+    "add": "Ajouter un Conflit"
+  }
+}

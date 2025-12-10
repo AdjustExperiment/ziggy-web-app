@@ -1,0 +1,25 @@
+{
+  "title": "关于 Ziggy",
+  "subtitle": "赋能全球辩论社区",
+  "mission": {
+    "title": "我们的使命",
+    "content": "我们相信辩论的力量可以改变世界各地的生活和社区。"
+  },
+  "team": {
+    "title": "我们的团队",
+    "description": "认识 Ziggy 背后充满热情的人们"
+  },
+  "values": {
+    "title": "我们的价值观",
+    "excellence": "卓越",
+    "excellenceDesc": "我们在所做的一切中追求卓越",
+    "community": "社区",
+    "communityDesc": "跨越国界建立联系",
+    "innovation": "创新",
+    "innovationDesc": "用技术推动边界"
+  },
+  "contact": {
+    "title": "联系我们",
+    "description": "我们期待收到您的来信"
+  }
+}
