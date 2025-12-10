@@ -1,27 +1,29 @@
-import { ArrowRight, Users, Target } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BoxedText } from "@/components/ui/boxed-text";
-import { AnimatedGlobe } from "@/components/AnimatedGlobe";
+import { ThreeGlobe } from "@/components/ThreeGlobe";
+
 export function Hero() {
-  return <section className="relative overflow-hidden bg-gradient-hero">
+  return (
+    <section className="relative overflow-hidden bg-gradient-hero">
       {/* Animated Background Elements */}
       <div className="absolute inset-0">
         <div className="absolute inset-0 bg-background/5" />
         
         {/* Floating Particles */}
         <div className="absolute top-10 left-10 w-32 h-32 bg-primary/5 rounded-full blur-xl animate-float" style={{
-        animationDelay: '0s'
-      }}></div>
+          animationDelay: '0s'
+        }}></div>
         <div className="absolute top-20 right-20 w-48 h-48 bg-primary/8 rounded-full blur-2xl animate-float" style={{
-        animationDelay: '2s'
-      }}></div>
+          animationDelay: '2s'
+        }}></div>
         <div className="absolute bottom-20 left-20 w-40 h-40 bg-primary/6 rounded-full blur-xl animate-float" style={{
-        animationDelay: '4s'
-      }}></div>
+          animationDelay: '4s'
+        }}></div>
         <div className="absolute bottom-10 right-10 w-56 h-56 bg-primary/4 rounded-full blur-3xl animate-float" style={{
-        animationDelay: '1s'
-      }}></div>
+          animationDelay: '1s'
+        }}></div>
         
         {/* Gradient Overlays */}
         <div className="absolute inset-0 bg-gradient-to-br from-transparent via-primary/5 to-background/10"></div>
@@ -100,30 +102,14 @@ export function Hero() {
             </div>
           </div>
 
-          {/* Animated Globe */}
+          {/* Three.js Globe */}
           <div className="relative order-first lg:order-last">
-            <div className="absolute inset-0 bg-gradient-to-t from-background/20 to-transparent rounded-3xl pointer-events-none z-10" />
-            
-            <AnimatedGlobe 
+            <ThreeGlobe 
               className="rounded-3xl shadow-tournament w-full h-[300px] sm:h-[400px] lg:h-[500px] xl:h-[600px]"
             />
-            
-            {/* Floating Stats Cards */}
-            <div className="absolute top-2 sm:top-4 right-2 sm:right-4 z-20 bg-card/90 backdrop-blur-sm rounded-2xl p-2 sm:p-4 shadow-card border border-border/50">
-              <div className="flex items-center gap-1 sm:gap-2">
-                <Users className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
-                <span className="text-xs sm:text-sm font-medium text-card-foreground">Live: 1,342</span>
-              </div>
-            </div>
-            
-            <div className="absolute bottom-2 sm:bottom-4 left-2 sm:left-4 z-20 bg-card/90 backdrop-blur-sm rounded-2xl p-2 sm:p-4 shadow-card border border-border/50">
-              <div className="flex items-center gap-1 sm:gap-2">
-                <Target className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
-                <span className="text-xs sm:text-sm font-medium text-card-foreground">Win Rate: 78.5%</span>
-              </div>
-            </div>
           </div>
         </div>
       </div>
-    </section>;
+    </section>
+  );
 }
