@@ -1,4 +1,4 @@
-import { ArrowRight, Users, Target } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BoxedText } from "@/components/ui/boxed-text";
@@ -107,21 +107,6 @@ export function Hero() {
             <AnimatedGlobe 
               className="rounded-3xl shadow-tournament w-full h-[300px] sm:h-[400px] lg:h-[500px] xl:h-[600px]"
             />
-            
-            {/* Floating Stats Cards */}
-            <div className="absolute top-2 sm:top-4 right-2 sm:right-4 z-20 bg-card/90 backdrop-blur-sm rounded-2xl p-2 sm:p-4 shadow-card border border-border/50">
-              <div className="flex items-center gap-1 sm:gap-2">
-                <Users className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
-                <span className="text-xs sm:text-sm font-medium text-card-foreground">Live: 1,342</span>
-              </div>
-            </div>
-            
-            <div className="absolute bottom-2 sm:bottom-4 left-2 sm:left-4 z-20 bg-card/90 backdrop-blur-sm rounded-2xl p-2 sm:p-4 shadow-card border border-border/50">
-              <div className="flex items-center gap-1 sm:gap-2">
-                <Target className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
-                <span className="text-xs sm:text-sm font-medium text-card-foreground">Win Rate: 78.5%</span>
-              </div>
-            </div>
           </div>
         </div>
       </div>
