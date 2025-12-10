@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useOptimizedAuth } from '@/hooks/useOptimizedAuth';
@@ -45,6 +45,13 @@ export function Navbar() {
   const { user, profile, signOut, isAdmin } = useOptimizedAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const { setIsOpen: setSearchOpen } = useGlobalSearch();
+  
+  // Detect platform for keyboard shortcut display
+  const isMac = useMemo(() => {
+    if (typeof navigator === 'undefined') return false;
+    return /Mac|iPhone|iPad|iPod/.test(navigator.platform || navigator.userAgent);
+  }, []);
+  const modifierKey = isMac ? '⌘' : 'Ctrl+';
 
   const displayName = profile?.first_name 
     ? `${profile.first_name} ${profile.last_name || ''}`.trim()
@@ -212,7 +219,7 @@ export function Navbar() {
             >
               <Search className="h-4 w-4" />
               <kbd className="hidden lg:inline-flex h-5 items-center gap-1 rounded border border-border bg-muted px-1.5 text-[10px] font-medium text-muted-foreground">
-                ⌘K
+                {modifierKey}K
               </kbd>
             </Button>
 
