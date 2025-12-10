@@ -24,6 +24,7 @@ import MultiJudgePanelManager from './MultiJudgePanelManager';
 import { TournamentContentManager } from './TournamentContentManager';
 import { TournamentObserversManager } from './TournamentObserversManager';
 import { TournamentSettingsManager } from './TournamentSettingsManager';
+import { TournamentSponsorSelector } from './TournamentSponsorSelector';
 import TabulationDashboard from './tabulation/TabulationDashboard';
 import { useOptimizedAuth } from '@/hooks/useOptimizedAuth';
 
@@ -667,6 +668,11 @@ export function TournamentManager() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Sponsors - Now linked to real sponsor profiles */}
+          {activeTournamentId && (
+            <TournamentSponsorSelector tournamentId={activeTournamentId} />
+          )}
 
           {/* Settings */}
           <Card>

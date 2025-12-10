@@ -16,6 +16,7 @@ import {
   Star,
   ArrowUpDown
 } from 'lucide-react';
+import { ErrorDisplay } from '@/components/ErrorDisplay';
 
 interface StandingsViewProps {
   tournamentId: string;
@@ -361,13 +362,13 @@ export function StandingsView({ tournamentId, registrations, eventId }: Standing
         </CardHeader>
         <CardContent>
           {standings.length === 0 ? (
-            <div className="text-center py-12">
-              <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No Standings Yet</h3>
-              <p className="text-muted-foreground">
-                Standings will appear once rounds are completed and ballots are submitted.
-              </p>
-            </div>
+            <ErrorDisplay
+              errorCode="ERR_NO_BALLOTS"
+              message="No Standings Yet"
+              details="Standings will appear once rounds are completed and ballots are submitted. Use the Recalculate button after ballots are entered."
+              retryAction={syncStandings}
+              variant="empty"
+            />
           ) : (
             <div className="space-y-4">
               {/* Summary Stats */}

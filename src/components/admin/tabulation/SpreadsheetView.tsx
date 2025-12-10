@@ -6,8 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/components/ui/use-toast';
-import { Download, RefreshCw, Search, ArrowUpDown, ChevronDown, ChevronUp } from 'lucide-react';
+import { Download, RefreshCw, Search, ArrowUpDown, ChevronDown, ChevronUp, Users } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ErrorDisplay, EmptyState } from '@/components/ErrorDisplay';
 
 interface SpreadsheetViewProps {
   tournamentId: string;
@@ -404,6 +405,20 @@ export function SpreadsheetView({ tournamentId, eventId }: SpreadsheetViewProps)
           <div className="flex justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
           </div>
+        ) : displayTeams.length === 0 && teams.length === 0 ? (
+          <ErrorDisplay
+            errorCode="ERR_NO_TEAMS"
+            message="No teams registered yet"
+            details="Register competitors for this tournament to see their statistics in the spreadsheet view."
+            retryAction={fetchData}
+            variant="empty"
+          />
+        ) : displayTeams.length === 0 ? (
+          <EmptyState
+            icon={<Users className="h-12 w-12 text-muted-foreground" />}
+            title="No matching teams"
+            description="Try adjusting your search or filter criteria."
+          />
         ) : (
           <div className="overflow-x-auto">
             <Table>
@@ -474,12 +489,6 @@ export function SpreadsheetView({ tournamentId, eventId }: SpreadsheetViewProps)
                 ))}
               </TableBody>
             </Table>
-          </div>
-        )}
-
-        {!loading && displayTeams.length === 0 && (
-          <div className="text-center py-8 text-muted-foreground">
-            No teams found matching your criteria
           </div>
         )}
       </CardContent>
