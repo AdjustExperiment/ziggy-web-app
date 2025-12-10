@@ -14,13 +14,15 @@ export function AnimatedGlobe({ className }: { className?: string }) {
   const sizeRef = useRef(0);
   const arcsRef = useRef<ArcState[]>([
     { routeIndex: 0, progress: 0, active: true },
-    { routeIndex: 7, progress: 0.2, active: true },
-    { routeIndex: 14, progress: 0.4, active: true },
-    { routeIndex: 21, progress: 0.6, active: true },
-    { routeIndex: 28, progress: 0.8, active: true },
-    { routeIndex: 35, progress: 1.0, active: true },
-    { routeIndex: 42, progress: 0.3, active: true },
-    { routeIndex: 49, progress: 0.7, active: true },
+    { routeIndex: 10, progress: 0.15, active: true },
+    { routeIndex: 20, progress: 0.3, active: true },
+    { routeIndex: 30, progress: 0.45, active: true },
+    { routeIndex: 40, progress: 0.6, active: true },
+    { routeIndex: 50, progress: 0.75, active: true },
+    { routeIndex: 60, progress: 0.9, active: true },
+    { routeIndex: 70, progress: 0.1, active: true },
+    { routeIndex: 5, progress: 0.5, active: true },
+    { routeIndex: 15, progress: 0.65, active: true },
   ]);
 
   // Convert capitals to cobe marker format
@@ -85,21 +87,39 @@ export function AnimatedGlobe({ className }: { className?: string }) {
       });
 
       const animate = () => {
-        const r = size * 0.425;
+        // Arc radius matches cobe's internal globe radius
+        const r = size * 0.47;
         arcCtx.clearRect(0, 0, size, size);
 
         for (const arc of arcsRef.current) {
           if (!arc.active) continue;
-          const route = CONNECTION_ROUTES[arc.routeIndex];
+          const route = CONNECTION_ROUTES[arc.routeIndex % CONNECTION_ROUTES.length];
           if (!route) continue;
           const start = WORLD_CAPITALS[route[0]], end = WORLD_CAPITALS[route[1]];
           if (!start || !end) continue;
           
-          const fadeOpacity = arc.progress > 1.0 ? Math.max(0, 1 - (arc.progress - 1.0) * 2) : 1;
-          drawAnimatedArc(arcCtx, { lat: start.lat, lng: start.lng }, { lat: end.lat, lng: end.lng }, phiRef.current, size, size, r, Math.min(arc.progress, 1), fadeOpacity);
+          // Arc lifecycle:
+          // 0.0 → 1.0: Drawing the arc
+          // 1.0 → 1.4: Hold at destination (fully drawn)
+          // 1.4 → 1.7: Fade out
+          // 1.7+: Reset to new route
+          let fadeOpacity = 1;
+          if (arc.progress > 1.4) {
+            fadeOpacity = Math.max(0, 1 - (arc.progress - 1.4) * 3.33);
+          }
           
-          arc.progress += 0.002;
-          if (arc.progress >= 1.5) { 
+          drawAnimatedArc(
+            arcCtx, 
+            { lat: start.lat, lng: start.lng }, 
+            { lat: end.lat, lng: end.lng }, 
+            phiRef.current, 
+            size, size, r, 
+            arc.progress, 
+            fadeOpacity
+          );
+          
+          arc.progress += 0.003;
+          if (arc.progress >= 1.7) { 
             arc.progress = 0; 
             arc.routeIndex = (arc.routeIndex + 1) % CONNECTION_ROUTES.length;
           }
