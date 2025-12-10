@@ -25,10 +25,10 @@ export function AnimatedGlobe({ className }: { className?: string }) {
     { routeIndex: 15, progress: 0.65, active: true },
   ]);
 
-  // Convert capitals to cobe marker format
+  // Convert capitals to cobe marker format - size 0.06 for visibility
   const cobeMarkers = WORLD_CAPITALS.map(city => ({
     location: [city.lat, city.lng] as [number, number],
-    size: 0.04
+    size: 0.06
   }));
 
   useEffect(() => {

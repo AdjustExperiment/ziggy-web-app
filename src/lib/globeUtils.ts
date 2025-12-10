@@ -1,4 +1,4 @@
-// Project lat/lng to 2D canvas coordinates matching cobe's coordinate system
+// Project lat/lng to 2D canvas coordinates using cobe's EXACT rotation matrix
 export function projectToCanvas(
   lat: number, lng: number, phi: number, theta: number,
   canvasWidth: number, canvasHeight: number, globeRadius: number
@@ -6,30 +6,39 @@ export function projectToCanvas(
   const latRad = lat * (Math.PI / 180);
   const lngRad = lng * (Math.PI / 180);
   
-  // Convert to 3D cartesian coordinates on unit sphere
-  // Cobe's marker system: x = -cos(lat)*cos(lng-PI), y = sin(lat), z = cos(lat)*sin(lng-PI)
+  // Convert to 3D coordinates matching cobe's marker conversion
   const adjustedLng = lngRad - Math.PI;
-  let x = -Math.cos(latRad) * Math.cos(adjustedLng);
-  let y = Math.sin(latRad);
-  let z = Math.cos(latRad) * Math.sin(adjustedLng);
+  const cosLat = Math.cos(latRad);
+  const sinLat = Math.sin(latRad);
+  const cosAdjLng = Math.cos(adjustedLng);
+  const sinAdjLng = Math.sin(adjustedLng);
   
-  // Apply phi rotation (around Y-axis) - matches cobe's shader
-  const cosPhi = Math.cos(phi);
-  const sinPhi = Math.sin(phi);
-  const x1 = cosPhi * x + sinPhi * z;
-  const z1 = -sinPhi * x + cosPhi * z;
+  // Initial position (cobe format)
+  const px = -cosLat * cosAdjLng;
+  const py = sinLat;
+  const pz = cosLat * sinAdjLng;
   
-  // Apply theta rotation (around X-axis) - matches cobe's shader
-  const cosTheta = Math.cos(theta);
-  const sinTheta = Math.sin(theta);
-  const y1 = cosTheta * y + sinTheta * z1;
-  const z2 = -sinTheta * y + cosTheta * z1;
+  // Apply cobe's EXACT rotation matrix: J(theta, phi)
+  // From cobe shader: mat3(d, f*e, -f*c, 0., c, e, f, d*-e, d*c)
+  // where c=cos(theta), d=cos(phi), e=sin(theta), f=sin(phi)
+  const c = Math.cos(theta);  // cos(theta)
+  const d = Math.cos(phi);    // cos(phi)
+  const e = Math.sin(theta);  // sin(theta)
+  const f = Math.sin(phi);    // sin(phi)
+  
+  // Matrix multiplication: result = J * position
+  // Row 1: [d, f*e, -f*c]
+  const rx = d * px + f * e * py + (-f * c) * pz;
+  // Row 2: [0, c, e]
+  const ry = 0 * px + c * py + e * pz;
+  // Row 3: [f, -d*e, d*c]
+  const rz = f * px + (-d * e) * py + (d * c) * pz;
   
   return {
-    x: canvasWidth / 2 + x1 * globeRadius,
-    y: canvasHeight / 2 - y1 * globeRadius,
-    visible: z2 > 0,
-    depth: z2,
+    x: canvasWidth / 2 + rx * globeRadius,
+    y: canvasHeight / 2 - ry * globeRadius,  // Flip Y for canvas
+    visible: rz > 0,  // Visible if facing camera (positive Z)
+    depth: rz,
   };
 }
 
