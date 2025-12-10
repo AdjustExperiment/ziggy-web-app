@@ -51,6 +51,11 @@ export function AnimatedGlobe({ className }: { className?: string }) {
         }));
       }
 
+      // DEBUG: Log city data to diagnose rendering issues
+      console.log('🌍 Globe init - Total cities:', WORLD_CITIES.length);
+      console.log('🌍 First 5 cities (should be African):', WORLD_CITIES.slice(0, 5).map(c => `${c.name} (${c.lat}, ${c.lng})`));
+      console.log('🌍 City states initialized:', cityStatesRef.current.length);
+
       // Initialize markers with starting colors
       const initialMarkers = WORLD_CITIES.map((city) => ({
         location: [city.lat, city.lng] as [number, number],
@@ -74,6 +79,11 @@ export function AnimatedGlobe({ className }: { className?: string }) {
         onRender: (state) => {
           phiRef.current += 0.0008;
           state.phi = phiRef.current;
+
+          // DEBUG: Log marker count periodically
+          if (Math.random() < 0.005) {
+            console.log('🔴 Markers being rendered:', state.markers?.length || 0);
+          }
 
           // Update city light states and markers
           const updatedMarkers = WORLD_CITIES.map((city, i) => {
