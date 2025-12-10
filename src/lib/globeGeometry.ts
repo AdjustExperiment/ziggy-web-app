@@ -22,8 +22,8 @@ export function latLngToVector3(lat: number, lng: number, radius: number = GLOBE
 export function createGreatCircleArc(
   start: { lat: number; lng: number },
   end: { lat: number; lng: number },
-  segments: number = 64,
-  altitude: number = 0.12
+  segments: number = 50,
+  altitude: number = 0.15
 ): THREE.Vector3[] {
   const startVec = latLngToVector3(start.lat, start.lng);
   const endVec = latLngToVector3(end.lat, end.lng);
@@ -145,17 +145,17 @@ export function isOnLand(lat: number, lng: number): boolean {
  * Uses a lat/lng grid with consistent spacing for clean appearance
  */
 export function generateUniformLandPoints(
-  latStep: number = 2.5,
-  lngStep: number = 2.5,
+  latStep: number = 1.8,
+  lngStep: number = 1.8,
   radius: number = GLOBE_RADIUS
 ): Float32Array {
   const positions: number[] = [];
   
   // Generate points on a uniform lat/lng grid
-  for (let lat = -85; lat <= 85; lat += latStep) {
+  for (let lat = -80; lat <= 80; lat += latStep) {
     // Adjust longitude step based on latitude to maintain uniform density
-    const adjustedLngStep = lngStep / Math.cos(lat * Math.PI / 180);
-    const effectiveLngStep = Math.min(adjustedLngStep, 20); // Cap at 20 degrees
+    const adjustedLngStep = lngStep / Math.max(0.3, Math.cos(lat * Math.PI / 180));
+    const effectiveLngStep = Math.min(adjustedLngStep, 15); // Cap at 15 degrees
     
     for (let lng = -180; lng < 180; lng += effectiveLngStep) {
       if (isOnLand(lat, lng)) {
@@ -178,7 +178,7 @@ export function generateCapitalPositions(
   const positions = new Float32Array(capitals.length * 3);
   
   capitals.forEach((capital, i) => {
-    const vec = latLngToVector3(capital.lat, capital.lng, radius * 1.005);
+    const vec = latLngToVector3(capital.lat, capital.lng, radius * 1.002);
     positions[i * 3] = vec.x;
     positions[i * 3 + 1] = vec.y;
     positions[i * 3 + 2] = vec.z;

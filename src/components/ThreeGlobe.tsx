@@ -1,12 +1,12 @@
-import { useRef, useMemo, useEffect, useState } from 'react';
+import React, { useRef, useMemo, useState, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { WORLD_CAPITALS, CONNECTION_ROUTES } from '@/data/capitals';
 import { 
-  latLngToVector3, 
-  createGreatCircleArc, 
-  generateUniformLandPoints,
+  generateUniformLandPoints, 
+  createGreatCircleArc,
+  latLngToVector3,
   GLOBE_RADIUS 
 } from '@/lib/globeGeometry';
 
@@ -14,16 +14,12 @@ interface ThreeGlobeProps {
   className?: string;
 }
 
-// Earth surface dots component
+// Earth surface dots component - denser grid
 function EarthDots() {
-  const pointsRef = useRef<THREE.Points>(null);
+  const positions = useMemo(() => generateUniformLandPoints(1.8, 1.8), []);
   
-  const positions = useMemo(() => {
-    return generateUniformLandPoints(2.5, 2.5, GLOBE_RADIUS);
-  }, []);
-
   return (
-    <points ref={pointsRef}>
+    <points>
       <bufferGeometry>
         <bufferAttribute
           attach="attributes-position"
@@ -33,263 +29,245 @@ function EarthDots() {
         />
       </bufferGeometry>
       <pointsMaterial
+        size={0.008}
         color="#ffffff"
-        size={0.012}
-        sizeAttenuation
         transparent
-        opacity={0.8}
+        opacity={0.9}
+        sizeAttenuation={true}
       />
     </points>
   );
 }
 
-// Capital city dots component
+// Capital city dots with glow effect
 function CapitalDots({ onHover }: { onHover: (city: string | null, position: THREE.Vector3 | null) => void }) {
   const meshRef = useRef<THREE.InstancedMesh>(null);
+  const glowRef = useRef<THREE.InstancedMesh>(null);
+  const dummy = useMemo(() => new THREE.Object3D(), []);
   
-  const { matrices, positions } = useMemo(() => {
-    const matrices: THREE.Matrix4[] = [];
-    const positions: THREE.Vector3[] = [];
-    
+  const positions = useMemo(() => {
+    const posArr: THREE.Vector3[] = [];
     WORLD_CAPITALS.forEach((capital) => {
-      const position = latLngToVector3(capital.lat, capital.lng, GLOBE_RADIUS * 1.008);
-      positions.push(position);
-      
-      const matrix = new THREE.Matrix4();
-      matrix.setPosition(position);
-      matrices.push(matrix);
+      posArr.push(latLngToVector3(capital.lat, capital.lng, GLOBE_RADIUS * 1.003));
     });
-    
-    return { matrices, positions };
+    return posArr;
   }, []);
-
+  
   useEffect(() => {
-    if (meshRef.current) {
-      matrices.forEach((matrix, i) => {
-        meshRef.current!.setMatrixAt(i, matrix);
-      });
-      meshRef.current.instanceMatrix.needsUpdate = true;
+    if (!meshRef.current || !glowRef.current) return;
+    
+    positions.forEach((pos, i) => {
+      dummy.position.copy(pos);
+      dummy.updateMatrix();
+      meshRef.current!.setMatrixAt(i, dummy.matrix);
+      glowRef.current!.setMatrixAt(i, dummy.matrix);
+    });
+    meshRef.current.instanceMatrix.needsUpdate = true;
+    glowRef.current.instanceMatrix.needsUpdate = true;
+  }, [positions, dummy]);
+  
+  const handlePointerOver = (e: any) => {
+    e.stopPropagation();
+    const instanceId = e.instanceId;
+    if (instanceId !== undefined && WORLD_CAPITALS[instanceId]) {
+      const capital = WORLD_CAPITALS[instanceId];
+      onHover(`${capital.name}, ${capital.country}`, positions[instanceId]);
     }
-  }, [matrices]);
-
+  };
+  
   return (
-    <instancedMesh
-      ref={meshRef}
-      args={[undefined, undefined, WORLD_CAPITALS.length]}
-      onPointerOver={(e) => {
-        e.stopPropagation();
-        const idx = e.instanceId;
-        if (idx !== undefined) {
-          onHover(
-            `${WORLD_CAPITALS[idx].name}, ${WORLD_CAPITALS[idx].country}`,
-            positions[idx]
-          );
-        }
-      }}
-      onPointerOut={() => onHover(null, null)}
-    >
-      <sphereGeometry args={[0.018, 12, 12]} />
-      <meshBasicMaterial color="#e50914" transparent opacity={0.95} />
-    </instancedMesh>
+    <group>
+      {/* Glow layer (behind) */}
+      <instancedMesh ref={glowRef} args={[undefined, undefined, WORLD_CAPITALS.length]}>
+        <sphereGeometry args={[0.016, 8, 8]} />
+        <meshBasicMaterial color="#e50914" transparent opacity={0.25} />
+      </instancedMesh>
+      
+      {/* Main capital dots */}
+      <instancedMesh
+        ref={meshRef}
+        args={[undefined, undefined, WORLD_CAPITALS.length]}
+        onPointerOver={handlePointerOver}
+        onPointerOut={() => onHover(null, null)}
+      >
+        <sphereGeometry args={[0.01, 8, 8]} />
+        <meshBasicMaterial color="#e50914" />
+      </instancedMesh>
+    </group>
   );
 }
 
-// Animated arc component
+// Single animated arc with proper line rendering
 function AnimatedArc({ 
   startIdx, 
   endIdx, 
-  progress,
-  opacity
+  onComplete 
 }: { 
   startIdx: number; 
   endIdx: number; 
-  progress: number;
-  opacity: number;
+  onComplete: () => void;
 }) {
+  const lineRef = useRef<THREE.Line>(null);
+  const progressRef = useRef(0);
+  const opacityRef = useRef(1);
+  const phaseRef = useRef<'drawing' | 'holding' | 'fading'>('drawing');
+  const holdTimeRef = useRef(0);
   
   const fullPoints = useMemo(() => {
     const start = WORLD_CAPITALS[startIdx];
     const end = WORLD_CAPITALS[endIdx];
-    return createGreatCircleArc(
-      { lat: start.lat, lng: start.lng },
-      { lat: end.lat, lng: end.lng },
-      64,
-      0.15
-    );
+    if (!start || !end) return [];
+    return createGreatCircleArc(start, end, 50, 0.12);
   }, [startIdx, endIdx]);
-
-  const geometry = useMemo(() => {
-    const visibleCount = Math.floor(fullPoints.length * progress);
-    const visiblePoints = fullPoints.slice(0, Math.max(2, visibleCount));
-    return new THREE.BufferGeometry().setFromPoints(visiblePoints);
-  }, [fullPoints, progress]);
-
+  
+  const geometry = useMemo(() => new THREE.BufferGeometry(), []);
+  const material = useMemo(() => new THREE.LineBasicMaterial({ 
+    color: new THREE.Color('#ff6b6b'),
+    transparent: true,
+    opacity: 1,
+  }), []);
+  
+  const line = useMemo(() => new THREE.Line(geometry, material), [geometry, material]);
+  
+  useFrame((_, delta) => {
+    if (fullPoints.length === 0) return;
+    
+    if (phaseRef.current === 'drawing') {
+      progressRef.current = Math.min(1, progressRef.current + delta * 0.5);
+      const pointCount = Math.max(2, Math.floor(progressRef.current * fullPoints.length));
+      const visiblePoints = fullPoints.slice(0, pointCount);
+      geometry.setFromPoints(visiblePoints);
+      
+      if (progressRef.current >= 1) {
+        phaseRef.current = 'holding';
+      }
+    } else if (phaseRef.current === 'holding') {
+      holdTimeRef.current += delta;
+      if (holdTimeRef.current > 1.2) {
+        phaseRef.current = 'fading';
+      }
+    } else if (phaseRef.current === 'fading') {
+      opacityRef.current = Math.max(0, opacityRef.current - delta * 1.5);
+      material.opacity = opacityRef.current;
+      
+      if (opacityRef.current <= 0) {
+        onComplete();
+      }
+    }
+  });
+  
   useEffect(() => {
     return () => {
       geometry.dispose();
+      material.dispose();
     };
-  }, [geometry]);
-
-  if (progress <= 0 || opacity <= 0) return null;
-
-  return (
-    <primitive object={new THREE.Line(geometry, new THREE.LineBasicMaterial({ 
-      color: '#ff6b6b', 
-      transparent: true, 
-      opacity: opacity * 0.8 
-    }))} />
-  );
+  }, [geometry, material]);
+  
+  if (fullPoints.length === 0) return null;
+  
+  return <primitive object={line} />;
 }
 
-// Arc animation manager
+// Arc animation system
 function ArcAnimationSystem() {
-  const [arcs, setArcs] = useState<Array<{
-    id: number;
-    startIdx: number;
-    endIdx: number;
-    progress: number;
-    opacity: number;
-    phase: 'drawing' | 'holding' | 'fading';
-    holdTime: number;
-  }>>([]);
-  
+  const [activeArcs, setActiveArcs] = useState<Array<{ id: number; startIdx: number; endIdx: number }>>([]);
   const arcIdRef = useRef(0);
   const routeIndexRef = useRef(0);
-  const lastAddTimeRef = useRef(0);
-
-  useFrame((state, delta) => {
-    const time = state.clock.elapsedTime;
-    
-    setArcs(prevArcs => {
-      const updated = prevArcs.map(arc => {
-        const newArc = { ...arc };
-        
-        if (arc.phase === 'drawing') {
-          newArc.progress = Math.min(1, arc.progress + delta * 0.5);
-          if (newArc.progress >= 1) {
-            newArc.phase = 'holding';
-            newArc.holdTime = 0;
-          }
-        } else if (arc.phase === 'holding') {
-          newArc.holdTime = (arc.holdTime || 0) + delta;
-          if (newArc.holdTime > 0.8) {
-            newArc.phase = 'fading';
-          }
-        } else if (arc.phase === 'fading') {
-          newArc.opacity = Math.max(0, arc.opacity - delta * 1.2);
-        }
-        
-        return newArc;
-      });
-
-      // Remove fully faded arcs
-      const activeArcs = updated.filter(arc => arc.opacity > 0);
+  
+  useEffect(() => {
+    const addArc = () => {
+      const route = CONNECTION_ROUTES[routeIndexRef.current % CONNECTION_ROUTES.length];
+      routeIndexRef.current++;
       
-      // Add new arc every 1.5 seconds
-      if (time - lastAddTimeRef.current > 1.5 && activeArcs.length < 5) {
-        lastAddTimeRef.current = time;
-        const route = CONNECTION_ROUTES[routeIndexRef.current % CONNECTION_ROUTES.length];
-        routeIndexRef.current++;
-        
-        activeArcs.push({
-          id: arcIdRef.current++,
-          startIdx: route[0],
-          endIdx: route[1],
-          progress: 0,
-          opacity: 1,
-          phase: 'drawing',
-          holdTime: 0
-        });
-      }
-
-      return activeArcs;
-    });
-  });
-
+      const newArc = {
+        id: arcIdRef.current++,
+        startIdx: route[0],
+        endIdx: route[1]
+      };
+      
+      setActiveArcs(prev => [...prev.slice(-4), newArc]);
+    };
+    
+    // Initial arc
+    addArc();
+    
+    // Add new arcs periodically
+    const interval = setInterval(addArc, 1800);
+    return () => clearInterval(interval);
+  }, []);
+  
+  const handleArcComplete = (id: number) => {
+    setActiveArcs(prev => prev.filter(arc => arc.id !== id));
+  };
+  
   return (
-    <>
-      {arcs.map(arc => (
+    <group>
+      {activeArcs.map(arc => (
         <AnimatedArc
           key={arc.id}
           startIdx={arc.startIdx}
           endIdx={arc.endIdx}
-          progress={arc.progress}
-          opacity={arc.opacity}
+          onComplete={() => handleArcComplete(arc.id)}
         />
       ))}
-    </>
+    </group>
   );
 }
 
 // Main globe scene
 function GlobeScene() {
-  const groupRef = useRef<THREE.Group>(null);
+  const globeRef = useRef<THREE.Group>(null);
   const [hoveredCity, setHoveredCity] = useState<string | null>(null);
   const [hoverPosition, setHoverPosition] = useState<THREE.Vector3 | null>(null);
-
-  // Auto-rotation
-  useFrame(() => {
-    if (groupRef.current) {
-      groupRef.current.rotation.y += 0.001;
-    }
-  });
-
+  
   const handleHover = (city: string | null, position: THREE.Vector3 | null) => {
     setHoveredCity(city);
     setHoverPosition(position);
   };
-
+  
+  useFrame(() => {
+    if (globeRef.current) {
+      globeRef.current.rotation.y += 0.0008;
+    }
+  });
+  
   return (
     <>
-      {/* Ambient light for overall illumination */}
-      <ambientLight intensity={0.6} />
+      <ambientLight intensity={0.5} />
+      <directionalLight position={[5, 3, 5]} intensity={0.6} />
       
-      {/* Directional light for subtle shading */}
-      <directionalLight position={[5, 3, 5]} intensity={0.4} />
-      
-      {/* Globe group with rotation */}
-      <group ref={groupRef}>
-        {/* Core sphere (barely visible, for depth) */}
+      <group ref={globeRef}>
+        {/* Dark core sphere */}
         <mesh>
-          <sphereGeometry args={[GLOBE_RADIUS * 0.98, 32, 32]} />
-          <meshBasicMaterial color="#0b0b17" transparent opacity={0.9} />
+          <sphereGeometry args={[GLOBE_RADIUS * 0.99, 48, 48]} />
+          <meshBasicMaterial color="#080812" />
         </mesh>
         
-        {/* Earth land dots */}
+        {/* Land dots */}
         <EarthDots />
         
-        {/* Capital city dots */}
+        {/* Capital markers */}
         <CapitalDots onHover={handleHover} />
         
-        {/* Animated connection arcs */}
+        {/* Arc connections */}
         <ArcAnimationSystem />
       </group>
-
-      {/* City tooltip */}
+      
+      {/* Tooltip */}
       {hoveredCity && hoverPosition && (
-        <Html
-          position={[hoverPosition.x * 1.15, hoverPosition.y * 1.15, hoverPosition.z * 1.15]}
-          center
-          style={{
-            pointerEvents: 'none',
-            whiteSpace: 'nowrap'
-          }}
-        >
-          <div className="bg-background/95 backdrop-blur-sm text-foreground text-sm px-3 py-1.5 rounded-md border border-border shadow-lg font-medium">
+        <Html position={[hoverPosition.x * 1.12, hoverPosition.y * 1.12, hoverPosition.z * 1.12]} center>
+          <div className="bg-black/90 text-white text-xs px-2.5 py-1.5 rounded-lg whitespace-nowrap pointer-events-none border border-white/20 shadow-lg">
             {hoveredCity}
           </div>
         </Html>
       )}
-
-      {/* Camera controls */}
+      
       <OrbitControls
         enableZoom={false}
         enablePan={false}
-        enableRotate={true}
-        rotateSpeed={0.4}
-        autoRotate={false}
-        minPolarAngle={Math.PI * 0.25}
-        maxPolarAngle={Math.PI * 0.75}
+        rotateSpeed={0.3}
+        minPolarAngle={Math.PI * 0.3}
+        maxPolarAngle={Math.PI * 0.7}
       />
     </>
   );
@@ -297,11 +275,11 @@ function GlobeScene() {
 
 export function ThreeGlobe({ className }: ThreeGlobeProps) {
   return (
-    <div className={className} style={{ background: '#0b0b17' }}>
+    <div className={`w-full h-full ${className || ''}`}>
       <Canvas
-        camera={{ position: [0, 0, 2.5], fov: 45 }}
-        gl={{ antialias: true, alpha: false }}
+        camera={{ position: [0, 0, 2.4], fov: 45 }}
         dpr={[1, 1.5]}
+        gl={{ antialias: true, alpha: true }}
       >
         <color attach="background" args={['#0b0b17']} />
         <GlobeScene />
