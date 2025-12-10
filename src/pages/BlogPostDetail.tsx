@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, CalendarDays, Clock, User, Share2 } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
+import DOMPurify from 'dompurify';
 
 interface BlogPost {
   id: string;
@@ -210,7 +211,7 @@ export default function BlogPostDetail() {
             {post.content && (
               <div 
                 className="prose prose-lg max-w-none dark:prose-invert prose-headings:font-primary prose-p:text-muted-foreground prose-a:text-red-500"
-                dangerouslySetInnerHTML={{ __html: post.content }}
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.content) }}
               />
             )}
             {!post.content && !post.excerpt && (
