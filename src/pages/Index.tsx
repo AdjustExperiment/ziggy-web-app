@@ -84,10 +84,18 @@ const Index = () => {
         
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 sm:mb-16">
-            <Badge className="mb-4 bg-primary/10 text-primary border-primary/20 text-sm sm:text-base">
-              <span className="inline-block w-2 h-2 bg-primary rounded-full mr-2"></span>
-              Featured by the Cato Institute
-            </Badge>
+            <a 
+              href="https://www.cato.org/blog/friday-feature-ziggy-debate" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-block"
+            >
+              <Badge className="mb-4 bg-primary/10 text-primary border-primary/20 text-sm sm:text-base cursor-pointer hover:bg-primary/20 transition-colors">
+                <span className="inline-block w-2 h-2 bg-primary rounded-full mr-2"></span>
+                Featured by the Cato Institute
+                <ArrowRight className="ml-2 h-3 w-3" />
+              </Badge>
+            </a>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-4 font-primary">
               Ziggy Online Debate Features
             </h2>
