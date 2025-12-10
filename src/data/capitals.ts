@@ -96,3 +96,65 @@ export const WORLD_CAPITALS: Capital[] = [
   { name: 'Wellington', country: 'New Zealand', lat: -41.2866, lng: 174.7756 },
   { name: 'Brisbane', country: 'Australia', lat: -27.4698, lng: 153.0251 },
 ];
+
+// Connection routes - pairs of city indices for arc animations
+// Creates a network of connections across continents
+export const CONNECTION_ROUTES: [number, number][] = [
+  // Trans-Atlantic
+  [0, 21],   // Washington D.C. → London
+  [21, 22],  // London → Paris
+  [22, 23],  // Paris → Berlin
+  
+  // Europe to Asia
+  [23, 46],  // Berlin → Moscow
+  [46, 48],  // Moscow → Beijing
+  [48, 47],  // Beijing → Tokyo
+  
+  // Asia Pacific
+  [47, 49],  // Tokyo → Seoul
+  [49, 51],  // Seoul → Singapore
+  [51, 53],  // Singapore → Jakarta
+  
+  // To Oceania
+  [51, 77],  // Singapore → Sydney
+  [77, 81],  // Sydney → Wellington
+  
+  // Middle East connections
+  [50, 56],  // New Delhi → Dubai
+  [56, 64],  // Dubai → Doha
+  [64, 67],  // Doha → Cairo
+  
+  // Africa
+  [67, 69],  // Cairo → Nairobi
+  [69, 68],  // Nairobi → Cape Town
+  [68, 71],  // Cape Town → Casablanca
+  
+  // Back to Europe
+  [71, 24],  // Casablanca → Madrid
+  [24, 35],  // Madrid → Lisbon
+  
+  // Americas
+  [0, 1],    // Washington D.C. → Ottawa
+  [0, 2],    // Washington D.C. → Mexico City
+  [2, 15],   // Mexico City → Bogotá
+  [15, 14],  // Bogotá → Lima
+  [14, 13],  // Lima → Buenos Aires
+  [13, 16],  // Buenos Aires → Santiago
+  [12, 15],  // Brasília → Bogotá
+  
+  // Cross-Pacific
+  [47, 0],   // Tokyo → Washington D.C.
+  [77, 16],  // Sydney → Santiago
+  
+  // More European connections
+  [21, 36],  // London → Dublin
+  [23, 29],  // Berlin → Warsaw
+  [30, 42],  // Stockholm → Helsinki
+  [28, 41],  // Vienna → Prague
+  
+  // Additional global routes
+  [11, 21],  // New York → London
+  [17, 47],  // San Francisco → Tokyo
+  [10, 77],  // Los Angeles → Sydney
+  [8, 12],   // Miami → Brasília
+];
