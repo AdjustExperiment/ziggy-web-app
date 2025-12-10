@@ -2,55 +2,10 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 
-// Import English translations
+// Import only English translations synchronously (default/fallback)
 import enCommon from './locales/en/common.json';
 import enNav from './locales/en/nav.json';
 import enHome from './locales/en/home.json';
-
-// Import Spanish translations
-import esCommon from './locales/es/common.json';
-import esNav from './locales/es/nav.json';
-import esHome from './locales/es/home.json';
-
-// Import French translations
-import frCommon from './locales/fr/common.json';
-import frNav from './locales/fr/nav.json';
-import frHome from './locales/fr/home.json';
-
-// Import Russian translations
-import ruCommon from './locales/ru/common.json';
-import ruNav from './locales/ru/nav.json';
-import ruHome from './locales/ru/home.json';
-
-// Import Chinese translations
-import zhCommon from './locales/zh/common.json';
-import zhNav from './locales/zh/nav.json';
-import zhHome from './locales/zh/home.json';
-
-// Import Hindi translations
-import hiCommon from './locales/hi/common.json';
-import hiNav from './locales/hi/nav.json';
-import hiHome from './locales/hi/home.json';
-
-// Import Yoruba translations
-import yoCommon from './locales/yo/common.json';
-import yoNav from './locales/yo/nav.json';
-import yoHome from './locales/yo/home.json';
-
-// Import Amharic translations
-import amCommon from './locales/am/common.json';
-import amNav from './locales/am/nav.json';
-import amHome from './locales/am/home.json';
-
-// Import Swahili translations
-import swCommon from './locales/sw/common.json';
-import swNav from './locales/sw/nav.json';
-import swHome from './locales/sw/home.json';
-
-// Import Zulu translations
-import zuCommon from './locales/zu/common.json';
-import zuNav from './locales/zu/nav.json';
-import zuHome from './locales/zu/home.json';
 
 export interface SupportedLanguage {
   code: string;
@@ -73,17 +28,30 @@ export const SUPPORTED_LANGUAGES: SupportedLanguage[] = [
   { code: 'zu', name: 'Zulu', nativeName: 'isiZulu', flag: '🇿🇦' },
 ];
 
+// Only load English initially - other languages loaded on demand
 const resources = {
   en: { common: enCommon, nav: enNav, home: enHome },
-  es: { common: esCommon, nav: esNav, home: esHome },
-  fr: { common: frCommon, nav: frNav, home: frHome },
-  ru: { common: ruCommon, nav: ruNav, home: ruHome },
-  zh: { common: zhCommon, nav: zhNav, home: zhHome },
-  hi: { common: hiCommon, nav: hiNav, home: hiHome },
-  yo: { common: yoCommon, nav: yoNav, home: yoHome },
-  am: { common: amCommon, nav: amNav, home: amHome },
-  sw: { common: swCommon, nav: swNav, home: swHome },
-  zu: { common: zuCommon, nav: zuNav, home: zuHome },
+};
+
+// Dynamic language loader - loads translations on demand
+const loadLanguage = async (lng: string): Promise<void> => {
+  if (lng === 'en' || i18n.hasResourceBundle(lng, 'common')) {
+    return; // Already loaded
+  }
+
+  try {
+    const [common, nav, home] = await Promise.all([
+      import(`./locales/${lng}/common.json`),
+      import(`./locales/${lng}/nav.json`),
+      import(`./locales/${lng}/home.json`),
+    ]);
+
+    i18n.addResourceBundle(lng, 'common', common.default, true, true);
+    i18n.addResourceBundle(lng, 'nav', nav.default, true, true);
+    i18n.addResourceBundle(lng, 'home', home.default, true, true);
+  } catch (error) {
+    console.warn(`Failed to load translations for ${lng}, falling back to English`, error);
+  }
 };
 
 i18n
@@ -113,5 +81,13 @@ i18n
       }
     },
   });
+
+// Listen for language changes and load translations dynamically
+i18n.on('languageChanged', (lng) => {
+  loadLanguage(lng);
+});
+
+// Export the loader for manual preloading if needed
+export { loadLanguage };
 
 export default i18n;

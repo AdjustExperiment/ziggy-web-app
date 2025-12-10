@@ -2,7 +2,7 @@ import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BoxedText } from "@/components/ui/boxed-text";
-import { AnimatedGlobe } from "@/components/AnimatedGlobe";
+import { LazyGlobe } from "@/components/LazyGlobe";
 import { useTranslation } from "react-i18next";
 
 export function Hero() {
@@ -105,7 +105,7 @@ export function Hero() {
           <div className="relative order-first lg:order-last">
             <div className="absolute inset-0 bg-gradient-to-t from-background/20 to-transparent rounded-3xl pointer-events-none z-10" />
             
-            <AnimatedGlobe 
+            <LazyGlobe 
               className="rounded-3xl shadow-tournament w-full h-[300px] sm:h-[400px] lg:h-[500px] xl:h-[600px]"
             />
           </div>

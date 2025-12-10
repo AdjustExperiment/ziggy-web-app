@@ -46,6 +46,10 @@ export default defineConfig(({ mode }) => ({
           query: ['@tanstack/react-query', '@tanstack/react-virtual'],
           charts: ['recharts'],
           utils: ['date-fns', 'date-fns-tz', 'clsx', 'class-variance-authority', 'tailwind-merge', 'dompurify', 'zod'],
+          // Heavy components in separate chunks
+          globe: ['cobe'],
+          i18n: ['i18next', 'react-i18next', 'i18next-browser-languagedetector'],
+          editor: ['react-quill'],
         },
       },
     },

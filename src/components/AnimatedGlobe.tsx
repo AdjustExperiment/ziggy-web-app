@@ -73,7 +73,7 @@ export function AnimatedGlobe({ className }: { className?: string }) {
         theta: 0.15, 
         dark: 1, 
         diffuse: 1.2,
-        mapSamples: 24000, 
+        mapSamples: 12000, // Reduced from 24000 for better performance
         mapBrightness: 6,
         baseColor: [0.12, 0.12, 0.18], 
         markerColor: [0.9, 0.2, 0.2], 
