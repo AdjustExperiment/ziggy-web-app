@@ -28,7 +28,7 @@ export function AnimatedGlobe({ className }: { className?: string }) {
   // Convert capitals to cobe marker format
   const cobeMarkers = WORLD_CAPITALS.map(city => ({
     location: [city.lat, city.lng] as [number, number],
-    size: 0.025
+    size: 0.04
   }));
 
   useEffect(() => {
@@ -87,8 +87,8 @@ export function AnimatedGlobe({ className }: { className?: string }) {
       });
 
       const animate = () => {
-        // Arc radius matches cobe's internal globe radius
-        const r = size * 0.47;
+        // Arc radius matches cobe's internal globe radius exactly
+        const r = size * 0.5;
         arcCtx.clearRect(0, 0, size, size);
 
         for (const arc of arcsRef.current) {
