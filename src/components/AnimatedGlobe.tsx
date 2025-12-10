@@ -5,6 +5,7 @@ import { WORLD_CAPITALS, CONNECTION_ROUTES } from '@/data/capitals';
 import { projectToCanvas, drawAnimatedArc, drawPulsingMarker } from '@/lib/globeUtils';
 
 interface ArcState { routeIndex: number; progress: number; active: boolean; }
+interface HoveredCity { name: string; country: string; lat: number; lng: number; }
 
 export function AnimatedGlobe({ className }: { className?: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -13,13 +14,15 @@ export function AnimatedGlobe({ className }: { className?: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const phiRef = useRef(0);
   const pulseRef = useRef(0);
+  const isHoveringRef = useRef(false);
+  const sizeRef = useRef(0);
   const arcsRef = useRef<ArcState[]>([
     { routeIndex: 0, progress: 0, active: true },
-    { routeIndex: 10, progress: 0.3, active: true },
-    { routeIndex: 20, progress: 0.6, active: true },
-    { routeIndex: 30, progress: 0.4, active: true },
+    { routeIndex: 12, progress: 0, active: true },
+    { routeIndex: 24, progress: 0, active: true },
+    { routeIndex: 36, progress: 0, active: true },
   ]);
-  const [hoveredCity, setHoveredCity] = useState<{ name: string; country: string; x: number; y: number } | null>(null);
+  const [hoveredCity, setHoveredCity] = useState<HoveredCity | null>(null);
 
   useEffect(() => {
     if ('geolocation' in navigator) {
@@ -40,6 +43,7 @@ export function AnimatedGlobe({ className }: { className?: string }) {
 
     const init = () => {
       const size = Math.min(container.offsetWidth, container.offsetHeight, 600);
+      sizeRef.current = size;
       const dpr = Math.min(window.devicePixelRatio, 2);
       [canvas, arcCanvas, markerCanvas].forEach(c => {
         c.width = size * dpr; c.height = size * dpr;
@@ -54,7 +58,12 @@ export function AnimatedGlobe({ className }: { className?: string }) {
         mapSamples: 32000, mapBrightness: 8,
         baseColor: [0.08, 0.08, 0.12], markerColor: [0.9, 0.2, 0.2], glowColor: [0.15, 0.15, 0.2],
         markers: [],
-        onRender: (state) => { phiRef.current += 0.0008; state.phi = phiRef.current; },
+        onRender: (state) => {
+          if (!isHoveringRef.current) {
+            phiRef.current += 0.0008;
+          }
+          state.phi = phiRef.current;
+        },
       });
 
       const animate = () => {
@@ -74,9 +83,16 @@ export function AnimatedGlobe({ className }: { className?: string }) {
           if (!route) continue;
           const start = WORLD_CAPITALS[route[0]], end = WORLD_CAPITALS[route[1]];
           if (!start || !end) continue;
-          drawAnimatedArc(arcCtx, { lat: start.lat, lng: start.lng }, { lat: end.lat, lng: end.lng }, phiRef.current, size, size, r, arc.progress);
-          arc.progress += 0.008;
-          if (arc.progress >= 1.2) { arc.progress = 0; arc.routeIndex = Math.floor(Math.random() * CONNECTION_ROUTES.length); }
+          
+          // Calculate fade opacity for smooth transition
+          const fadeOpacity = arc.progress > 1.0 ? Math.max(0, 1 - (arc.progress - 1.0) * 2) : 1;
+          drawAnimatedArc(arcCtx, { lat: start.lat, lng: start.lng }, { lat: end.lat, lng: end.lng }, phiRef.current, size, size, r, Math.min(arc.progress, 1), fadeOpacity);
+          
+          arc.progress += 0.002; // Slower animation
+          if (arc.progress >= 1.5) { 
+            arc.progress = 0; 
+            arc.routeIndex = (arc.routeIndex + 1) % CONNECTION_ROUTES.length; // Sequential cycling
+          }
         }
         animId = requestAnimationFrame(animate);
       };
@@ -93,26 +109,37 @@ export function AnimatedGlobe({ className }: { className?: string }) {
     if (!containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left, y = e.clientY - rect.top;
-    const size = Math.min(rect.width, rect.height), r = size * 0.4;
-    let closest: typeof hoveredCity = null, dist = 20;
+    const size = sizeRef.current, r = size * 0.4;
+    let closest: HoveredCity | null = null, dist = 20;
     for (const city of WORLD_CAPITALS) {
       const p = projectToCanvas(city.lat, city.lng, phiRef.current, size, size, r);
       if (!p.visible) continue;
       const d = Math.sqrt((p.x - x) ** 2 + (p.y - y) ** 2);
-      if (d < dist) { dist = d; closest = { name: city.name, country: city.country, x: p.x, y: p.y }; }
+      if (d < dist) { dist = d; closest = { name: city.name, country: city.country, lat: city.lat, lng: city.lng }; }
     }
     setHoveredCity(closest);
   }, []);
 
+  // Calculate dynamic tooltip position
+  const getTooltipPosition = useCallback(() => {
+    if (!hoveredCity) return { x: 0, y: 0, visible: false };
+    const size = sizeRef.current, r = size * 0.4;
+    return projectToCanvas(hoveredCity.lat, hoveredCity.lng, phiRef.current, size, size, r);
+  }, [hoveredCity]);
+
+  const tooltipPos = hoveredCity ? getTooltipPosition() : null;
+
   return (
     <div ref={containerRef} className={cn("relative w-full h-full flex items-center justify-center", className)}
-      onMouseMove={handleMouseMove} onMouseLeave={() => setHoveredCity(null)}>
+      onMouseMove={handleMouseMove} 
+      onMouseEnter={() => { isHoveringRef.current = true; }}
+      onMouseLeave={() => { isHoveringRef.current = false; setHoveredCity(null); }}>
       <canvas ref={canvasRef} className="max-w-full max-h-full" />
       <canvas ref={markerCanvasRef} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
       <canvas ref={arcCanvasRef} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
-      {hoveredCity && (
+      {hoveredCity && tooltipPos?.visible && (
         <div className="absolute z-10 px-3 py-1.5 rounded-lg bg-background/90 backdrop-blur-sm border border-primary/30 shadow-lg pointer-events-none"
-          style={{ left: hoveredCity.x, top: hoveredCity.y - 40, transform: 'translateX(-50%)' }}>
+          style={{ left: tooltipPos.x, top: tooltipPos.y - 40, transform: 'translateX(-50%)' }}>
           <p className="text-sm font-medium text-foreground">{hoveredCity.name}</p>
           <p className="text-xs text-muted-foreground">{hoveredCity.country}</p>
         </div>

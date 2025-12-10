@@ -36,52 +36,65 @@ export function interpolateGreatCircle(
 
 // Draw animated arc
 export function drawAnimatedArc(
-  ctx: CanvasRenderingContext2D, start: { lat: number; lng: number }, end: { lat: number; lng: number },
-  globeRotation: number, canvasWidth: number, canvasHeight: number, globeRadius: number, progress: number
+  ctx: CanvasRenderingContext2D,
+  start: { lat: number; lng: number },
+  end: { lat: number; lng: number },
+  globeRotation: number,
+  canvasWidth: number,
+  canvasHeight: number,
+  globeRadius: number,
+  progress: number,
+  fadeOpacity: number = 1
 ) {
   const numPoints = 40;
   const points: { x: number; y: number; visible: boolean }[] = [];
-  const lat1 = start.lat * Math.PI / 180, lng1 = start.lng * Math.PI / 180;
-  const lat2 = end.lat * Math.PI / 180, lng2 = end.lng * Math.PI / 180;
-  const angularDist = Math.acos(Math.sin(lat1) * Math.sin(lat2) + Math.cos(lat1) * Math.cos(lat2) * Math.cos(lng2 - lng1));
-  const maxElevation = Math.min(angularDist * 0.15, 0.2);
 
   for (let i = 0; i <= numPoints; i++) {
     const t = i / numPoints;
+    if (t > progress) break;
     const pos = interpolateGreatCircle(start, end, t);
-    const elevation = 4 * maxElevation * t * (1 - t);
-    const proj = projectToCanvas(pos.lat, pos.lng, globeRotation, canvasWidth, canvasHeight, globeRadius * (1 + elevation));
-    points.push(proj);
+    const elevation = 1 + Math.sin(t * Math.PI) * 0.15;
+    const p = projectToCanvas(pos.lat, pos.lng, globeRotation, canvasWidth, canvasHeight, globeRadius * elevation);
+    points.push(p);
   }
 
   const visiblePoints = points.filter(p => p.visible);
   if (visiblePoints.length < 2) return;
 
-  const pointsToDraw = Math.max(2, Math.ceil(visiblePoints.length * Math.min(progress, 1)));
-  
   ctx.save();
+  ctx.globalAlpha = fadeOpacity;
   ctx.shadowColor = 'hsla(0, 72%, 50%, 0.6)';
-  ctx.shadowBlur = 4;
-  ctx.beginPath();
-  ctx.strokeStyle = 'hsl(0, 72%, 55%)';
-  ctx.lineWidth = 1.5;
-  ctx.lineCap = 'round';
-  ctx.moveTo(visiblePoints[0].x, visiblePoints[0].y);
-  for (let i = 1; i < pointsToDraw; i++) ctx.lineTo(visiblePoints[i].x, visiblePoints[i].y);
-  ctx.stroke();
-  ctx.restore();
+  ctx.shadowBlur = 8;
 
-  if (progress > 0 && progress < 1 && pointsToDraw > 0) {
-    const head = visiblePoints[pointsToDraw - 1];
-    ctx.save();
-    ctx.shadowColor = 'hsl(0, 72%, 60%)';
-    ctx.shadowBlur = 8;
-    ctx.beginPath();
-    ctx.fillStyle = 'hsl(0, 72%, 70%)';
-    ctx.arc(head.x, head.y, 2.5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
+  ctx.beginPath();
+  ctx.moveTo(visiblePoints[0].x, visiblePoints[0].y);
+  for (let i = 1; i < visiblePoints.length; i++) {
+    ctx.lineTo(visiblePoints[i].x, visiblePoints[i].y);
   }
+
+  const gradient = ctx.createLinearGradient(
+    visiblePoints[0].x, visiblePoints[0].y,
+    visiblePoints[visiblePoints.length - 1].x, visiblePoints[visiblePoints.length - 1].y
+  );
+  gradient.addColorStop(0, 'hsla(0, 72%, 50%, 0.3)');
+  gradient.addColorStop(0.5, 'hsla(0, 72%, 55%, 0.7)');
+  gradient.addColorStop(1, 'hsla(0, 72%, 60%, 0.9)');
+
+  ctx.strokeStyle = gradient;
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+
+  // Draw pulsing head at the end of the arc
+  if (visiblePoints.length > 0) {
+    const head = visiblePoints[visiblePoints.length - 1];
+    ctx.beginPath();
+    ctx.arc(head.x, head.y, 3, 0, Math.PI * 2);
+    ctx.fillStyle = 'hsl(0, 72%, 60%)';
+    ctx.fill();
+  }
+
+  ctx.restore();
 }
 
 // Draw pulsing marker
