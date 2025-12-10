@@ -61,9 +61,21 @@ export function OptimizedAuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [hasCheckedSession, setHasCheckedSession] = useState(false);
   const queryClient = useQueryClient();
 
-  // Query for profile data with React Query
+  // Fast-path: Check localStorage for existing session before making any queries
+  // This defers expensive queries for anonymous users
+  const hasStoredSession = useMemo(() => {
+    try {
+      const stored = localStorage.getItem('sb-kiummwyxeleejbwapssa-auth-token');
+      return !!stored;
+    } catch {
+      return false;
+    }
+  }, []);
+
+  // Query for profile data with React Query - ONLY if we have a confirmed user
   const { data: profile } = useQuery({
     queryKey: ['profile', user?.id],
     queryFn: async () => {
@@ -93,45 +105,33 @@ export function OptimizedAuthProvider({ children }: { children: ReactNode }) {
         role: roleData?.role || 'user'
       } as Profile;
     },
-    enabled: !!user?.id,
+    enabled: !!user?.id && hasCheckedSession,
     staleTime: 10 * 60 * 1000,
   });
 
-  // Query for admin scope (tournament and organization admin assignments)
+  // Query for admin scope (tournament and organization admin assignments) - ONLY if confirmed user
   const { data: adminScope } = useQuery({
     queryKey: ['adminScope', user?.id],
     queryFn: async (): Promise<AdminScope> => {
       if (!user?.id) return defaultAdminScope;
 
-      // Fetch tournament admin assignments
-      const { data: tournamentAdmins, error: taError } = await supabase
-        .from('tournament_admins')
-        .select(`
-          tournament_id,
-          tournaments!inner(name)
-        `)
-        .eq('user_id', user.id);
+      // Batch fetch tournament and organization admin assignments
+      const [tournamentAdminsResult, orgAdminsResult] = await Promise.all([
+        supabase
+          .from('tournament_admins')
+          .select(`tournament_id, tournaments!inner(name)`)
+          .eq('user_id', user.id),
+        supabase
+          .from('organization_admins')
+          .select(`organization_id, role, organizations!inner(name)`)
+          .eq('user_id', user.id)
+      ]);
 
-      if (taError) {
-        console.error('Error fetching tournament admins:', taError);
-      }
-
-      // Fetch organization admin assignments
-      const { data: orgAdmins, error: oaError } = await supabase
-        .from('organization_admins')
-        .select(`
-          organization_id,
-          role,
-          organizations!inner(name)
-        `)
-        .eq('user_id', user.id);
-
-      if (oaError) {
-        console.error('Error fetching org admins:', oaError);
-      }
+      const tournamentAdmins = tournamentAdminsResult.data || [];
+      const orgAdmins = orgAdminsResult.data || [];
 
       // Get tournaments belonging to user's organizations
-      const orgIds = (orgAdmins || []).map(oa => oa.organization_id);
+      const orgIds = orgAdmins.map(oa => oa.organization_id);
       let orgTournaments: string[] = [];
       
       if (orgIds.length > 0) {
@@ -144,15 +144,15 @@ export function OptimizedAuthProvider({ children }: { children: ReactNode }) {
       }
 
       // Combine accessible tournament IDs
-      const directTournamentIds = (tournamentAdmins || []).map(ta => ta.tournament_id);
+      const directTournamentIds = tournamentAdmins.map(ta => ta.tournament_id);
       const accessibleTournamentIds = [...new Set([...directTournamentIds, ...orgTournaments])];
 
       return {
-        tournamentAdmins: (tournamentAdmins || []).map(ta => ({
+        tournamentAdmins: tournamentAdmins.map(ta => ({
           tournament_id: ta.tournament_id,
           tournament_name: (ta.tournaments as any)?.name || 'Unknown',
         })),
-        organizationAdmins: (orgAdmins || []).map(oa => ({
+        organizationAdmins: orgAdmins.map(oa => ({
           organization_id: oa.organization_id,
           organization_name: (oa.organizations as any)?.name || 'Unknown',
           role: oa.role as 'admin' | 'owner',
@@ -160,33 +160,42 @@ export function OptimizedAuthProvider({ children }: { children: ReactNode }) {
         accessibleTournamentIds,
       };
     },
-    enabled: !!user?.id,
+    enabled: !!user?.id && hasCheckedSession,
     staleTime: 5 * 60 * 1000,
   });
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
+        setHasCheckedSession(true);
         
         if (!session?.user) {
-          queryClient.setQueryData(['profile', session?.user?.id], null);
-          queryClient.setQueryData(['adminScope', session?.user?.id], defaultAdminScope);
+          queryClient.setQueryData(['profile', null], null);
+          queryClient.setQueryData(['adminScope', null], defaultAdminScope);
         }
         
         setLoading(false);
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    // Fast path: If no stored session, mark as checked immediately without making any API calls
+    if (!hasStoredSession) {
+      setHasCheckedSession(true);
       setLoading(false);
-    });
+    } else {
+      // Only call getSession if we might have a stored session
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        setHasCheckedSession(true);
+        setLoading(false);
+      });
+    }
 
     return () => subscription.unsubscribe();
-  }, [queryClient]);
+  }, [queryClient, hasStoredSession]);
 
   const signUp = useCallback(async (email: string, password: string, userData?: { data: { first_name?: string; last_name?: string } }) => {
     const redirectUrl = `${window.location.origin}/`;

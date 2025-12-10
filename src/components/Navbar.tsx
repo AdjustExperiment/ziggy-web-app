@@ -1,15 +1,11 @@
-
-import React, { useMemo } from 'react';
+import React, { useMemo, memo, lazy, Suspense, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useOptimizedAuth } from '@/hooks/useOptimizedAuth';
 import { ThemeToggle } from './ThemeToggle';
 import { LanguageSelector } from './LanguageSelector';
-import { NotificationsDropdown } from './admin/NotificationsDropdown';
-import { UserNotifications } from './UserNotifications';
 import { LazyImage } from '@/components/LazyImage';
-import { GlobalSearch } from './GlobalSearch';
-import { useGlobalSearch } from '@/hooks/useGlobalSearch';
+import LazyGlobalSearch from './LazyGlobalSearch';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Separator } from '@/components/ui/separator';
 import { 
@@ -32,7 +28,8 @@ import {
   Gavel,
   Eye,
   Building,
-  Search
+  Search,
+  Bell
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -42,10 +39,20 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-export function Navbar() {
+// Lazy load notification components - only needed when user is logged in
+const UserNotifications = lazy(() => import('./UserNotifications').then(m => ({ default: m.UserNotifications })));
+const NotificationsDropdown = lazy(() => import('./admin/NotificationsDropdown').then(m => ({ default: m.NotificationsDropdown })));
+
+// Notification loading fallback
+const NotificationFallback = () => (
+  <Button variant="ghost" size="sm" disabled className="relative">
+    <Bell className="h-4 w-4 animate-pulse" />
+  </Button>
+);
+
+function NavbarComponent() {
   const { user, profile, signOut, isAdmin } = useOptimizedAuth();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
-  const { setIsOpen: setSearchOpen } = useGlobalSearch();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   // Detect platform for keyboard shortcut display
   const isMac = useMemo(() => {
@@ -211,36 +218,22 @@ export function Navbar() {
           </div>
           
           <div className="flex items-center space-x-2 sm:space-x-4">
-            {/* Desktop Search Button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSearchOpen(true)}
-              className="hidden sm:flex items-center gap-2 text-muted-foreground hover:text-foreground"
-            >
-              <Search className="h-4 w-4" />
-              <kbd className="hidden lg:inline-flex h-5 items-center gap-1 rounded border border-border bg-muted px-1.5 text-[10px] font-medium text-muted-foreground">
-                {modifierKey}K
-              </kbd>
-            </Button>
-
-            {/* Mobile Search Button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSearchOpen(true)}
-              className="sm:hidden touch-target"
-            >
-              <Search className="h-5 w-5" />
-            </Button>
+            {/* Global Search - lazy loaded */}
+            <LazyGlobalSearch className="hidden sm:flex items-center gap-2 text-muted-foreground hover:text-foreground" />
 
             <LanguageSelector />
             <ThemeToggle />
             
             {user ? (
               <>
-                {isAdmin && <NotificationsDropdown />}
-                <UserNotifications />
+                {isAdmin && (
+                  <Suspense fallback={<NotificationFallback />}>
+                    <NotificationsDropdown />
+                  </Suspense>
+                )}
+                <Suspense fallback={<NotificationFallback />}>
+                  <UserNotifications />
+                </Suspense>
                 
                 {/* Desktop Dashboard Dropdown */}
                 <div className="hidden sm:block">
@@ -624,9 +617,8 @@ export function Navbar() {
         )}
       </div>
     </nav>
-    
-    {/* Global Search Dialog */}
-    <GlobalSearch />
     </>
   );
 }
+
+export const Navbar = memo(NavbarComponent);
