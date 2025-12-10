@@ -22,8 +22,8 @@ export function latLngToVector3(lat: number, lng: number, radius: number = GLOBE
 export function createGreatCircleArc(
   start: { lat: number; lng: number },
   end: { lat: number; lng: number },
-  segments: number = 50,
-  altitude: number = 0.15
+  segments: number = 64,
+  altitude: number = 0.12
 ): THREE.Vector3[] {
   const startVec = latLngToVector3(start.lat, start.lng);
   const endVec = latLngToVector3(end.lat, end.lng);
@@ -33,11 +33,11 @@ export function createGreatCircleArc(
   for (let i = 0; i <= segments; i++) {
     const t = i / segments;
     
-    // Spherical interpolation
+    // Spherical linear interpolation (SLERP)
     const point = new THREE.Vector3().lerpVectors(startVec, endVec, t);
     point.normalize();
     
-    // Add altitude curve (highest at midpoint)
+    // Add altitude curve (parabolic - highest at midpoint)
     const altitudeFactor = Math.sin(t * Math.PI) * altitude;
     point.multiplyScalar(GLOBE_RADIUS + altitudeFactor);
     
@@ -48,86 +48,141 @@ export function createGreatCircleArc(
 }
 
 /**
- * Generate evenly distributed points on a sphere using fibonacci spiral
- */
-export function generateSpherePoints(count: number, radius: number = GLOBE_RADIUS): Float32Array {
-  const positions = new Float32Array(count * 3);
-  const phi = Math.PI * (3 - Math.sqrt(5)); // Golden angle
-  
-  for (let i = 0; i < count; i++) {
-    const y = 1 - (i / (count - 1)) * 2;
-    const radiusAtY = Math.sqrt(1 - y * y);
-    const theta = phi * i;
-    
-    const x = Math.cos(theta) * radiusAtY;
-    const z = Math.sin(theta) * radiusAtY;
-    
-    positions[i * 3] = x * radius;
-    positions[i * 3 + 1] = y * radius;
-    positions[i * 3 + 2] = z * radius;
-  }
-  
-  return positions;
-}
-
-/**
- * Check if a point on the sphere is on land (simplified check)
- * Uses a basic algorithm that approximates continental shapes
+ * Detailed land detection using continental polygons
+ * Returns true if the point is approximately on land
  */
 export function isOnLand(lat: number, lng: number): boolean {
-  // Simplified continental bounds - not perfect but gives good visual distribution
-  // North America
-  if (lat > 25 && lat < 70 && lng > -130 && lng < -60) return true;
+  // North America (mainland)
+  if (lat >= 25 && lat <= 50 && lng >= -125 && lng <= -65) return true;
+  // North America (Canada)
+  if (lat >= 50 && lat <= 72 && lng >= -140 && lng <= -55) return true;
+  // Alaska
+  if (lat >= 55 && lat <= 72 && lng >= -170 && lng <= -140) return true;
+  // Central America
+  if (lat >= 7 && lat <= 25 && lng >= -120 && lng <= -75) return true;
+  // Mexico
+  if (lat >= 15 && lat <= 32 && lng >= -118 && lng <= -86) return true;
+  
   // South America
-  if (lat > -55 && lat < 12 && lng > -80 && lng < -35) return true;
-  // Europe
-  if (lat > 35 && lat < 70 && lng > -10 && lng < 40) return true;
-  // Africa
-  if (lat > -35 && lat < 37 && lng > -18 && lng < 52) return true;
-  // Asia
-  if (lat > 10 && lat < 75 && lng > 40 && lng < 145) return true;
-  // Australia
-  if (lat > -45 && lat < -10 && lng > 110 && lng < 155) return true;
+  if (lat >= -56 && lat <= 12 && lng >= -82 && lng <= -34) return true;
+  // Brazil bulge
+  if (lat >= -10 && lat <= 5 && lng >= -74 && lng <= -34) return true;
+  
+  // Europe (Western)
+  if (lat >= 36 && lat <= 60 && lng >= -10 && lng <= 25) return true;
+  // Europe (Eastern)
+  if (lat >= 45 && lat <= 60 && lng >= 25 && lng <= 45) return true;
+  // Scandinavia
+  if (lat >= 55 && lat <= 71 && lng >= 5 && lng <= 30) return true;
+  // UK & Ireland
+  if (lat >= 50 && lat <= 59 && lng >= -11 && lng <= 2) return true;
+  // Iceland
+  if (lat >= 63 && lat <= 66 && lng >= -24 && lng <= -13) return true;
+  
+  // Russia (European)
+  if (lat >= 50 && lat <= 70 && lng >= 30 && lng <= 60) return true;
+  // Russia (Siberia)
+  if (lat >= 50 && lat <= 75 && lng >= 60 && lng <= 180) return true;
+  
+  // Africa (North)
+  if (lat >= 20 && lat <= 37 && lng >= -17 && lng <= 40) return true;
+  // Africa (West bulge)
+  if (lat >= 4 && lat <= 20 && lng >= -18 && lng <= 15) return true;
+  // Africa (Central & East)
+  if (lat >= -5 && lat <= 20 && lng >= 15 && lng <= 52) return true;
+  // Africa (South)
+  if (lat >= -35 && lat <= -5 && lng >= 10 && lng <= 52) return true;
+  // Madagascar
+  if (lat >= -26 && lat <= -12 && lng >= 43 && lng <= 50) return true;
+  
+  // Middle East
+  if (lat >= 12 && lat <= 42 && lng >= 35 && lng <= 60) return true;
+  // Arabian Peninsula
+  if (lat >= 12 && lat <= 32 && lng >= 35 && lng <= 60) return true;
+  
   // India subcontinent
-  if (lat > 5 && lat < 35 && lng > 68 && lng < 97) return true;
-  // Japan/Korea
-  if (lat > 30 && lat < 45 && lng > 125 && lng < 145) return true;
-  // UK/Ireland
-  if (lat > 50 && lat < 60 && lng > -10 && lng < 2) return true;
+  if (lat >= 8 && lat <= 35 && lng >= 68 && lng <= 90) return true;
+  // Sri Lanka
+  if (lat >= 6 && lat <= 10 && lng >= 79 && lng <= 82) return true;
+  
+  // Southeast Asia
+  if (lat >= 10 && lat <= 28 && lng >= 92 && lng <= 110) return true;
+  // Vietnam, Thailand, Malaysia
+  if (lat >= -1 && lat <= 25 && lng >= 98 && lng <= 110) return true;
+  
+  // China
+  if (lat >= 20 && lat <= 45 && lng >= 75 && lng <= 125) return true;
+  // Mongolia
+  if (lat >= 42 && lat <= 52 && lng >= 88 && lng <= 120) return true;
+  
+  // Japan
+  if (lat >= 30 && lat <= 46 && lng >= 129 && lng <= 146) return true;
+  // Korea
+  if (lat >= 33 && lat <= 43 && lng >= 124 && lng <= 130) return true;
+  // Taiwan
+  if (lat >= 22 && lat <= 25 && lng >= 120 && lng <= 122) return true;
+  
+  // Philippines
+  if (lat >= 5 && lat <= 20 && lng >= 117 && lng <= 127) return true;
   // Indonesia
-  if (lat > -10 && lat < 5 && lng > 95 && lng < 140) return true;
+  if (lat >= -11 && lat <= 6 && lng >= 95 && lng <= 141) return true;
+  // Papua New Guinea
+  if (lat >= -12 && lat <= 0 && lng >= 140 && lng <= 155) return true;
+  
+  // Australia
+  if (lat >= -44 && lat <= -10 && lng >= 113 && lng <= 154) return true;
+  // New Zealand
+  if (lat >= -47 && lat <= -34 && lng >= 166 && lng <= 179) return true;
+  
+  // Greenland
+  if (lat >= 60 && lat <= 84 && lng >= -73 && lng <= -12) return true;
   
   return false;
 }
 
 /**
- * Generate land-only points on a sphere
+ * Generate uniform grid of land points on the globe
+ * Uses a lat/lng grid with consistent spacing for clean appearance
  */
-export function generateLandPoints(count: number, radius: number = GLOBE_RADIUS): Float32Array {
+export function generateUniformLandPoints(
+  latStep: number = 2.5,
+  lngStep: number = 2.5,
+  radius: number = GLOBE_RADIUS
+): Float32Array {
   const positions: number[] = [];
-  let attempts = 0;
-  const maxAttempts = count * 20;
   
-  while (positions.length < count * 3 && attempts < maxAttempts) {
-    // Random point on sphere
-    const u = Math.random();
-    const v = Math.random();
-    const theta = 2 * Math.PI * u;
-    const phi = Math.acos(2 * v - 1);
+  // Generate points on a uniform lat/lng grid
+  for (let lat = -85; lat <= 85; lat += latStep) {
+    // Adjust longitude step based on latitude to maintain uniform density
+    const adjustedLngStep = lngStep / Math.cos(lat * Math.PI / 180);
+    const effectiveLngStep = Math.min(adjustedLngStep, 20); // Cap at 20 degrees
     
-    const lat = 90 - (phi * 180 / Math.PI);
-    const lng = (theta * 180 / Math.PI) - 180;
-    
-    if (isOnLand(lat, lng)) {
-      const x = Math.sin(phi) * Math.cos(theta) * radius;
-      const y = Math.cos(phi) * radius;
-      const z = Math.sin(phi) * Math.sin(theta) * radius;
-      
-      positions.push(x, y, z);
+    for (let lng = -180; lng < 180; lng += effectiveLngStep) {
+      if (isOnLand(lat, lng)) {
+        const vec = latLngToVector3(lat, lng, radius);
+        positions.push(vec.x, vec.y, vec.z);
+      }
     }
-    
-    attempts++;
   }
   
   return new Float32Array(positions);
+}
+
+/**
+ * Generate capital city positions as Float32Array for instanced rendering
+ */
+export function generateCapitalPositions(
+  capitals: Array<{ lat: number; lng: number }>,
+  radius: number = GLOBE_RADIUS
+): Float32Array {
+  const positions = new Float32Array(capitals.length * 3);
+  
+  capitals.forEach((capital, i) => {
+    const vec = latLngToVector3(capital.lat, capital.lng, radius * 1.005);
+    positions[i * 3] = vec.x;
+    positions[i * 3 + 1] = vec.y;
+    positions[i * 3 + 2] = vec.z;
+  });
+  
+  return positions;
 }

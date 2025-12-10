@@ -6,7 +6,7 @@ import { WORLD_CAPITALS, CONNECTION_ROUTES } from '@/data/capitals';
 import { 
   latLngToVector3, 
   createGreatCircleArc, 
-  generateLandPoints,
+  generateUniformLandPoints,
   GLOBE_RADIUS 
 } from '@/lib/globeGeometry';
 
@@ -19,7 +19,7 @@ function EarthDots() {
   const pointsRef = useRef<THREE.Points>(null);
   
   const positions = useMemo(() => {
-    return generateLandPoints(8000, GLOBE_RADIUS);
+    return generateUniformLandPoints(2.5, 2.5, GLOBE_RADIUS);
   }, []);
 
   return (
@@ -34,10 +34,10 @@ function EarthDots() {
       </bufferGeometry>
       <pointsMaterial
         color="#ffffff"
-        size={0.008}
+        size={0.012}
         sizeAttenuation
         transparent
-        opacity={0.7}
+        opacity={0.8}
       />
     </points>
   );
@@ -52,7 +52,7 @@ function CapitalDots({ onHover }: { onHover: (city: string | null, position: THR
     const positions: THREE.Vector3[] = [];
     
     WORLD_CAPITALS.forEach((capital) => {
-      const position = latLngToVector3(capital.lat, capital.lng, GLOBE_RADIUS * 1.005);
+      const position = latLngToVector3(capital.lat, capital.lng, GLOBE_RADIUS * 1.008);
       positions.push(position);
       
       const matrix = new THREE.Matrix4();
@@ -88,8 +88,8 @@ function CapitalDots({ onHover }: { onHover: (city: string | null, position: THR
       }}
       onPointerOut={() => onHover(null, null)}
     >
-      <sphereGeometry args={[0.015, 8, 8]} />
-      <meshBasicMaterial color="#e50914" />
+      <sphereGeometry args={[0.018, 12, 12]} />
+      <meshBasicMaterial color="#e50914" transparent opacity={0.95} />
     </instancedMesh>
   );
 }
@@ -113,8 +113,8 @@ function AnimatedArc({
     return createGreatCircleArc(
       { lat: start.lat, lng: start.lng },
       { lat: end.lat, lng: end.lng },
-      50,
-      0.12
+      64,
+      0.15
     );
   }, [startIdx, endIdx]);
 
@@ -150,30 +150,16 @@ function ArcAnimationSystem() {
     progress: number;
     opacity: number;
     phase: 'drawing' | 'holding' | 'fading';
+    holdTime: number;
   }>>([]);
   
   const arcIdRef = useRef(0);
   const routeIndexRef = useRef(0);
+  const lastAddTimeRef = useRef(0);
 
-  useEffect(() => {
-    // Initialize with first few arcs
-    const initialArcs = [];
-    for (let i = 0; i < 3; i++) {
-      const route = CONNECTION_ROUTES[i % CONNECTION_ROUTES.length];
-      initialArcs.push({
-        id: arcIdRef.current++,
-        startIdx: route[0],
-        endIdx: route[1],
-        progress: 0,
-        opacity: 1,
-        phase: 'drawing' as const
-      });
-      routeIndexRef.current++;
-    }
-    setArcs(initialArcs);
-  }, []);
-
-  useFrame((_, delta) => {
+  useFrame((state, delta) => {
+    const time = state.clock.elapsedTime;
+    
     setArcs(prevArcs => {
       const updated = prevArcs.map(arc => {
         const newArc = { ...arc };
@@ -182,21 +168,26 @@ function ArcAnimationSystem() {
           newArc.progress = Math.min(1, arc.progress + delta * 0.5);
           if (newArc.progress >= 1) {
             newArc.phase = 'holding';
+            newArc.holdTime = 0;
           }
         } else if (arc.phase === 'holding') {
-          // Hold for a moment then fade
-          newArc.phase = 'fading';
+          newArc.holdTime = (arc.holdTime || 0) + delta;
+          if (newArc.holdTime > 0.8) {
+            newArc.phase = 'fading';
+          }
         } else if (arc.phase === 'fading') {
-          newArc.opacity = Math.max(0, arc.opacity - delta * 0.8);
+          newArc.opacity = Math.max(0, arc.opacity - delta * 1.2);
         }
         
         return newArc;
       });
 
-      // Remove fully faded arcs and add new ones
+      // Remove fully faded arcs
       const activeArcs = updated.filter(arc => arc.opacity > 0);
       
-      if (activeArcs.length < 4 && Math.random() < delta * 2) {
+      // Add new arc every 1.5 seconds
+      if (time - lastAddTimeRef.current > 1.5 && activeArcs.length < 5) {
+        lastAddTimeRef.current = time;
         const route = CONNECTION_ROUTES[routeIndexRef.current % CONNECTION_ROUTES.length];
         routeIndexRef.current++;
         
@@ -206,7 +197,8 @@ function ArcAnimationSystem() {
           endIdx: route[1],
           progress: 0,
           opacity: 1,
-          phase: 'drawing'
+          phase: 'drawing',
+          holdTime: 0
         });
       }
 
@@ -236,9 +228,9 @@ function GlobeScene() {
   const [hoverPosition, setHoverPosition] = useState<THREE.Vector3 | null>(null);
 
   // Auto-rotation
-  useFrame((_, delta) => {
+  useFrame(() => {
     if (groupRef.current) {
-      groupRef.current.rotation.y += delta * 0.05;
+      groupRef.current.rotation.y += 0.001;
     }
   });
 
@@ -250,17 +242,17 @@ function GlobeScene() {
   return (
     <>
       {/* Ambient light for overall illumination */}
-      <ambientLight intensity={0.5} />
+      <ambientLight intensity={0.6} />
       
       {/* Directional light for subtle shading */}
-      <directionalLight position={[5, 3, 5]} intensity={0.3} />
+      <directionalLight position={[5, 3, 5]} intensity={0.4} />
       
       {/* Globe group with rotation */}
       <group ref={groupRef}>
         {/* Core sphere (barely visible, for depth) */}
         <mesh>
-          <sphereGeometry args={[GLOBE_RADIUS * 0.99, 32, 32]} />
-          <meshBasicMaterial color="#0b0b17" transparent opacity={0.95} />
+          <sphereGeometry args={[GLOBE_RADIUS * 0.98, 32, 32]} />
+          <meshBasicMaterial color="#0b0b17" transparent opacity={0.9} />
         </mesh>
         
         {/* Earth land dots */}
@@ -276,14 +268,14 @@ function GlobeScene() {
       {/* City tooltip */}
       {hoveredCity && hoverPosition && (
         <Html
-          position={[hoverPosition.x * 1.1, hoverPosition.y * 1.1, hoverPosition.z * 1.1]}
+          position={[hoverPosition.x * 1.15, hoverPosition.y * 1.15, hoverPosition.z * 1.15]}
           center
           style={{
             pointerEvents: 'none',
             whiteSpace: 'nowrap'
           }}
         >
-          <div className="bg-card/95 backdrop-blur-sm text-card-foreground text-xs px-2 py-1 rounded-md border border-border shadow-lg">
+          <div className="bg-background/95 backdrop-blur-sm text-foreground text-sm px-3 py-1.5 rounded-md border border-border shadow-lg font-medium">
             {hoveredCity}
           </div>
         </Html>
@@ -294,10 +286,10 @@ function GlobeScene() {
         enableZoom={false}
         enablePan={false}
         enableRotate={true}
-        rotateSpeed={0.3}
+        rotateSpeed={0.4}
         autoRotate={false}
-        minPolarAngle={Math.PI * 0.3}
-        maxPolarAngle={Math.PI * 0.7}
+        minPolarAngle={Math.PI * 0.25}
+        maxPolarAngle={Math.PI * 0.75}
       />
     </>
   );
@@ -309,7 +301,7 @@ export function ThreeGlobe({ className }: ThreeGlobeProps) {
       <Canvas
         camera={{ position: [0, 0, 2.5], fov: 45 }}
         gl={{ antialias: true, alpha: false }}
-        dpr={[1, 2]}
+        dpr={[1, 1.5]}
       >
         <color attach="background" args={['#0b0b17']} />
         <GlobeScene />
