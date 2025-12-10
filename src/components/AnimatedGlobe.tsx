@@ -52,7 +52,7 @@ export function AnimatedGlobe({ className }: { className?: string }) {
       // Initialize markers with starting colors
       const initialMarkers = WORLD_CITIES.map((city) => ({
         location: [city.lat, city.lng] as [number, number],
-        size: 0.02
+        size: 0.03
       }));
 
       globe = createGlobe(canvas, {
@@ -62,12 +62,12 @@ export function AnimatedGlobe({ className }: { className?: string }) {
         phi: phiRef.current, 
         theta: 0.15, 
         dark: 1, 
-        diffuse: 1.6,
-        mapSamples: 32000, 
-        mapBrightness: 8,
-        baseColor: [0.08, 0.08, 0.12], 
+        diffuse: 1.2,
+        mapSamples: 24000, 
+        mapBrightness: 6,
+        baseColor: [0.12, 0.12, 0.18], 
         markerColor: [0.9, 0.2, 0.2], 
-        glowColor: [0.15, 0.15, 0.2],
+        glowColor: [0.1, 0.1, 0.15],
         markers: initialMarkers,
         onRender: (state) => {
           phiRef.current += 0.0008;
