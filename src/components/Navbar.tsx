@@ -7,6 +7,8 @@ import { ThemeToggle } from './ThemeToggle';
 import { NotificationsDropdown } from './admin/NotificationsDropdown';
 import { UserNotifications } from './UserNotifications';
 import { LazyImage } from '@/components/LazyImage';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Separator } from '@/components/ui/separator';
 import { 
   Calendar, 
   BarChart3, 
@@ -310,36 +312,162 @@ export function Navbar() {
         {/* Mobile Navigation Menu */}
         {isMobileMenuOpen && (
           <div className="lg:hidden animate-mobile-slide-up">
-            <div className="mobile-px pt-2 pb-3 space-y-1 bg-background/95 backdrop-blur-md border-b border-border">
-              {user && (
-                <Link
-                  to="/tournaments"
-                  className="flex items-center space-x-2 px-3 py-3 rounded-md text-base font-medium hover:bg-muted touch-target"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <Trophy className="h-5 w-5" />
-                  <span>Tournaments</span>
-                </Link>
-              )}
+            <div className="mobile-px pt-2 pb-3 space-y-1 bg-background/95 backdrop-blur-md border-b border-border max-h-[calc(100vh-4rem)] overflow-y-auto">
+              
+              {/* Tournaments Group */}
+              <Collapsible>
+                <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-3 rounded-md text-base font-medium hover:bg-muted touch-target">
+                  <div className="flex items-center space-x-2">
+                    <Trophy className="h-5 w-5" />
+                    <span>Tournaments</span>
+                  </div>
+                  <ChevronDown className="h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                </CollapsibleTrigger>
+                <CollapsibleContent className="pl-8 space-y-1">
+                  <Link
+                    to="/tournaments"
+                    className="flex items-center space-x-2 px-3 py-2.5 rounded-md text-sm hover:bg-muted touch-target"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <Trophy className="h-4 w-4" />
+                    <span>Browse Tournaments</span>
+                  </Link>
+                  <Link
+                    to="/results"
+                    className="flex items-center space-x-2 px-3 py-2.5 rounded-md text-sm hover:bg-muted touch-target"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <BarChart3 className="h-4 w-4" />
+                    <span>Results</span>
+                  </Link>
+                  <Link
+                    to="/host-tournament"
+                    className="flex items-center space-x-2 px-3 py-2.5 rounded-md text-sm hover:bg-muted touch-target"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <Calendar className="h-4 w-4" />
+                    <span>Host a Tournament</span>
+                  </Link>
+                </CollapsibleContent>
+              </Collapsible>
 
-              <Link
-                to="/results"
-                className="flex items-center space-x-2 px-3 py-3 rounded-md text-base font-medium hover:bg-muted touch-target"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <BarChart3 className="h-5 w-5" />
-                <span>Results</span>
-              </Link>
+              {/* Partners Group */}
+              <Collapsible>
+                <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-3 rounded-md text-base font-medium hover:bg-muted touch-target">
+                  <div className="flex items-center space-x-2">
+                    <Users className="h-5 w-5" />
+                    <span>Partners</span>
+                  </div>
+                  <ChevronDown className="h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                </CollapsibleTrigger>
+                <CollapsibleContent className="pl-8 space-y-1">
+                  <Link
+                    to="/club-partners"
+                    className="flex items-center space-x-2 px-3 py-2.5 rounded-md text-sm hover:bg-muted touch-target"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <Users className="h-4 w-4" />
+                    <span>Club Partners</span>
+                  </Link>
+                  <Link
+                    to="/ambassador"
+                    className="flex items-center space-x-2 px-3 py-2.5 rounded-md text-sm hover:bg-muted touch-target"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <User className="h-4 w-4" />
+                    <span>Ambassador Program</span>
+                  </Link>
+                  <Link
+                    to="/sponsors"
+                    className="flex items-center space-x-2 px-3 py-2.5 rounded-md text-sm hover:bg-muted touch-target"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <Trophy className="h-4 w-4" />
+                    <span>Sponsors</span>
+                  </Link>
+                  <Link
+                    to="/sponsor"
+                    className="flex items-center space-x-2 px-3 py-2.5 rounded-md text-sm hover:bg-muted touch-target"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <Users className="h-4 w-4" />
+                    <span>Become a Sponsor</span>
+                  </Link>
+                  {user && (
+                    <Link
+                      to="/sponsor/dashboard"
+                      className="flex items-center space-x-2 px-3 py-2.5 rounded-md text-sm hover:bg-muted touch-target"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <Building className="h-4 w-4" />
+                      <span>Sponsor Dashboard</span>
+                    </Link>
+                  )}
+                </CollapsibleContent>
+              </Collapsible>
 
-              <Link
-                to="/about"
-                className="flex items-center space-x-2 px-3 py-3 rounded-md text-base font-medium hover:bg-muted touch-target"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <Info className="h-5 w-5" />
-                <span>About</span>
-              </Link>
+              {/* Resources Group */}
+              <Collapsible>
+                <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-3 rounded-md text-base font-medium hover:bg-muted touch-target">
+                  <div className="flex items-center space-x-2">
+                    <Info className="h-5 w-5" />
+                    <span>Resources</span>
+                  </div>
+                  <ChevronDown className="h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                </CollapsibleTrigger>
+                <CollapsibleContent className="pl-8 space-y-1">
+                  <Link
+                    to="/about"
+                    className="flex items-center space-x-2 px-3 py-2.5 rounded-md text-sm hover:bg-muted touch-target"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <Info className="h-4 w-4" />
+                    <span>About Us</span>
+                  </Link>
+                  <Link
+                    to="/getting-started"
+                    className="flex items-center space-x-2 px-3 py-2.5 rounded-md text-sm hover:bg-muted touch-target"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <FileText className="h-4 w-4" />
+                    <span>Getting Started</span>
+                  </Link>
+                  <Link
+                    to="/learn-about-debate"
+                    className="flex items-center space-x-2 px-3 py-2.5 rounded-md text-sm hover:bg-muted touch-target"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <BookOpen className="h-4 w-4" />
+                    <span>Learn about Debate</span>
+                  </Link>
+                  <Link
+                    to="/rules"
+                    className="flex items-center space-x-2 px-3 py-2.5 rounded-md text-sm hover:bg-muted touch-target"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <ScrollText className="h-4 w-4" />
+                    <span>Rules</span>
+                  </Link>
+                  <Link
+                    to="/faq"
+                    className="flex items-center space-x-2 px-3 py-2.5 rounded-md text-sm hover:bg-muted touch-target"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <HelpCircle className="h-4 w-4" />
+                    <span>FAQ</span>
+                  </Link>
+                  <Link
+                    to="/contact"
+                    className="flex items-center space-x-2 px-3 py-2.5 rounded-md text-sm hover:bg-muted touch-target"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <Users className="h-4 w-4" />
+                    <span>Contact</span>
+                  </Link>
+                </CollapsibleContent>
+              </Collapsible>
 
+              {/* Blog - Direct Link */}
               <Link
                 to="/blog"
                 className="flex items-center space-x-2 px-3 py-3 rounded-md text-base font-medium hover:bg-muted touch-target"
@@ -349,93 +477,76 @@ export function Navbar() {
                 <span>Blog</span>
               </Link>
 
-              <Link
-                to="/learn-about-debate"
-                className="flex items-center space-x-2 px-3 py-3 rounded-md text-base font-medium hover:bg-muted touch-target"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <BookOpen className="h-5 w-5" />
-                <span>Learn about Debate</span>
-              </Link>
-
-              <Link
-                to="/rules"
-                className="flex items-center space-x-2 px-3 py-3 rounded-md text-base font-medium hover:bg-muted touch-target"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <ScrollText className="h-5 w-5" />
-                <span>Rules</span>
-              </Link>
-
-              <Link
-                to="/sponsors"
-                className="flex items-center space-x-2 px-3 py-3 rounded-md text-base font-medium hover:bg-muted touch-target"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <Users className="h-5 w-5" />
-                <span>Sponsors</span>
-              </Link>
+              <Separator className="my-2" />
 
               {user ? (
                 <>
-                  <Link
-                    to="/dashboard"
-                    className="flex items-center space-x-2 px-3 py-3 rounded-md text-base font-medium hover:bg-muted touch-target"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    <Home className="h-5 w-5" />
-                    <span>My Dashboard</span>
-                  </Link>
+                  {/* Dashboard Group */}
+                  <Collapsible>
+                    <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-3 rounded-md text-base font-medium hover:bg-muted touch-target">
+                      <div className="flex items-center space-x-2">
+                        <BarChart3 className="h-5 w-5" />
+                        <span>Dashboard</span>
+                      </div>
+                      <ChevronDown className="h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="pl-8 space-y-1">
+                      <Link
+                        to="/dashboard"
+                        className="flex items-center space-x-2 px-3 py-2.5 rounded-md text-sm hover:bg-muted touch-target"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <Home className="h-4 w-4" />
+                        <span>My Dashboard</span>
+                      </Link>
+                      <Link
+                        to="/my-tournaments"
+                        className="flex items-center space-x-2 px-3 py-2.5 rounded-md text-sm hover:bg-muted touch-target"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <Trophy className="h-4 w-4" />
+                        <span>My Tournaments</span>
+                      </Link>
+                      <Link
+                        to="/portal"
+                        className="flex items-center space-x-2 px-3 py-2.5 rounded-md text-sm hover:bg-muted touch-target"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <Users className="h-4 w-4" />
+                        <span>Participant Portal (Legacy)</span>
+                      </Link>
+                      {profile?.role === 'judge' && (
+                        <Link
+                          to="/judge"
+                          className="flex items-center space-x-2 px-3 py-2.5 rounded-md text-sm hover:bg-muted touch-target"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          <Gavel className="h-4 w-4" />
+                          <span>Judge Dashboard</span>
+                        </Link>
+                      )}
+                      <Link
+                        to="/observer"
+                        className="flex items-center space-x-2 px-3 py-2.5 rounded-md text-sm hover:bg-muted touch-target"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <Eye className="h-4 w-4" />
+                        <span>Observer Dashboard</span>
+                      </Link>
+                      {isAdmin && (
+                        <Link
+                          to="/admin"
+                          className="flex items-center space-x-2 px-3 py-2.5 rounded-md text-sm hover:bg-muted touch-target"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          <Settings className="h-4 w-4" />
+                          <span>Admin Dashboard</span>
+                        </Link>
+                      )}
+                    </CollapsibleContent>
+                  </Collapsible>
 
-                  <Link
-                    to="/my-tournaments"
-                    className="flex items-center space-x-2 px-3 py-3 rounded-md text-base font-medium hover:bg-muted touch-target"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    <Trophy className="h-5 w-5" />
-                    <span>My Tournaments</span>
-                  </Link>
-
-                   <Link
-                     to="/portal"
-                     className="flex items-center space-x-2 px-3 py-3 rounded-md text-base font-medium hover:bg-muted touch-target"
-                     onClick={() => setIsMobileMenuOpen(false)}
-                   >
-                     <Users className="h-5 w-5" />
-                     <span>Participant Portal (Legacy)</span>
-                   </Link>
-
-                   {profile?.role === 'judge' && (
-                     <Link
-                       to="/judge"
-                       className="flex items-center space-x-2 px-3 py-3 rounded-md text-base font-medium hover:bg-muted touch-target"
-                       onClick={() => setIsMobileMenuOpen(false)}
-                     >
-                       <Gavel className="h-5 w-5" />
-                       <span>Judge Dashboard</span>
-                     </Link>
-                   )}
-
-                   <Link
-                     to="/observer"
-                     className="flex items-center space-x-2 px-3 py-3 rounded-md text-base font-medium hover:bg-muted touch-target"
-                     onClick={() => setIsMobileMenuOpen(false)}
-                   >
-                     <Eye className="h-5 w-5" />
-                     <span>Observer Dashboard</span>
-                   </Link>
-
-                   {isAdmin && (
-                     <Link
-                       to="/admin"
-                       className="flex items-center space-x-2 px-3 py-3 rounded-md text-base font-medium hover:bg-muted touch-target"
-                       onClick={() => setIsMobileMenuOpen(false)}
-                     >
-                       <Settings className="h-5 w-5" />
-                       <span>Admin Dashboard</span>
-                     </Link>
-                   )}
-
+                  {/* Account - Direct Link */}
                   <Link
                     to="/account"
                     className="flex items-center space-x-2 px-3 py-3 rounded-md text-base font-medium hover:bg-muted touch-target"
@@ -445,12 +556,13 @@ export function Navbar() {
                     <span>Account Settings</span>
                   </Link>
 
+                  {/* Sign Out */}
                   <button
                     onClick={() => {
                       signOut();
                       setIsMobileMenuOpen(false);
                     }}
-                    className="flex items-center space-x-2 px-3 py-3 rounded-md text-base font-medium hover:bg-muted w-full text-left touch-target"
+                    className="flex items-center space-x-2 px-3 py-3 rounded-md text-base font-medium hover:bg-muted w-full text-left touch-target text-destructive"
                   >
                     <LogOut className="h-5 w-5" />
                     <span>Sign out</span>
