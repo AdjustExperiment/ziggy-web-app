@@ -2,7 +2,7 @@ import { useEffect, useRef, useCallback, useState } from 'react';
 import createGlobe from 'cobe';
 import { cn } from '@/lib/utils';
 import { WORLD_CAPITALS, CONNECTION_ROUTES } from '@/data/capitals';
-import { projectToCanvas, drawAnimatedArc, drawGlowingMarker } from '@/lib/globeUtils';
+import { projectToCanvas, drawAnimatedArc } from '@/lib/globeUtils';
 
 interface ArcState { routeIndex: number; progress: number; active: boolean; }
 interface HoveredCity { name: string; country: string; lat: number; lng: number; }
@@ -10,7 +10,6 @@ interface HoveredCity { name: string; country: string; lat: number; lng: number;
 export function AnimatedGlobe({ className }: { className?: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const arcCanvasRef = useRef<HTMLCanvasElement>(null);
-  const markerCanvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const phiRef = useRef(0);
   const isHoveringRef = useRef(false);
@@ -24,6 +23,12 @@ export function AnimatedGlobe({ className }: { className?: string }) {
   ]);
   const [hoveredCity, setHoveredCity] = useState<HoveredCity | null>(null);
 
+  // Convert capitals to cobe marker format
+  const cobeMarkers = WORLD_CAPITALS.map(city => ({
+    location: [city.lat, city.lng] as [number, number],
+    size: 0.06
+  }));
+
   useEffect(() => {
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
@@ -35,8 +40,8 @@ export function AnimatedGlobe({ className }: { className?: string }) {
 
   useEffect(() => {
     const container = containerRef.current, canvas = canvasRef.current;
-    const arcCanvas = arcCanvasRef.current, markerCanvas = markerCanvasRef.current;
-    if (!container || !canvas || !arcCanvas || !markerCanvas) return;
+    const arcCanvas = arcCanvasRef.current;
+    if (!container || !canvas || !arcCanvas) return;
 
     let globe: ReturnType<typeof createGlobe> | undefined;
     let animId: number;
@@ -45,19 +50,34 @@ export function AnimatedGlobe({ className }: { className?: string }) {
       const size = Math.min(container.offsetWidth, container.offsetHeight, 600);
       sizeRef.current = size;
       const dpr = Math.min(window.devicePixelRatio, 2);
-      [canvas, arcCanvas, markerCanvas].forEach(c => {
-        c.width = size * dpr; c.height = size * dpr;
-        c.style.width = `${size}px`; c.style.height = `${size}px`;
-      });
-      const arcCtx = arcCanvas.getContext('2d')!, markerCtx = markerCanvas.getContext('2d')!;
-      arcCtx.scale(dpr, dpr); markerCtx.scale(dpr, dpr);
+      
+      canvas.width = size * dpr; 
+      canvas.height = size * dpr;
+      canvas.style.width = `${size}px`; 
+      canvas.style.height = `${size}px`;
+      
+      arcCanvas.width = size * dpr; 
+      arcCanvas.height = size * dpr;
+      arcCanvas.style.width = `${size}px`; 
+      arcCanvas.style.height = `${size}px`;
+      
+      const arcCtx = arcCanvas.getContext('2d')!;
+      arcCtx.scale(dpr, dpr);
 
       globe = createGlobe(canvas, {
-        devicePixelRatio: dpr, width: size * dpr, height: size * dpr,
-        phi: phiRef.current, theta: 0.15, dark: 1, diffuse: 1.6,
-        mapSamples: 32000, mapBrightness: 8,
-        baseColor: [0.08, 0.08, 0.12], markerColor: [0.9, 0.2, 0.2], glowColor: [0.15, 0.15, 0.2],
-        markers: [],
+        devicePixelRatio: dpr, 
+        width: size * dpr, 
+        height: size * dpr,
+        phi: phiRef.current, 
+        theta: 0.15, 
+        dark: 1, 
+        diffuse: 1.6,
+        mapSamples: 32000, 
+        mapBrightness: 8,
+        baseColor: [0.08, 0.08, 0.12], 
+        markerColor: [0.9, 0.2, 0.2], 
+        glowColor: [0.15, 0.15, 0.2],
+        markers: cobeMarkers,
         onRender: (state) => {
           if (!isHoveringRef.current) {
             phiRef.current += 0.0008;
@@ -69,12 +89,6 @@ export function AnimatedGlobe({ className }: { className?: string }) {
       const animate = () => {
         const r = size * 0.4;
         arcCtx.clearRect(0, 0, size, size);
-        markerCtx.clearRect(0, 0, size, size);
-
-        for (const city of WORLD_CAPITALS) {
-          const p = projectToCanvas(city.lat, city.lng, phiRef.current, size, size, r);
-          if (p.visible) drawGlowingMarker(markerCtx, p.x, p.y, p.depth);
-        }
 
         for (const arc of arcsRef.current) {
           if (!arc.active) continue;
@@ -83,14 +97,13 @@ export function AnimatedGlobe({ className }: { className?: string }) {
           const start = WORLD_CAPITALS[route[0]], end = WORLD_CAPITALS[route[1]];
           if (!start || !end) continue;
           
-          // Calculate fade opacity for smooth transition
           const fadeOpacity = arc.progress > 1.0 ? Math.max(0, 1 - (arc.progress - 1.0) * 2) : 1;
           drawAnimatedArc(arcCtx, { lat: start.lat, lng: start.lng }, { lat: end.lat, lng: end.lng }, phiRef.current, size, size, r, Math.min(arc.progress, 1), fadeOpacity);
           
-          arc.progress += 0.002; // Slower animation
+          arc.progress += 0.002;
           if (arc.progress >= 1.5) { 
             arc.progress = 0; 
-            arc.routeIndex = (arc.routeIndex + 1) % CONNECTION_ROUTES.length; // Sequential cycling
+            arc.routeIndex = (arc.routeIndex + 1) % CONNECTION_ROUTES.length;
           }
         }
         animId = requestAnimationFrame(animate);
@@ -102,14 +115,14 @@ export function AnimatedGlobe({ className }: { className?: string }) {
     const onResize = () => { globe?.destroy(); cancelAnimationFrame(animId); init(); };
     window.addEventListener('resize', onResize);
     return () => { globe?.destroy(); cancelAnimationFrame(animId); window.removeEventListener('resize', onResize); };
-  }, []);
+  }, [cobeMarkers]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (!containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left, y = e.clientY - rect.top;
     
-    // Manual rotation when hovering - track horizontal mouse movement
+    // Manual rotation when hovering
     if (isHoveringRef.current && lastMouseXRef.current !== null) {
       const deltaX = x - lastMouseXRef.current;
       phiRef.current -= deltaX * 0.005;
@@ -127,7 +140,6 @@ export function AnimatedGlobe({ className }: { className?: string }) {
     setHoveredCity(closest);
   }, []);
 
-  // Calculate dynamic tooltip position
   const getTooltipPosition = useCallback(() => {
     if (!hoveredCity) return { x: 0, y: 0, visible: false };
     const size = sizeRef.current, r = size * 0.4;
@@ -142,7 +154,6 @@ export function AnimatedGlobe({ className }: { className?: string }) {
       onMouseEnter={() => { isHoveringRef.current = true; lastMouseXRef.current = null; }}
       onMouseLeave={() => { isHoveringRef.current = false; lastMouseXRef.current = null; setHoveredCity(null); }}>
       <canvas ref={canvasRef} className="max-w-full max-h-full" />
-      <canvas ref={markerCanvasRef} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
       <canvas ref={arcCanvasRef} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
       {hoveredCity && tooltipPos?.visible && (
         <div className="absolute z-10 px-3 py-1.5 rounded-lg bg-background/90 backdrop-blur-sm border border-primary/30 shadow-lg pointer-events-none"
