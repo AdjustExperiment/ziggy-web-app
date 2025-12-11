@@ -20,8 +20,8 @@ interface Tournament {
   status: string;
   format: string;
   is_championship: boolean;
-  results_published: boolean;
-  results_visibility: {
+  results_published?: boolean;
+  results_visibility?: {
     prelim_rounds?: boolean;
     elim_rounds?: boolean;
     break_results?: boolean;
@@ -35,16 +35,16 @@ interface Standing {
   rank: number;
   wins: number;
   losses: number;
-  speaker_points: number;
+  speaks_avg: number;
   registration?: {
-    debater1_name: string;
-    debater2_name: string | null;
-    school_organization: string;
-  };
+    debater1_name?: string;
+    debater2_name?: string | null;
+    school_organization?: string;
+    participant_name?: string;
+  } | null;
 }
 
 export function ResultsManager() {
-  const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [completedTournaments, setCompletedTournaments] = useState<Tournament[]>([]);
   const [publishedTournaments, setPublishedTournaments] = useState<Tournament[]>([]);
   const [loading, setLoading] = useState(true);
@@ -67,13 +67,16 @@ export function ResultsManager() {
     try {
       const { data, error } = await supabase
         .from('tournaments')
-        .select('*')
+        .select('id, name, start_date, end_date, location, status, format, is_championship, results_published, results_visibility')
         .order('start_date', { ascending: false });
 
       if (error) throw error;
 
-      const allTournaments = (data || []) as Tournament[];
-      setTournaments(allTournaments);
+      const allTournaments = (data || []).map(t => ({
+        ...t,
+        results_published: (t as any).results_published ?? false,
+        results_visibility: (t as any).results_visibility ?? null
+      })) as Tournament[];
       
       // Split into completed (unpublished) and published
       setCompletedTournaments(
@@ -96,21 +99,37 @@ export function ResultsManager() {
 
   const fetchStandings = async (tournamentId: string) => {
     try {
-      const { data, error } = await supabase
+      // Fetch standings separately then registrations
+      const { data: standingsData, error: standingsError } = await supabase
         .from('tournament_standings')
-        .select(`
-          *,
-          registration:tournament_registrations(
-            debater1_name,
-            debater2_name,
-            school_organization
-          )
-        `)
+        .select('id, registration_id, rank, wins, losses, speaks_avg')
         .eq('tournament_id', tournamentId)
         .order('rank', { ascending: true });
 
-      if (error) throw error;
-      setStandings(data || []);
+      if (standingsError) throw standingsError;
+
+      if (!standingsData || standingsData.length === 0) {
+        setStandings([]);
+        return;
+      }
+
+      // Fetch registration details
+      const registrationIds = standingsData.map(s => s.registration_id);
+      const { data: regsData, error: regsError } = await supabase
+        .from('tournament_registrations')
+        .select('id, participant_name, school_organization')
+        .in('id', registrationIds);
+
+      if (regsError) throw regsError;
+
+      // Combine data
+      const regMap = new Map((regsData || []).map(r => [r.id, r]));
+      const combinedStandings: Standing[] = standingsData.map(s => ({
+        ...s,
+        registration: regMap.get(s.registration_id) || null
+      }));
+
+      setStandings(combinedStandings);
     } catch (error: any) {
       console.error('Error fetching standings:', error);
       toast({
@@ -145,15 +164,15 @@ export function ResultsManager() {
       const { error } = await supabase
         .from('tournaments')
         .update({
-          results_published: true,
           is_championship: publishSettings.is_championship,
+          results_published: true,
           results_visibility: {
             prelim_rounds: publishSettings.prelim_rounds,
             elim_rounds: publishSettings.elim_rounds,
             break_results: publishSettings.break_results,
             finals: publishSettings.finals
           }
-        })
+        } as any)
         .eq('id', selectedTournament.id);
 
       if (error) throw error;
@@ -182,7 +201,7 @@ export function ResultsManager() {
     try {
       const { error } = await supabase
         .from('tournaments')
-        .update({ results_published: false })
+        .update({ results_published: false } as any)
         .eq('id', tournamentId);
 
       if (error) throw error;
@@ -215,7 +234,7 @@ export function ResultsManager() {
             ...tournament.results_visibility,
             ...visibility
           }
-        })
+        } as any)
         .eq('id', tournamentId);
 
       if (error) throw error;
@@ -490,7 +509,8 @@ export function ResultsManager() {
                             </Badge>
                           </TableCell>
                           <TableCell className="font-medium">
-                            {standing.registration?.debater1_name}
+                            {standing.registration?.participant_name || 
+                              standing.registration?.debater1_name || 'Unknown'}
                             {standing.registration?.debater2_name && 
                               ` / ${standing.registration.debater2_name}`}
                           </TableCell>
@@ -501,7 +521,7 @@ export function ResultsManager() {
                             {standing.wins}-{standing.losses}
                           </TableCell>
                           <TableCell className="text-center">
-                            {standing.speaker_points?.toFixed(1) || '-'}
+                            {standing.speaks_avg?.toFixed(1) || '-'}
                           </TableCell>
                         </TableRow>
                       ))}

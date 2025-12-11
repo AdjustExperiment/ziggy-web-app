@@ -3700,6 +3700,8 @@ export type Database = {
           registration_fee: number | null
           registration_open: boolean | null
           resolutions_enabled: boolean
+          results_published: boolean | null
+          results_visibility: Json | null
           round_count: number | null
           round_interval_days: number | null
           round_schedule_type: string | null
@@ -3740,6 +3742,8 @@ export type Database = {
           registration_fee?: number | null
           registration_open?: boolean | null
           resolutions_enabled?: boolean
+          results_published?: boolean | null
+          results_visibility?: Json | null
           round_count?: number | null
           round_interval_days?: number | null
           round_schedule_type?: string | null
@@ -3780,6 +3784,8 @@ export type Database = {
           registration_fee?: number | null
           registration_open?: boolean | null
           resolutions_enabled?: boolean
+          results_published?: boolean | null
+          results_visibility?: Json | null
           round_count?: number | null
           round_interval_days?: number | null
           round_schedule_type?: string | null
