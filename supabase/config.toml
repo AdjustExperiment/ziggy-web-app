@@ -1,5 +1,8 @@
 project_id = "kiummwyxeleejbwapssa"
 
+[functions.admin-list-users]
+verify_jwt = true
+
 [api]
 enabled = true
 port = 54321
