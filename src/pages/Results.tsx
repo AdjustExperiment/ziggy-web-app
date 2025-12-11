@@ -22,6 +22,14 @@ interface TournamentResult {
   losses: number;
   speaks_total: number;
   speaks_avg: number;
+  event_id: string | null;
+  event_name: string | null;
+}
+
+interface EventGroup {
+  event_id: string;
+  event_name: string;
+  teams: TournamentResult[];
 }
 
 interface GroupedTournamentResults {
@@ -30,6 +38,8 @@ interface GroupedTournamentResults {
   format: string;
   start_date: string;
   teams: TournamentResult[];
+  events: EventGroup[];
+  is_multi_format: boolean;
 }
 
 interface TopPerformer {
@@ -79,6 +89,7 @@ const Results = () => {
   const [timePeriod, setTimePeriod] = useState('all');
   const [formats, setFormats] = useState<string[]>([]);
   const [availableYears, setAvailableYears] = useState<number[]>([]);
+  const [selectedEventByTournament, setSelectedEventByTournament] = useState<Record<string, string>>({});
 
   useEffect(() => {
     fetchAllResults();
@@ -86,7 +97,7 @@ const Results = () => {
 
   const fetchAllResults = async () => {
     try {
-      // Fetch recent tournament results from tournament_standings
+      // Fetch recent tournament results from tournament_standings with event info
       const { data: standingsData, error: standingsError } = await supabase
         .from('tournament_standings')
         .select(`
@@ -99,7 +110,9 @@ const Results = () => {
           registration:tournament_registrations(
             participant_name,
             partner_name,
-            school_organization
+            school_organization,
+            event_id,
+            event:tournament_events(id, name)
           ),
           tournament:tournaments(
             id,
@@ -130,6 +143,8 @@ const Results = () => {
             losses: s.losses,
             speaks_total: s.speaks_total || 0,
             speaks_avg: s.speaks_avg || 0,
+            event_id: (s.registration as any)?.event_id || null,
+            event_name: (s.registration as any)?.event?.name || null,
           }));
         
         setRecentResults(formattedResults);
@@ -340,17 +355,25 @@ const Results = () => {
   }, [recentResults, timePeriod]);
 
   const getPositionIcon = (rank: number) => {
-    if (rank === 1) return <Crown className="h-6 w-6 text-primary" />;
-    if (rank === 2) return <Medal className="h-6 w-6 text-primary/80" />;
-    if (rank === 3) return <Award className="h-6 w-6 text-primary/60" />;
-    return <Trophy className="h-6 w-6 text-muted-foreground" />;
+    if (rank === 1) return <Crown className="h-5 w-5 text-yellow-500" />;
+    if (rank === 2) return <Medal className="h-5 w-5 text-slate-400" />;
+    if (rank === 3) return <Award className="h-5 w-5 text-amber-600" />;
+    return <Trophy className="h-5 w-5 text-muted-foreground" />;
+  };
+
+  const getPositionCircleStyle = (rank: number) => {
+    if (rank === 1) return 'bg-gradient-to-br from-yellow-400 to-yellow-600 text-yellow-950 shadow-lg shadow-yellow-500/30';
+    if (rank === 2) return 'bg-gradient-to-br from-slate-300 to-slate-500 text-slate-950 shadow-lg shadow-slate-400/30';
+    if (rank === 3) return 'bg-gradient-to-br from-amber-400 to-amber-700 text-amber-950 shadow-lg shadow-amber-500/30';
+    return 'bg-muted border border-border text-muted-foreground';
   };
 
   const getPositionBadge = (rank: number) => {
-    if (rank === 1) return { text: '1st Place', variant: 'default' as const, className: 'bg-primary text-primary-foreground' };
-    if (rank === 2) return { text: '2nd Place', variant: 'secondary' as const, className: 'bg-primary/80 text-primary-foreground' };
-    if (rank === 3) return { text: '3rd Place', variant: 'secondary' as const, className: 'bg-primary/60 text-primary-foreground' };
-    return { text: `${rank}th Place`, variant: 'outline' as const, className: 'border-border text-muted-foreground' };
+    if (rank === 1) return { text: '🥇 1st Place', variant: 'default' as const, className: 'bg-gradient-to-r from-yellow-500 to-yellow-400 text-yellow-950 border-0' };
+    if (rank === 2) return { text: '🥈 2nd Place', variant: 'secondary' as const, className: 'bg-gradient-to-r from-slate-400 to-slate-300 text-slate-950 border-0' };
+    if (rank === 3) return { text: '🥉 3rd Place', variant: 'secondary' as const, className: 'bg-gradient-to-r from-amber-500 to-amber-400 text-amber-950 border-0' };
+    if (rank <= 8) return { text: `${rank}th Place`, variant: 'outline' as const, className: 'bg-muted text-muted-foreground' };
+    return { text: `${rank}th`, variant: 'outline' as const, className: 'border-border text-muted-foreground' };
   };
 
   // Filter results based on search, format, and time period
@@ -369,7 +392,7 @@ const Results = () => {
   // Filter championships by time period
   const filteredChampionships = championships.filter(c => filterByTimePeriod(c.start_date));
 
-  // Group results by tournament
+  // Group results by tournament and events
   const groupResultsByTournament = (results: TournamentResult[]): GroupedTournamentResults[] => {
     const groupMap = new Map<string, GroupedTournamentResults>();
     
@@ -383,17 +406,47 @@ const Results = () => {
           tournament_name: result.tournament_name,
           format: result.format,
           start_date: result.start_date,
-          teams: [result]
+          teams: [result],
+          events: [],
+          is_multi_format: false
         });
       }
     });
     
-    // Sort teams within each tournament by rank, then sort tournaments by date (most recent first)
+    // Process each tournament group to create event sub-groups
     return Array.from(groupMap.values())
-      .map(group => ({
-        ...group,
-        teams: group.teams.sort((a, b) => a.rank - b.rank)
-      }))
+      .map(group => {
+        // Group teams by event
+        const eventMap = new Map<string, EventGroup>();
+        group.teams.forEach(team => {
+          const eventKey = team.event_id || 'default';
+          const existing = eventMap.get(eventKey);
+          if (existing) {
+            existing.teams.push(team);
+          } else {
+            eventMap.set(eventKey, {
+              event_id: team.event_id || 'default',
+              event_name: team.event_name || group.format || 'Main Event',
+              teams: [team]
+            });
+          }
+        });
+        
+        // Sort teams within each event by rank
+        const events = Array.from(eventMap.values())
+          .map(event => ({
+            ...event,
+            teams: event.teams.sort((a, b) => a.rank - b.rank)
+          }))
+          .sort((a, b) => a.event_name.localeCompare(b.event_name));
+        
+        return {
+          ...group,
+          teams: group.teams.sort((a, b) => a.rank - b.rank),
+          events,
+          is_multi_format: events.length > 1
+        };
+      })
       .sort((a, b) => new Date(b.start_date).getTime() - new Date(a.start_date).getTime());
   };
 
@@ -507,67 +560,97 @@ const Results = () => {
                 </Card>
               ) : (
                 <div className="space-y-6">
-                  {groupedResults.map((group) => (
-                    <Card key={group.tournament_id} className="overflow-hidden">
-                      {/* Tournament Header */}
-                      <CardHeader className="bg-muted/50 border-b border-border">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <CardTitle className="text-xl">{group.tournament_name}</CardTitle>
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                              <Badge variant="outline">{group.format}</Badge>
-                              <span>•</span>
-                              <Calendar className="h-4 w-4" />
-                              <span>{new Date(group.start_date).toLocaleDateString()}</span>
-                              <span>•</span>
-                              <Users className="h-4 w-4" />
-                              <span>{group.teams.length} teams</span>
-                            </div>
-                          </div>
-                          <Trophy className="h-8 w-8 text-primary/40" />
-                        </div>
-                      </CardHeader>
-                      
-                      {/* Teams List */}
-                      <CardContent className="p-0">
-                        <div className="divide-y divide-border">
-                          {group.teams.map((result) => {
-                            const badge = getPositionBadge(result.rank);
-                            return (
-                              <div 
-                                key={result.id} 
-                                className="flex flex-col sm:flex-row sm:items-center justify-between p-4 hover:bg-muted/30 transition-colors gap-3"
-                              >
-                                <div className="flex items-center gap-3">
-                                  <div className="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
-                                    {getPositionIcon(result.rank)}
-                                  </div>
-                                  <div>
-                                    <div className="font-semibold text-foreground">
-                                      {result.participant_name}
-                                      {result.partner_name && ` & ${result.partner_name}`}
-                                    </div>
-                                    <div className="text-sm text-muted-foreground">
-                                      {result.school || 'Independent'}
-                                    </div>
-                                  </div>
-                                </div>
-                                <div className="flex items-center gap-4 ml-13 sm:ml-0">
-                                  <div className="text-right text-sm">
-                                    <div className="font-medium text-foreground">{result.wins}W - {result.losses}L</div>
-                                    <div className="text-muted-foreground">{result.speaks_avg.toFixed(1)} avg</div>
-                                  </div>
-                                  <Badge className={badge.className}>
-                                    {badge.text}
-                                  </Badge>
-                                </div>
+                  {groupedResults.map((group) => {
+                    const selectedEvent = selectedEventByTournament[group.tournament_id] || group.events[0]?.event_id || 'default';
+                    const currentEventTeams = group.is_multi_format 
+                      ? group.events.find(e => e.event_id === selectedEvent)?.teams || []
+                      : group.teams;
+                    
+                    return (
+                      <Card key={group.tournament_id} className="overflow-hidden">
+                        {/* Tournament Header */}
+                        <CardHeader className="bg-muted/50 border-b border-border">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <CardTitle className="text-xl">{group.tournament_name}</CardTitle>
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                                <Badge variant="outline">{group.format}</Badge>
+                                <span>•</span>
+                                <Calendar className="h-4 w-4" />
+                                <span>{new Date(group.start_date).toLocaleDateString()}</span>
+                                <span>•</span>
+                                <Users className="h-4 w-4" />
+                                <span>{group.teams.length} teams</span>
                               </div>
-                            );
-                          })}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                            </div>
+                            <Trophy className="h-8 w-8 text-yellow-500/40" />
+                          </div>
+                          
+                          {/* Event Tabs for Multi-Format Tournaments */}
+                          {group.is_multi_format && (
+                            <div className="mt-4">
+                              <Tabs 
+                                value={selectedEvent} 
+                                onValueChange={(value) => setSelectedEventByTournament(prev => ({ ...prev, [group.tournament_id]: value }))}
+                              >
+                                <TabsList className="bg-background/50 h-auto flex-wrap">
+                                  {group.events.map((event) => (
+                                    <TabsTrigger 
+                                      key={event.event_id} 
+                                      value={event.event_id}
+                                      className="text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                                    >
+                                      {event.event_name}
+                                      <span className="ml-1.5 text-[10px] opacity-70">({event.teams.length})</span>
+                                    </TabsTrigger>
+                                  ))}
+                                </TabsList>
+                              </Tabs>
+                            </div>
+                          )}
+                        </CardHeader>
+                        
+                        {/* Teams List */}
+                        <CardContent className="p-0">
+                          <div className="divide-y divide-border">
+                            {currentEventTeams.map((result) => {
+                              const badge = getPositionBadge(result.rank);
+                              return (
+                                <div 
+                                  key={result.id} 
+                                  className="flex flex-col sm:flex-row sm:items-center justify-between p-4 hover:bg-muted/30 transition-colors gap-3"
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${getPositionCircleStyle(result.rank)}`}>
+                                      {getPositionIcon(result.rank)}
+                                    </div>
+                                    <div>
+                                      <div className="font-semibold text-foreground">
+                                        {result.participant_name}
+                                        {result.partner_name && ` & ${result.partner_name}`}
+                                      </div>
+                                      <div className="text-sm text-muted-foreground">
+                                        {result.school || 'Independent'}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-4 ml-13 sm:ml-0">
+                                    <div className="text-right text-sm">
+                                      <div className="font-medium text-foreground">{result.wins}W - {result.losses}L</div>
+                                      <div className="text-muted-foreground">{result.speaks_avg.toFixed(1)} avg</div>
+                                    </div>
+                                    <Badge className={badge.className}>
+                                      {badge.text}
+                                    </Badge>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
                 </div>
               )}
             </TabsContent>
@@ -600,12 +683,12 @@ const Results = () => {
                           >
                             <div className="flex items-center gap-3">
                               <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
-                                index === 0 ? 'bg-amber-500 text-white' : 
-                                index === 1 ? 'bg-amber-400 text-white' : 
-                                index === 2 ? 'bg-amber-300 text-amber-900' : 
+                                index === 0 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600 text-yellow-950 shadow-md' : 
+                                index === 1 ? 'bg-gradient-to-br from-slate-300 to-slate-500 text-slate-950 shadow-md' : 
+                                index === 2 ? 'bg-gradient-to-br from-amber-400 to-amber-700 text-amber-950 shadow-md' : 
                                 'bg-muted text-muted-foreground'
                               }`}>
-                                {index + 1}
+                                {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : index + 1}
                               </div>
                               <div>
                                 <div className="font-semibold text-foreground">{performer.participant_name}</div>
@@ -653,12 +736,12 @@ const Results = () => {
                           >
                             <div className="flex items-center gap-3">
                               <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
-                                index === 0 ? 'bg-emerald-500 text-white' : 
-                                index === 1 ? 'bg-emerald-400 text-white' : 
-                                index === 2 ? 'bg-emerald-300 text-emerald-900' : 
+                                index === 0 ? 'bg-gradient-to-br from-emerald-400 to-emerald-600 text-emerald-950 shadow-md' : 
+                                index === 1 ? 'bg-gradient-to-br from-emerald-300 to-emerald-500 text-emerald-950 shadow-md' : 
+                                index === 2 ? 'bg-gradient-to-br from-emerald-200 to-emerald-400 text-emerald-900 shadow-md' : 
                                 'bg-muted text-muted-foreground'
                               }`}>
-                                {index + 1}
+                                {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : index + 1}
                               </div>
                               <div>
                                 <div className="font-semibold text-foreground">{performer.participant_name}</div>
@@ -796,15 +879,15 @@ const Results = () => {
 
                       {/* Champions Section */}
                       <div className="grid md:grid-cols-2 gap-4">
-                        {/* Winner Card */}
-                        <div className="p-4 rounded-lg bg-gradient-to-br from-primary/20 via-primary/10 to-transparent border-2 border-primary/30 relative overflow-hidden">
-                          <div className="absolute top-0 right-0 w-24 h-24 bg-primary/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+                        {/* Winner Card - Gold Theme */}
+                        <div className="p-4 rounded-lg bg-gradient-to-br from-yellow-500/20 via-yellow-400/10 to-transparent border-2 border-yellow-500/40 relative overflow-hidden shadow-lg shadow-yellow-500/10">
+                          <div className="absolute top-0 right-0 w-24 h-24 bg-yellow-500/10 rounded-full -translate-y-1/2 translate-x-1/2" />
                           <div className="relative">
                             <div className="flex items-center gap-2 mb-3">
-                              <div className="p-1.5 rounded-full bg-primary/20">
-                                <Crown className="h-5 w-5 text-primary" />
+                              <div className="p-1.5 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 shadow-md">
+                                <Crown className="h-5 w-5 text-yellow-950" />
                               </div>
-                              <span className="font-bold text-primary uppercase text-sm tracking-wide">Champion</span>
+                              <span className="font-bold text-yellow-600 dark:text-yellow-400 uppercase text-sm tracking-wide">🥇 Champion</span>
                             </div>
                             {tournament.winner_name ? (
                               <div>
@@ -819,15 +902,15 @@ const Results = () => {
                           </div>
                         </div>
 
-                        {/* Runner-up Card */}
-                        <div className="p-4 rounded-lg bg-muted/50 border border-border relative overflow-hidden">
-                          <div className="absolute top-0 right-0 w-20 h-20 bg-muted rounded-full -translate-y-1/2 translate-x-1/2" />
+                        {/* Runner-up Card - Silver Theme */}
+                        <div className="p-4 rounded-lg bg-gradient-to-br from-slate-400/20 via-slate-300/10 to-transparent border-2 border-slate-400/40 relative overflow-hidden shadow-lg shadow-slate-400/10">
+                          <div className="absolute top-0 right-0 w-20 h-20 bg-slate-400/10 rounded-full -translate-y-1/2 translate-x-1/2" />
                           <div className="relative">
                             <div className="flex items-center gap-2 mb-3">
-                              <div className="p-1.5 rounded-full bg-muted">
-                                <Medal className="h-5 w-5 text-muted-foreground" />
+                              <div className="p-1.5 rounded-full bg-gradient-to-br from-slate-300 to-slate-500 shadow-md">
+                                <Medal className="h-5 w-5 text-slate-950" />
                               </div>
-                              <span className="font-semibold text-muted-foreground uppercase text-sm tracking-wide">Runner-up</span>
+                              <span className="font-semibold text-slate-500 dark:text-slate-400 uppercase text-sm tracking-wide">🥈 Runner-up</span>
                             </div>
                             {tournament.runner_up_name ? (
                               <div>
