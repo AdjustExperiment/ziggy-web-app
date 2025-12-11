@@ -3687,6 +3687,7 @@ export type Database = {
           end_date: string
           format: string
           id: string
+          is_championship: boolean
           judges_per_room: number | null
           location: string
           max_participants: number
@@ -3726,6 +3727,7 @@ export type Database = {
           end_date: string
           format: string
           id?: string
+          is_championship?: boolean
           judges_per_room?: number | null
           location: string
           max_participants?: number
@@ -3765,6 +3767,7 @@ export type Database = {
           end_date?: string
           format?: string
           id?: string
+          is_championship?: boolean
           judges_per_room?: number | null
           location?: string
           max_participants?: number
