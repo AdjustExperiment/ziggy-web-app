@@ -44,7 +44,7 @@ site_url = "http://127.0.0.1:3000"
 additional_redirect_urls = ["https://127.0.0.1:3000"]
 jwt_expiry = 3600
 enable_signup = true
-enable_email_confirmations = false
+enable_email_confirmations = true
 
 [auth.security]
 otp_expiry = 900
@@ -53,7 +53,7 @@ leaked_password_protection = true
 [auth.email]
 enable_signup = true
 double_confirm_changes = true
-enable_confirmations = false
+enable_confirmations = true
 
 [auth.sms]
 enable_signup = false
@@ -151,6 +151,9 @@ client_id = ""
 secret = ""
 
 [functions.admin-create-user]
+verify_jwt = true
+
+[functions.admin-update-user]
 verify_jwt = true
 
 [functions.send-registration-email]

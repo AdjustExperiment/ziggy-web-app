@@ -29,6 +29,7 @@ export const AuthModal = ({
   const [activeTab, setActiveTab] = useState(defaultTab);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [signUpSuccess, setSignUpSuccess] = useState(false);
   
   const [signInData, setSignInData] = useState({
     email: '',
@@ -67,6 +68,7 @@ export const AuthModal = ({
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setSignUpSuccess(false);
 
     if (signUpData.password !== signUpData.confirmPassword) {
       setError('Passwords do not match');
@@ -91,8 +93,9 @@ export const AuthModal = ({
       if (error) {
         setError(error.message);
       } else {
-        onOpenChange(false);
-        onSuccess?.();
+        // Show confirmation email sent message
+        setSignUpSuccess(true);
+        setSignUpData({ email: '', password: '', confirmPassword: '', firstName: '', lastName: '' });
       }
     } catch (err: any) {
       setError(err.message || 'An unexpected error occurred');
@@ -166,6 +169,27 @@ export const AuthModal = ({
           </TabsContent>
 
           <TabsContent value="signup" className="space-y-4 mt-4">
+            {signUpSuccess ? (
+              <div className="text-center py-6 space-y-4">
+                <div className="w-16 h-16 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
+                  <Mail className="h-8 w-8 text-primary" />
+                </div>
+                <h3 className="text-lg font-semibold">Check your email</h3>
+                <p className="text-muted-foreground text-sm">
+                  We've sent a confirmation link to your email address. Please click the link to verify your account before signing in.
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setSignUpSuccess(false);
+                    setActiveTab('signin');
+                  }}
+                  className="mt-4"
+                >
+                  Back to Sign In
+                </Button>
+              </div>
+            ) : (
             <form onSubmit={handleSignUp} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -244,6 +268,7 @@ export const AuthModal = ({
                 Create Account
               </Button>
             </form>
+            )}
           </TabsContent>
         </Tabs>
       </DialogContent>
