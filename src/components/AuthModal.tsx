@@ -82,6 +82,12 @@ export const AuthModal = ({
       return;
     }
 
+    if (!signUpData.firstName.trim() || !signUpData.lastName.trim()) {
+      setError('First name and last name are required');
+      setLoading(false);
+      return;
+    }
+
     try {
       const { error } = await signUp(signUpData.email, signUpData.password, {
         data: {
@@ -208,13 +214,14 @@ export const AuthModal = ({
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signup-lastname">Last Name</Label>
+                  <Label htmlFor="signup-lastname">Last Name *</Label>
                   <Input
                     id="signup-lastname"
                     type="text"
                     placeholder="Last name"
                     value={signUpData.lastName}
                     onChange={(e) => setSignUpData(prev => ({ ...prev, lastName: e.target.value }))}
+                    required
                   />
                 </div>
               </div>

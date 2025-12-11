@@ -4,8 +4,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/use-toast';
-import { MessageCircle, Users, Clock, MapPin, CheckCircle, XCircle } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { MessageCircle, Users, Clock, MapPin, CheckCircle, XCircle, UserPlus, Loader2, Trash2, Search, Gavel } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 interface PairingWithDetails {
@@ -39,6 +43,24 @@ interface PairingWithDetails {
   }>;
 }
 
+interface JudgeProfile {
+  id: string;
+  name: string;
+  email: string;
+  experience_level: string;
+  specializations: string[];
+  alumni: boolean;
+  user_id: string | null;
+}
+
+interface TournamentJudge {
+  id: string;
+  judge_profile_id: string;
+  status: string;
+  registered_at: string;
+  judge_profile: JudgeProfile;
+}
+
 interface JudgePostingsViewProps {
   tournamentId: string;
 }
@@ -48,11 +70,24 @@ export function JudgePostingsView({ tournamentId }: JudgePostingsViewProps) {
   const [pairings, setPairings] = useState<PairingWithDetails[]>([]);
   const [judgeProfile, setJudgeProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  
+  // Tournament judges roster state
+  const [tournamentJudges, setTournamentJudges] = useState<TournamentJudge[]>([]);
+  const [allJudgeProfiles, setAllJudgeProfiles] = useState<JudgeProfile[]>([]);
+  
+  // Add judge dialog state
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [selectedJudgeId, setSelectedJudgeId] = useState('');
+  const [judgeSearch, setJudgeSearch] = useState('');
+  const [addingJudge, setAddingJudge] = useState(false);
+  const [removingJudgeId, setRemovingJudgeId] = useState<string | null>(null);
 
   useEffect(() => {
     if (tournamentId && user) {
       fetchJudgeProfile();
       fetchPairings();
+      fetchTournamentJudges();
+      fetchAllJudgeProfiles();
     }
   }, [tournamentId, user]);
 
@@ -93,7 +128,6 @@ export function JudgePostingsView({ tournamentId }: JudgePostingsViewProps) {
         .order('created_at');
 
       if (error) throw error;
-      // Add empty judge_volunteer_requests array to each pairing
       const pairingsWithRequests = (data || []).map(pairing => ({
         ...pairing,
         judge_volunteer_requests: [] as Array<{
@@ -116,6 +150,138 @@ export function JudgePostingsView({ tournamentId }: JudgePostingsViewProps) {
     }
   };
 
+  const fetchTournamentJudges = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('tournament_judge_registrations')
+        .select(`
+          id,
+          judge_profile_id,
+          status,
+          registered_at,
+          judge_profile:judge_profiles(id, name, email, experience_level, specializations, alumni, user_id)
+        `)
+        .eq('tournament_id', tournamentId)
+        .order('registered_at', { ascending: false });
+
+      if (error) throw error;
+      
+      // Type assertion to handle the nested structure
+      const typedData = (data || []).map(item => ({
+        ...item,
+        judge_profile: item.judge_profile as unknown as JudgeProfile
+      }));
+      
+      setTournamentJudges(typedData);
+    } catch (error: any) {
+      console.error('Error fetching tournament judges:', error);
+    }
+  };
+
+  const fetchAllJudgeProfiles = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('judge_profiles')
+        .select('id, name, email, experience_level, specializations, alumni, user_id')
+        .eq('status', 'approved')
+        .order('name');
+
+      if (error) throw error;
+      setAllJudgeProfiles(data || []);
+    } catch (error: any) {
+      console.error('Error fetching judge profiles:', error);
+    }
+  };
+
+  // Filter out judges already registered for this tournament
+  const availableJudges = allJudgeProfiles.filter(
+    jp => !tournamentJudges.some(tj => tj.judge_profile_id === jp.id)
+  );
+
+  const filteredAvailableJudges = availableJudges.filter(jp => {
+    const searchLower = judgeSearch.toLowerCase();
+    return (
+      jp.name.toLowerCase().includes(searchLower) ||
+      jp.email.toLowerCase().includes(searchLower)
+    );
+  });
+
+  const handleAddJudge = async () => {
+    if (!selectedJudgeId) {
+      toast({
+        title: "Validation Error",
+        description: "Please select a judge",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const selectedJudge = allJudgeProfiles.find(jp => jp.id === selectedJudgeId);
+    if (!selectedJudge) return;
+
+    setAddingJudge(true);
+    try {
+      const { error } = await supabase
+        .from('tournament_judge_registrations')
+        .insert({
+          tournament_id: tournamentId,
+          judge_profile_id: selectedJudgeId,
+          user_id: selectedJudge.user_id || user?.id,
+          status: 'confirmed'
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `${selectedJudge.name} added to tournament judge roster`,
+      });
+
+      setSelectedJudgeId('');
+      setAddDialogOpen(false);
+      fetchTournamentJudges();
+    } catch (error: any) {
+      console.error('Error adding judge:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add judge",
+        variant: "destructive",
+      });
+    } finally {
+      setAddingJudge(false);
+    }
+  };
+
+  const handleRemoveJudge = async (registrationId: string, judgeName: string) => {
+    if (!confirm(`Remove ${judgeName} from this tournament's judge roster?`)) return;
+
+    setRemovingJudgeId(registrationId);
+    try {
+      const { error } = await supabase
+        .from('tournament_judge_registrations')
+        .delete()
+        .eq('id', registrationId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `${judgeName} removed from judge roster`,
+      });
+
+      fetchTournamentJudges();
+    } catch (error: any) {
+      console.error('Error removing judge:', error);
+      toast({
+        title: "Error",
+        description: "Failed to remove judge",
+        variant: "destructive",
+      });
+    } finally {
+      setRemovingJudgeId(null);
+    }
+  };
+
   const volunteerToJudge = async (pairingId: string, note?: string) => {
     if (!judgeProfile) {
       toast({
@@ -127,20 +293,6 @@ export function JudgePostingsView({ tournamentId }: JudgePostingsViewProps) {
     }
 
     try {
-    // Temporarily disable until types are updated
-    /*
-    const { error } = await supabase
-        .from('judge_volunteer_requests')
-        .insert({
-          pairing_id: pairingId,
-          judge_profile_id: judgeProfile.id,
-          status: 'pending',
-          note: note || null
-        });
-
-      if (error) throw error;
-      */
-
       toast({
         title: "Success",
         description: "Volunteer request submitted successfully (demo mode)",
@@ -158,7 +310,6 @@ export function JudgePostingsView({ tournamentId }: JudgePostingsViewProps) {
   };
 
   const openPairingChat = (pairingId: string) => {
-    // Navigate to pairing detail page with chat
     window.open(`/pairing/${pairingId}`, '_blank');
   };
 
@@ -172,6 +323,149 @@ export function JudgePostingsView({ tournamentId }: JudgePostingsViewProps) {
 
   return (
     <div className="space-y-6">
+      {/* Tournament Judge Roster */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Gavel className="h-5 w-5" />
+                Tournament Judge Roster
+              </CardTitle>
+              <CardDescription>
+                Judges registered for this tournament who are eligible for assignments
+              </CardDescription>
+            </div>
+            <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Add Judge
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Add Judge to Tournament</DialogTitle>
+                  <DialogDescription>
+                    Select an approved judge profile to add to this tournament's roster
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 mt-4">
+                  <div className="space-y-2">
+                    <Label>Search Judges</Label>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search by name or email..."
+                        value={judgeSearch}
+                        onChange={(e) => setJudgeSearch(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Select Judge</Label>
+                    <Select value={selectedJudgeId} onValueChange={setSelectedJudgeId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a judge..." />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-60">
+                        {filteredAvailableJudges.length === 0 ? (
+                          <div className="p-2 text-sm text-muted-foreground text-center">
+                            No available judges found
+                          </div>
+                        ) : (
+                          filteredAvailableJudges.slice(0, 50).map(jp => (
+                            <SelectItem key={jp.id} value={jp.id}>
+                              <div className="flex items-center gap-2">
+                                {jp.alumni && <span className="text-amber-600 font-medium">[A]</span>}
+                                {jp.name} - {jp.experience_level}
+                              </div>
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                    {selectedJudgeId && (
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {allJudgeProfiles.find(jp => jp.id === selectedJudgeId)?.email}
+                      </div>
+                    )}
+                  </div>
+
+                  <Button 
+                    onClick={handleAddJudge} 
+                    className="w-full" 
+                    disabled={addingJudge || !selectedJudgeId}
+                  >
+                    {addingJudge && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                    Add to Tournament
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {tournamentJudges.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              No judges registered for this tournament yet
+            </div>
+          ) : (
+            <div className="grid gap-2">
+              {tournamentJudges.map(tj => (
+                <div 
+                  key={tj.id} 
+                  className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
+                >
+                  <div className="flex items-center gap-3">
+                    <div>
+                      <div className="font-medium flex items-center gap-2">
+                        {tj.judge_profile.alumni && (
+                          <span className="text-amber-600 font-medium">[A]</span>
+                        )}
+                        {tj.judge_profile.name}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {tj.judge_profile.email} • {tj.judge_profile.experience_level}
+                      </div>
+                      {tj.judge_profile.specializations?.length > 0 && (
+                        <div className="flex gap-1 mt-1">
+                          {tj.judge_profile.specializations.map(s => (
+                            <Badge key={s} variant="outline" className="text-xs">
+                              {s}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={tj.status === 'confirmed' ? 'default' : 'secondary'}>
+                      {tj.status}
+                    </Badge>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleRemoveJudge(tj.id, tj.judge_profile.name)}
+                      disabled={removingJudgeId === tj.id}
+                    >
+                      {removingJudgeId === tj.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Pairings View */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

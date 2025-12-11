@@ -32,6 +32,8 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
 
   useEffect(() => {
     const typeParam = searchParams.get("type");
@@ -64,16 +66,32 @@ const Login = () => {
 
     try {
       if (isSignUp) {
+        if (!firstName.trim() || !lastName.trim()) {
+          toast({
+            title: 'Error',
+            description: 'First name and last name are required',
+            variant: 'destructive',
+          });
+          setFormLoading(false);
+          return;
+        }
+        
         if (password !== confirmPassword) {
           toast({
             title: 'Error',
             description: 'Passwords do not match',
             variant: 'destructive',
           });
+          setFormLoading(false);
           return;
         }
         
-        const { error } = await signUp(email, password);
+        const { error } = await signUp(email, password, {
+          data: {
+            first_name: firstName.trim(),
+            last_name: lastName.trim()
+          }
+        });
         
         if (error) {
           toast({
@@ -90,6 +108,8 @@ const Login = () => {
           // Reset form
           setEmail('');
           setPassword('');
+          setFirstName('');
+          setLastName('');
           setConfirmPassword('');
         }
       } else {
@@ -248,6 +268,36 @@ const Login = () => {
                               </p>
                             </div>
                           )}
+                          
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="user-firstname" className="text-foreground">First Name *</Label>
+                              <div className="relative">
+                                <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                <Input
+                                  id="user-firstname"
+                                  type="text"
+                                  placeholder="First name"
+                                  className="pl-10 bg-background border-border text-foreground placeholder:text-muted-foreground"
+                                  value={firstName}
+                                  onChange={(e) => setFirstName(e.target.value)}
+                                  required
+                                />
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="user-lastname" className="text-foreground">Last Name *</Label>
+                              <Input
+                                id="user-lastname"
+                                type="text"
+                                placeholder="Last name"
+                                className="bg-background border-border text-foreground placeholder:text-muted-foreground"
+                                value={lastName}
+                                onChange={(e) => setLastName(e.target.value)}
+                                required
+                              />
+                            </div>
+                          </div>
                         </>
                       )}
                       
@@ -353,11 +403,43 @@ const Login = () => {
                     </div>
                     <form onSubmit={handleSubmit} className="space-y-4">
                       {isSignUp && (
-                        <div className="text-center mb-4">
-                          <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20">
-                            Creating ZIP Account
-                          </Badge>
-                        </div>
+                        <>
+                          <div className="text-center mb-4">
+                            <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20">
+                              Creating ZIP Account
+                            </Badge>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="team-firstname" className="text-foreground">First Name *</Label>
+                              <div className="relative">
+                                <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                <Input
+                                  id="team-firstname"
+                                  type="text"
+                                  placeholder="First name"
+                                  className="pl-10 bg-background border-border text-foreground placeholder:text-muted-foreground"
+                                  value={firstName}
+                                  onChange={(e) => setFirstName(e.target.value)}
+                                  required
+                                />
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="team-lastname" className="text-foreground">Last Name *</Label>
+                              <Input
+                                id="team-lastname"
+                                type="text"
+                                placeholder="Last name"
+                                className="bg-background border-border text-foreground placeholder:text-muted-foreground"
+                                value={lastName}
+                                onChange={(e) => setLastName(e.target.value)}
+                                required
+                              />
+                            </div>
+                          </div>
+                        </>
                       )}
                       
                       <div className="space-y-2">
@@ -393,7 +475,7 @@ const Login = () => {
                             type="button"
                             variant="ghost"
                             size="sm"
-                            className="absolute right-2 top-1/2 -translate-y-1/2 text-white/70 hover:text-white"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                             onClick={() => setShowPassword(!showPassword)}
                           >
                             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -403,14 +485,14 @@ const Login = () => {
                       
                       {isSignUp && (
                         <div className="space-y-2">
-                          <Label htmlFor="team-confirm-password" className="text-white">Confirm Password</Label>
+                          <Label htmlFor="team-confirm-password" className="text-foreground">Confirm Password</Label>
                           <div className="relative">
-                            <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/70" />
+                            <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                             <Input
                               id="team-confirm-password"
                               type={showPassword ? "text" : "password"}
                               placeholder="Confirm your password"
-                              className="pl-10 bg-black border-white/20 text-white placeholder:text-white/70"
+                              className="pl-10 bg-background border-border text-foreground placeholder:text-muted-foreground"
                               value={confirmPassword}
                               onChange={(e) => setConfirmPassword(e.target.value)}
                               required
