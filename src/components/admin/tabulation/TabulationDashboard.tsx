@@ -6,6 +6,8 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { AlertTriangle, Info } from 'lucide-react';
+import { LegacyExporter } from './LegacyExporter';
+import { LegacyPairingUploader } from './LegacyPairingUploader';
 import { CompetitorDirectory } from './CompetitorDirectory';
 import { ParticipationManager } from './ParticipationManager';
 import { TabulationRulesManager } from './TabulationRulesManager';
@@ -197,18 +199,33 @@ export default function TabulationDashboard({ tournamentId }: TabulationDashboar
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-3xl font-bold mb-2">Tabulation Dashboard</h1>
           <p className="text-muted-foreground">
             Manage tournament draw, results, and standings.
           </p>
         </div>
-        {tournament && (
-          <Badge variant={isPlanningPhase ? 'secondary' : 'default'}>
-            {tournament.status}
-          </Badge>
-        )}
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Legacy Import/Export */}
+          <LegacyPairingUploader
+            tournamentId={tournamentId}
+            eventId={selectedEventId}
+            existingRounds={filteredRounds}
+            registrations={filteredRegistrations}
+            onImportComplete={handleRoundsUpdate}
+          />
+          <LegacyExporter
+            tournamentId={tournamentId}
+            tournamentName={tournament?.name}
+            eventId={selectedEventId}
+          />
+          {tournament && (
+            <Badge variant={isPlanningPhase ? 'secondary' : 'default'}>
+              {tournament.status}
+            </Badge>
+          )}
+        </div>
       </div>
 
       {/* Event/Format Selector (for multi-format tournaments) */}
