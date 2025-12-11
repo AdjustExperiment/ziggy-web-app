@@ -6,113 +6,56 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trophy, Medal, Award, Calendar, Users, Search, Filter, Crown, Star } from "lucide-react";
+import { Trophy, Medal, Award, Calendar, Users, Search, Crown, Star, MapPin } from "lucide-react";
 
-const recentResults = [
-  {
-    tournament: "National Debate Championship 2024",
-    position: 1,
-    format: "Policy Debate",
-    date: "March 17, 2024",
-    participants: 128,
-    points: 1000,
-    prize: "$15,000"
-  },
-  {
-    tournament: "Regional Parliamentary Tournament", 
-    position: 3,
-    format: "Parliamentary",
-    date: "April 9, 2024",
-    participants: 64,
-    points: 750,
-    prize: "$5,000"
-  },
-  {
-    tournament: "High School Invitational",
-    position: 2,
-    format: "Public Forum", 
-    date: "May 4, 2024",
-    participants: 96,
-    points: 850,
-    prize: "$8,000"
-  }
-];
+interface TournamentResult {
+  id: string;
+  tournament_name: string;
+  tournament_id: string;
+  format: string;
+  start_date: string;
+  participant_name: string;
+  partner_name: string | null;
+  school: string | null;
+  rank: number;
+  wins: number;
+  losses: number;
+  speaks_total: number;
+  speaks_avg: number;
+}
 
-const topPerformers = [
-  {
-    rank: 1,
-    name: "Sarah Chen",
-    school: "Harvard University",
-    points: 2450,
-    tournaments: 8,
-    winRate: 92
-  },
-  {
-    rank: 2,
-    name: "Michael Rodriguez",
-    school: "Stanford University", 
-    points: 2380,
-    tournaments: 7,
-    winRate: 89
-  },
-  {
-    rank: 3,
-    name: "Emma Thompson",
-    school: "Yale University",
-    points: 2320,
-    tournaments: 9,
-    winRate: 87
-  },
-  {
-    rank: 4,
-    name: "David Kim",
-    school: "MIT",
-    points: 2290,
-    tournaments: 6,
-    winRate: 91
-  },
-  {
-    rank: 5,
-    name: "Jessica Wang",
-    school: "Princeton University",
-    points: 2250,
-    tournaments: 8,
-    winRate: 85
-  }
-];
+interface TopPerformer {
+  participant_name: string;
+  school: string | null;
+  total_wins: number;
+  total_losses: number;
+  total_speaks: number;
+  tournaments_count: number;
+  win_rate: number;
+}
 
-const tournamentHistory = [
-  {
-    name: "World Universities Debating Championship",
-    winner: "Oxford A Team",
-    runnerUp: "Cambridge A Team",
-    date: "December 2023",
-    location: "Bangkok, Thailand",
-    participants: 400
-  },
-  {
-    name: "North American Championships",
-    winner: "Harvard Crimson",
-    runnerUp: "Yale Bulldogs", 
-    date: "November 2023",
-    location: "Toronto, Canada",
-    participants: 200
-  },
-  {
-    name: "European Debate League Final",
-    winner: "LSE Lions",
-    runnerUp: "Edinburgh Eagles",
-    date: "October 2023", 
-    location: "London, UK",
-    participants: 150
-  }
-];
+interface Championship {
+  id: string;
+  name: string;
+  format: string;
+  start_date: string;
+  end_date: string;
+  location: string | null;
+  winner_name: string | null;
+  winner_school: string | null;
+  runner_up_name: string | null;
+  runner_up_school: string | null;
+  participant_count: number;
+}
 
 const Results = () => {
-  const [recentResults, setRecentResults] = useState<any[]>([]);
-  const [topPerformers, setTopPerformers] = useState<any[]>([]);
-  const [championships, setChampionships] = useState<any[]>([]);
+  const [recentResults, setRecentResults] = useState<TournamentResult[]>([]);
+  const [topPerformers, setTopPerformers] = useState<TopPerformer[]>([]);
+  const [championships, setChampionships] = useState<Championship[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [formatFilter, setFormatFilter] = useState('all');
+  const [formats, setFormats] = useState<string[]>([]);
 
   useEffect(() => {
     fetchAllResults();
@@ -120,21 +63,202 @@ const Results = () => {
 
   const fetchAllResults = async () => {
     try {
-      const [recentRes, performersRes, champRes] = await Promise.all([
-        supabase.from('results_recent').select('*').order('date', { ascending: false }).limit(10),
-        supabase.from('top_performers').select('*').order('rank').limit(10),
-        supabase.from('championships').select('*').order('date', { ascending: false }).limit(10)
-      ]);
+      // Fetch recent tournament results from tournament_standings
+      const { data: standingsData, error: standingsError } = await supabase
+        .from('tournament_standings')
+        .select(`
+          id,
+          rank,
+          wins,
+          losses,
+          speaks_total,
+          speaks_avg,
+          registration:tournament_registrations(
+            participant_name,
+            partner_name,
+            school_organization
+          ),
+          tournament:tournaments(
+            id,
+            name,
+            format,
+            start_date
+          )
+        `)
+        .order('rank')
+        .limit(100);
 
-      if (recentRes.data) setRecentResults(recentRes.data);
-      if (performersRes.data) setTopPerformers(performersRes.data);
-      if (champRes.data) setChampionships(champRes.data);
+      if (standingsError) {
+        console.error('Error fetching standings:', standingsError);
+      } else if (standingsData) {
+        const formattedResults: TournamentResult[] = standingsData
+          .filter(s => s.tournament && s.registration)
+          .map(s => ({
+            id: s.id,
+            tournament_name: (s.tournament as any)?.name || 'Unknown Tournament',
+            tournament_id: (s.tournament as any)?.id || '',
+            format: (s.tournament as any)?.format || 'Unknown',
+            start_date: (s.tournament as any)?.start_date || '',
+            participant_name: (s.registration as any)?.participant_name || 'Unknown',
+            partner_name: (s.registration as any)?.partner_name,
+            school: (s.registration as any)?.school_organization,
+            rank: s.rank,
+            wins: s.wins,
+            losses: s.losses,
+            speaks_total: s.speaks_total || 0,
+            speaks_avg: s.speaks_avg || 0,
+          }));
+        
+        setRecentResults(formattedResults);
+        
+        // Extract unique formats
+        const uniqueFormats = [...new Set(formattedResults.map(r => r.format).filter(Boolean))];
+        setFormats(uniqueFormats);
+
+        // Calculate top performers by aggregating standings
+        const performerMap = new Map<string, TopPerformer>();
+        formattedResults.forEach(result => {
+          const key = result.participant_name;
+          const existing = performerMap.get(key);
+          if (existing) {
+            existing.total_wins += result.wins;
+            existing.total_losses += result.losses;
+            existing.total_speaks += result.speaks_total;
+            existing.tournaments_count += 1;
+          } else {
+            performerMap.set(key, {
+              participant_name: result.participant_name,
+              school: result.school,
+              total_wins: result.wins,
+              total_losses: result.losses,
+              total_speaks: result.speaks_total,
+              tournaments_count: 1,
+              win_rate: 0,
+            });
+          }
+        });
+
+        // Calculate win rates and sort
+        const performers = Array.from(performerMap.values())
+          .map(p => ({
+            ...p,
+            win_rate: p.total_wins + p.total_losses > 0 
+              ? Math.round((p.total_wins / (p.total_wins + p.total_losses)) * 100) 
+              : 0
+          }))
+          .sort((a, b) => {
+            // Sort by wins first, then by win rate
+            if (b.total_wins !== a.total_wins) return b.total_wins - a.total_wins;
+            return b.win_rate - a.win_rate;
+          })
+          .slice(0, 10);
+
+        setTopPerformers(performers);
+      }
+
+      // Fetch completed tournaments for championships
+      const { data: tournamentsData, error: tournamentsError } = await supabase
+        .from('tournaments')
+        .select(`
+          id,
+          name,
+          format,
+          start_date,
+          end_date,
+          location
+        `)
+        .eq('status', 'Completed')
+        .order('end_date', { ascending: false })
+        .limit(20);
+
+      if (tournamentsError) {
+        console.error('Error fetching tournaments:', tournamentsError);
+      } else if (tournamentsData && tournamentsData.length > 0) {
+        // For each completed tournament, fetch winner and runner-up
+        const championshipResults: Championship[] = await Promise.all(
+          tournamentsData.map(async (tournament) => {
+            // Get top 2 standings for this tournament
+            const { data: topStandings } = await supabase
+              .from('tournament_standings')
+              .select(`
+                rank,
+                registration:tournament_registrations(
+                  participant_name,
+                  partner_name,
+                  school_organization
+                )
+              `)
+              .eq('tournament_id', tournament.id)
+              .lte('rank', 2)
+              .order('rank');
+
+            // Get participant count
+            const { count } = await supabase
+              .from('tournament_registrations')
+              .select('*', { count: 'exact', head: true })
+              .eq('tournament_id', tournament.id);
+
+            const winner = topStandings?.find(s => s.rank === 1);
+            const runnerUp = topStandings?.find(s => s.rank === 2);
+
+            return {
+              id: tournament.id,
+              name: tournament.name,
+              format: tournament.format || 'Unknown',
+              start_date: tournament.start_date,
+              end_date: tournament.end_date,
+              location: tournament.location,
+              winner_name: winner ? formatTeamName(winner.registration as any) : null,
+              winner_school: (winner?.registration as any)?.school_organization || null,
+              runner_up_name: runnerUp ? formatTeamName(runnerUp.registration as any) : null,
+              runner_up_school: (runnerUp?.registration as any)?.school_organization || null,
+              participant_count: count || 0,
+            };
+          })
+        );
+
+        setChampionships(championshipResults);
+      }
     } catch (error) {
       console.error('Error fetching results:', error);
     } finally {
       setLoading(false);
     }
   };
+
+  const formatTeamName = (registration: { participant_name: string; partner_name?: string } | null) => {
+    if (!registration) return null;
+    if (registration.partner_name) {
+      return `${registration.participant_name} & ${registration.partner_name}`;
+    }
+    return registration.participant_name;
+  };
+
+  const getPositionIcon = (rank: number) => {
+    if (rank === 1) return <Crown className="h-6 w-6 text-primary" />;
+    if (rank === 2) return <Medal className="h-6 w-6 text-primary/80" />;
+    if (rank === 3) return <Award className="h-6 w-6 text-primary/60" />;
+    return <Trophy className="h-6 w-6 text-muted-foreground" />;
+  };
+
+  const getPositionBadge = (rank: number) => {
+    if (rank === 1) return { text: '1st Place', variant: 'default' as const, className: 'bg-primary text-primary-foreground' };
+    if (rank === 2) return { text: '2nd Place', variant: 'secondary' as const, className: 'bg-primary/80 text-primary-foreground' };
+    if (rank === 3) return { text: '3rd Place', variant: 'secondary' as const, className: 'bg-primary/60 text-primary-foreground' };
+    return { text: `${rank}th Place`, variant: 'outline' as const, className: 'border-border text-muted-foreground' };
+  };
+
+  // Filter results based on search and format
+  const filteredResults = recentResults.filter(result => {
+    const matchesSearch = searchQuery === '' || 
+      result.tournament_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      result.participant_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (result.school?.toLowerCase().includes(searchQuery.toLowerCase()));
+    
+    const matchesFormat = formatFilter === 'all' || result.format === formatFilter;
+    
+    return matchesSearch && matchesFormat;
+  });
 
   if (loading) {
     return (
@@ -147,13 +271,13 @@ const Results = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <section className="bg-black py-16">
+      <section className="bg-card py-16 border-b border-border">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h1 className="text-4xl font-bold text-white mb-4 font-primary">
+            <h1 className="text-4xl font-bold text-foreground mb-4 font-primary">
               Tournament Results
             </h1>
-            <p className="text-xl text-white/70 max-w-3xl mx-auto">
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
               Comprehensive results from debate tournaments worldwide. Track winners, 
               rankings, and championship outcomes.
             </p>
@@ -162,38 +286,29 @@ const Results = () => {
       </section>
 
       {/* Filters */}
-      <section className="py-8 bg-black/95 border-b border-white/10">
+      <section className="py-8 bg-card/50 border-b border-border">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row gap-4 items-center">
             <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/70" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Search results..."
-                className="pl-10 bg-black border-white/20 text-white placeholder:text-white/70"
+                className="pl-10"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
             
             <div className="flex gap-4">
-              <Select>
-                <SelectTrigger className="w-40 bg-black border-white/20 text-white">
+              <Select value={formatFilter} onValueChange={setFormatFilter}>
+                <SelectTrigger className="w-40">
                   <SelectValue placeholder="Format" />
                 </SelectTrigger>
-                <SelectContent className="bg-black border-white/20">
-                  <SelectItem value="all" className="text-white hover:bg-white/10">All Formats</SelectItem>
-                  <SelectItem value="policy" className="text-white hover:bg-white/10">Policy Debate</SelectItem>
-                  <SelectItem value="parliamentary" className="text-white hover:bg-white/10">Parliamentary</SelectItem>
-                  <SelectItem value="public-forum" className="text-white hover:bg-white/10">Public Forum</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select>
-                <SelectTrigger className="w-40 bg-black border-white/20 text-white">
-                  <SelectValue placeholder="Year" />
-                </SelectTrigger>
-                <SelectContent className="bg-black border-white/20">
-                  <SelectItem value="2024" className="text-white hover:bg-white/10">2024</SelectItem>
-                  <SelectItem value="2023" className="text-white hover:bg-white/10">2023</SelectItem>
-                  <SelectItem value="2022" className="text-white hover:bg-white/10">2022</SelectItem>
+                <SelectContent>
+                  <SelectItem value="all">All Formats</SelectItem>
+                  {formats.map(format => (
+                    <SelectItem key={format} value={format}>{format}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -202,133 +317,146 @@ const Results = () => {
       </section>
 
       {/* Results Tabs */}
-      <section className="py-12 bg-black">
+      <section className="py-12">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <Tabs defaultValue="recent" className="space-y-8">
-            <TabsList className="bg-black border border-white/10">
-              <TabsTrigger value="recent" className="data-[state=active]:bg-red-500 data-[state=active]:text-white text-white/70">
+            <TabsList className="bg-muted">
+              <TabsTrigger value="recent" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                 Recent Results
               </TabsTrigger>
-              <TabsTrigger value="rankings" className="data-[state=active]:bg-red-500 data-[state=active]:text-white text-white/70">
+              <TabsTrigger value="rankings" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                 Rankings
               </TabsTrigger>
-              <TabsTrigger value="championships" className="data-[state=active]:bg-red-500 data-[state=active]:text-white text-white/70">
+              <TabsTrigger value="championships" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                 Championships
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="recent" className="space-y-6">
-              <div className="grid gap-6">
-                {recentResults.length === 0 ? (
-                  <Card className="bg-black border-white/10">
+              <div className="grid gap-4">
+                {filteredResults.length === 0 ? (
+                  <Card>
                     <CardContent className="text-center py-12">
                       <Trophy className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                      <h3 className="text-xl font-semibold text-white mb-2">No Results Yet</h3>
-                      <p className="text-white/70 mb-6">Tournament results will appear here once competitions conclude.</p>
-                      <Button variant="outline" className="border-white/20 text-white hover:bg-white/10" asChild>
+                      <h3 className="text-xl font-semibold text-foreground mb-2">No Results Yet</h3>
+                      <p className="text-muted-foreground mb-6">
+                        {searchQuery || formatFilter !== 'all' 
+                          ? 'No results match your search criteria.'
+                          : 'Tournament results will appear here once competitions conclude.'}
+                      </p>
+                      <Button variant="outline" asChild>
                         <a href="/tournaments">Browse Upcoming Tournaments</a>
                       </Button>
                     </CardContent>
                   </Card>
                 ) : (
-                  recentResults.map((result, index) => (
-                  <Card key={index} className="bg-black border-white/10 hover:border-red-500/30 transition-smooth">
-                    <CardContent className="pt-6">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-500/10 border border-red-500/20">
-                            {result.position?.toLowerCase() === 'win' || result.position === 1 ? (
-                              <Crown className="h-6 w-6 text-red-500" />
-                            ) : result.position === 2 ? (
-                              <Medal className="h-6 w-6 text-red-500" />
-                            ) : (
-                              <Award className="h-6 w-6 text-red-500" />
-                            )}
-                          </div>
-                          
-                          <div>
-                            <h3 className="text-lg font-bold text-white">{result.tournament}</h3>
-                            <div className="flex items-center gap-4 text-sm text-white/70">
-                              <span>{result.format}</span>
-                              <span>•</span>
-                              <span>{new Date(result.date).toLocaleDateString()}</span>
-                              <span>•</span>
-                              <span>{result.participants} participants</span>
+                  filteredResults.map((result) => {
+                    const badge = getPositionBadge(result.rank);
+                    return (
+                      <Card key={result.id} className="hover:border-primary/30 transition-all">
+                        <CardContent className="pt-6">
+                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div className="flex items-center gap-4">
+                              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 border border-primary/20">
+                                {getPositionIcon(result.rank)}
+                              </div>
+                              
+                              <div>
+                                <h3 className="text-lg font-bold text-foreground">
+                                  {result.participant_name}
+                                  {result.partner_name && ` & ${result.partner_name}`}
+                                </h3>
+                                <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                                  <span className="font-medium">{result.tournament_name}</span>
+                                  <span>•</span>
+                                  <span>{result.format}</span>
+                                  <span>•</span>
+                                  <span>{new Date(result.start_date).toLocaleDateString()}</span>
+                                  {result.school && (
+                                    <>
+                                      <span>•</span>
+                                      <span>{result.school}</span>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="flex items-center gap-4">
+                              <div className="text-right">
+                                <div className="text-sm font-medium text-foreground">
+                                  {result.wins}W - {result.losses}L
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {result.speaks_avg.toFixed(1)} avg speaks
+                                </div>
+                              </div>
+                              <Badge className={badge.className}>
+                                {badge.text}
+                              </Badge>
                             </div>
                           </div>
-                        </div>
-                        
-                        <div className="text-right">
-                          <Badge 
-                            variant={result.position?.toLowerCase() === 'win' || result.position === 1 ? 'default' : 'secondary'}
-                            className={result.position?.toLowerCase() === 'win' || result.position === 1 ? 'bg-red-500 text-white' : 'bg-white/10 text-white/70'}
-                          >
-                            {result.position?.toLowerCase() === 'win' ? 'Win' : 
-                             result.position === 1 ? '1st Place' : 
-                             result.position === 2 ? '2nd Place' : 
-                             `${result.position} Place`}
-                          </Badge>
-                          <div className="text-sm text-white/70 mt-1">
-                            {result.points} points {result.prize && `• ${result.prize}`}
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  ))
+                        </CardContent>
+                      </Card>
+                    );
+                  })
                 )}
               </div>
             </TabsContent>
 
             <TabsContent value="rankings" className="space-y-6">
-              <Card className="bg-black border-white/10">
+              <Card>
                 <CardHeader>
-                  <CardTitle className="text-white font-primary flex items-center gap-2">
-                    <Star className="h-5 w-5 text-red-500" />
-                    Top Performers - Current Season
+                  <CardTitle className="flex items-center gap-2">
+                    <Star className="h-5 w-5 text-primary" />
+                    Top Performers - All Time
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   {topPerformers.length === 0 ? (
                     <div className="text-center py-12">
                       <Star className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                      <h3 className="text-lg font-semibold text-white mb-2">Rankings Coming Soon</h3>
-                      <p className="text-white/70">Top performers will be listed once tournament data is available.</p>
+                      <h3 className="text-lg font-semibold text-foreground mb-2">Rankings Coming Soon</h3>
+                      <p className="text-muted-foreground">Top performers will be listed once tournament data is available.</p>
                     </div>
                   ) : (
-                    <div className="space-y-4">
-                      {topPerformers.map((performer) => (
-                      <div key={performer.rank} className="flex items-center justify-between p-4 rounded-lg bg-black/50 border border-white/5 hover:border-red-500/20 transition-smooth">
-                        <div className="flex items-center gap-4">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
-                            performer.rank === 1 ? 'bg-red-500 text-white' : 
-                            performer.rank === 2 ? 'bg-red-400 text-white' : 
-                            performer.rank === 3 ? 'bg-red-300 text-black' : 'bg-white/10 text-white'
-                          }`}>
-                            {performer.rank}
+                    <div className="space-y-3">
+                      {topPerformers.map((performer, index) => (
+                        <div 
+                          key={performer.participant_name} 
+                          className="flex items-center justify-between p-4 rounded-lg bg-muted/50 border border-border hover:border-primary/20 transition-all"
+                        >
+                          <div className="flex items-center gap-4">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
+                              index === 0 ? 'bg-primary text-primary-foreground' : 
+                              index === 1 ? 'bg-primary/80 text-primary-foreground' : 
+                              index === 2 ? 'bg-primary/60 text-primary-foreground' : 
+                              'bg-muted text-muted-foreground'
+                            }`}>
+                              {index + 1}
+                            </div>
+                            
+                            <div>
+                              <div className="font-bold text-foreground">{performer.participant_name}</div>
+                              <div className="text-sm text-muted-foreground">{performer.school || 'Independent'}</div>
+                            </div>
                           </div>
                           
-                          <div>
-                            <div className="font-bold text-white">{performer.name}</div>
-                            <div className="text-sm text-white/70">{performer.school}</div>
+                          <div className="flex items-center gap-6 text-sm">
+                            <div className="text-center">
+                              <div className="font-bold text-foreground">{performer.total_wins}</div>
+                              <div className="text-muted-foreground">Wins</div>
+                            </div>
+                            <div className="text-center">
+                              <div className="font-bold text-foreground">{performer.tournaments_count}</div>
+                              <div className="text-muted-foreground">Tournaments</div>
+                            </div>
+                            <div className="text-center">
+                              <div className="font-bold text-primary">{performer.win_rate}%</div>
+                              <div className="text-muted-foreground">Win Rate</div>
+                            </div>
                           </div>
                         </div>
-                        
-                        <div className="flex items-center gap-8 text-sm">
-                          <div className="text-center">
-                            <div className="font-bold text-white">{performer.points}</div>
-                            <div className="text-white/70">Points</div>
-                          </div>
-                          <div className="text-center">
-                            <div className="font-bold text-white">{performer.tournaments}</div>
-                            <div className="text-white/70">Tournaments</div>
-                          </div>
-                          <div className="text-center">
-                            <div className="font-bold text-red-500">{performer.winRate}%</div>
-                            <div className="text-white/70">Win Rate</div>
-                          </div>
-                        </div>
-                      </div>
                       ))}
                     </div>
                   )}
@@ -339,56 +467,82 @@ const Results = () => {
             <TabsContent value="championships" className="space-y-6">
               <div className="grid gap-6">
                 {championships.length === 0 ? (
-                  <Card className="bg-black border-white/10">
+                  <Card>
                     <CardContent className="text-center py-12">
                       <Trophy className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                      <h3 className="text-xl font-semibold text-white mb-2">Championship History Coming Soon</h3>
-                      <p className="text-white/70">Past championship results will be displayed here.</p>
+                      <h3 className="text-xl font-semibold text-foreground mb-2">No Completed Tournaments</h3>
+                      <p className="text-muted-foreground">Championship results will appear here once tournaments are completed.</p>
                     </CardContent>
                   </Card>
                 ) : (
-                  championships.map((tournament, index) => (
-                    <Card key={index} className="bg-black border-white/10 hover:border-red-500/30 transition-smooth">
+                  championships.map((tournament) => (
+                    <Card key={tournament.id} className="hover:border-primary/30 transition-all">
                       <CardHeader>
                         <div className="flex items-center justify-between">
-                          <CardTitle className="text-white font-primary">{tournament.name}</CardTitle>
-                          <Badge className="bg-red-500 text-white">Championship</Badge>
+                          <CardTitle>{tournament.name}</CardTitle>
+                          <Badge className="bg-primary text-primary-foreground">Championship</Badge>
                         </div>
                       </CardHeader>
                       <CardContent>
                         <div className="grid md:grid-cols-2 gap-6">
-                          <div>
-                            <div className="space-y-3">
+                          <div className="space-y-3">
+                            {tournament.winner_name ? (
                               <div className="flex items-center gap-3">
-                                <Crown className="h-5 w-5 text-red-500" />
+                                <Crown className="h-5 w-5 text-primary" />
                                 <div>
-                                  <div className="font-bold text-white">Winner</div>
-                                  <div className="text-white/70">{tournament.winner}</div>
+                                  <div className="font-bold text-foreground">Winner</div>
+                                  <div className="text-muted-foreground">
+                                    {tournament.winner_name}
+                                    {tournament.winner_school && ` (${tournament.winner_school})`}
+                                  </div>
                                 </div>
                               </div>
-                              
+                            ) : (
                               <div className="flex items-center gap-3">
-                                <Medal className="h-5 w-5 text-red-400" />
+                                <Crown className="h-5 w-5 text-muted-foreground" />
                                 <div>
-                                  <div className="font-bold text-white">Runner-up</div>
-                                  <div className="text-white/70">{tournament.runner_up}</div>
+                                  <div className="font-bold text-foreground">Winner</div>
+                                  <div className="text-muted-foreground">Results pending</div>
                                 </div>
                               </div>
-                            </div>
+                            )}
+                            
+                            {tournament.runner_up_name && (
+                              <div className="flex items-center gap-3">
+                                <Medal className="h-5 w-5 text-primary/80" />
+                                <div>
+                                  <div className="font-bold text-foreground">Runner-up</div>
+                                  <div className="text-muted-foreground">
+                                    {tournament.runner_up_name}
+                                    {tournament.runner_up_school && ` (${tournament.runner_up_school})`}
+                                  </div>
+                                </div>
+                              </div>
+                            )}
                           </div>
                           
-                          <div className="space-y-3">
-                            <div className="flex items-center gap-2 text-white/70">
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2 text-muted-foreground">
                               <Calendar className="h-4 w-4" />
-                              <span>{new Date(tournament.date).toLocaleDateString()}</span>
+                              <span>
+                                {new Date(tournament.start_date).toLocaleDateString()}
+                                {tournament.end_date && tournament.end_date !== tournament.start_date && 
+                                  ` - ${new Date(tournament.end_date).toLocaleDateString()}`}
+                              </span>
                             </div>
-                            <div className="flex items-center gap-2 text-white/70">
-                              <Trophy className="h-4 w-4" />
-                              <span>{tournament.location}</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-white/70">
+                            {tournament.location && (
+                              <div className="flex items-center gap-2 text-muted-foreground">
+                                <MapPin className="h-4 w-4" />
+                                <span>{tournament.location}</span>
+                              </div>
+                            )}
+                            <div className="flex items-center gap-2 text-muted-foreground">
                               <Users className="h-4 w-4" />
-                              <span>{tournament.participants} participants</span>
+                              <span>{tournament.participant_count} participants</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <Trophy className="h-4 w-4" />
+                              <span>{tournament.format}</span>
                             </div>
                           </div>
                         </div>
