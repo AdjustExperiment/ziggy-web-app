@@ -52,6 +52,9 @@ interface UserFormData {
   bio: string;
   qualifications: string;
   specializations: string[];
+  // Auth update fields (edit only)
+  new_email: string;
+  new_password: string;
 }
 
 const STATES = [
@@ -94,7 +97,9 @@ export function UserManager() {
     experience_level: 'novice',
     bio: '',
     qualifications: '',
-    specializations: []
+    specializations: [],
+    new_email: '',
+    new_password: ''
   });
 
   useEffect(() => {
@@ -217,6 +222,20 @@ export function UserManager() {
     if (!editingUser) return;
     
     try {
+      // Update auth credentials if provided (email or password)
+      if (formData.new_email || formData.new_password) {
+        const { data: authResult, error: authError } = await supabase.functions.invoke('admin-update-user', {
+          body: {
+            userId: editingUser.user_id,
+            email: formData.new_email || undefined,
+            password: formData.new_password || undefined
+          }
+        });
+
+        if (authError) throw authError;
+        if (authResult?.error) throw new Error(authResult.error);
+      }
+
       // Update profile
       const { error: profileError } = await supabase
         .from('profiles')
@@ -284,7 +303,9 @@ export function UserManager() {
 
       toast({
         title: "Success",
-        description: "User updated successfully",
+        description: formData.new_email || formData.new_password 
+          ? "User credentials and profile updated successfully" 
+          : "User updated successfully",
       });
 
       setIsEditDialogOpen(false);
@@ -294,7 +315,7 @@ export function UserManager() {
     } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to update user",
+        description: error.message || "Failed to update user",
         variant: "destructive",
       });
     }
@@ -303,8 +324,8 @@ export function UserManager() {
   const openEditDialog = (user: User) => {
     setEditingUser(user);
     setFormData({
-      email: '', // Cannot edit email
-      password: '', // Password field for new users only
+      email: '',
+      password: '',
       first_name: user.first_name || '',
       last_name: user.last_name || '',
       role: user.role,
@@ -317,7 +338,9 @@ export function UserManager() {
       experience_level: user.judge_profile?.experience_level || 'novice',
       bio: user.judge_profile?.bio || '',
       qualifications: user.judge_profile?.qualifications || '',
-      specializations: user.judge_profile?.specializations || []
+      specializations: user.judge_profile?.specializations || [],
+      new_email: '',
+      new_password: ''
     });
     setIsEditDialogOpen(true);
   };
@@ -338,7 +361,9 @@ export function UserManager() {
       experience_level: 'novice',
       bio: '',
       qualifications: '',
-      specializations: []
+      specializations: [],
+      new_email: '',
+      new_password: ''
     });
   };
 
@@ -605,11 +630,41 @@ export function UserManager() {
             <DialogHeader>
               <DialogTitle>Edit User</DialogTitle>
               <DialogDescription>
-                Update user profile and role information
+                Update user profile, credentials, and role information
               </DialogDescription>
             </DialogHeader>
             
             <div className="grid gap-4 py-4">
+              {/* Auth Credentials Section */}
+              <div className="space-y-4 p-4 bg-muted/50 rounded-lg border border-border">
+                <h4 className="font-medium text-sm text-muted-foreground">Account Credentials (Optional)</h4>
+                <p className="text-xs text-muted-foreground">Leave blank to keep unchanged</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="edit_new_email">New Email Address</Label>
+                    <Input
+                      id="edit_new_email"
+                      type="email"
+                      value={formData.new_email}
+                      onChange={(e) => setFormData({...formData, new_email: e.target.value})}
+                      placeholder="Leave blank to keep current"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit_new_password">Reset Password</Label>
+                    <Input
+                      id="edit_new_password"
+                      type="password"
+                      value={formData.new_password}
+                      onChange={(e) => setFormData({...formData, new_password: e.target.value})}
+                      placeholder="Leave blank to keep current"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+              
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="edit_first_name">First Name *</Label>
