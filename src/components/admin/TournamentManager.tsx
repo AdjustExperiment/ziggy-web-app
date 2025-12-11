@@ -10,7 +10,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
-import { CalendarIcon, Plus, X, ChevronRight, AlertCircle } from "lucide-react"
+import { CalendarIcon, Plus, X, ChevronRight, AlertCircle, Crown } from "lucide-react"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -48,6 +48,7 @@ interface Tournament {
   sponsors: any[];
   tournament_info: string | null;
   registration_open: boolean;
+  is_championship: boolean;
 }
 
 export function TournamentManager() {
@@ -74,6 +75,7 @@ export function TournamentManager() {
     sponsors: [],
     tournament_info: null,
     registration_open: false,
+    is_championship: false,
   });
   const [formats, setFormats] = useState<{ id: string; name: string }[]>([]);
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
@@ -98,7 +100,7 @@ export function TournamentManager() {
         .select(`
           id, name, description, start_date, end_date, location, status, opt_outs_enabled,
           format, registration_fee, max_participants, current_participants, registration_deadline,
-          cash_prize_total, prize_pool, prize_items, sponsors, tournament_info, registration_open
+          cash_prize_total, prize_pool, prize_items, sponsors, tournament_info, registration_open, is_championship
         `);
 
       // Filter to accessible tournaments for non-global admins
@@ -148,7 +150,7 @@ export function TournamentManager() {
         .select(`
           id, name, description, start_date, end_date, location, status, opt_outs_enabled,
           format, registration_fee, max_participants, current_participants, registration_deadline,
-          cash_prize_total, prize_pool, prize_items, sponsors, tournament_info, registration_open
+          cash_prize_total, prize_pool, prize_items, sponsors, tournament_info, registration_open, is_championship
         `)
         .eq('id', id)
         .single();
@@ -199,6 +201,7 @@ export function TournamentManager() {
         sponsors: formData.sponsors,
         tournament_info: formData.tournament_info,
         registration_open: formData.status === 'Registration Open',
+        is_championship: formData.is_championship,
       };
 
       if (tournamentId) {
@@ -679,7 +682,25 @@ export function TournamentManager() {
             <CardHeader>
               <CardTitle>Additional Settings</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
+              {/* Championship Toggle */}
+              <div className="flex items-center justify-between p-4 rounded-lg bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
+                <div className="flex items-center gap-3">
+                  <Crown className="h-5 w-5 text-primary" />
+                  <div>
+                    <Label htmlFor="is_championship" className="font-semibold text-foreground">Championship Tournament</Label>
+                    <p className="text-sm text-muted-foreground">Mark as a major championship for featured display on Results page</p>
+                  </div>
+                </div>
+                <Switch
+                  id="is_championship"
+                  checked={formData.is_championship || false}
+                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_championship: checked }))}
+                />
+              </div>
+              
+              <Separator />
+              
               <div className="flex items-center space-x-2">
                 <Switch
                   id="opt_outs_enabled"

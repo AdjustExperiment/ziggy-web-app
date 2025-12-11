@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trophy, Medal, Award, Calendar, Users, Search, Crown, Star, MapPin } from "lucide-react";
+import { Trophy, Medal, Award, Calendar, Users, Search, Crown, Star, MapPin, DollarSign, Gift, Building } from "lucide-react";
 
 interface TournamentResult {
   id: string;
@@ -41,6 +41,14 @@ interface TopPerformer {
   win_rate: number;
 }
 
+interface ChampionshipSponsor {
+  id: string;
+  name: string;
+  logo_url: string | null;
+  description: string | null;
+  tier: string;
+}
+
 interface Championship {
   id: string;
   name: string;
@@ -53,6 +61,10 @@ interface Championship {
   runner_up_name: string | null;
   runner_up_school: string | null;
   participant_count: number;
+  prize_pool: string | null;
+  cash_prize_total: number | null;
+  prize_items: string[];
+  sponsors: ChampionshipSponsor[];
 }
 
 const Results = () => {
@@ -163,7 +175,7 @@ const Results = () => {
         setTopPerformers(performers);
       }
 
-      // Fetch completed tournaments for championships
+      // Fetch completed championship tournaments with prize info
       const { data: tournamentsData, error: tournamentsError } = await supabase
         .from('tournaments')
         .select(`
@@ -172,16 +184,20 @@ const Results = () => {
           format,
           start_date,
           end_date,
-          location
+          location,
+          prize_pool,
+          cash_prize_total,
+          prize_items
         `)
         .eq('status', 'Completed')
+        .eq('is_championship', true)
         .order('end_date', { ascending: false })
         .limit(20);
 
       if (tournamentsError) {
         console.error('Error fetching tournaments:', tournamentsError);
       } else if (tournamentsData && tournamentsData.length > 0) {
-        // For each completed tournament, fetch winner and runner-up
+        // For each completed championship, fetch winner, runner-up, and sponsors
         const championshipResults: Championship[] = await Promise.all(
           tournamentsData.map(async (tournament) => {
             // Get top 2 standings for this tournament
@@ -205,6 +221,44 @@ const Results = () => {
               .select('*', { count: 'exact', head: true })
               .eq('tournament_id', tournament.id);
 
+            // Get linked sponsors - fetch separately to avoid type issues
+            let sponsors: ChampionshipSponsor[] = [];
+            try {
+              const sponsorLinksQuery = supabase
+                .from('tournament_sponsor_links' as any)
+                .select('tier, sponsor_profile_id')
+                .eq('tournament_id', tournament.id)
+                .eq('status', 'approved')
+                .order('display_order');
+              const { data: sponsorLinks } = await sponsorLinksQuery;
+
+              if (sponsorLinks && (sponsorLinks as any[]).length > 0) {
+                const sponsorIds = (sponsorLinks as any[]).map((l: any) => l.sponsor_profile_id);
+                const { data: sponsorProfiles } = await supabase
+                  .from('sponsor_profiles')
+                  .select('id, name, logo_url, description')
+                  .in('id', sponsorIds);
+                
+                if (sponsorProfiles) {
+                  sponsors = (sponsorLinks as any[])
+                    .map((link: any) => {
+                      const profile = sponsorProfiles.find(p => p.id === link.sponsor_profile_id);
+                      if (!profile) return null;
+                      return {
+                        id: profile.id,
+                        name: profile.name,
+                        logo_url: profile.logo_url,
+                        description: profile.description,
+                        tier: link.tier,
+                      };
+                    })
+                    .filter((s: any): s is ChampionshipSponsor => s !== null);
+                }
+              }
+            } catch (err) {
+              console.error('Error fetching sponsors:', err);
+            }
+
             const winner = topStandings?.find(s => s.rank === 1);
             const runnerUp = topStandings?.find(s => s.rank === 2);
 
@@ -220,6 +274,10 @@ const Results = () => {
               runner_up_name: runnerUp ? formatTeamName(runnerUp.registration as any) : null,
               runner_up_school: (runnerUp?.registration as any)?.school_organization || null,
               participant_count: count || 0,
+              prize_pool: tournament.prize_pool,
+              cash_prize_total: tournament.cash_prize_total,
+              prize_items: Array.isArray(tournament.prize_items) ? tournament.prize_items : [],
+              sponsors,
             };
           })
         );
@@ -512,93 +570,180 @@ const Results = () => {
               </Card>
             </TabsContent>
 
-            <TabsContent value="championships" className="space-y-6">
-              <div className="grid gap-6">
-                {championships.length === 0 ? (
-                  <Card>
-                    <CardContent className="text-center py-12">
-                      <Trophy className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                      <h3 className="text-xl font-semibold text-foreground mb-2">No Completed Tournaments</h3>
-                      <p className="text-muted-foreground">Championship results will appear here once tournaments are completed.</p>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  championships.map((tournament) => (
-                    <Card key={tournament.id} className="hover:border-primary/30 transition-all">
-                      <CardHeader>
-                        <div className="flex items-center justify-between">
-                          <CardTitle>{tournament.name}</CardTitle>
-                          <Badge className="bg-primary text-primary-foreground">Championship</Badge>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="grid md:grid-cols-2 gap-6">
-                          <div className="space-y-3">
-                            {tournament.winner_name ? (
-                              <div className="flex items-center gap-3">
-                                <Crown className="h-5 w-5 text-primary" />
-                                <div>
-                                  <div className="font-bold text-foreground">Winner</div>
-                                  <div className="text-muted-foreground">
-                                    {tournament.winner_name}
-                                    {tournament.winner_school && ` (${tournament.winner_school})`}
-                                  </div>
-                                </div>
-                              </div>
-                            ) : (
-                              <div className="flex items-center gap-3">
-                                <Crown className="h-5 w-5 text-muted-foreground" />
-                                <div>
-                                  <div className="font-bold text-foreground">Winner</div>
-                                  <div className="text-muted-foreground">Results pending</div>
-                                </div>
-                              </div>
-                            )}
-                            
-                            {tournament.runner_up_name && (
-                              <div className="flex items-center gap-3">
-                                <Medal className="h-5 w-5 text-primary/80" />
-                                <div>
-                                  <div className="font-bold text-foreground">Runner-up</div>
-                                  <div className="text-muted-foreground">
-                                    {tournament.runner_up_name}
-                                    {tournament.runner_up_school && ` (${tournament.runner_up_school})`}
-                                  </div>
-                                </div>
-                              </div>
-                            )}
+            <TabsContent value="championships" className="space-y-8">
+              {championships.length === 0 ? (
+                <Card>
+                  <CardContent className="text-center py-12">
+                    <Crown className="h-16 w-16 text-primary/40 mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold text-foreground mb-2">No Championship Tournaments</h3>
+                    <p className="text-muted-foreground">Championship results will appear here once designated championship tournaments are completed.</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                championships.map((tournament) => (
+                  <Card key={tournament.id} className="overflow-hidden border-2 border-primary/20 hover:border-primary/40 transition-all">
+                    {/* Championship Header */}
+                    <CardHeader className="bg-gradient-to-r from-primary/15 via-primary/10 to-primary/5 border-b border-primary/20">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 rounded-full bg-primary/20">
+                            <Crown className="h-6 w-6 text-primary" />
                           </div>
-                          
-                          <div className="space-y-2">
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                              <Calendar className="h-4 w-4" />
-                              <span>
+                          <div>
+                            <CardTitle className="text-2xl">{tournament.name}</CardTitle>
+                            <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">
+                              <span className="flex items-center gap-1">
+                                <Calendar className="h-4 w-4" />
                                 {new Date(tournament.start_date).toLocaleDateString()}
                                 {tournament.end_date && tournament.end_date !== tournament.start_date && 
                                   ` - ${new Date(tournament.end_date).toLocaleDateString()}`}
                               </span>
-                            </div>
-                            {tournament.location && (
-                              <div className="flex items-center gap-2 text-muted-foreground">
-                                <MapPin className="h-4 w-4" />
-                                <span>{tournament.location}</span>
-                              </div>
-                            )}
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                              <Users className="h-4 w-4" />
-                              <span>{tournament.participant_count} participants</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                              <Trophy className="h-4 w-4" />
-                              <span>{tournament.format}</span>
+                              {tournament.location && (
+                                <span className="flex items-center gap-1">
+                                  <MapPin className="h-4 w-4" />
+                                  {tournament.location}
+                                </span>
+                              )}
                             </div>
                           </div>
                         </div>
-                      </CardContent>
-                    </Card>
-                  ))
-                )}
-              </div>
+                        <Badge className="bg-primary text-primary-foreground text-sm px-3 py-1">
+                          Championship
+                        </Badge>
+                      </div>
+                    </CardHeader>
+
+                    <CardContent className="p-6 space-y-6">
+                      {/* Prize Pool Section */}
+                      {(tournament.cash_prize_total || tournament.prize_pool || tournament.prize_items.length > 0) && (
+                        <div className="p-4 rounded-lg bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
+                          <div className="flex items-center gap-2 mb-3">
+                            <DollarSign className="h-5 w-5 text-primary" />
+                            <span className="font-semibold text-foreground">Prize Pool</span>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-3">
+                            {tournament.cash_prize_total && (
+                              <Badge variant="outline" className="text-lg px-4 py-2 border-primary/30 bg-primary/5">
+                                ${tournament.cash_prize_total.toLocaleString()} Cash
+                              </Badge>
+                            )}
+                            {tournament.prize_pool && (
+                              <span className="text-muted-foreground">{tournament.prize_pool}</span>
+                            )}
+                            {tournament.prize_items.map((item, idx) => (
+                              <Badge key={idx} variant="secondary" className="flex items-center gap-1">
+                                <Gift className="h-3 w-3" />
+                                {item}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Sponsors Section */}
+                      {tournament.sponsors.length > 0 && (
+                        <div className="p-4 rounded-lg bg-muted/50 border border-border">
+                          <div className="flex items-center gap-2 mb-3">
+                            <Building className="h-5 w-5 text-muted-foreground" />
+                            <span className="font-semibold text-foreground">Presented By</span>
+                          </div>
+                          <div className="flex flex-wrap gap-4">
+                            {tournament.sponsors.map((sponsor) => (
+                              <div key={sponsor.id} className="flex items-center gap-3 p-2 rounded-lg bg-background border border-border">
+                                {sponsor.logo_url ? (
+                                  <img 
+                                    src={sponsor.logo_url} 
+                                    alt={sponsor.name} 
+                                    className="h-10 w-10 object-contain rounded"
+                                  />
+                                ) : (
+                                  <div className="h-10 w-10 rounded bg-muted flex items-center justify-center">
+                                    <Building className="h-5 w-5 text-muted-foreground" />
+                                  </div>
+                                )}
+                                <div>
+                                  <div className="font-medium text-foreground text-sm">{sponsor.name}</div>
+                                  {sponsor.description && (
+                                    <div className="text-xs text-muted-foreground line-clamp-1 max-w-[200px]">
+                                      {sponsor.description}
+                                    </div>
+                                  )}
+                                </div>
+                                <Badge variant="outline" className="text-xs capitalize">
+                                  {sponsor.tier}
+                                </Badge>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Champions Section */}
+                      <div className="grid md:grid-cols-2 gap-4">
+                        {/* Winner Card */}
+                        <div className="p-4 rounded-lg bg-gradient-to-br from-primary/20 via-primary/10 to-transparent border-2 border-primary/30 relative overflow-hidden">
+                          <div className="absolute top-0 right-0 w-24 h-24 bg-primary/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+                          <div className="relative">
+                            <div className="flex items-center gap-2 mb-3">
+                              <div className="p-1.5 rounded-full bg-primary/20">
+                                <Crown className="h-5 w-5 text-primary" />
+                              </div>
+                              <span className="font-bold text-primary uppercase text-sm tracking-wide">Champion</span>
+                            </div>
+                            {tournament.winner_name ? (
+                              <div>
+                                <div className="text-xl font-bold text-foreground">{tournament.winner_name}</div>
+                                {tournament.winner_school && (
+                                  <div className="text-muted-foreground">{tournament.winner_school}</div>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="text-muted-foreground">Results pending</div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Runner-up Card */}
+                        <div className="p-4 rounded-lg bg-muted/50 border border-border relative overflow-hidden">
+                          <div className="absolute top-0 right-0 w-20 h-20 bg-muted rounded-full -translate-y-1/2 translate-x-1/2" />
+                          <div className="relative">
+                            <div className="flex items-center gap-2 mb-3">
+                              <div className="p-1.5 rounded-full bg-muted">
+                                <Medal className="h-5 w-5 text-muted-foreground" />
+                              </div>
+                              <span className="font-semibold text-muted-foreground uppercase text-sm tracking-wide">Runner-up</span>
+                            </div>
+                            {tournament.runner_up_name ? (
+                              <div>
+                                <div className="text-lg font-semibold text-foreground">{tournament.runner_up_name}</div>
+                                {tournament.runner_up_school && (
+                                  <div className="text-muted-foreground text-sm">{tournament.runner_up_school}</div>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="text-muted-foreground">Results pending</div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Stats Footer */}
+                      <div className="flex items-center justify-between pt-4 border-t border-border text-sm text-muted-foreground">
+                        <div className="flex items-center gap-4">
+                          <span className="flex items-center gap-1">
+                            <Users className="h-4 w-4" />
+                            {tournament.participant_count} participants
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Trophy className="h-4 w-4" />
+                            {tournament.format}
+                          </span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
             </TabsContent>
           </Tabs>
         </div>
