@@ -24,6 +24,7 @@ interface User {
   state: string | null;
   region: string | null;
   time_zone: string | null;
+  auth_email?: string; // Email from auth.users
   judge_profile?: {
     id: string;
     name: string;
@@ -108,32 +109,42 @@ export function UserManager() {
 
   const fetchUsers = async () => {
     try {
-      // First get all profiles
-      const { data: profiles, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
+      // Fetch profiles, judge profiles, and auth emails in parallel
+      const [profilesRes, judgeProfilesRes, authUsersRes] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select('*')
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('judge_profiles')
+          .select('*'),
+        supabase.functions.invoke('admin-list-users')
+      ]);
 
-      if (profileError) throw profileError;
+      if (profilesRes.error) throw profilesRes.error;
+      if (judgeProfilesRes.error) throw judgeProfilesRes.error;
 
-      // Then get judge profiles for users who have them
-      const { data: judgeProfiles, error: judgeError } = await supabase
-        .from('judge_profiles')
-        .select('*');
-
-      if (judgeError) throw judgeError;
+      // Create email lookup map from auth users
+      const emailMap = new Map<string, string>();
+      if (authUsersRes.data?.users) {
+        authUsersRes.data.users.forEach((u: { id: string; email: string }) => {
+          emailMap.set(u.id, u.email);
+        });
+      }
 
       // Combine the data
-      const transformedUsers: User[] = profiles?.map(profile => {
-        const judgeProfile = judgeProfiles?.find(jp => jp.user_id === profile.user_id);
+      const transformedUsers: User[] = profilesRes.data?.map(profile => {
+        const judgeProfile = judgeProfilesRes.data?.find(jp => jp.user_id === profile.user_id);
         return {
           ...profile,
+          auth_email: emailMap.get(profile.user_id) || '',
           judge_profile: judgeProfile || null
         };
       }) || [];
       
       setUsers(transformedUsers);
     } catch (error: any) {
+      console.error('Error fetching users:', error);
       toast({
         title: "Error",
         description: "Failed to fetch users",
@@ -369,8 +380,10 @@ export function UserManager() {
 
   const filteredUsers = users.filter(user => {
     const fullName = `${user.first_name || ''} ${user.last_name || ''}`.toLowerCase();
-    const matchesSearch = fullName.includes(searchTerm.toLowerCase()) ||
-                         (user.user_id || '').toLowerCase().includes(searchTerm.toLowerCase());
+    const searchLower = searchTerm.toLowerCase();
+    const matchesSearch = fullName.includes(searchLower) ||
+                         (user.user_id || '').toLowerCase().includes(searchLower) ||
+                         (user.auth_email || '').toLowerCase().includes(searchLower);
     
     let matchesRole = true;
     if (roleFilter === 'judge') {
@@ -637,7 +650,16 @@ export function UserManager() {
             <div className="grid gap-4 py-4">
               {/* Auth Credentials Section */}
               <div className="space-y-4 p-4 bg-muted/50 rounded-lg border border-border">
-                <h4 className="font-medium text-sm text-muted-foreground">Account Credentials (Optional)</h4>
+                <h4 className="font-medium text-sm text-muted-foreground">Account Credentials</h4>
+                
+                {/* Show current email */}
+                <div>
+                  <Label className="text-muted-foreground">Current Email</Label>
+                  <div className="text-sm font-medium p-2 bg-background rounded border">
+                    {editingUser?.auth_email || 'Unknown'}
+                  </div>
+                </div>
+                
                 <p className="text-xs text-muted-foreground">Leave blank to keep unchanged</p>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -897,6 +919,7 @@ export function UserManager() {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead>Contact</TableHead>
                 <TableHead>Location</TableHead>
@@ -910,6 +933,9 @@ export function UserManager() {
                   <TableCell>
                     <div className="font-medium">{user.first_name} {user.last_name}</div>
                     <div className="text-xs text-muted-foreground font-mono">{user.user_id?.slice(0, 8)}...</div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-sm font-medium">{user.auth_email || '-'}</div>
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-col gap-1">
@@ -929,9 +955,6 @@ export function UserManager() {
                   <TableCell>
                     <div className="text-sm">
                       {user.phone && <div>📞 {user.phone}</div>}
-                      {user.judge_profile?.email && (
-                        <div className="text-xs text-muted-foreground">✉️ {user.judge_profile.email}</div>
-                      )}
                     </div>
                   </TableCell>
                   <TableCell>
