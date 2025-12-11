@@ -12,6 +12,19 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Progress } from "@/components/ui/progress";
 import { Trophy, Medal, Award, Calendar, Users, Search, Crown, Star, MapPin, DollarSign, Gift, Building, MessageSquare, TrendingUp, Swords, ArrowRightLeft, Check, ChevronsUpDown, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { 
+  LineChart, Line, AreaChart, Area, XAxis, YAxis, 
+  CartesianGrid, Tooltip, ResponsiveContainer, Legend 
+} from 'recharts';
+
+interface TrendDataPoint {
+  date: string;
+  label: string;
+  comp1WinRate: number | null;
+  comp2WinRate: number | null;
+  comp1Speaks: number | null;
+  comp2Speaks: number | null;
+}
 
 interface TournamentResult {
   id: string;
@@ -513,6 +526,51 @@ const Results = () => {
     });
     return Array.from(competitorMap.values()).sort((a, b) => a.name.localeCompare(b.name));
   }, [recentResults]);
+
+  // Compute trend data for charts
+  const trendData = useMemo<TrendDataPoint[]>(() => {
+    if (!headToHead || !competitor1 || !competitor2) return [];
+    
+    // Get all tournaments for both competitors with dates
+    const comp1Results = recentResults
+      .filter(r => r.participant_name === competitor1)
+      .sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime());
+      
+    const comp2Results = recentResults
+      .filter(r => r.participant_name === competitor2)
+      .sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime());
+    
+    // Create unified timeline combining both competitors' tournaments
+    const allDates = [...new Set([
+      ...comp1Results.map(r => r.start_date),
+      ...comp2Results.map(r => r.start_date)
+    ])].sort();
+    
+    // Calculate cumulative stats at each date point
+    return allDates.map(date => {
+      const c1AtDate = comp1Results.filter(r => r.start_date <= date);
+      const c2AtDate = comp2Results.filter(r => r.start_date <= date);
+      
+      // Calculate cumulative win rate
+      const c1Wins = c1AtDate.reduce((s, r) => s + r.wins, 0);
+      const c1Total = c1AtDate.reduce((s, r) => s + r.wins + r.losses, 0);
+      const c2Wins = c2AtDate.reduce((s, r) => s + r.wins, 0);
+      const c2Total = c2AtDate.reduce((s, r) => s + r.wins + r.losses, 0);
+      
+      // Get speaks for that specific tournament
+      const c1TournSpeaks = comp1Results.find(r => r.start_date === date)?.speaks_avg || null;
+      const c2TournSpeaks = comp2Results.find(r => r.start_date === date)?.speaks_avg || null;
+      
+      return {
+        date,
+        label: new Date(date).toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
+        comp1WinRate: c1Total > 0 ? Math.round((c1Wins / c1Total) * 100) : null,
+        comp2WinRate: c2Total > 0 ? Math.round((c2Wins / c2Total) * 100) : null,
+        comp1Speaks: c1TournSpeaks,
+        comp2Speaks: c2TournSpeaks,
+      };
+    });
+  }, [headToHead, recentResults, competitor1, competitor2]);
 
   // Fetch head-to-head data
   const fetchHeadToHead = async () => {
@@ -1375,6 +1433,160 @@ const Results = () => {
                       </CardContent>
                     </Card>
                   </div>
+
+                  {/* Performance Trend Charts */}
+                  {trendData.length > 1 && (
+                    <div className="grid lg:grid-cols-2 gap-6">
+                      {/* Win Rate Trend Chart */}
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <TrendingUp className="h-5 w-5 text-primary" />
+                            Win Rate Over Time
+                          </CardTitle>
+                          <p className="text-sm text-muted-foreground">
+                            Cumulative win rate progression across tournaments
+                          </p>
+                        </CardHeader>
+                        <CardContent>
+                          <ResponsiveContainer width="100%" height={280}>
+                            <LineChart data={trendData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                              <XAxis 
+                                dataKey="label" 
+                                stroke="hsl(var(--muted-foreground))" 
+                                tick={{ fontSize: 11 }}
+                                tickLine={{ stroke: 'hsl(var(--border))' }}
+                              />
+                              <YAxis 
+                                stroke="hsl(var(--muted-foreground))" 
+                                domain={[0, 100]} 
+                                tickFormatter={(v) => `${v}%`}
+                                tick={{ fontSize: 11 }}
+                                tickLine={{ stroke: 'hsl(var(--border))' }}
+                              />
+                              <Tooltip 
+                                contentStyle={{ 
+                                  backgroundColor: 'hsl(var(--card))', 
+                                  border: '1px solid hsl(var(--border))',
+                                  borderRadius: '8px',
+                                  boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                                }}
+                                labelStyle={{ color: 'hsl(var(--foreground))', fontWeight: 600, marginBottom: 4 }}
+                                formatter={(value: number | null, name: string) => {
+                                  if (value === null) return ['N/A', name];
+                                  return [`${value}%`, name];
+                                }}
+                              />
+                              <Legend 
+                                wrapperStyle={{ paddingTop: 16 }}
+                                formatter={(value) => <span className="text-sm text-foreground">{value}</span>}
+                              />
+                              <Line 
+                                type="monotone" 
+                                dataKey="comp1WinRate" 
+                                stroke="hsl(var(--primary))" 
+                                strokeWidth={3}
+                                name={headToHead.competitor1.name}
+                                dot={{ r: 4, fill: 'hsl(var(--primary))' }}
+                                activeDot={{ r: 6, stroke: 'hsl(var(--primary))', strokeWidth: 2 }}
+                                connectNulls
+                              />
+                              <Line 
+                                type="monotone" 
+                                dataKey="comp2WinRate" 
+                                stroke="hsl(var(--secondary))" 
+                                strokeWidth={3}
+                                name={headToHead.competitor2.name}
+                                dot={{ r: 4, fill: 'hsl(var(--secondary))' }}
+                                activeDot={{ r: 6, stroke: 'hsl(var(--secondary))', strokeWidth: 2 }}
+                                connectNulls
+                              />
+                            </LineChart>
+                          </ResponsiveContainer>
+                        </CardContent>
+                      </Card>
+
+                      {/* Speaker Points Trend Chart */}
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <MessageSquare className="h-5 w-5 text-amber-500" />
+                            Speaker Points by Tournament
+                          </CardTitle>
+                          <p className="text-sm text-muted-foreground">
+                            Average speaker points at each tournament
+                          </p>
+                        </CardHeader>
+                        <CardContent>
+                          <ResponsiveContainer width="100%" height={280}>
+                            <AreaChart data={trendData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                              <defs>
+                                <linearGradient id="comp1SpeaksGradient" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                                  <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                                </linearGradient>
+                                <linearGradient id="comp2SpeaksGradient" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%" stopColor="hsl(var(--secondary))" stopOpacity={0.3}/>
+                                  <stop offset="95%" stopColor="hsl(var(--secondary))" stopOpacity={0}/>
+                                </linearGradient>
+                              </defs>
+                              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                              <XAxis 
+                                dataKey="label" 
+                                stroke="hsl(var(--muted-foreground))" 
+                                tick={{ fontSize: 11 }}
+                                tickLine={{ stroke: 'hsl(var(--border))' }}
+                              />
+                              <YAxis 
+                                stroke="hsl(var(--muted-foreground))" 
+                                domain={['auto', 'auto']}
+                                tick={{ fontSize: 11 }}
+                                tickLine={{ stroke: 'hsl(var(--border))' }}
+                              />
+                              <Tooltip 
+                                contentStyle={{ 
+                                  backgroundColor: 'hsl(var(--card))', 
+                                  border: '1px solid hsl(var(--border))',
+                                  borderRadius: '8px',
+                                  boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                                }}
+                                labelStyle={{ color: 'hsl(var(--foreground))', fontWeight: 600, marginBottom: 4 }}
+                                formatter={(value: number | null, name: string) => {
+                                  if (value === null) return ['N/A', name];
+                                  return [value.toFixed(1), name];
+                                }}
+                              />
+                              <Legend 
+                                wrapperStyle={{ paddingTop: 16 }}
+                                formatter={(value) => <span className="text-sm text-foreground">{value}</span>}
+                              />
+                              <Area 
+                                type="monotone" 
+                                dataKey="comp1Speaks" 
+                                stroke="hsl(var(--primary))" 
+                                fill="url(#comp1SpeaksGradient)"
+                                strokeWidth={2}
+                                name={headToHead.competitor1.name}
+                                connectNulls
+                                dot={{ r: 3, fill: 'hsl(var(--primary))' }}
+                              />
+                              <Area 
+                                type="monotone" 
+                                dataKey="comp2Speaks" 
+                                stroke="hsl(var(--secondary))" 
+                                fill="url(#comp2SpeaksGradient)"
+                                strokeWidth={2}
+                                name={headToHead.competitor2.name}
+                                connectNulls
+                                dot={{ r: 3, fill: 'hsl(var(--secondary))' }}
+                              />
+                            </AreaChart>
+                          </ResponsiveContainer>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  )}
 
                   {/* Head-to-Head Summary */}
                   <Card>
