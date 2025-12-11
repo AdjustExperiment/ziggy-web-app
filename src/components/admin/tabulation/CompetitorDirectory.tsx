@@ -5,8 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/use-toast';
-import { Mail, Phone, Search, Trophy, Users, MessageCircle } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Mail, Phone, Search, Trophy, Users, MessageCircle, UserPlus, Loader2 } from 'lucide-react';
 
 interface Registration {
   id: string;
@@ -28,6 +31,13 @@ interface CompetitorStats {
   opponents: string[];
 }
 
+interface UserOption {
+  id: string;
+  email: string;
+  first_name: string | null;
+  last_name: string | null;
+}
+
 interface CompetitorDirectoryProps {
   tournamentId: string;
   eventId?: string | null;
@@ -38,11 +48,35 @@ export function CompetitorDirectory({ tournamentId, eventId }: CompetitorDirecto
   const [searchTerm, setSearchTerm] = useState('');
   const [competitorStats, setCompetitorStats] = useState<Map<string, CompetitorStats>>(new Map());
   const [loading, setLoading] = useState(false);
+  
+  // Add competitor dialog state
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [users, setUsers] = useState<UserOption[]>([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState('');
+  const [userSearch, setUserSearch] = useState('');
+  const [newCompetitor, setNewCompetitor] = useState({
+    participant_name: '',
+    participant_email: '',
+    school_organization: '',
+    partner_name: '',
+    payment_status: 'manual'
+  });
+  const [addingCompetitor, setAddingCompetitor] = useState(false);
 
   const filteredRegistrations = registrations.filter(reg =>
     reg.participant_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (reg.school_organization && reg.school_organization.toLowerCase().includes(searchTerm.toLowerCase()))
   );
+
+  const filteredUsers = users.filter(user => {
+    const searchLower = userSearch.toLowerCase();
+    return (
+      user.email?.toLowerCase().includes(searchLower) ||
+      user.first_name?.toLowerCase().includes(searchLower) ||
+      user.last_name?.toLowerCase().includes(searchLower)
+    );
+  });
 
   useEffect(() => {
     if (tournamentId) {
@@ -50,6 +84,58 @@ export function CompetitorDirectory({ tournamentId, eventId }: CompetitorDirecto
       fetchCompetitorStats();
     }
   }, [tournamentId, eventId]);
+
+  useEffect(() => {
+    if (addDialogOpen && users.length === 0) {
+      fetchUsers();
+    }
+  }, [addDialogOpen]);
+
+  const fetchUsers = async () => {
+    setUsersLoading(true);
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session) {
+        throw new Error('Not authenticated');
+      }
+
+      const { data, error } = await supabase.functions.invoke('admin-list-users', {
+        headers: {
+          Authorization: `Bearer ${session.session.access_token}`
+        }
+      });
+
+      if (error) throw error;
+
+      // Fetch profiles to get names
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('user_id, first_name, last_name');
+
+      const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+
+      const usersWithNames = (data.users || []).map((u: any) => {
+        const profile = profileMap.get(u.id);
+        return {
+          id: u.id,
+          email: u.email,
+          first_name: profile?.first_name || null,
+          last_name: profile?.last_name || null
+        };
+      });
+
+      setUsers(usersWithNames);
+    } catch (error: any) {
+      console.error('Error fetching users:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch users",
+        variant: "destructive",
+      });
+    } finally {
+      setUsersLoading(false);
+    }
+  };
 
   const fetchRegistrations = async () => {
     try {
@@ -79,8 +165,6 @@ export function CompetitorDirectory({ tournamentId, eventId }: CompetitorDirecto
   const fetchCompetitorStats = async () => {
     setLoading(true);
     try {
-      // For now, we'll just initialize empty stats
-      // This will be expanded when we have proper pairing and ballot data
       const stats = new Map<string, CompetitorStats>();
       registrations.forEach(reg => {
         stats.set(reg.id, {
@@ -103,6 +187,87 @@ export function CompetitorDirectory({ tournamentId, eventId }: CompetitorDirecto
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSelectUser = (userId: string) => {
+    setSelectedUserId(userId);
+    const user = users.find(u => u.id === userId);
+    if (user) {
+      const fullName = [user.first_name, user.last_name].filter(Boolean).join(' ') || '';
+      setNewCompetitor(prev => ({
+        ...prev,
+        participant_name: fullName,
+        participant_email: user.email
+      }));
+    }
+  };
+
+  const handleAddCompetitor = async () => {
+    if (!selectedUserId || !newCompetitor.participant_name || !newCompetitor.participant_email) {
+      toast({
+        title: "Validation Error",
+        description: "Please select a user and fill in required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check for duplicate registration
+    const existingReg = registrations.find(r => 
+      r.participant_email.toLowerCase() === newCompetitor.participant_email.toLowerCase()
+    );
+    if (existingReg) {
+      toast({
+        title: "Duplicate Registration",
+        description: "This user is already registered for this tournament",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setAddingCompetitor(true);
+    try {
+      const { error } = await supabase
+        .from('tournament_registrations')
+        .insert({
+          tournament_id: tournamentId,
+          event_id: eventId || null,
+          user_id: selectedUserId,
+          participant_name: newCompetitor.participant_name,
+          participant_email: newCompetitor.participant_email,
+          school_organization: newCompetitor.school_organization || null,
+          partner_name: newCompetitor.partner_name || null,
+          payment_status: newCompetitor.payment_status
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `${newCompetitor.participant_name} added to tournament`,
+      });
+
+      // Reset form and close dialog
+      setSelectedUserId('');
+      setNewCompetitor({
+        participant_name: '',
+        participant_email: '',
+        school_organization: '',
+        partner_name: '',
+        payment_status: 'manual'
+      });
+      setAddDialogOpen(false);
+      fetchRegistrations();
+    } catch (error: any) {
+      console.error('Error adding competitor:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add competitor",
+        variant: "destructive",
+      });
+    } finally {
+      setAddingCompetitor(false);
     }
   };
 
@@ -141,13 +306,132 @@ export function CompetitorDirectory({ tournamentId, eventId }: CompetitorDirecto
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Competitor Directory
-          </CardTitle>
-          <CardDescription>
-            View competitor information, contact details, and performance statistics
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Competitor Directory
+              </CardTitle>
+              <CardDescription>
+                View competitor information, contact details, and performance statistics
+              </CardDescription>
+            </div>
+            <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Add Competitor
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Add Competitor to Tournament</DialogTitle>
+                  <DialogDescription>
+                    Select an existing user account to add as a competitor
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 mt-4">
+                  <div className="space-y-2">
+                    <Label>Search Users</Label>
+                    <Input
+                      placeholder="Search by name or email..."
+                      value={userSearch}
+                      onChange={(e) => setUserSearch(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Select User</Label>
+                    {usersLoading ? (
+                      <div className="flex items-center justify-center p-4">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      </div>
+                    ) : (
+                      <Select value={selectedUserId} onValueChange={handleSelectUser}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a user..." />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-60">
+                          {filteredUsers.slice(0, 50).map(user => (
+                            <SelectItem key={user.id} value={user.id}>
+                              {user.first_name || user.last_name 
+                                ? `${user.first_name || ''} ${user.last_name || ''}`.trim()
+                                : user.email
+                              } ({user.email})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Participant Name *</Label>
+                    <Input
+                      value={newCompetitor.participant_name}
+                      onChange={(e) => setNewCompetitor(prev => ({ ...prev, participant_name: e.target.value }))}
+                      placeholder="Full name for postings"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Email *</Label>
+                    <Input
+                      type="email"
+                      value={newCompetitor.participant_email}
+                      onChange={(e) => setNewCompetitor(prev => ({ ...prev, participant_email: e.target.value }))}
+                      placeholder="Contact email"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>School/Organization</Label>
+                    <Input
+                      value={newCompetitor.school_organization}
+                      onChange={(e) => setNewCompetitor(prev => ({ ...prev, school_organization: e.target.value }))}
+                      placeholder="School or club name"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Partner Name (for team events)</Label>
+                    <Input
+                      value={newCompetitor.partner_name}
+                      onChange={(e) => setNewCompetitor(prev => ({ ...prev, partner_name: e.target.value }))}
+                      placeholder="Partner's name"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Payment Status</Label>
+                    <Select 
+                      value={newCompetitor.payment_status} 
+                      onValueChange={(value) => setNewCompetitor(prev => ({ ...prev, payment_status: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="manual">Manual (Admin Added)</SelectItem>
+                        <SelectItem value="paid">Paid</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="waived">Waived</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <Button 
+                    onClick={handleAddCompetitor} 
+                    className="w-full" 
+                    disabled={addingCompetitor || !selectedUserId}
+                  >
+                    {addingCompetitor && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                    Add Competitor
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-4 mb-6">
