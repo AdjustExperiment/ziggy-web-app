@@ -165,6 +165,9 @@ verify_jwt = true
 [functions.seed-test-data]
 verify_jwt = true
 
+[functions.qa-simulation]
+verify_jwt = true
+
 [functions.collect-performance-metrics]
 verify_jwt = false
 
