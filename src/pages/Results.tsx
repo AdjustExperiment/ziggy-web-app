@@ -6,7 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trophy, Medal, Award, Calendar, Users, Search, Crown, Star, MapPin, DollarSign, Gift, Building, MessageSquare, TrendingUp } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Progress } from "@/components/ui/progress";
+import { Trophy, Medal, Award, Calendar, Users, Search, Crown, Star, MapPin, DollarSign, Gift, Building, MessageSquare, TrendingUp, Swords, ArrowRightLeft, Check, ChevronsUpDown, Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface TournamentResult {
   id: string;
@@ -80,6 +85,41 @@ interface Championship {
   sponsors: ChampionshipSponsor[];
 }
 
+interface CompetitorOption {
+  name: string;
+  school: string | null;
+}
+
+interface CompetitorStats {
+  name: string;
+  school: string | null;
+  total_wins: number;
+  total_losses: number;
+  win_rate: number;
+  avg_speaks: number;
+  total_rounds: number;
+  tournaments_count: number;
+}
+
+interface HeadToHeadMatch {
+  id: string;
+  tournament_name: string;
+  round_name: string;
+  date: string;
+  winner: string;
+  competitor1_side: 'aff' | 'neg';
+  competitor1_speaks: number | null;
+  competitor2_speaks: number | null;
+}
+
+interface HeadToHeadResult {
+  competitor1: CompetitorStats;
+  competitor2: CompetitorStats;
+  matches: HeadToHeadMatch[];
+  competitor1_wins: number;
+  competitor2_wins: number;
+}
+
 const Results = () => {
   const [recentResults, setRecentResults] = useState<TournamentResult[]>([]);
   const [championships, setChampionships] = useState<Championship[]>([]);
@@ -90,6 +130,14 @@ const Results = () => {
   const [formats, setFormats] = useState<string[]>([]);
   const [availableYears, setAvailableYears] = useState<number[]>([]);
   const [selectedEventByTournament, setSelectedEventByTournament] = useState<Record<string, string>>({});
+  
+  // Compare tab state
+  const [competitor1, setCompetitor1] = useState<string | null>(null);
+  const [competitor2, setCompetitor2] = useState<string | null>(null);
+  const [headToHead, setHeadToHead] = useState<HeadToHeadResult | null>(null);
+  const [comparisonLoading, setComparisonLoading] = useState(false);
+  const [open1, setOpen1] = useState(false);
+  const [open2, setOpen2] = useState(false);
 
   useEffect(() => {
     fetchAllResults();
@@ -452,6 +500,154 @@ const Results = () => {
 
   const groupedResults = groupResultsByTournament(filteredResults);
 
+  // Get unique competitors for comparison feature
+  const uniqueCompetitors = useMemo<CompetitorOption[]>(() => {
+    const competitorMap = new Map<string, CompetitorOption>();
+    recentResults.forEach(result => {
+      if (!competitorMap.has(result.participant_name)) {
+        competitorMap.set(result.participant_name, {
+          name: result.participant_name,
+          school: result.school
+        });
+      }
+    });
+    return Array.from(competitorMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }, [recentResults]);
+
+  // Fetch head-to-head data
+  const fetchHeadToHead = async () => {
+    if (!competitor1 || !competitor2 || competitor1 === competitor2) return;
+    
+    setComparisonLoading(true);
+    setHeadToHead(null);
+    
+    try {
+      // Get registration IDs for both competitors
+      const { data: reg1Data } = await supabase
+        .from('tournament_registrations')
+        .select('id, tournament_id, tournament:tournaments(name, start_date)')
+        .eq('participant_name', competitor1);
+      
+      const { data: reg2Data } = await supabase
+        .from('tournament_registrations')
+        .select('id, tournament_id')
+        .eq('participant_name', competitor2);
+      
+      const regIds1 = reg1Data?.map(r => r.id) || [];
+      const regIds2 = reg2Data?.map(r => r.id) || [];
+      
+      if (regIds1.length === 0 || regIds2.length === 0) {
+        setComparisonLoading(false);
+        return;
+      }
+      
+      // Find pairings where they faced each other
+      const { data: matchups } = await supabase
+        .from('pairings')
+        .select(`
+          id,
+          result,
+          scheduled_time,
+          aff_registration_id,
+          neg_registration_id,
+          round:rounds(name),
+          tournament:tournaments(name, start_date)
+        `)
+        .not('result', 'is', null)
+        .or(`aff_registration_id.in.(${regIds1.join(',')}),neg_registration_id.in.(${regIds1.join(',')})`)
+        .or(`aff_registration_id.in.(${regIds2.join(',')}),neg_registration_id.in.(${regIds2.join(',')})`);
+      
+      // Filter to only matchups between the two competitors
+      const directMatchups = (matchups || []).filter(m => {
+        const isComp1Aff = regIds1.includes(m.aff_registration_id);
+        const isComp1Neg = regIds1.includes(m.neg_registration_id);
+        const isComp2Aff = regIds2.includes(m.aff_registration_id);
+        const isComp2Neg = regIds2.includes(m.neg_registration_id);
+        return (isComp1Aff && isComp2Neg) || (isComp1Neg && isComp2Aff);
+      });
+      
+      // Calculate stats from recent results
+      const comp1Results = recentResults.filter(r => r.participant_name === competitor1);
+      const comp2Results = recentResults.filter(r => r.participant_name === competitor2);
+      
+      const comp1Stats: CompetitorStats = {
+        name: competitor1,
+        school: comp1Results[0]?.school || null,
+        total_wins: comp1Results.reduce((sum, r) => sum + r.wins, 0),
+        total_losses: comp1Results.reduce((sum, r) => sum + r.losses, 0),
+        win_rate: 0,
+        avg_speaks: comp1Results.length > 0 
+          ? comp1Results.reduce((sum, r) => sum + r.speaks_avg, 0) / comp1Results.length 
+          : 0,
+        total_rounds: comp1Results.reduce((sum, r) => sum + r.wins + r.losses, 0),
+        tournaments_count: comp1Results.length
+      };
+      comp1Stats.win_rate = comp1Stats.total_rounds > 0 
+        ? Math.round((comp1Stats.total_wins / comp1Stats.total_rounds) * 100) 
+        : 0;
+      
+      const comp2Stats: CompetitorStats = {
+        name: competitor2,
+        school: comp2Results[0]?.school || null,
+        total_wins: comp2Results.reduce((sum, r) => sum + r.wins, 0),
+        total_losses: comp2Results.reduce((sum, r) => sum + r.losses, 0),
+        win_rate: 0,
+        avg_speaks: comp2Results.length > 0 
+          ? comp2Results.reduce((sum, r) => sum + r.speaks_avg, 0) / comp2Results.length 
+          : 0,
+        total_rounds: comp2Results.reduce((sum, r) => sum + r.wins + r.losses, 0),
+        tournaments_count: comp2Results.length
+      };
+      comp2Stats.win_rate = comp2Stats.total_rounds > 0 
+        ? Math.round((comp2Stats.total_wins / comp2Stats.total_rounds) * 100) 
+        : 0;
+      
+      // Process direct matchups
+      let comp1Wins = 0;
+      let comp2Wins = 0;
+      const matches: HeadToHeadMatch[] = directMatchups.map(m => {
+        const result = m.result as any;
+        const isComp1Aff = regIds1.includes(m.aff_registration_id);
+        const winner = result?.winner === 'aff' 
+          ? (isComp1Aff ? competitor1 : competitor2)
+          : (isComp1Aff ? competitor2 : competitor1);
+        
+        if (winner === competitor1) comp1Wins++;
+        else comp2Wins++;
+        
+        return {
+          id: m.id,
+          tournament_name: (m.tournament as any)?.name || 'Unknown',
+          round_name: (m.round as any)?.name || 'Unknown Round',
+          date: (m.tournament as any)?.start_date || '',
+          winner,
+          competitor1_side: (isComp1Aff ? 'aff' : 'neg') as 'aff' | 'neg',
+          competitor1_speaks: isComp1Aff ? result?.aff_speaks : result?.neg_speaks,
+          competitor2_speaks: isComp1Aff ? result?.neg_speaks : result?.aff_speaks,
+        };
+      }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      
+      setHeadToHead({
+        competitor1: comp1Stats,
+        competitor2: comp2Stats,
+        matches,
+        competitor1_wins: comp1Wins,
+        competitor2_wins: comp2Wins
+      });
+    } catch (error) {
+      console.error('Error fetching head-to-head:', error);
+    } finally {
+      setComparisonLoading(false);
+    }
+  };
+
+  const swapCompetitors = () => {
+    const temp = competitor1;
+    setCompetitor1(competitor2);
+    setCompetitor2(temp);
+    setHeadToHead(null);
+  };
+
   const getTimePeriodLabel = () => {
     if (timePeriod === 'all') return 'All Time';
     return timePeriod;
@@ -539,6 +735,10 @@ const Results = () => {
               </TabsTrigger>
               <TabsTrigger value="championships" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                 Championships
+              </TabsTrigger>
+              <TabsTrigger value="compare" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex items-center gap-1.5">
+                <Swords className="h-4 w-4" />
+                Compare
               </TabsTrigger>
             </TabsList>
 
@@ -942,6 +1142,348 @@ const Results = () => {
                     </CardContent>
                   </Card>
                 ))
+              )}
+            </TabsContent>
+
+            {/* Compare Tab */}
+            <TabsContent value="compare" className="space-y-6">
+              {/* Competitor Selectors */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Swords className="h-5 w-5 text-primary" />
+                    Compare Competitors
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Select two competitors to compare their overall statistics and head-to-head record
+                  </p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid md:grid-cols-[1fr_auto_1fr_auto] gap-4 items-end">
+                    {/* Competitor 1 Selector */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-foreground">Competitor 1</label>
+                      <Popover open={open1} onOpenChange={setOpen1}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={open1}
+                            className="w-full justify-between"
+                          >
+                            {competitor1 || "Select competitor..."}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[300px] p-0">
+                          <Command>
+                            <CommandInput placeholder="Search competitors..." />
+                            <CommandList>
+                              <CommandEmpty>No competitor found.</CommandEmpty>
+                              <CommandGroup className="max-h-60 overflow-y-auto">
+                                {uniqueCompetitors.map((c) => (
+                                  <CommandItem
+                                    key={c.name}
+                                    value={c.name}
+                                    onSelect={(value) => {
+                                      setCompetitor1(value === competitor1 ? null : value);
+                                      setOpen1(false);
+                                      setHeadToHead(null);
+                                    }}
+                                  >
+                                    <Check
+                                      className={cn(
+                                        "mr-2 h-4 w-4",
+                                        competitor1 === c.name ? "opacity-100" : "opacity-0"
+                                      )}
+                                    />
+                                    <div>
+                                      <div>{c.name}</div>
+                                      {c.school && <div className="text-xs text-muted-foreground">{c.school}</div>}
+                                    </div>
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+
+                    {/* Swap Button */}
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      onClick={swapCompetitors}
+                      disabled={!competitor1 && !competitor2}
+                      className="hidden md:flex"
+                    >
+                      <ArrowRightLeft className="h-4 w-4" />
+                    </Button>
+
+                    {/* Competitor 2 Selector */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-foreground">Competitor 2</label>
+                      <Popover open={open2} onOpenChange={setOpen2}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={open2}
+                            className="w-full justify-between"
+                          >
+                            {competitor2 || "Select competitor..."}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[300px] p-0">
+                          <Command>
+                            <CommandInput placeholder="Search competitors..." />
+                            <CommandList>
+                              <CommandEmpty>No competitor found.</CommandEmpty>
+                              <CommandGroup className="max-h-60 overflow-y-auto">
+                                {uniqueCompetitors.map((c) => (
+                                  <CommandItem
+                                    key={c.name}
+                                    value={c.name}
+                                    onSelect={(value) => {
+                                      setCompetitor2(value === competitor2 ? null : value);
+                                      setOpen2(false);
+                                      setHeadToHead(null);
+                                    }}
+                                  >
+                                    <Check
+                                      className={cn(
+                                        "mr-2 h-4 w-4",
+                                        competitor2 === c.name ? "opacity-100" : "opacity-0"
+                                      )}
+                                    />
+                                    <div>
+                                      <div>{c.name}</div>
+                                      {c.school && <div className="text-xs text-muted-foreground">{c.school}</div>}
+                                    </div>
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+
+                    {/* Compare Button */}
+                    <Button 
+                      onClick={fetchHeadToHead}
+                      disabled={!competitor1 || !competitor2 || competitor1 === competitor2 || comparisonLoading}
+                    >
+                      {comparisonLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Loading...
+                        </>
+                      ) : (
+                        <>
+                          <Swords className="mr-2 h-4 w-4" />
+                          Compare
+                        </>
+                      )}
+                    </Button>
+                  </div>
+
+                  {competitor1 === competitor2 && competitor1 && (
+                    <p className="text-sm text-destructive">Please select two different competitors</p>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Comparison Results */}
+              {headToHead && (
+                <div className="space-y-6">
+                  {/* Stats Cards Side-by-Side */}
+                  <div className="grid md:grid-cols-2 gap-6">
+                    {/* Competitor 1 Stats */}
+                    <Card className="border-l-4 border-l-primary">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-lg">{headToHead.competitor1.name}</CardTitle>
+                        <p className="text-sm text-muted-foreground">{headToHead.competitor1.school || 'Independent'}</p>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <div className="text-2xl font-bold text-foreground">
+                              {headToHead.competitor1.total_wins}-{headToHead.competitor1.total_losses}
+                            </div>
+                            <div className="text-xs text-muted-foreground">Win-Loss Record</div>
+                          </div>
+                          <div>
+                            <div className="text-2xl font-bold text-primary">{headToHead.competitor1.win_rate}%</div>
+                            <div className="text-xs text-muted-foreground">Win Rate</div>
+                          </div>
+                          <div>
+                            <div className="text-2xl font-bold text-foreground">{headToHead.competitor1.avg_speaks.toFixed(1)}</div>
+                            <div className="text-xs text-muted-foreground">Avg Speaker Points</div>
+                          </div>
+                          <div>
+                            <div className="text-2xl font-bold text-foreground">{headToHead.competitor1.tournaments_count}</div>
+                            <div className="text-xs text-muted-foreground">Tournaments</div>
+                          </div>
+                        </div>
+                        <div>
+                          <div className="flex justify-between text-xs mb-1">
+                            <span>Win Rate</span>
+                            <span>{headToHead.competitor1.win_rate}%</span>
+                          </div>
+                          <Progress value={headToHead.competitor1.win_rate} className="h-2" />
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Competitor 2 Stats */}
+                    <Card className="border-l-4 border-l-secondary">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-lg">{headToHead.competitor2.name}</CardTitle>
+                        <p className="text-sm text-muted-foreground">{headToHead.competitor2.school || 'Independent'}</p>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <div className="text-2xl font-bold text-foreground">
+                              {headToHead.competitor2.total_wins}-{headToHead.competitor2.total_losses}
+                            </div>
+                            <div className="text-xs text-muted-foreground">Win-Loss Record</div>
+                          </div>
+                          <div>
+                            <div className="text-2xl font-bold text-secondary">{headToHead.competitor2.win_rate}%</div>
+                            <div className="text-xs text-muted-foreground">Win Rate</div>
+                          </div>
+                          <div>
+                            <div className="text-2xl font-bold text-foreground">{headToHead.competitor2.avg_speaks.toFixed(1)}</div>
+                            <div className="text-xs text-muted-foreground">Avg Speaker Points</div>
+                          </div>
+                          <div>
+                            <div className="text-2xl font-bold text-foreground">{headToHead.competitor2.tournaments_count}</div>
+                            <div className="text-xs text-muted-foreground">Tournaments</div>
+                          </div>
+                        </div>
+                        <div>
+                          <div className="flex justify-between text-xs mb-1">
+                            <span>Win Rate</span>
+                            <span>{headToHead.competitor2.win_rate}%</span>
+                          </div>
+                          <Progress value={headToHead.competitor2.win_rate} className="h-2" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Head-to-Head Summary */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Swords className="h-5 w-5" />
+                        Head-to-Head Record
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {headToHead.matches.length === 0 ? (
+                        <div className="text-center py-8">
+                          <Users className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+                          <h3 className="font-semibold text-foreground mb-1">No Direct Matchups Found</h3>
+                          <p className="text-sm text-muted-foreground">
+                            These competitors have not faced each other in recorded tournaments.
+                          </p>
+                        </div>
+                      ) : (
+                        <>
+                          {/* Win Summary */}
+                          <div className="flex items-center justify-center gap-8 mb-6 p-4 bg-muted/50 rounded-lg">
+                            <div className="text-center">
+                              <div className={cn(
+                                "text-4xl font-bold",
+                                headToHead.competitor1_wins > headToHead.competitor2_wins 
+                                  ? "text-primary" 
+                                  : "text-muted-foreground"
+                              )}>
+                                {headToHead.competitor1_wins}
+                              </div>
+                              <p className="text-sm text-muted-foreground">{headToHead.competitor1.name}</p>
+                            </div>
+                            <div className="text-2xl text-muted-foreground font-light">vs</div>
+                            <div className="text-center">
+                              <div className={cn(
+                                "text-4xl font-bold",
+                                headToHead.competitor2_wins > headToHead.competitor1_wins 
+                                  ? "text-secondary" 
+                                  : "text-muted-foreground"
+                              )}>
+                                {headToHead.competitor2_wins}
+                              </div>
+                              <p className="text-sm text-muted-foreground">{headToHead.competitor2.name}</p>
+                            </div>
+                          </div>
+
+                          {/* Match History Table */}
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Tournament</TableHead>
+                                <TableHead>Round</TableHead>
+                                <TableHead>Date</TableHead>
+                                <TableHead>Winner</TableHead>
+                                <TableHead className="text-right">Speaker Points</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {headToHead.matches.map((match) => (
+                                <TableRow key={match.id}>
+                                  <TableCell className="font-medium">{match.tournament_name}</TableCell>
+                                  <TableCell>{match.round_name}</TableCell>
+                                  <TableCell>{new Date(match.date).toLocaleDateString()}</TableCell>
+                                  <TableCell>
+                                    <div className="flex items-center gap-2">
+                                      {match.winner === headToHead.competitor1.name ? (
+                                        <Trophy className="h-4 w-4 text-primary" />
+                                      ) : (
+                                        <Trophy className="h-4 w-4 text-secondary" />
+                                      )}
+                                      <span className={cn(
+                                        "font-medium",
+                                        match.winner === headToHead.competitor1.name 
+                                          ? "text-primary" 
+                                          : "text-secondary"
+                                      )}>
+                                        {match.winner}
+                                      </span>
+                                    </div>
+                                  </TableCell>
+                                  <TableCell className="text-right">
+                                    <span className="text-primary">{match.competitor1_speaks ?? '-'}</span>
+                                    <span className="text-muted-foreground mx-2">vs</span>
+                                    <span className="text-secondary">{match.competitor2_speaks ?? '-'}</span>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
+              {/* Empty State */}
+              {!headToHead && !comparisonLoading && (
+                <Card>
+                  <CardContent className="text-center py-12">
+                    <Swords className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold text-foreground mb-2">Compare Head-to-Head</h3>
+                    <p className="text-muted-foreground max-w-md mx-auto">
+                      Select two competitors above to view their overall statistics side-by-side 
+                      and see their head-to-head matchup history.
+                    </p>
+                  </CardContent>
+                </Card>
               )}
             </TabsContent>
           </Tabs>
