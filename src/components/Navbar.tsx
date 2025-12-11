@@ -39,9 +39,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-// Lazy load notification components - only needed when user is logged in
-const UserNotifications = lazy(() => import('./UserNotifications').then(m => ({ default: m.UserNotifications })));
-const NotificationsDropdown = lazy(() => import('./admin/NotificationsDropdown').then(m => ({ default: m.NotificationsDropdown })));
+// Lazy load unified notification dropdown - only needed when user is logged in
+const UnifiedNotificationDropdown = lazy(() => import('./UnifiedNotificationDropdown').then(m => ({ default: m.UnifiedNotificationDropdown })));
 
 // Notification loading fallback
 const NotificationFallback = () => (
@@ -226,13 +225,8 @@ function NavbarComponent() {
             
             {user ? (
               <>
-                {isAdmin && (
-                  <Suspense fallback={<NotificationFallback />}>
-                    <NotificationsDropdown />
-                  </Suspense>
-                )}
                 <Suspense fallback={<NotificationFallback />}>
-                  <UserNotifications />
+                  <UnifiedNotificationDropdown />
                 </Suspense>
                 
                 {/* Desktop Dashboard Dropdown */}
