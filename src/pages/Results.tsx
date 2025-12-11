@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trophy, Medal, Award, Calendar, Users, Search, Crown, Star, MapPin, DollarSign, Gift, Building } from "lucide-react";
+import { Trophy, Medal, Award, Calendar, Users, Search, Crown, Star, MapPin, DollarSign, Gift, Building, MessageSquare, TrendingUp } from "lucide-react";
 
 interface TournamentResult {
   id: string;
@@ -23,6 +23,7 @@ interface TournamentResult {
   speaks_total: number;
   speaks_avg: number;
 }
+
 interface GroupedTournamentResults {
   tournament_id: string;
   tournament_name: string;
@@ -37,7 +38,9 @@ interface TopPerformer {
   total_wins: number;
   total_losses: number;
   total_speaks: number;
+  speaks_avg: number;
   tournaments_count: number;
+  total_rounds: number;
   win_rate: number;
 }
 
@@ -69,12 +72,13 @@ interface Championship {
 
 const Results = () => {
   const [recentResults, setRecentResults] = useState<TournamentResult[]>([]);
-  const [topPerformers, setTopPerformers] = useState<TopPerformer[]>([]);
   const [championships, setChampionships] = useState<Championship[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [formatFilter, setFormatFilter] = useState('all');
+  const [timePeriod, setTimePeriod] = useState('all');
   const [formats, setFormats] = useState<string[]>([]);
+  const [availableYears, setAvailableYears] = useState<number[]>([]);
 
   useEffect(() => {
     fetchAllResults();
@@ -105,7 +109,7 @@ const Results = () => {
           )
         `)
         .order('rank')
-        .limit(100);
+        .limit(500);
 
       if (standingsError) {
         console.error('Error fetching standings:', standingsError);
@@ -134,45 +138,13 @@ const Results = () => {
         const uniqueFormats = [...new Set(formattedResults.map(r => r.format).filter(Boolean))];
         setFormats(uniqueFormats);
 
-        // Calculate top performers by aggregating standings
-        const performerMap = new Map<string, TopPerformer>();
-        formattedResults.forEach(result => {
-          const key = result.participant_name;
-          const existing = performerMap.get(key);
-          if (existing) {
-            existing.total_wins += result.wins;
-            existing.total_losses += result.losses;
-            existing.total_speaks += result.speaks_total;
-            existing.tournaments_count += 1;
-          } else {
-            performerMap.set(key, {
-              participant_name: result.participant_name,
-              school: result.school,
-              total_wins: result.wins,
-              total_losses: result.losses,
-              total_speaks: result.speaks_total,
-              tournaments_count: 1,
-              win_rate: 0,
-            });
-          }
-        });
-
-        // Calculate win rates and sort
-        const performers = Array.from(performerMap.values())
-          .map(p => ({
-            ...p,
-            win_rate: p.total_wins + p.total_losses > 0 
-              ? Math.round((p.total_wins / (p.total_wins + p.total_losses)) * 100) 
-              : 0
-          }))
-          .sort((a, b) => {
-            // Sort by wins first, then by win rate
-            if (b.total_wins !== a.total_wins) return b.total_wins - a.total_wins;
-            return b.win_rate - a.win_rate;
-          })
-          .slice(0, 10);
-
-        setTopPerformers(performers);
+        // Extract available years from tournament dates
+        const years = [...new Set(
+          formattedResults
+            .map(r => new Date(r.start_date).getFullYear())
+            .filter(y => !isNaN(y))
+        )].sort((a, b) => b - a); // Most recent first
+        setAvailableYears(years);
       }
 
       // Fetch completed championship tournaments with prize info
@@ -192,7 +164,7 @@ const Results = () => {
         .eq('status', 'Completed')
         .eq('is_championship', true)
         .order('end_date', { ascending: false })
-        .limit(20);
+        .limit(50);
 
       if (tournamentsError) {
         console.error('Error fetching tournaments:', tournamentsError);
@@ -299,6 +271,74 @@ const Results = () => {
     return registration.participant_name;
   };
 
+  // Filter by time period
+  const filterByTimePeriod = (date: string) => {
+    if (timePeriod === 'all') return true;
+    const year = new Date(date).getFullYear();
+    return year === parseInt(timePeriod);
+  };
+
+  // Calculate top performers from filtered results
+  const { topBySpeaks, topByWinRate } = useMemo(() => {
+    const filteredByTime = recentResults.filter(r => filterByTimePeriod(r.start_date));
+    
+    const performerMap = new Map<string, TopPerformer>();
+    filteredByTime.forEach(result => {
+      const key = result.participant_name;
+      const existing = performerMap.get(key);
+      const rounds = result.wins + result.losses;
+      
+      if (existing) {
+        existing.total_wins += result.wins;
+        existing.total_losses += result.losses;
+        existing.total_speaks += result.speaks_total;
+        existing.total_rounds += rounds;
+        existing.tournaments_count += 1;
+        // Recalculate average speaks
+        existing.speaks_avg = existing.total_rounds > 0 
+          ? existing.total_speaks / existing.total_rounds 
+          : 0;
+      } else {
+        performerMap.set(key, {
+          participant_name: result.participant_name,
+          school: result.school,
+          total_wins: result.wins,
+          total_losses: result.losses,
+          total_speaks: result.speaks_total,
+          speaks_avg: rounds > 0 ? result.speaks_total / rounds : 0,
+          tournaments_count: 1,
+          total_rounds: rounds,
+          win_rate: 0,
+        });
+      }
+    });
+
+    // Calculate win rates
+    const performers = Array.from(performerMap.values()).map(p => ({
+      ...p,
+      win_rate: p.total_wins + p.total_losses > 0 
+        ? Math.round((p.total_wins / (p.total_wins + p.total_losses)) * 100) 
+        : 0
+    }));
+
+    // Top by speaker points (sorted by speaks_avg)
+    const topBySpeaks = [...performers]
+      .filter(p => p.total_rounds >= 2) // Minimum 2 rounds
+      .sort((a, b) => b.speaks_avg - a.speaks_avg)
+      .slice(0, 10);
+
+    // Top by win rate (minimum 4 rounds to qualify)
+    const topByWinRate = [...performers]
+      .filter(p => p.total_rounds >= 4) // Minimum 4 rounds
+      .sort((a, b) => {
+        if (b.win_rate !== a.win_rate) return b.win_rate - a.win_rate;
+        return b.total_wins - a.total_wins; // Tiebreaker: total wins
+      })
+      .slice(0, 10);
+
+    return { topBySpeaks, topByWinRate };
+  }, [recentResults, timePeriod]);
+
   const getPositionIcon = (rank: number) => {
     if (rank === 1) return <Crown className="h-6 w-6 text-primary" />;
     if (rank === 2) return <Medal className="h-6 w-6 text-primary/80" />;
@@ -313,7 +353,7 @@ const Results = () => {
     return { text: `${rank}th Place`, variant: 'outline' as const, className: 'border-border text-muted-foreground' };
   };
 
-  // Filter results based on search and format
+  // Filter results based on search, format, and time period
   const filteredResults = recentResults.filter(result => {
     const matchesSearch = searchQuery === '' || 
       result.tournament_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -321,9 +361,13 @@ const Results = () => {
       (result.school?.toLowerCase().includes(searchQuery.toLowerCase()));
     
     const matchesFormat = formatFilter === 'all' || result.format === formatFilter;
+    const matchesTime = filterByTimePeriod(result.start_date);
     
-    return matchesSearch && matchesFormat;
+    return matchesSearch && matchesFormat && matchesTime;
   });
+
+  // Filter championships by time period
+  const filteredChampionships = championships.filter(c => filterByTimePeriod(c.start_date));
 
   // Group results by tournament
   const groupResultsByTournament = (results: TournamentResult[]): GroupedTournamentResults[] => {
@@ -354,6 +398,11 @@ const Results = () => {
   };
 
   const groupedResults = groupResultsByTournament(filteredResults);
+
+  const getTimePeriodLabel = () => {
+    if (timePeriod === 'all') return 'All Time';
+    return timePeriod;
+  };
 
   if (loading) {
     return (
@@ -406,6 +455,19 @@ const Results = () => {
                   ))}
                 </SelectContent>
               </Select>
+
+              <Select value={timePeriod} onValueChange={setTimePeriod}>
+                <SelectTrigger className="w-36">
+                  <Calendar className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Time Period" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Time</SelectItem>
+                  {availableYears.map(year => (
+                    <SelectItem key={year} value={String(year)}>{year}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </div>
@@ -434,7 +496,7 @@ const Results = () => {
                     <Trophy className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
                     <h3 className="text-xl font-semibold text-foreground mb-2">No Results Yet</h3>
                     <p className="text-muted-foreground mb-6">
-                      {searchQuery || formatFilter !== 'all' 
+                      {searchQuery || formatFilter !== 'all' || timePeriod !== 'all'
                         ? 'No results match your search criteria.'
                         : 'Tournament results will appear here once competitions conclude.'}
                     </p>
@@ -511,76 +573,130 @@ const Results = () => {
             </TabsContent>
 
             <TabsContent value="rankings" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Star className="h-5 w-5 text-primary" />
-                    Top Performers - All Time
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {topPerformers.length === 0 ? (
-                    <div className="text-center py-12">
-                      <Star className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                      <h3 className="text-lg font-semibold text-foreground mb-2">Rankings Coming Soon</h3>
-                      <p className="text-muted-foreground">Top performers will be listed once tournament data is available.</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {topPerformers.map((performer, index) => (
-                        <div 
-                          key={performer.participant_name} 
-                          className="flex items-center justify-between p-4 rounded-lg bg-muted/50 border border-border hover:border-primary/20 transition-all"
-                        >
-                          <div className="flex items-center gap-4">
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
-                              index === 0 ? 'bg-primary text-primary-foreground' : 
-                              index === 1 ? 'bg-primary/80 text-primary-foreground' : 
-                              index === 2 ? 'bg-primary/60 text-primary-foreground' : 
-                              'bg-muted text-muted-foreground'
-                            }`}>
-                              {index + 1}
+              <div className="grid md:grid-cols-2 gap-6">
+                {/* Top by Speaker Points */}
+                <Card>
+                  <CardHeader className="bg-gradient-to-r from-amber-500/10 to-transparent border-b border-border">
+                    <CardTitle className="flex items-center gap-2">
+                      <MessageSquare className="h-5 w-5 text-amber-500" />
+                      Top Speaker Points
+                    </CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      {getTimePeriodLabel()} • Ranked by average speaker points
+                    </p>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    {topBySpeaks.length === 0 ? (
+                      <div className="text-center py-12 px-4">
+                        <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+                        <p className="text-muted-foreground">No speaker data available for this period.</p>
+                      </div>
+                    ) : (
+                      <div className="divide-y divide-border">
+                        {topBySpeaks.map((performer, index) => (
+                          <div 
+                            key={performer.participant_name} 
+                            className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
+                                index === 0 ? 'bg-amber-500 text-white' : 
+                                index === 1 ? 'bg-amber-400 text-white' : 
+                                index === 2 ? 'bg-amber-300 text-amber-900' : 
+                                'bg-muted text-muted-foreground'
+                              }`}>
+                                {index + 1}
+                              </div>
+                              <div>
+                                <div className="font-semibold text-foreground">{performer.participant_name}</div>
+                                <div className="text-xs text-muted-foreground">{performer.school || 'Independent'}</div>
+                              </div>
                             </div>
-                            
-                            <div>
-                              <div className="font-bold text-foreground">{performer.participant_name}</div>
-                              <div className="text-sm text-muted-foreground">{performer.school || 'Independent'}</div>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-center gap-6 text-sm">
-                            <div className="text-center">
-                              <div className="font-bold text-foreground">{performer.total_wins}</div>
-                              <div className="text-muted-foreground">Wins</div>
-                            </div>
-                            <div className="text-center">
-                              <div className="font-bold text-foreground">{performer.tournaments_count}</div>
-                              <div className="text-muted-foreground">Tournaments</div>
-                            </div>
-                            <div className="text-center">
-                              <div className="font-bold text-primary">{performer.win_rate}%</div>
-                              <div className="text-muted-foreground">Win Rate</div>
+                            <div className="text-right">
+                              <div className="font-bold text-amber-600 dark:text-amber-400">
+                                {performer.speaks_avg.toFixed(1)}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                {performer.total_rounds} rounds
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Top by Win Rate */}
+                <Card>
+                  <CardHeader className="bg-gradient-to-r from-emerald-500/10 to-transparent border-b border-border">
+                    <CardTitle className="flex items-center gap-2">
+                      <TrendingUp className="h-5 w-5 text-emerald-500" />
+                      Top Win Rate
+                    </CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      {getTimePeriodLabel()} • Min 4 rounds • Ranked by win %
+                    </p>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    {topByWinRate.length === 0 ? (
+                      <div className="text-center py-12 px-4">
+                        <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+                        <p className="text-muted-foreground">No win data available for this period.</p>
+                      </div>
+                    ) : (
+                      <div className="divide-y divide-border">
+                        {topByWinRate.map((performer, index) => (
+                          <div 
+                            key={performer.participant_name} 
+                            className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
+                                index === 0 ? 'bg-emerald-500 text-white' : 
+                                index === 1 ? 'bg-emerald-400 text-white' : 
+                                index === 2 ? 'bg-emerald-300 text-emerald-900' : 
+                                'bg-muted text-muted-foreground'
+                              }`}>
+                                {index + 1}
+                              </div>
+                              <div>
+                                <div className="font-semibold text-foreground">{performer.participant_name}</div>
+                                <div className="text-xs text-muted-foreground">{performer.school || 'Independent'}</div>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="font-bold text-emerald-600 dark:text-emerald-400">
+                                {performer.win_rate}%
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                {performer.total_wins}W-{performer.total_losses}L
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
             </TabsContent>
 
             <TabsContent value="championships" className="space-y-8">
-              {championships.length === 0 ? (
+              {filteredChampionships.length === 0 ? (
                 <Card>
                   <CardContent className="text-center py-12">
                     <Crown className="h-16 w-16 text-primary/40 mx-auto mb-4" />
                     <h3 className="text-xl font-semibold text-foreground mb-2">No Championship Tournaments</h3>
-                    <p className="text-muted-foreground">Championship results will appear here once designated championship tournaments are completed.</p>
+                    <p className="text-muted-foreground">
+                      {timePeriod !== 'all' 
+                        ? `No championship results found for ${timePeriod}.`
+                        : 'Championship results will appear here once designated championship tournaments are completed.'}
+                    </p>
                   </CardContent>
                 </Card>
               ) : (
-                championships.map((tournament) => (
+                filteredChampionships.map((tournament) => (
                   <Card key={tournament.id} className="overflow-hidden border-2 border-primary/20 hover:border-primary/40 transition-all">
                     {/* Championship Header */}
                     <CardHeader className="bg-gradient-to-r from-primary/15 via-primary/10 to-primary/5 border-b border-primary/20">
