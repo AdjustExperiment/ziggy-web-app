@@ -1,3 +1,10 @@
+/**
+ * Ziggy Online Debate Platform
+ * © 2011-2025 Justus Aryani. All Rights Reserved.
+ * Proprietary and Confidential.
+ * Unauthorized copying, modification, or distribution is strictly prohibited.
+ */
+
 import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { Toaster } from "@/components/ui/toaster"
@@ -54,6 +61,7 @@ const HostTournament = React.lazy(() => import('@/pages/HostTournament'));
 const ClubPartners = React.lazy(() => import('@/pages/ClubPartners'));
 const Ambassador = React.lazy(() => import('@/pages/Ambassador'));
 const SponsorApplication = React.lazy(() => import('@/pages/SponsorApplication'));
+const Terms = React.lazy(() => import('@/pages/Terms'));
 // Loading component for Suspense fallback
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center">
@@ -174,7 +182,7 @@ function App() {
               <Route path="/host-tournament" element={<HostTournament />} />
               <Route path="/club-partners" element={<ClubPartners />} />
               <Route path="/ambassador" element={<Ambassador />} />
-              <Route path="/terms" element={<Navigate to="/rules" replace />} />
+              <Route path="/terms" element={<Terms />} />
               <Route path="/analytics" element={<Analytics />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

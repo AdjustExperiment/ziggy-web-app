@@ -1,3 +1,8 @@
+/**
+ * Ziggy Online Debate Platform
+ * © 2011-2025 Justus Aryani. All Rights Reserved.
+ */
+
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -20,7 +25,7 @@ const Privacy = () => {
               <section className="mb-8">
                 <h2 className="text-2xl font-semibold text-foreground mb-4">Introduction</h2>
                 <p className="text-muted-foreground leading-relaxed mb-4">
-                  Ziggy Online Debate is fully owned and operated by "Galactic Horizons LLC – Series 1 – Ziggy Online Debate, Protected Series," a series of Galactic Horizons LLC <em>(www.galactichorizons.com)</em>.
+                  The Ziggy Online Debate platform and all associated source code, designs, and intellectual property are the <strong>exclusive creative work of Justus Aryani</strong>, licensed for operation under Galactic Horizons LLC – Series 1 – Ziggy Online Debate, Protected Series <em>(www.galactichorizons.com)</em>.
                 </p>
                 <p className="text-muted-foreground leading-relaxed mb-4">
                   Ziggy Online Debate provides an online platform for people to compete, schedule, and judge debate rounds. Accordingly, we collect information from you when you choose to sign up for our services or purchase our products. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our website and or service. Please read this Privacy Policy carefully. If you do not agree with the terms of this Privacy Policy, please do not access the site or use our services.

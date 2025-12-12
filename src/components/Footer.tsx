@@ -219,11 +219,18 @@ export function Footer() {
 
         {/* Bottom Section */}
         <div className="border-t border-primary/20 mt-8 pt-8 flex flex-col sm:flex-row justify-between items-center">
-          <div className="text-muted-foreground text-sm font-secondary">
-            © {new Date().getFullYear()} Ziggy Online Debate™. All rights reserved.
+          <div className="text-muted-foreground text-sm font-secondary space-y-1">
+            <div>© {new Date().getFullYear()} Ziggy Online Debate™. All rights reserved.</div>
+            <div className="text-xs text-muted-foreground/70">Designed & Built by Justus Aryani</div>
           </div>
           
           <div className="flex items-center space-x-4 mt-4 sm:mt-0">
+            <Link 
+              to="/terms" 
+              className="text-muted-foreground hover:text-primary text-sm transition-colors"
+            >
+              Terms of Service
+            </Link>
             <Link 
               to="/privacy" 
               className="text-muted-foreground hover:text-primary text-sm transition-colors"

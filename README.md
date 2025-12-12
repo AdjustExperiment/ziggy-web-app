@@ -1,5 +1,15 @@
 # Welcome to the Ziggy Web-App
 
+## Ownership & Copyright
+
+**© 2011-2025 Justus Aryani. All Rights Reserved.**
+
+The Ziggy Online Debate platform, including all source code, designs, user interfaces, and intellectual property, is the exclusive creative work and property of Justus Aryani. Licensed for operation under Galactic Horizons LLC – Series 1 – Ziggy Online Debate, Protected Series.
+
+Unauthorized copying, modification, or distribution is strictly prohibited.
+
+---
+
 ## Project info
 
 [<img alt="Deployed with FTP Deploy Action" src="https://img.shields.io/badge/Deployed With-FTP DEPLOY ACTION-%3CCOLOR%3E?style=for-the-badge&color=0077b6">](https://github.com/SamKirkland/FTP-Deploy-Action)
