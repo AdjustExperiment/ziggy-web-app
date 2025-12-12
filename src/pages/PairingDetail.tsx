@@ -16,6 +16,13 @@ import { Separator } from '@/components/ui/separator';
 import JudgeRequestModal from '@/components/JudgeRequestModal';
 import EnhancedJudgeRequestModal from '@/components/EnhancedJudgeRequestModal';
 
+interface TournamentSettings {
+  judge_requests_enabled: boolean;
+  schedule_proposals_enabled: boolean;
+  is_online: boolean;
+  tournament_type: string;
+}
+
 interface PairingDetailData {
   id: string;
   room: string | null;
@@ -86,6 +93,8 @@ interface Evidence {
 
 type UserRole = 'participant' | 'judge' | 'observer' | 'unauthorized';
 
+import { ScheduleProposalModal } from '@/components/ScheduleProposalModal';
+
 export default function PairingDetail() {
   const { pairingId } = useParams<{ pairingId: string }>();
   const { user } = useAuth();
@@ -99,7 +108,14 @@ export default function PairingDetail() {
   const [uploadingFile, setUploadingFile] = useState(false);
   const [userSide, setUserSide] = useState<'aff' | 'neg' | null>(null);
   const [showJudgeRequest, setShowJudgeRequest] = useState(false);
+  const [showScheduleProposal, setShowScheduleProposal] = useState(false);
   const [userRole, setUserRole] = useState<UserRole>('unauthorized');
+  const [tournamentSettings, setTournamentSettings] = useState<TournamentSettings>({
+    judge_requests_enabled: true,
+    schedule_proposals_enabled: true,
+    is_online: true,
+    tournament_type: 'long_form',
+  });
 
   useEffect(() => {
     if (pairingId && user) {
@@ -244,6 +260,22 @@ export default function PairingDetail() {
       if (error) throw error;
       
       setPairing(data);
+      
+      // Fetch tournament settings for feature visibility
+      const { data: tournamentData } = await supabase
+        .from('tournaments')
+        .select('judge_requests_enabled, schedule_proposals_enabled, is_online, tournament_type')
+        .eq('id', data.tournament_id)
+        .single();
+
+      if (tournamentData) {
+        setTournamentSettings({
+          judge_requests_enabled: tournamentData.judge_requests_enabled ?? true,
+          schedule_proposals_enabled: tournamentData.schedule_proposals_enabled ?? true,
+          is_online: tournamentData.is_online ?? true,
+          tournament_type: tournamentData.tournament_type ?? 'long_form',
+        });
+      }
       
       // Determine user's side
       if (data.aff_registration.user_id === user?.id) {
@@ -550,6 +582,42 @@ export default function PairingDetail() {
         </CardHeader>
       </Card>
 
+      {/* Actions - Conditional based on tournament settings */}
+      {userRole === 'participant' && !isObserver && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="text-lg">Actions</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-3">
+            {tournamentSettings.judge_requests_enabled && (
+              <Button 
+                variant="outline" 
+                onClick={() => setShowJudgeRequest(true)}
+                className="flex items-center gap-2"
+              >
+                <Gavel className="h-4 w-4" />
+                Request Judge
+              </Button>
+            )}
+            {tournamentSettings.schedule_proposals_enabled && (
+              <Button 
+                variant="outline" 
+                onClick={() => setShowScheduleProposal(true)}
+                className="flex items-center gap-2"
+              >
+                <Calendar className="h-4 w-4" />
+                Propose Schedule
+              </Button>
+            )}
+            {!tournamentSettings.judge_requests_enabled && !tournamentSettings.schedule_proposals_enabled && (
+              <p className="text-sm text-muted-foreground">
+                This is a live-paced tournament. Schedule changes and judge requests are managed by tournament admins.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         {/* Participants */}
         <Card>
@@ -829,6 +897,25 @@ export default function PairingDetail() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Modals */}
+      {pairing && (
+        <>
+          <JudgeRequestModal
+            isOpen={showJudgeRequest}
+            onClose={() => setShowJudgeRequest(false)}
+            pairingId={pairing.id}
+            tournamentName={pairing.tournament.name}
+            roundName={pairing.round.name}
+          />
+          <ScheduleProposalModal
+            pairingId={pairing.id}
+            isOpen={showScheduleProposal}
+            onClose={() => setShowScheduleProposal(false)}
+            onSubmit={() => fetchPairingDetail()}
+          />
+        </>
+      )}
     </div>
   );
 }

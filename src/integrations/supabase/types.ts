@@ -1464,6 +1464,7 @@ export type Database = {
           status: string
           tournament_id: string
           updated_at: string
+          venue_id: string | null
         }
         Insert: {
           aff_registration_id: string
@@ -1484,6 +1485,7 @@ export type Database = {
           status?: string
           tournament_id: string
           updated_at?: string
+          venue_id?: string | null
         }
         Update: {
           aff_registration_id?: string
@@ -1504,6 +1506,7 @@ export type Database = {
           status?: string
           tournament_id?: string
           updated_at?: string
+          venue_id?: string | null
         }
         Relationships: [
           {
@@ -1546,6 +1549,13 @@ export type Database = {
             columns: ["tournament_id"]
             isOneToOne: false
             referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pairings_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_venues"
             referencedColumns: ["id"]
           },
         ]
@@ -3671,6 +3681,56 @@ export type Database = {
         }
         Relationships: []
       }
+      tournament_venues: {
+        Row: {
+          building: string | null
+          capacity: number | null
+          created_at: string
+          floor: string | null
+          id: string
+          is_available: boolean
+          notes: string | null
+          room_name: string
+          room_number: string | null
+          tournament_id: string
+          updated_at: string
+        }
+        Insert: {
+          building?: string | null
+          capacity?: number | null
+          created_at?: string
+          floor?: string | null
+          id?: string
+          is_available?: boolean
+          notes?: string | null
+          room_name: string
+          room_number?: string | null
+          tournament_id: string
+          updated_at?: string
+        }
+        Update: {
+          building?: string | null
+          capacity?: number | null
+          created_at?: string
+          floor?: string | null
+          id?: string
+          is_available?: boolean
+          notes?: string | null
+          room_name?: string
+          room_number?: string | null
+          tournament_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tournament_venues_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tournaments: {
         Row: {
           additional_info: Json | null
@@ -3688,6 +3748,8 @@ export type Database = {
           format: string
           id: string
           is_championship: boolean
+          is_online: boolean
+          judge_requests_enabled: boolean
           judges_per_room: number | null
           location: string
           max_participants: number
@@ -3706,13 +3768,16 @@ export type Database = {
           round_interval_days: number | null
           round_schedule_type: string | null
           rounds_config: Json | null
+          schedule_proposals_enabled: boolean
           sponsors: Json | null
           start_date: string
           status: string
           supported_tags: string[]
           tournament_info: string | null
+          tournament_type: string
           updated_at: string
           venue_details: string | null
+          venue_management_enabled: boolean
         }
         Insert: {
           additional_info?: Json | null
@@ -3730,6 +3795,8 @@ export type Database = {
           format: string
           id?: string
           is_championship?: boolean
+          is_online?: boolean
+          judge_requests_enabled?: boolean
           judges_per_room?: number | null
           location: string
           max_participants?: number
@@ -3748,13 +3815,16 @@ export type Database = {
           round_interval_days?: number | null
           round_schedule_type?: string | null
           rounds_config?: Json | null
+          schedule_proposals_enabled?: boolean
           sponsors?: Json | null
           start_date: string
           status?: string
           supported_tags?: string[]
           tournament_info?: string | null
+          tournament_type?: string
           updated_at?: string
           venue_details?: string | null
+          venue_management_enabled?: boolean
         }
         Update: {
           additional_info?: Json | null
@@ -3772,6 +3842,8 @@ export type Database = {
           format?: string
           id?: string
           is_championship?: boolean
+          is_online?: boolean
+          judge_requests_enabled?: boolean
           judges_per_room?: number | null
           location?: string
           max_participants?: number
@@ -3790,13 +3862,16 @@ export type Database = {
           round_interval_days?: number | null
           round_schedule_type?: string | null
           rounds_config?: Json | null
+          schedule_proposals_enabled?: boolean
           sponsors?: Json | null
           start_date?: string
           status?: string
           supported_tags?: string[]
           tournament_info?: string | null
+          tournament_type?: string
           updated_at?: string
           venue_details?: string | null
+          venue_management_enabled?: boolean
         }
         Relationships: [
           {
