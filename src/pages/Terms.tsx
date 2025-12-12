@@ -36,13 +36,13 @@ const Terms = () => {
               <section className="mb-8">
                 <h2 className="text-2xl font-semibold text-foreground mb-4 font-primary">2. Intellectual Property & Ownership</h2>
                 <p className="text-muted-foreground leading-relaxed mb-4 font-secondary">
-                  The Ziggy Online Debate platform, including but not limited to all source code, software, designs, user interface, graphics, logos, trademarks, architecture, documentation, and all associated intellectual property, is the <strong>exclusive creative work and property of Justus Aryani</strong>.
+                  The Ziggy Online Debate platform, including but not limited to all source code, software, designs, user interface, graphics, logos, trademarks, architecture, documentation, and all associated intellectual property, is <strong>proprietary software licensed to Galactic Horizons LLC – Series 1 – Ziggy Online Debate, Protected Series</strong>.
                 </p>
                 <p className="text-muted-foreground leading-relaxed mb-4 font-secondary">
-                  All rights, title, and interest in and to the Platform and its components are owned exclusively by Justus Aryani. The Platform is licensed for operation under Galactic Horizons LLC – Series 1 – Ziggy Online Debate, Protected Series.
+                  All rights, title, and interest in and to the Platform and its components are reserved. The Ziggy brand, logo, and related trademarks are the property of Galactic Horizons LLC.
                 </p>
                 <p className="text-muted-foreground leading-relaxed mb-4 font-secondary">
-                  <strong>© 2011-{new Date().getFullYear()} Justus Aryani. All Rights Reserved.</strong>
+                  <strong>© 2011-{new Date().getFullYear()} Galactic Horizons LLC. All Rights Reserved.</strong>
                 </p>
                 <p className="text-muted-foreground leading-relaxed font-secondary">
                   Unauthorized copying, reproduction, modification, distribution, transmission, republication, display, or performance of any portion of this Platform or its underlying source code is strictly prohibited and may result in severe civil and criminal penalties.
@@ -98,7 +98,7 @@ const Terms = () => {
               <section className="mb-8">
                 <h2 className="text-2xl font-semibold text-foreground mb-4 font-primary">6. Limitations</h2>
                 <p className="text-muted-foreground leading-relaxed font-secondary">
-                  In no event shall Ziggy Online Debate, Justus Aryani, or Galactic Horizons LLC be liable for any damages (including, without limitation, damages for loss of data or profit, or due to business interruption) arising out of the use or inability to use the Platform, even if Ziggy Online Debate or an authorized representative has been notified orally or in writing of the possibility of such damage.
+                  In no event shall Ziggy Online Debate or Galactic Horizons LLC be liable for any damages (including, without limitation, damages for loss of data or profit, or due to business interruption) arising out of the use or inability to use the Platform, even if Ziggy Online Debate or an authorized representative has been notified orally or in writing of the possibility of such damage.
                 </p>
               </section>
 
