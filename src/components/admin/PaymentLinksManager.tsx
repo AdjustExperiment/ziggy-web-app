@@ -33,7 +33,7 @@ const PaymentLinksManager = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingLink, setEditingLink] = useState<PaymentLink | null>(null);
   const [formData, setFormData] = useState({
-    tournament_id: '',
+    tournament_id: 'global',
     provider: 'paypal' as 'paypal' | 'venmo',
     link_url: '',
     is_active: true
@@ -85,7 +85,7 @@ const PaymentLinksManager = () => {
     try {
       const submitData = {
         ...formData,
-        tournament_id: formData.tournament_id || null
+        tournament_id: formData.tournament_id === 'global' ? null : formData.tournament_id
       };
 
       if (editingLink) {
@@ -125,7 +125,7 @@ const PaymentLinksManager = () => {
   const handleEdit = (link: PaymentLink) => {
     setEditingLink(link);
     setFormData({
-      tournament_id: link.tournament_id || '',
+      tournament_id: link.tournament_id || 'global',
       provider: link.provider,
       link_url: link.link_url,
       is_active: link.is_active
@@ -157,7 +157,7 @@ const PaymentLinksManager = () => {
 
   const resetForm = () => {
     setFormData({
-      tournament_id: '',
+      tournament_id: 'global',
       provider: 'paypal',
       link_url: '',
       is_active: true
@@ -205,7 +205,7 @@ const PaymentLinksManager = () => {
                       <SelectValue placeholder="Select tournament (optional)" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Global (All Tournaments)</SelectItem>
+                      <SelectItem value="global">Global (All Tournaments)</SelectItem>
                       {tournaments.map((tournament) => (
                         <SelectItem key={tournament.id} value={tournament.id}>
                           {tournament.name}
