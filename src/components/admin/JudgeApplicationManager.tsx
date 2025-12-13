@@ -40,9 +40,20 @@ interface TournamentJudgeRegistration {
   tournament?: { id: string; name: string };
 }
 
+// Extended interface for unregistered judge profiles
+interface UnregisteredJudge {
+  id: string;
+  isUnregistered: true;
+  judge_profile: JudgeProfile;
+  tournament: null;
+  status: 'unregistered';
+}
+
+type JudgeEntry = TournamentJudgeRegistration | UnregisteredJudge;
+
 export function JudgeApplicationManager() {
   const { toast } = useToast();
-  const [judges, setJudges] = useState<TournamentJudgeRegistration[]>([]);
+  const [judges, setJudges] = useState<JudgeEntry[]>([]);
   const [tournaments, setTournaments] = useState<{ id: string; name: string }[]>([]);
   const [selectedTournament, setSelectedTournament] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -84,11 +95,35 @@ export function JudgeApplicationManager() {
 
       if (error) throw error;
 
-      const formattedJudges = registrations?.map(reg => ({
+      const formattedJudges: JudgeEntry[] = registrations?.map(reg => ({
         ...reg,
         judge_profile: reg.judge_profiles,
         tournament: reg.tournaments,
       })) || [];
+
+      // When viewing "All Tournaments", also fetch judge_profiles that aren't registered to any tournament
+      if (selectedTournament === 'all') {
+        const registeredProfileIds = new Set(formattedJudges.map(j => j.judge_profile?.id).filter(Boolean));
+        
+        const { data: allProfiles, error: profilesError } = await supabase
+          .from('judge_profiles')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (!profilesError && allProfiles) {
+          const unregisteredJudges: UnregisteredJudge[] = allProfiles
+            .filter(profile => !registeredProfileIds.has(profile.id))
+            .map(profile => ({
+              id: `unregistered-${profile.id}`,
+              isUnregistered: true as const,
+              judge_profile: profile,
+              tournament: null,
+              status: 'unregistered' as const,
+            }));
+          
+          formattedJudges.push(...unregisteredJudges);
+        }
+      }
 
       setJudges(formattedJudges);
     } catch (error) {
@@ -186,8 +221,9 @@ export function JudgeApplicationManager() {
       confirmed: "default",
       pending: "secondary",
       withdrawn: "destructive",
+      unregistered: "outline",
     };
-    return <Badge variant={variants[status] || "outline"}>{status}</Badge>;
+    return <Badge variant={variants[status] || "outline"}>{status === 'unregistered' ? 'Not Registered' : status}</Badge>;
   };
 
   const getExperienceBadge = (level: string) => {
@@ -346,7 +382,7 @@ export function JudgeApplicationManager() {
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>{reg.tournament?.name || 'N/A'}</TableCell>
+                      <TableCell>{reg.tournament?.name || <span className="text-muted-foreground italic">Not registered to tournament</span>}</TableCell>
                       <TableCell>
                         <div className="flex flex-col gap-1">
                           {getExperienceBadge(profile.experience_level)}
@@ -372,7 +408,7 @@ export function JudgeApplicationManager() {
                       <TableCell>{getStatusBadge(reg.status)}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          {reg.status === 'pending' && (
+                          {reg.status === 'pending' && !('isUnregistered' in reg) && (
                             <Button 
                               variant="outline" 
                               size="sm"
@@ -391,13 +427,15 @@ export function JudgeApplicationManager() {
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => handleRemoveJudge(reg.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          {!('isUnregistered' in reg) && (
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleRemoveJudge(reg.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
