@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useAuth } from '@/hooks/useAuth';
+import { useOptimizedAuth } from '@/hooks/useOptimizedAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -21,7 +21,8 @@ import {
   BookOpen,
   ChevronRight,
   Award,
-  Edit
+  Edit,
+  Shield
 } from 'lucide-react';
 import { TournamentContentManager } from '@/components/admin/TournamentContentManager';
 import { BackButton } from '@/components/ui/back-button';
@@ -83,7 +84,7 @@ interface RelatedTournament {
 
 export default function TournamentLanding() {
   const { tournamentId } = useParams<{ tournamentId: string }>();
-  const { user, profile } = useAuth();
+  const { user, profile, canAccessTournament, isAdmin } = useOptimizedAuth();
   const { toast } = useToast();
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [content, setContent] = useState<TournamentContent | null>(null);
@@ -245,7 +246,7 @@ export default function TournamentLanding() {
             <Badge variant={getStatusColor(tournament.status)} className="text-sm px-3 py-1">
               {tournament.status}
             </Badge>
-            {profile?.role === 'admin' && (
+            {canAccessTournament(tournament.id) && (
               <Button variant="outline" size="sm" asChild>
                 <Link to={`/admin?tab=tournaments&selected=${tournament.id}`}>
                   <Edit className="h-4 w-4 mr-1" />
@@ -257,32 +258,40 @@ export default function TournamentLanding() {
         </div>
 
         {/* Quick Actions */}
-        {userRegistration && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <Button asChild className="justify-start">
-              <Link to={`/tournaments/${tournament.id}/my-match`}>
-                <Trophy className="h-4 w-4 mr-2" />
-                View My Match
-              </Link>
-            </Button>
-            <Button variant="outline" asChild className="justify-start">
-              <Link to={`/tournaments/${tournament.id}/rounds`}>
-                <Clock className="h-4 w-4 mr-2" />
-                View Rounds
-              </Link>
-            </Button>
-            <Button variant="outline" asChild className="justify-start">
-              <Link to={`/tournaments/${tournament.id}/postings`}>
-                <FileText className="h-4 w-4 mr-2" />
-                Postings & Spectate
-              </Link>
-            </Button>
-            <Button variant="outline" asChild className="justify-start">
-              <Link to={`/pairings/${tournament.id}`}>
-                <Users className="h-4 w-4 mr-2" />
-                View Pairings
-              </Link>
-            </Button>
+        {(userRegistration || canAccessTournament(tournament.id)) && (
+          <div className="space-y-3 mb-6">
+            {!userRegistration && canAccessTournament(tournament.id) && (
+              <Badge variant="secondary" className="mb-2">
+                <Shield className="w-3 h-3 mr-1" />
+                Admin View
+              </Badge>
+            )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Button asChild className="justify-start">
+                <Link to={`/tournaments/${tournament.id}/my-match`}>
+                  <Trophy className="h-4 w-4 mr-2" />
+                  {userRegistration ? 'View My Match' : 'All Matches'}
+                </Link>
+              </Button>
+              <Button variant="outline" asChild className="justify-start">
+                <Link to={`/tournaments/${tournament.id}/rounds`}>
+                  <Clock className="h-4 w-4 mr-2" />
+                  View Rounds
+                </Link>
+              </Button>
+              <Button variant="outline" asChild className="justify-start">
+                <Link to={`/tournaments/${tournament.id}/postings`}>
+                  <FileText className="h-4 w-4 mr-2" />
+                  Postings & Spectate
+                </Link>
+              </Button>
+              <Button variant="outline" asChild className="justify-start">
+                <Link to={`/pairings/${tournament.id}`}>
+                  <Users className="h-4 w-4 mr-2" />
+                  View Pairings
+                </Link>
+              </Button>
+            </div>
           </div>
         )}
       </div>
@@ -303,7 +312,7 @@ export default function TournamentLanding() {
             <Building className="h-4 w-4 mr-1 lg:mr-2" />
             <span className="hidden lg:inline">Sponsors</span>
           </TabsTrigger>
-          {profile?.role === 'admin' && (
+          {canAccessTournament(tournamentId || '') && (
             <TabsTrigger value="manage">
               <Edit className="h-4 w-4 mr-1 lg:mr-2" />
               <span className="hidden lg:inline">Manage</span>
