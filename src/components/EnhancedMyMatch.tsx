@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useOptimizedAuth } from '@/hooks/useOptimizedAuth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,10 +17,23 @@ import {
   Calendar,
   FileText,
   Gavel,
-  Upload
+  Upload,
+  Shield,
+  Eye
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Ballot } from '@/types/database';
+
+interface AllPairing {
+  id: string;
+  round_name: string;
+  aff_team: string;
+  neg_team: string;
+  scheduled_time?: string;
+  room?: string;
+  status: string;
+  judge_name?: string;
+}
 
 interface MatchDetails {
   id: string;
@@ -40,16 +53,70 @@ interface MatchDetails {
 
 export function EnhancedMyMatch() {
   const { tournamentId } = useParams<{ tournamentId: string }>();
-  const { user } = useOptimizedAuth();
+  const { user, canAccessTournament } = useOptimizedAuth();
   const [match, setMatch] = useState<MatchDetails | null>(null);
+  const [allPairings, setAllPairings] = useState<AllPairing[]>([]);
   const [loading, setLoading] = useState(true);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [showChat, setShowChat] = useState(false);
+  const [isAdminView, setIsAdminView] = useState(false);
 
   useEffect(() => {
     if (!user || !tournamentId) return;
     fetchMatchDetails();
   }, [user, tournamentId]);
+
+  const fetchAllPairings = async () => {
+    if (!tournamentId) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('pairings')
+        .select(`
+          id,
+          scheduled_time,
+          room,
+          status,
+          rounds!inner (name),
+          judge_profiles (name),
+          aff_registration:tournament_registrations!aff_registration_id (
+            participant_name,
+            school_organization
+          ),
+          neg_registration:tournament_registrations!neg_registration_id (
+            participant_name,
+            school_organization
+          )
+        `)
+        .eq('tournament_id', tournamentId)
+        .order('scheduled_time', { ascending: true });
+
+      if (error) throw error;
+
+      if (data) {
+        setAllPairings(data.map((p: any) => ({
+          id: p.id,
+          round_name: p.rounds?.name || 'Unknown Round',
+          aff_team: `${p.aff_registration?.participant_name || 'TBD'}${
+            p.aff_registration?.school_organization 
+              ? ` (${p.aff_registration.school_organization})` 
+              : ''
+          }`,
+          neg_team: `${p.neg_registration?.participant_name || 'TBD'}${
+            p.neg_registration?.school_organization 
+              ? ` (${p.neg_registration.school_organization})` 
+              : ''
+          }`,
+          scheduled_time: p.scheduled_time,
+          room: p.room,
+          status: p.status,
+          judge_name: p.judge_profiles?.name
+        })));
+      }
+    } catch (error) {
+      console.error('Error fetching all pairings:', error);
+    }
+  };
 
   const fetchMatchDetails = async () => {
     if (!user || !tournamentId) return;
@@ -136,6 +203,11 @@ export function EnhancedMyMatch() {
       }
     } catch (error) {
       console.error('Error fetching match details:', error);
+      // If user is admin and no match found, fetch all pairings
+      if (canAccessTournament(tournamentId || '')) {
+        setIsAdminView(true);
+        await fetchAllPairings();
+      }
     } finally {
       setLoading(false);
     }
@@ -146,6 +218,102 @@ export function EnhancedMyMatch() {
       <div className="text-center py-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
         <p className="text-muted-foreground">Loading match details...</p>
+      </div>
+    );
+  }
+
+  // Admin view - show all pairings when no personal match found
+  if (!match && isAdminView) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary">
+                <Shield className="w-3 h-3 mr-1" />
+                Admin View
+              </Badge>
+            </div>
+            <CardTitle className="flex items-center gap-2">
+              <Eye className="h-5 w-5" />
+              All Tournament Matches
+            </CardTitle>
+            <CardDescription>
+              Viewing all pairings as tournament administrator
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {allPairings.length > 0 ? (
+              <div className="space-y-4">
+                {allPairings.map((pairing) => (
+                  <Card key={pairing.id} className="border">
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <p className="font-medium">{pairing.round_name}</p>
+                          <Badge 
+                            variant={
+                              pairing.status === 'completed' ? 'default' : 
+                              pairing.status === 'in_progress' ? 'secondary' : 
+                              'outline'
+                            }
+                            className="mt-1"
+                          >
+                            {pairing.status.replace('_', ' ')}
+                          </Badge>
+                        </div>
+                        <Button variant="outline" size="sm" asChild>
+                          <Link to={`/pairings/${pairing.id}`}>
+                            <FileText className="h-4 w-4 mr-1" />
+                            Details
+                          </Link>
+                        </Button>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <p className="text-muted-foreground">Affirmative</p>
+                          <p className="font-medium">{pairing.aff_team}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Negative</p>
+                          <p className="font-medium">{pairing.neg_team}</p>
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap gap-4 mt-3 text-sm text-muted-foreground">
+                        {pairing.scheduled_time && (
+                          <div className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            {format(new Date(pairing.scheduled_time), 'PPp')}
+                          </div>
+                        )}
+                        {pairing.room && (
+                          <div className="flex items-center gap-1">
+                            <MapPin className="h-3 w-3" />
+                            {pairing.room}
+                          </div>
+                        )}
+                        {pairing.judge_name && (
+                          <div className="flex items-center gap-1">
+                            <Gavel className="h-3 w-3" />
+                            {pairing.judge_name}
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No pairings found</h3>
+                <p className="text-muted-foreground">
+                  No matches have been created for this tournament yet.
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     );
   }
