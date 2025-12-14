@@ -3734,6 +3734,8 @@ export type Database = {
       tournaments: {
         Row: {
           additional_info: Json | null
+          allow_judge_volunteering: boolean | null
+          auto_approve_judge_volunteers: boolean | null
           auto_judge_assignment: boolean | null
           auto_schedule_rounds: boolean | null
           ballot_reveal_mode: string
@@ -3781,6 +3783,8 @@ export type Database = {
         }
         Insert: {
           additional_info?: Json | null
+          allow_judge_volunteering?: boolean | null
+          auto_approve_judge_volunteers?: boolean | null
           auto_judge_assignment?: boolean | null
           auto_schedule_rounds?: boolean | null
           ballot_reveal_mode?: string
@@ -3828,6 +3832,8 @@ export type Database = {
         }
         Update: {
           additional_info?: Json | null
+          allow_judge_volunteering?: boolean | null
+          auto_approve_judge_volunteers?: boolean | null
           auto_judge_assignment?: boolean | null
           auto_schedule_rounds?: boolean | null
           ballot_reveal_mode?: string
