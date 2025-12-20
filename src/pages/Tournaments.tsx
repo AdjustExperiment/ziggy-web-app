@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Users, Clock, Trophy, Search, Filter, ExternalLink, Grid3X3, List, Download, CalendarIcon, Plus, Edit } from "lucide-react";
+import { Calendar, Users, Clock, Trophy, Search, Filter, ExternalLink, Grid3X3, List, Download, CalendarIcon, Plus, Edit, Play } from "lucide-react";
 import { format } from "date-fns";
 import TournamentInfo from "@/components/TournamentInfo";
 import { FluidBlobBackground } from "@/components/FluidBlobBackground";
@@ -502,18 +502,31 @@ const Tournaments = () => {
                     )}
                     
                     <div className="pt-2 flex flex-col sm:flex-row gap-2 border-t border-border/20">
-                      <Button 
-                        className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground text-sm"
-                        onClick={() => handleRegister(tournament.id)}
-                        disabled={!tournament.registration_open || tournament.current_participants >= tournament.max_participants}
-                      >
-                        {tournament.registration_open && tournament.current_participants < tournament.max_participants 
-                          ? `Register ($${tournament.registration_fee})` 
-                          : tournament.current_participants >= tournament.max_participants 
-                          ? 'Full' 
-                          : 'View Details'
-                        }
-                      </Button>
+                      {/* Enter Tournament button for ongoing tournaments */}
+                      {tournament.status === 'Ongoing' && (
+                        <Button 
+                          className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground text-sm"
+                          onClick={() => navigate(`/tournaments/${tournament.id}/live`)}
+                        >
+                          <Play className="h-4 w-4 mr-2" />
+                          Enter Tournament
+                        </Button>
+                      )}
+                      
+                      {tournament.status !== 'Ongoing' && (
+                        <Button 
+                          className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground text-sm"
+                          onClick={() => handleRegister(tournament.id)}
+                          disabled={!tournament.registration_open || tournament.current_participants >= tournament.max_participants}
+                        >
+                          {tournament.registration_open && tournament.current_participants < tournament.max_participants 
+                            ? `Register ($${tournament.registration_fee})` 
+                            : tournament.current_participants >= tournament.max_participants 
+                            ? 'Full' 
+                            : 'View Details'
+                          }
+                        </Button>
+                      )}
                       
                       <Button 
                         variant="outline" 

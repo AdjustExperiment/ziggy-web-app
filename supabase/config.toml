@@ -179,3 +179,6 @@ verify_jwt = false
 
 [functions.send-test-email]
 verify_jwt = true
+
+[functions.send-custom-auth-email]
+verify_jwt = false
