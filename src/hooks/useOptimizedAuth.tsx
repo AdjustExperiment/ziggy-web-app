@@ -198,7 +198,11 @@ export function OptimizedAuthProvider({ children }: { children: ReactNode }) {
   }, [queryClient, hasStoredSession]);
 
   const signUp = useCallback(async (email: string, password: string, userData?: { data: { first_name?: string; last_name?: string } }) => {
-    const redirectUrl = `${window.location.origin}/`;
+    // Use production URL to avoid localhost redirect issues
+    // Fallback to origin for deployed environments
+    const redirectUrl = window.location.origin.includes('localhost') 
+      ? 'https://kiummwyxeleejbwapssa.lovable.app/'
+      : `${window.location.origin}/`;
     
     const { error } = await supabase.auth.signUp({
       email,
@@ -222,11 +226,29 @@ export function OptimizedAuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error('Error signing out:', error);
+    try {
+      // Clear query cache first to prevent stale data
+      queryClient.clear();
+      
+      // Sign out from Supabase
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Error signing out:', error);
+      }
+      
+      // Explicitly clear localStorage as backup
+      localStorage.removeItem('sb-kiummwyxeleejbwapssa-auth-token');
+      
+      // Reset state immediately
+      setUser(null);
+      setSession(null);
+    } catch (error) {
+      console.error('Error during sign out:', error);
+      // Force clear even on error
+      localStorage.removeItem('sb-kiummwyxeleejbwapssa-auth-token');
+      setUser(null);
+      setSession(null);
     }
-    queryClient.clear();
   }, [queryClient]);
 
   const refreshUser = useCallback(async () => {

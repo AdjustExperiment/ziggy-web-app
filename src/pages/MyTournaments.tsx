@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Trophy, Calendar, MapPin, Users, Eye, Clock, FileText } from 'lucide-react';
+import { Trophy, Calendar, MapPin, Users, Eye, Clock, FileText, Play } from 'lucide-react';
 import { Registration } from '@/types/database';
 
 interface TournamentWithRegistration extends Registration {
@@ -216,13 +216,23 @@ export default function MyTournaments() {
                 </div>
 
                 <div className="flex flex-col gap-2">
+                  {/* Enter Tournament button for active tournaments */}
+                  {(registration.tournament.status === 'Ongoing' || registration.tournament.status === 'In Progress') && (
+                    <Button size="sm" asChild className="w-full bg-primary hover:bg-primary/90">
+                      <Link to={`/tournaments/${registration.tournament.id}/live`}>
+                        <Play className="h-4 w-4 mr-2" />
+                        Enter Tournament
+                      </Link>
+                    </Button>
+                  )}
+                  
                   <div className="flex flex-col sm:flex-row gap-2">
-                  <Button variant="outline" size="sm" asChild className="flex-1 text-xs sm:text-sm">
-                    <Link to={`/tournaments/${registration.tournament.id}`}>
-                      <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                      <span className="hidden sm:inline">View </span>Tournament
-                    </Link>
-                  </Button>
+                    <Button variant="outline" size="sm" asChild className="flex-1 text-xs sm:text-sm">
+                      <Link to={`/tournaments/${registration.tournament.id}`}>
+                        <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                        <span className="hidden sm:inline">View </span>Tournament
+                      </Link>
+                    </Button>
                     
                     <Button variant="outline" size="sm" asChild className="flex-1 text-xs sm:text-sm">
                       <Link to={`/tournaments/${registration.tournament.id}/rounds`}>
@@ -239,7 +249,7 @@ export default function MyTournaments() {
                     </Link>
                   </Button>
 
-                  <Button size="sm" asChild className="w-full text-xs sm:text-sm">
+                  <Button variant="secondary" size="sm" asChild className="w-full text-xs sm:text-sm">
                     <Link to={`/tournaments/${registration.tournament.id}/my-match`}>
                       View My Match
                     </Link>

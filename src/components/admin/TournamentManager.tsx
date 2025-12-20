@@ -227,7 +227,7 @@ export function TournamentManager() {
           title: "Success", 
           description: "Tournament created successfully",
         });
-        navigate(`/tournament/${data.id}`);
+        navigate(`/tournaments/${data.id}`);
       }
     } catch (error: any) {
       console.error('Error saving tournament:', error);

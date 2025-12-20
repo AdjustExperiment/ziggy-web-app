@@ -54,6 +54,7 @@ const SponsorInvite = React.lazy(() => import('@/pages/SponsorInvite'));
 const Sponsors = React.lazy(() => import('@/pages/Sponsors'));
 const LearnAboutDebate = React.lazy(() => import('@/pages/LearnAboutDebate'));
 const TournamentDashboard = React.lazy(() => import('@/pages/TournamentDashboard'));
+const TournamentLive = React.lazy(() => import('@/pages/TournamentLive'));
 const MyDashboard = React.lazy(() => import('@/pages/MyDashboard'));
 const ObserverDashboard = React.lazy(() => import('@/pages/ObserverDashboard'));
 const PrintPostings = React.lazy(() => import('@/pages/PrintPostings'));
@@ -124,6 +125,11 @@ function App() {
               <Route path="/tournaments/:tournamentId/dashboard" element={
                 <ProtectedRoute>
                   <TournamentDashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="/tournaments/:tournamentId/live" element={
+                <ProtectedRoute>
+                  <TournamentLive />
                 </ProtectedRoute>
               } />
               <Route path="/portal" element={<Navigate to="/dashboard" replace />} />
