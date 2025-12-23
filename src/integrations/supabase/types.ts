@@ -383,6 +383,94 @@ export type Database = {
           },
         ]
       }
+      cart_items: {
+        Row: {
+          additional_info: Json | null
+          base_price: number
+          cart_id: string
+          claim_token: string | null
+          claimed_by_user_id: string | null
+          created_at: string
+          discount_amount: number | null
+          event_id: string | null
+          id: string
+          is_claimed: boolean | null
+          participant_email: string
+          participant_name: string
+          partner_email: string | null
+          partner_name: string | null
+          promo_code_id: string | null
+          registrant_type: string
+          role: string
+          school_organization: string | null
+          updated_at: string
+        }
+        Insert: {
+          additional_info?: Json | null
+          base_price?: number
+          cart_id: string
+          claim_token?: string | null
+          claimed_by_user_id?: string | null
+          created_at?: string
+          discount_amount?: number | null
+          event_id?: string | null
+          id?: string
+          is_claimed?: boolean | null
+          participant_email: string
+          participant_name: string
+          partner_email?: string | null
+          partner_name?: string | null
+          promo_code_id?: string | null
+          registrant_type?: string
+          role?: string
+          school_organization?: string | null
+          updated_at?: string
+        }
+        Update: {
+          additional_info?: Json | null
+          base_price?: number
+          cart_id?: string
+          claim_token?: string | null
+          claimed_by_user_id?: string | null
+          created_at?: string
+          discount_amount?: number | null
+          event_id?: string | null
+          id?: string
+          is_claimed?: boolean | null
+          participant_email?: string
+          participant_name?: string
+          partner_email?: string | null
+          partner_name?: string | null
+          promo_code_id?: string | null
+          registrant_type?: string
+          role?: string
+          school_organization?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cart_items_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "registration_carts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cart_items_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cart_items_promo_code_id_fkey"
+            columns: ["promo_code_id"]
+            isOneToOne: false
+            referencedRelation: "promo_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       championships: {
         Row: {
           created_at: string
@@ -920,6 +1008,47 @@ export type Database = {
           value?: Json
         }
         Relationships: []
+      }
+      group_discount_rules: {
+        Row: {
+          created_at: string
+          discount_type: string
+          discount_value: number
+          id: string
+          is_active: boolean | null
+          min_registrations: number
+          tournament_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          discount_type?: string
+          discount_value: number
+          id?: string
+          is_active?: boolean | null
+          min_registrations: number
+          tournament_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          discount_type?: string
+          discount_value?: number
+          id?: string
+          is_active?: boolean | null
+          min_registrations?: number
+          tournament_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_discount_rules_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       judge_availability: {
         Row: {
@@ -1648,10 +1777,14 @@ export type Database = {
       payment_transactions: {
         Row: {
           amount: number
+          cart_id: string | null
           created_at: string
           currency: string
           id: string
           metadata: Json | null
+          payment_method: string
+          paypal_capture_id: string | null
+          paypal_order_id: string | null
           registration_id: string | null
           status: string
           stripe_payment_intent_id: string | null
@@ -1661,10 +1794,14 @@ export type Database = {
         }
         Insert: {
           amount: number
+          cart_id?: string | null
           created_at?: string
           currency?: string
           id?: string
           metadata?: Json | null
+          payment_method?: string
+          paypal_capture_id?: string | null
+          paypal_order_id?: string | null
           registration_id?: string | null
           status?: string
           stripe_payment_intent_id?: string | null
@@ -1674,10 +1811,14 @@ export type Database = {
         }
         Update: {
           amount?: number
+          cart_id?: string | null
           created_at?: string
           currency?: string
           id?: string
           metadata?: Json | null
+          payment_method?: string
+          paypal_capture_id?: string | null
+          paypal_order_id?: string | null
           registration_id?: string | null
           status?: string
           stripe_payment_intent_id?: string | null
@@ -1686,6 +1827,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "payment_transactions_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "registration_carts"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "payment_transactions_registration_id_fkey"
             columns: ["registration_id"]
@@ -1736,6 +1884,73 @@ export type Database = {
           },
           {
             foreignKeyName: "pending_judge_invitations_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pending_registrant_invitations: {
+        Row: {
+          cart_item_id: string
+          claim_token: string
+          claimed_at: string | null
+          claimed_by_user_id: string | null
+          created_at: string
+          email: string
+          expires_at: string | null
+          id: string
+          invited_by_user_id: string
+          name: string
+          registration_id: string | null
+          tournament_id: string
+        }
+        Insert: {
+          cart_item_id: string
+          claim_token: string
+          claimed_at?: string | null
+          claimed_by_user_id?: string | null
+          created_at?: string
+          email: string
+          expires_at?: string | null
+          id?: string
+          invited_by_user_id: string
+          name: string
+          registration_id?: string | null
+          tournament_id: string
+        }
+        Update: {
+          cart_item_id?: string
+          claim_token?: string
+          claimed_at?: string | null
+          claimed_by_user_id?: string | null
+          created_at?: string
+          email?: string
+          expires_at?: string | null
+          id?: string
+          invited_by_user_id?: string
+          name?: string
+          registration_id?: string | null
+          tournament_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pending_registrant_invitations_cart_item_id_fkey"
+            columns: ["cart_item_id"]
+            isOneToOne: false
+            referencedRelation: "cart_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pending_registrant_invitations_registration_id_fkey"
+            columns: ["registration_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_registrations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pending_registrant_invitations_tournament_id_fkey"
             columns: ["tournament_id"]
             isOneToOne: false
             referencedRelation: "tournaments"
@@ -2071,6 +2286,44 @@ export type Database = {
             columns: ["registration_id"]
             isOneToOne: false
             referencedRelation: "tournament_registrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      registration_carts: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          status: string
+          tournament_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          status?: string
+          tournament_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          status?: string
+          tournament_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "registration_carts_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
             referencedColumns: ["id"]
           },
         ]
@@ -3743,6 +3996,7 @@ export type Database = {
           check_in_enabled: boolean
           created_at: string
           created_by: string | null
+          currency: string
           current_participants: number
           debate_style: string | null
           description: string | null
@@ -3792,6 +4046,7 @@ export type Database = {
           check_in_enabled?: boolean
           created_at?: string
           created_by?: string | null
+          currency?: string
           current_participants?: number
           debate_style?: string | null
           description?: string | null
@@ -3841,6 +4096,7 @@ export type Database = {
           check_in_enabled?: boolean
           created_at?: string
           created_by?: string | null
+          currency?: string
           current_participants?: number
           debate_style?: string | null
           description?: string | null
