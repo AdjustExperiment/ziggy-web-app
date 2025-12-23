@@ -260,7 +260,7 @@ export function AddToCartForm({
           {/* Promo Code */}
           <PromoCodeInput
             tournamentId={tournamentId}
-            baseAmount={registrationFee}
+            originalAmount={registrationFee}
             onDiscountApplied={handlePromoDiscount}
           />
 
