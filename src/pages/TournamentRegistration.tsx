@@ -14,17 +14,23 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from '@/components/ui/use-toast';
 import PaymentButtons from '@/components/PaymentButtons';
 import { Registration } from '@/types/database';
-import { AlertCircle, CheckCircle, Info, Users, Gavel } from 'lucide-react';
+import { AlertCircle, CheckCircle, Info, Users, Gavel, ShoppingCart } from 'lucide-react';
 import PromoCodeInput from '@/components/PromoCodeInput';
 import { Separator } from '@/components/ui/separator';
 import { AuthModal } from '@/components/AuthModal';
 import { JudgeRegistration } from '@/components/JudgeRegistration';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useRegistrationCart } from '@/hooks/useRegistrationCart';
+import { AddToCartForm } from '@/components/cart/AddToCartForm';
+import { RegistrationCart } from '@/components/cart/RegistrationCart';
+import { PayPalCheckout } from '@/components/payment/PayPalCheckout';
 
 interface Tournament {
   id: string;
   name: string;
   registration_fee: number;
+  currency?: string;
 }
 
 interface TournamentEvent {
@@ -91,6 +97,23 @@ export default function TournamentRegistration() {
   const [events, setEvents] = useState<TournamentEvent[]>([]);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [eventConflict, setEventConflict] = useState<string | null>(null);
+
+  // Registration mode: 'self' or 'cart'
+  const [registrationMode, setRegistrationMode] = useState<'self' | 'cart'>('self');
+  
+  // Cart state
+  const {
+    cart,
+    items: cartItems,
+    groupDiscountRules,
+    isLoading: cartLoading,
+    addItem,
+    removeItem,
+    calculateTotal,
+    clearCart
+  } = useRegistrationCart(id || '');
+  
+  const [showCheckout, setShowCheckout] = useState(false);
 
   useEffect(() => {
     // Check if user is authenticated when component mounts
@@ -159,7 +182,7 @@ export default function TournamentRegistration() {
       try {
         const { data, error } = await supabase
           .from('tournaments')
-          .select('id, name, registration_fee')
+          .select('id, name, registration_fee, currency')
           .eq('id', id)
           .single();
 
@@ -390,6 +413,62 @@ export default function TournamentRegistration() {
     setAppliedPromoCode(promoCode);
   };
 
+  // Cart handlers
+  const handleAddToCart = async (item: any) => {
+    if (!user) {
+      setShowSignInModal(true);
+      return;
+    }
+    
+    const success = await addItem(item);
+    if (success) {
+      toast({
+        title: "Added to Cart",
+        description: `${item.participantName} has been added to your registration cart.`,
+      });
+    }
+  };
+
+  const handleRemoveFromCart = async (itemId: string) => {
+    const success = await removeItem(itemId);
+    if (success) {
+      toast({
+        title: "Removed from Cart",
+        description: "Registration removed from cart.",
+      });
+    }
+  };
+
+  const handleCheckout = () => {
+    if (cartItems.length === 0) {
+      toast({
+        title: "Empty Cart",
+        description: "Please add at least one registration to your cart.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setShowCheckout(true);
+  };
+
+  const handlePaymentSuccess = (details: any) => {
+    toast({
+      title: "Payment Successful!",
+      description: "Your registrations have been confirmed.",
+    });
+    clearCart();
+    setShowCheckout(false);
+    navigate('/my-tournaments');
+  };
+
+  const handlePaymentError = (error: string) => {
+    toast({
+      title: "Payment Failed",
+      description: error,
+      variant: "destructive",
+    });
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -413,6 +492,7 @@ export default function TournamentRegistration() {
   }
 
   const finalAmount = Math.max(0, (tournament?.registration_fee || 0) - discountAmount);
+  const cartSummary = calculateTotal();
 
   const renderSignInModal = () => (
     <AuthModal
@@ -739,6 +819,53 @@ export default function TournamentRegistration() {
     </Card>
   );
 
+  const renderCartMode = () => (
+    <div className="space-y-6">
+      <AddToCartForm
+        tournamentId={id || ''}
+        registrationFee={tournament?.registration_fee || 0}
+        events={events.length > 1 ? events : undefined}
+        currency={tournament?.currency || 'USD'}
+        onAddItem={handleAddToCart}
+        isLoading={cartLoading}
+      />
+
+      {cartItems.length > 0 && (
+        <RegistrationCart
+          items={cartItems}
+          summary={cartSummary}
+          discountRules={discountRules}
+          currency={tournament?.currency || 'USD'}
+          onRemoveItem={handleRemoveFromCart}
+          onEditItem={() => {}}
+          onCheckout={handleCheckout}
+          onClearCart={clearCart}
+        />
+      )}
+
+      {showCheckout && cart && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Complete Payment</CardTitle>
+            <CardDescription>
+              Complete your payment to finalize all registrations.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <PayPalCheckout
+              cartId={cart.id}
+              summary={cartSummary}
+              currency={tournament?.currency || 'USD'}
+              onSuccess={handlePaymentSuccess}
+              onError={handlePaymentError}
+              onCancel={() => setShowCheckout(false)}
+            />
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+
   const renderPaymentStep = () => (
     <Card>
       <CardHeader>
@@ -818,7 +945,33 @@ export default function TournamentRegistration() {
             {step === 1 && (
               <>
                 {renderRoleSelection()}
-                {!roleConflict && selectedRole === 'competitor' && renderRegistrationForm()}
+                
+                {!roleConflict && selectedRole === 'competitor' && (
+                  <Tabs value={registrationMode} onValueChange={(v) => setRegistrationMode(v as 'self' | 'cart')}>
+                    <TabsList className="grid w-full grid-cols-2 mb-6">
+                      <TabsTrigger value="self" className="flex items-center gap-2">
+                        <Users className="h-4 w-4" />
+                        Register Myself
+                      </TabsTrigger>
+                      <TabsTrigger value="cart" className="flex items-center gap-2">
+                        <ShoppingCart className="h-4 w-4" />
+                        Register Multiple
+                        {cartItems.length > 0 && (
+                          <Badge variant="secondary" className="ml-1">{cartItems.length}</Badge>
+                        )}
+                      </TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="self">
+                      {renderRegistrationForm()}
+                    </TabsContent>
+                    
+                    <TabsContent value="cart">
+                      {renderCartMode()}
+                    </TabsContent>
+                  </Tabs>
+                )}
+                
                 {!roleConflict && selectedRole === 'judge' && tournament && user && (
                   <JudgeRegistration
                     tournamentId={tournament.id}
@@ -847,7 +1000,7 @@ export default function TournamentRegistration() {
                     <span className="font-semibold">${tournament.registration_fee.toFixed(2)}</span>
                   </div>
                   
-                  {discountAmount > 0 && (
+                  {registrationMode === 'self' && discountAmount > 0 && (
                     <>
                       <div className="flex justify-between items-center text-green-600">
                         <span>Discount ({appliedPromoCode}):</span>
@@ -857,6 +1010,20 @@ export default function TournamentRegistration() {
                       <div className="flex justify-between items-center font-bold text-lg">
                         <span>Total:</span>
                         <span>${finalAmount.toFixed(2)}</span>
+                      </div>
+                    </>
+                  )}
+                  
+                  {registrationMode === 'cart' && cartItems.length > 0 && (
+                    <>
+                      <Separator />
+                      <div className="flex justify-between items-center">
+                        <span>Registrations:</span>
+                        <Badge>{cartItems.length}</Badge>
+                      </div>
+                      <div className="flex justify-between items-center font-bold text-lg">
+                        <span>Cart Total:</span>
+                        <span>${cartSummary.total.toFixed(2)}</span>
                       </div>
                     </>
                   )}

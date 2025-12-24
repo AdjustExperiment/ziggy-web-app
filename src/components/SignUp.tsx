@@ -1,172 +1,270 @@
-import { Trophy, Users, Target, Star } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-
-const plans = [
-  {
-    name: "Individual Debater",
-    price: "Free",
-    description: "Perfect for students getting started",
-    features: [
-      "Tournament registration",
-      "Basic performance tracking",
-      "Community access",
-      "Mobile app access"
-    ],
-    popular: false,
-    icon: <Users className="h-5 w-5" />
-  },
-  {
-    name: "Team Package",
-    price: "$49/month",
-    description: "Ideal for schools and debate teams",
-    features: [
-      "Everything in Individual",
-      "Team management dashboard",
-      "Advanced analytics",
-      "Custom tournaments",
-      "Priority support"
-    ],
-    popular: true,
-    icon: <Trophy className="h-5 w-5" />
-  },
-  {
-    name: "Tournament Organizer",
-    price: "$199/month",
-    description: "For professional tournament management",
-    features: [
-      "Everything in Team",
-      "Multi-tournament management",
-      "Real-time broadcasting",
-      "Judging tools",
-      "Revenue sharing",
-      "White-label solution"
-    ],
-    popular: false,
-    icon: <Star className="h-5 w-5" />
-  }
-];
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { toast } from '@/components/ui/use-toast';
+import { Trophy, Mail, Lock, User, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
 
 export function SignUp() {
-  return (
-    <div className="min-h-screen bg-gradient-subtle">
-      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="text-center mb-16">
-          <h1 className="text-4xl font-bold text-foreground mb-4">
-            Join the Championship
-          </h1>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Choose the perfect plan for your debate journey. From individual competitors 
-            to tournament organizers, we have solutions for every level.
-          </p>
-        </div>
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
-        {/* Pricing Cards */}
-        <div className="grid gap-8 lg:grid-cols-3 mb-16">
-          {plans.map((plan, index) => (
-            <Card 
-              key={index} 
-              className={`relative bg-gradient-card shadow-card hover:shadow-tournament transition-smooth ${
-                plan.popular ? 'border-primary shadow-glow' : ''
-              }`}
-            >
-              {plan.popular && (
-                <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-accent text-white border-0">
-                  Most Popular
-                </Badge>
-              )}
-              
-              <CardHeader className="text-center pb-6">
-                <div className="flex justify-center mb-4">
-                  <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                    {plan.icon}
-                  </div>
-                </div>
-                <CardTitle className="text-xl mb-2">{plan.name}</CardTitle>
-                <div className="text-3xl font-bold text-primary mb-2">{plan.price}</div>
-                <p className="text-muted-foreground">{plan.description}</p>
-              </CardHeader>
-              
-              <CardContent className="space-y-6">
-                <ul className="space-y-3">
-                  {plan.features.map((feature, idx) => (
-                    <li key={idx} className="flex items-center gap-3">
-                      <Target className="h-4 w-4 text-primary flex-shrink-0" />
-                      <span className="text-sm">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-                
-                <Button 
-                  className={`w-full ${
-                    plan.popular 
-                      ? 'bg-gradient-accent hover:opacity-90 text-white shadow-glow' 
-                      : 'border-primary text-primary hover:bg-primary hover:text-white'
-                  }`}
-                  variant={plan.popular ? 'default' : 'outline'}
-                  size="lg"
-                  onClick={() => window.location.href = '/tournaments'}
-                >
-                  <Target className="h-4 w-4 mr-2" />
-                  Get Started
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    setError(null);
+  };
 
-        {/* Google Form Integration */}
-        <Card className="bg-gradient-card shadow-tournament max-w-4xl mx-auto">
+  const validateForm = (): boolean => {
+    if (!formData.firstName.trim()) {
+      setError('First name is required');
+      return false;
+    }
+    if (!formData.lastName.trim()) {
+      setError('Last name is required');
+      return false;
+    }
+    if (!formData.email.trim()) {
+      setError('Email is required');
+      return false;
+    }
+    if (!formData.email.includes('@')) {
+      setError('Please enter a valid email address');
+      return false;
+    }
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return false;
+    }
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return false;
+    }
+    return true;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) return;
+    
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            first_name: formData.firstName,
+            last_name: formData.lastName
+          }
+        }
+      });
+
+      if (signUpError) throw signUpError;
+
+      if (data.user) {
+        setSuccess(true);
+        toast({
+          title: "Account Created!",
+          description: "Please check your email to verify your account.",
+        });
+      }
+    } catch (err: any) {
+      console.error('Sign up error:', err);
+      setError(err.message || 'An error occurred during sign up');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (success) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-subtle px-4">
+        <Card className="w-full max-w-md bg-gradient-card shadow-tournament">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl mb-2">Ready to Compete?</CardTitle>
-            <p className="text-muted-foreground">
-              Complete our registration form to join the next tournament cycle
-            </p>
+            <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
+            <CardTitle className="text-2xl">Check Your Email</CardTitle>
+            <CardDescription>
+              We've sent a verification link to <strong>{formData.email}</strong>
+            </CardDescription>
           </CardHeader>
-          <CardContent className="text-center space-y-6">
-            <div className="grid gap-4 sm:grid-cols-3">
-              <div className="flex items-center gap-3 p-4 rounded-lg bg-primary/5">
-                <Trophy className="h-8 w-8 text-primary" />
-                <div className="text-left">
-                  <div className="font-semibold">Quick Setup</div>
-                  <div className="text-sm text-muted-foreground">5 minute form</div>
+          <CardContent className="space-y-4 text-center">
+            <p className="text-muted-foreground">
+              Click the link in your email to verify your account and get started.
+            </p>
+            <div className="flex gap-4 justify-center">
+              <Button variant="outline" onClick={() => navigate('/login')}>
+                Go to Login
+              </Button>
+              <Button onClick={() => navigate('/tournaments')}>
+                Browse Tournaments
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-subtle px-4 py-12">
+      <Card className="w-full max-w-md bg-gradient-card shadow-tournament">
+        <CardHeader className="text-center">
+          <div className="flex justify-center mb-4">
+            <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+              <Trophy className="h-8 w-8 text-primary" />
+            </div>
+          </div>
+          <CardTitle className="text-2xl">Create Your Account</CardTitle>
+          <CardDescription>
+            Join the championship and start competing
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="firstName">First Name</Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="firstName"
+                    name="firstName"
+                    placeholder="John"
+                    value={formData.firstName}
+                    onChange={handleInputChange}
+                    className="pl-9"
+                    required
+                  />
                 </div>
               </div>
-              
-              <div className="flex items-center gap-3 p-4 rounded-lg bg-primary/5">
-                <Users className="h-8 w-8 text-primary" />
-                <div className="text-left">
-                  <div className="font-semibold">Team Support</div>
-                  <div className="text-sm text-muted-foreground">Coach guidance</div>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-3 p-4 rounded-lg bg-primary/5">
-                <Star className="h-8 w-8 text-primary" />
-                <div className="text-left">
-                  <div className="font-semibold">Championship Path</div>
-                  <div className="text-sm text-muted-foreground">Rank tracking</div>
+              <div className="space-y-2">
+                <Label htmlFor="lastName">Last Name</Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="lastName"
+                    name="lastName"
+                    placeholder="Doe"
+                    value={formData.lastName}
+                    onChange={handleInputChange}
+                    className="pl-9"
+                    required
+                  />
                 </div>
               </div>
             </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="john@example.com"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  className="pl-9"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  className="pl-9"
+                  required
+                  minLength={6}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">Must be at least 6 characters</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type="password"
+                  placeholder="••••••••"
+                  value={formData.confirmPassword}
+                  onChange={handleInputChange}
+                  className="pl-9"
+                  required
+                />
+              </div>
+            </div>
+
             <Button 
-              size="lg" 
-              className="bg-gradient-accent hover:opacity-90 text-white shadow-glow text-lg px-12 py-6"
-              onClick={() => window.location.href = '/tournaments'}
+              type="submit" 
+              className="w-full bg-gradient-accent hover:opacity-90 text-white shadow-glow"
+              disabled={loading}
             >
-              <Trophy className="h-5 w-5 mr-2" />
-              Browse Tournaments
+              {loading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Creating Account...
+                </>
+              ) : (
+                <>
+                  <Trophy className="h-4 w-4 mr-2" />
+                  Create Account
+                </>
+              )}
             </Button>
-            
-            <p className="text-sm text-muted-foreground">
-              By registering, you agree to our tournament rules and code of conduct
+
+            <div className="text-center text-sm">
+              <span className="text-muted-foreground">Already have an account? </span>
+              <Link to="/login" className="text-primary hover:underline font-medium">
+                Sign in
+              </Link>
+            </div>
+
+            <p className="text-xs text-center text-muted-foreground">
+              By creating an account, you agree to our{' '}
+              <Link to="/terms" className="underline hover:text-foreground">Terms of Service</Link>
+              {' '}and{' '}
+              <Link to="/privacy" className="underline hover:text-foreground">Privacy Policy</Link>
             </p>
-          </CardContent>
-        </Card>
-      </div>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 }
