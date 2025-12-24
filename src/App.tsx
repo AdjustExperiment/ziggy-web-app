@@ -63,6 +63,8 @@ const ClubPartners = React.lazy(() => import('@/pages/ClubPartners'));
 const Ambassador = React.lazy(() => import('@/pages/Ambassador'));
 const SponsorApplication = React.lazy(() => import('@/pages/SponsorApplication'));
 const Terms = React.lazy(() => import('@/pages/Terms'));
+const ClaimRegistration = React.lazy(() => import('@/pages/ClaimRegistration'));
+
 // Loading component for Suspense fallback
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center">
@@ -189,6 +191,7 @@ function App() {
               <Route path="/club-partners" element={<ClubPartners />} />
               <Route path="/ambassador" element={<Ambassador />} />
               <Route path="/terms" element={<Terms />} />
+              <Route path="/claim/:token" element={<ClaimRegistration />} />
               <Route path="/analytics" element={<Analytics />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
