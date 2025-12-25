@@ -834,7 +834,7 @@ export default function TournamentRegistration() {
         <RegistrationCart
           items={cartItems}
           summary={cartSummary}
-          discountRules={discountRules}
+          groupDiscountRules={groupDiscountRules}
           currency={tournament?.currency || 'USD'}
           onRemoveItem={handleRemoveFromCart}
           onEditItem={() => {}}
