@@ -979,6 +979,39 @@ export type Database = {
           },
         ]
       }
+      global_role_access: {
+        Row: {
+          can_chat: boolean
+          can_view_pairings: boolean
+          can_view_rooms: boolean
+          can_view_stream: boolean
+          created_at: string
+          id: string
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          can_chat?: boolean
+          can_view_pairings?: boolean
+          can_view_rooms?: boolean
+          can_view_stream?: boolean
+          created_at?: string
+          id?: string
+          role: string
+          updated_at?: string
+        }
+        Update: {
+          can_chat?: boolean
+          can_view_pairings?: boolean
+          can_view_rooms?: boolean
+          can_view_stream?: boolean
+          created_at?: string
+          id?: string
+          role?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       global_settings: {
         Row: {
           category: string | null
@@ -4154,6 +4187,7 @@ export type Database = {
           load_time_ms: number | null
           route: string
           scroll_depth: number | null
+          session_id: string | null
           time_on_page_ms: number | null
           user_id: string | null
           user_role: string | null
@@ -4166,6 +4200,7 @@ export type Database = {
           load_time_ms?: number | null
           route: string
           scroll_depth?: number | null
+          session_id?: string | null
           time_on_page_ms?: number | null
           user_id?: string | null
           user_role?: string | null
@@ -4178,6 +4213,7 @@ export type Database = {
           load_time_ms?: number | null
           route?: string
           scroll_depth?: number | null
+          session_id?: string | null
           time_on_page_ms?: number | null
           user_id?: string | null
           user_role?: string | null

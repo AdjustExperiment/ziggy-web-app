@@ -21,13 +21,15 @@ interface FooterUpdate {
   link_text: string;
 }
 
+const DEFAULT_FOOTER_UPDATE: FooterUpdate = {
+  title: 'Latest Update',
+  content: 'Tournament registration is now open! Join hundreds of debaters competing nationally.',
+  link_url: '/tournaments',
+  link_text: 'Register Now'
+};
+
 export function Footer() {
-  const [footerUpdate, setFooterUpdate] = useState<FooterUpdate>({
-    title: 'Latest Update',
-    content: 'Tournament registration is now open! Join hundreds of debaters competing nationally.',
-    link_url: '/tournaments',
-    link_text: 'Register Now'
-  });
+  const [footerUpdate, setFooterUpdate] = useState<FooterUpdate>(DEFAULT_FOOTER_UPDATE);
 
   useEffect(() => {
     loadFooterContent();
@@ -46,7 +48,22 @@ export function Footer() {
 
   const loadFooterContent = async () => {
     try {
-      // For now, using localStorage as a fallback until proper database schema is set up
+      // Try loading from database first
+      const { data, error } = await supabase
+        .from('global_settings')
+        .select('value')
+        .eq('key', 'footer_update')
+        .maybeSingle();
+      
+      if (!error && data?.value) {
+        const value = data.value as unknown as FooterUpdate;
+        if (value.title && value.content) {
+          setFooterUpdate(value);
+          return;
+        }
+      }
+      
+      // Fallback to localStorage
       const stored = localStorage.getItem('footer_latest_update');
       if (stored) {
         const content = JSON.parse(stored);
@@ -54,6 +71,7 @@ export function Footer() {
       }
     } catch (error) {
       console.error('Error loading footer content:', error);
+      // Use default values on error
     }
   };
 
