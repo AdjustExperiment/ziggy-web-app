@@ -10,22 +10,21 @@ import { Badge } from '@/components/ui/badge';
 import { Save, RefreshCw } from 'lucide-react';
 
 interface FooterUpdate {
-  id?: string;
   title: string;
   content: string;
   link_url: string;
   link_text: string;
-  created_at?: string;
-  updated_at?: string;
 }
 
+const DEFAULT_FOOTER_UPDATE: FooterUpdate = {
+  title: 'Latest Update',
+  content: 'Tournament registration is now open! Join hundreds of debaters competing nationally.',
+  link_url: '/tournaments',
+  link_text: 'Register Now'
+};
+
 export const FooterContentManager = () => {
-  const [footerUpdate, setFooterUpdate] = useState<FooterUpdate>({
-    title: 'Latest Update',
-    content: '',
-    link_url: '/tournaments',
-    link_text: 'Register Now'
-  });
+  const [footerUpdate, setFooterUpdate] = useState<FooterUpdate>(DEFAULT_FOOTER_UPDATE);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
@@ -37,11 +36,29 @@ export const FooterContentManager = () => {
   const loadFooterContent = async () => {
     try {
       setLoading(true);
-      // For now, using localStorage as a fallback until proper database schema is set up
-      const stored = localStorage.getItem('footer_latest_update');
-      if (stored) {
-        const content = JSON.parse(stored);
-        setFooterUpdate(content);
+      
+      // Load from global_settings table
+      const { data, error } = await supabase
+        .from('global_settings')
+        .select('value')
+        .eq('key', 'footer_update')
+        .maybeSingle();
+      
+      if (error) {
+        console.error('Error loading footer content:', error);
+        // Fallback to localStorage
+        const stored = localStorage.getItem('footer_latest_update');
+        if (stored) {
+          setFooterUpdate(JSON.parse(stored));
+        }
+        return;
+      }
+      
+      if (data?.value) {
+        const value = data.value as unknown as FooterUpdate;
+        if (value.title && value.content) {
+          setFooterUpdate(value);
+        }
       }
     } catch (error) {
       console.error('Error loading footer content:', error);
@@ -59,21 +76,62 @@ export const FooterContentManager = () => {
     try {
       setSaving(true);
       
-      // For now, using localStorage as a fallback until proper database schema is set up
+      // Check if record exists first
+      const { data: existing } = await supabase
+        .from('global_settings')
+        .select('id')
+        .eq('key', 'footer_update')
+        .maybeSingle();
+      
+      let error;
+      const jsonValue = JSON.parse(JSON.stringify(footerUpdate));
+      
+      if (existing) {
+        // Update existing record
+        const result = await supabase
+          .from('global_settings')
+          .update({
+            value: jsonValue,
+            category: 'content',
+            updated_at: new Date().toISOString()
+          })
+          .eq('key', 'footer_update');
+        error = result.error;
+      } else {
+        // Insert new record
+        const result = await supabase
+          .from('global_settings')
+          .insert([{
+            key: 'footer_update',
+            value: jsonValue,
+            category: 'content'
+          }]);
+        error = result.error;
+      }
+      
+      if (error) {
+        console.error('Error saving to database:', error);
+        // Fallback to localStorage
+        localStorage.setItem('footer_latest_update', JSON.stringify(footerUpdate));
+        toast({
+          title: "Saved Locally",
+          description: "Content saved locally. Database sync may require admin access.",
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: "Footer content updated successfully",
+        });
+      }
+
+      // Also update localStorage for immediate cross-tab sync
       localStorage.setItem('footer_latest_update', JSON.stringify(footerUpdate));
-
-      toast({
-        title: "Success",
-        description: "Footer content updated successfully",
-      });
-
+      
       // Dispatch custom event to notify other components of the change
       window.dispatchEvent(new CustomEvent('footerContentUpdated', { 
         detail: footerUpdate 
       }));
 
-      // Reload to get fresh data
-      await loadFooterContent();
     } catch (error) {
       console.error('Error saving footer content:', error);
       toast({
@@ -118,16 +176,16 @@ export const FooterContentManager = () => {
         {/* Preview Section */}
         <div className="p-4 border rounded-lg bg-muted/50">
           <h4 className="text-sm font-semibold text-muted-foreground mb-2">Preview</h4>
-          <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
-            <h4 className="text-white font-medium mb-2 text-sm">
+          <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">
+            <h4 className="text-card-foreground font-medium mb-2 text-sm">
               {footerUpdate.title || 'Latest Update'}
             </h4>
-            <p className="text-white/80 text-xs mb-2">
+            <p className="text-muted-foreground text-xs mb-2">
               {footerUpdate.content || 'No content yet...'}
             </p>
             <a 
               href={footerUpdate.link_url || '#'} 
-              className="inline-flex items-center text-red-400 hover:text-red-300 text-xs font-medium"
+              className="inline-flex items-center text-primary hover:text-primary/80 text-xs font-medium"
             >
               {footerUpdate.link_text || 'Learn More'}
             </a>

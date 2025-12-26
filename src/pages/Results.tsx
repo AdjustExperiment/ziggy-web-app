@@ -158,70 +158,108 @@ const Results = () => {
 
   const fetchAllResults = async () => {
     try {
-      // Fetch recent tournament results from tournament_standings with event info
+      setLoading(true);
+      
+      // Fetch tournament standings first
       const { data: standingsData, error: standingsError } = await supabase
         .from('tournament_standings')
-        .select(`
-          id,
-          rank,
-          wins,
-          losses,
-          speaks_total,
-          speaks_avg,
-          registration:tournament_registrations(
-            participant_name,
-            partner_name,
-            school_organization,
-            event_id,
-            event:tournament_events(id, name)
-          ),
-          tournament:tournaments(
-            id,
-            name,
-            format,
-            start_date
-          )
-        `)
+        .select('id, rank, wins, losses, speaks_total, speaks_avg, registration_id, tournament_id')
         .order('rank')
         .limit(500);
 
       if (standingsError) {
         console.error('Error fetching standings:', standingsError);
-      } else if (standingsData) {
-        const formattedResults: TournamentResult[] = standingsData
-          .filter(s => s.tournament && s.registration)
-          .map(s => ({
+        setLoading(false);
+        return;
+      }
+
+      if (!standingsData || standingsData.length === 0) {
+        setRecentResults([]);
+        setLoading(false);
+        return;
+      }
+
+      // Get unique IDs for batch fetching
+      const registrationIds = [...new Set(standingsData.map(s => s.registration_id).filter(Boolean))];
+      const tournamentIds = [...new Set(standingsData.map(s => s.tournament_id).filter(Boolean))];
+
+      // Fetch registrations and tournaments in parallel
+      const [registrationsResult, tournamentsResult] = await Promise.all([
+        supabase
+          .from('tournament_registrations')
+          .select('id, participant_name, partner_name, school_organization, event_id')
+          .in('id', registrationIds),
+        supabase
+          .from('tournaments')
+          .select('id, name, format, start_date')
+          .in('id', tournamentIds)
+      ]);
+
+      const registrationsMap = new Map(
+        (registrationsResult.data || []).map(r => [r.id, r])
+      );
+      const tournamentsMap = new Map(
+        (tournamentsResult.data || []).map(t => [t.id, t])
+      );
+
+      // Fetch event info if any registrations have event_id
+      const eventIds = [...new Set(
+        (registrationsResult.data || [])
+          .map(r => r.event_id)
+          .filter(Boolean)
+      )];
+      
+      let eventsMap = new Map<string, { id: string; name: string }>();
+      if (eventIds.length > 0) {
+        const { data: eventsData } = await supabase
+          .from('tournament_events')
+          .select('id, name')
+          .in('id', eventIds);
+        eventsMap = new Map((eventsData || []).map(e => [e.id, e]));
+      }
+
+      // Format results
+      const formattedResults: TournamentResult[] = standingsData
+        .map(s => {
+          const registration = registrationsMap.get(s.registration_id);
+          const tournament = tournamentsMap.get(s.tournament_id);
+          const event = registration?.event_id ? eventsMap.get(registration.event_id) : null;
+          
+          if (!registration || !tournament) return null;
+          
+          return {
             id: s.id,
-            tournament_name: (s.tournament as any)?.name || 'Unknown Tournament',
-            tournament_id: (s.tournament as any)?.id || '',
-            format: (s.tournament as any)?.format || 'Unknown',
-            start_date: (s.tournament as any)?.start_date || '',
-            participant_name: (s.registration as any)?.participant_name || 'Unknown',
-            partner_name: (s.registration as any)?.partner_name,
-            school: (s.registration as any)?.school_organization,
+            tournament_name: tournament.name || 'Unknown Tournament',
+            tournament_id: tournament.id || '',
+            format: tournament.format || 'Unknown',
+            start_date: tournament.start_date || '',
+            participant_name: registration.participant_name || 'Unknown',
+            partner_name: registration.partner_name,
+            school: registration.school_organization,
             rank: s.rank,
             wins: s.wins,
             losses: s.losses,
             speaks_total: s.speaks_total || 0,
             speaks_avg: s.speaks_avg || 0,
-            event_id: (s.registration as any)?.event_id || null,
-            event_name: (s.registration as any)?.event?.name || null,
-          }));
-        
-        setRecentResults(formattedResults);
-        
-        // Extract unique formats
-        const uniqueFormats = [...new Set(formattedResults.map(r => r.format).filter(Boolean))];
-        setFormats(uniqueFormats);
+            event_id: registration.event_id || null,
+            event_name: event?.name || null,
+          };
+        })
+        .filter((r): r is TournamentResult => r !== null);
+      
+      setRecentResults(formattedResults);
+      
+      // Extract unique formats
+      const uniqueFormats = [...new Set(formattedResults.map(r => r.format).filter(Boolean))];
+      setFormats(uniqueFormats);
 
-        // Extract available years from tournament dates
-        const years = [...new Set(
-          formattedResults
-            .map(r => new Date(r.start_date).getFullYear())
-            .filter(y => !isNaN(y))
-        )].sort((a, b) => b - a); // Most recent first
-        setAvailableYears(years);
-      }
+      // Extract available years from tournament dates
+      const years = [...new Set(
+        formattedResults
+          .map(r => new Date(r.start_date).getFullYear())
+          .filter(y => !isNaN(y))
+      )].sort((a, b) => b - a); // Most recent first
+      setAvailableYears(years);
 
       // Fetch completed championship tournaments with prize info
       const { data: tournamentsData, error: tournamentsError } = await supabase
