@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useOptimizedAuth } from '@/hooks/useOptimizedAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,11 +7,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Calendar, Users, Loader2, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Calendar, Users, Loader2, AlertCircle, Bell, Lock } from 'lucide-react';
 import { format } from 'date-fns';
 import TournamentHeader from '@/components/tournament/TournamentHeader';
 import RoundSelector from '@/components/tournament/RoundSelector';
 import RoundPairingsTable from '@/components/tournament/RoundPairingsTable';
+import RoundEmptyState from '@/components/tournament/RoundEmptyState';
+import TournamentSidebar from '@/components/tournament/TournamentSidebar';
+import { useTournamentRealtime } from '@/hooks/useTournamentRealtime';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 
 interface Tournament {
   id: string;
@@ -214,32 +218,69 @@ export default function TournamentLive() {
     fetchTournamentData();
   }, [tournamentId, user]);
 
-  // Fetch pairings when round changes
+  // Fetch pairings when round changes - admins see all, others see released only
+  const fetchPairings = useCallback(async () => {
+    if (!selectedRoundId) return;
+
+    if (import.meta.env.DEV) {
+      console.log('[TournamentLive] Fetching pairings for round:', selectedRoundId, { isAdmin });
+    }
+
+    let query = supabase
+      .from('pairings')
+      .select('*')
+      .eq('round_id', selectedRoundId)
+      .order('room_rank', { ascending: true });
+
+    // Non-admins only see released pairings
+    if (!isAdmin) {
+      query = query.eq('released', true);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error('Error fetching pairings:', error);
+      return;
+    }
+
+    if (import.meta.env.DEV) {
+      console.log('[TournamentLive] Fetched pairings:', data?.length, 
+        'released:', data?.filter(p => p.released).length,
+        'unreleased:', data?.filter(p => !p.released).length
+      );
+    }
+
+    setPairings(data || []);
+  }, [selectedRoundId, isAdmin]);
+
   useEffect(() => {
-    const fetchPairings = async () => {
-      if (!selectedRoundId) return;
-
-      const { data, error } = await supabase
-        .from('pairings')
-        .select('*')
-        .eq('round_id', selectedRoundId)
-        .eq('released', true)
-        .order('room_rank', { ascending: true });
-
-      if (error) {
-        console.error('Error fetching pairings:', error);
-        return;
-      }
-
-      setPairings(data || []);
-    };
-
     fetchPairings();
-    
-    // Poll for updates every 30 seconds
-    const interval = setInterval(fetchPairings, 30000);
-    return () => clearInterval(interval);
-  }, [selectedRoundId]);
+  }, [fetchPairings]);
+
+  // Real-time subscriptions - replace polling
+  useTournamentRealtime({
+    tournamentId: tournamentId || null,
+    onRoundUpdate: () => fetchPairings(),
+    onPairingUpdate: () => fetchPairings(),
+    showNotifications: true
+  });
+
+  // Push notifications
+  const { requestPermission, isEnabled: pushEnabled } = usePushNotifications({
+    tournamentId,
+    registrationId: userRegistrationId,
+    judgeProfileId: userJudgeProfileId
+  });
+
+  // Derived state for empty states
+  const hasUnreleasedPairings = useMemo(() => {
+    return pairings.some(p => !p.released);
+  }, [pairings]);
+
+  const releasedPairings = useMemo(() => {
+    return pairings.filter(p => p.released);
+  }, [pairings]);
 
   // Filter rounds by selected event
   const filteredRounds = useMemo(() => {
