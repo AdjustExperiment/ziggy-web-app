@@ -7,13 +7,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Calendar, Users, Loader2, AlertCircle, Bell, Lock } from 'lucide-react';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { ArrowLeft, Calendar, Users, Loader2, AlertCircle, Bell, Lock, Trophy, PanelRightOpen, PanelRightClose } from 'lucide-react';
 import { format } from 'date-fns';
 import TournamentHeader from '@/components/tournament/TournamentHeader';
 import RoundSelector from '@/components/tournament/RoundSelector';
 import RoundPairingsTable from '@/components/tournament/RoundPairingsTable';
 import RoundEmptyState from '@/components/tournament/RoundEmptyState';
 import TournamentSidebar from '@/components/tournament/TournamentSidebar';
+import TournamentBracket from '@/components/tournament/TournamentBracket';
 import { useTournamentRealtime } from '@/hooks/useTournamentRealtime';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 
@@ -94,6 +96,7 @@ export default function TournamentLive() {
   
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [selectedRoundId, setSelectedRoundId] = useState<string | null>(null);
+  const [showSidebar, setShowSidebar] = useState(true);
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -310,6 +313,59 @@ export default function TournamentLive() {
   const selectedRound = rounds.find(r => r.id === selectedRoundId);
   const selectedEvent = events.find(e => e.id === selectedEventId);
 
+  // Detect elimination rounds and prepare bracket data
+  const eliminationRounds = useMemo(() => {
+    return filteredRounds.filter(r => 
+      r.name.toLowerCase().includes('final') ||
+      r.name.toLowerCase().includes('semi') ||
+      r.name.toLowerCase().includes('quarter') ||
+      r.name.toLowerCase().includes('elim') ||
+      r.name.toLowerCase().includes('break')
+    );
+  }, [filteredRounds]);
+
+  const bracketMatches = useMemo(() => {
+    if (eliminationRounds.length === 0) return [];
+    
+    // Get all pairings for elimination rounds
+    const elimPairings = pairings.filter(p => 
+      eliminationRounds.some(r => r.id === selectedRoundId)
+    );
+    
+    return elimPairings.map((p, index) => ({
+      id: p.id,
+      roundNumber: 1, // Simplified - would need proper round mapping
+      matchNumber: index + 1,
+      team1: registrations.find(r => r.id === p.aff_registration_id) 
+        ? { 
+            id: p.aff_registration_id, 
+            name: registrations.find(r => r.id === p.aff_registration_id)?.participant_name || 'TBD',
+            school: registrations.find(r => r.id === p.aff_registration_id)?.school_organization || undefined
+          } 
+        : null,
+      team2: registrations.find(r => r.id === p.neg_registration_id)
+        ? {
+            id: p.neg_registration_id,
+            name: registrations.find(r => r.id === p.neg_registration_id)?.participant_name || 'TBD',
+            school: registrations.find(r => r.id === p.neg_registration_id)?.school_organization || undefined
+          }
+        : null,
+      winnerId: p.result?.winner_id || null,
+      room: p.room,
+      scheduledTime: p.scheduled_time,
+      status: p.status === 'completed' ? 'completed' as const : 
+              p.status === 'in_progress' ? 'in_progress' as const : 'pending' as const
+    }));
+  }, [eliminationRounds, pairings, registrations, selectedRoundId]);
+
+  const isEliminationRound = selectedRound && (
+    selectedRound.name.toLowerCase().includes('final') ||
+    selectedRound.name.toLowerCase().includes('semi') ||
+    selectedRound.name.toLowerCase().includes('quarter') ||
+    selectedRound.name.toLowerCase().includes('elim') ||
+    selectedRound.name.toLowerCase().includes('break')
+  );
+
   if (loading) {
     return (
       <div className="container max-w-6xl mx-auto py-8 px-4">
@@ -348,118 +404,163 @@ export default function TournamentLive() {
   }
 
   return (
-    <div className="container max-w-6xl mx-auto py-8 px-4 space-y-6">
-      {/* Back Button */}
-      <Button variant="ghost" onClick={() => navigate(-1)} className="gap-2 -ml-2">
-        <ArrowLeft className="h-4 w-4" />
-        Back
-      </Button>
+    <div className="container max-w-7xl mx-auto py-8 px-4">
+      {/* Back Button + Sidebar Toggle */}
+      <div className="flex items-center justify-between mb-4">
+        <Button variant="ghost" onClick={() => navigate(-1)} className="gap-2 -ml-2">
+          <ArrowLeft className="h-4 w-4" />
+          Back
+        </Button>
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={() => setShowSidebar(!showSidebar)}
+          className="lg:hidden"
+        >
+          {showSidebar ? <PanelRightClose className="h-4 w-4" /> : <PanelRightOpen className="h-4 w-4" />}
+        </Button>
+      </div>
 
-      {/* Tournament Header with Toggleable Panels */}
-      <TournamentHeader 
-        tournament={tournament} 
-        sponsors={sponsors}
-        formatName={selectedEvent?.debate_formats?.name}
-      />
-
-      {/* Event Tabs (if multi-format) */}
-      {events.length > 1 && (
-        <Tabs value={selectedEventId || ''} onValueChange={setSelectedEventId}>
-          <TabsList>
-            {events.map((event) => (
-              <TabsTrigger key={event.id} value={event.id}>
-                {event.short_code || event.name}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
-      )}
-
-      {/* Round Selector */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            Rounds
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <RoundSelector
-            rounds={filteredRounds}
-            selectedRoundId={selectedRoundId}
-            onSelectRound={setSelectedRoundId}
+      <div className="flex gap-6">
+        {/* Main Content */}
+        <div className={`flex-1 space-y-6 ${showSidebar ? 'lg:w-2/3' : 'w-full'}`}>
+          {/* Tournament Header with Toggleable Panels */}
+          <TournamentHeader 
+            tournament={tournament} 
+            sponsors={sponsors}
+            formatName={selectedEvent?.debate_formats?.name}
           />
-        </CardContent>
-      </Card>
 
-      {/* Selected Round Details */}
-      {selectedRound && (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-xl">{selectedRound.name}</CardTitle>
-              <div className="flex items-center gap-2">
-                {selectedRound.scheduled_date && (
-                  <Badge variant="outline" className="gap-1">
-                    <Calendar className="h-3 w-3" />
-                    {format(new Date(selectedRound.scheduled_date), 'MMM d, yyyy')}
-                  </Badge>
-                )}
-                <Badge 
-                  className={
-                    selectedRound.status === 'completed' 
-                      ? 'bg-green-500/20 text-green-400' 
-                      : selectedRound.status === 'in_progress'
-                      ? 'bg-yellow-500/20 text-yellow-400'
-                      : 'bg-muted text-muted-foreground'
-                  }
+          {/* Event Tabs (if multi-format) */}
+          {events.length > 1 && (
+            <Tabs value={selectedEventId || ''} onValueChange={setSelectedEventId}>
+              <TabsList>
+                {events.map((event) => (
+                  <TabsTrigger key={event.id} value={event.id}>
+                    {event.short_code || event.name}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
+          )}
+
+          {/* Rounds as Vertical Accordion */}
+          {filteredRounds.length > 0 ? (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Calendar className="h-5 w-5" />
+                  Rounds
+                  {isAdmin && pairings.some(p => !p.released) && (
+                    <Badge variant="outline" className="ml-2 gap-1">
+                      <Lock className="h-3 w-3" />
+                      {pairings.filter(p => !p.released).length} unreleased
+                    </Badge>
+                  )}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Accordion 
+                  type="single" 
+                  collapsible 
+                  value={selectedRoundId || undefined}
+                  onValueChange={(value) => setSelectedRoundId(value || null)}
                 >
-                  {selectedRound.status === 'completed' ? 'Completed' : 
-                   selectedRound.status === 'in_progress' ? 'In Progress' : 'Upcoming'}
-                </Badge>
-                <Badge variant="outline" className="gap-1">
-                  <Users className="h-3 w-3" />
-                  {enrichedPairings.length} pairings
-                </Badge>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {enrichedPairings.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                <p>No pairings have been released for this round yet.</p>
-              </div>
-            ) : (
-              <RoundPairingsTable
-                pairings={enrichedPairings}
-                roundId={selectedRoundId!}
-                tournamentId={tournament.id}
-                userRole={userRole}
-                userRegistrationId={userRegistrationId}
-                userJudgeProfileId={userJudgeProfileId}
-                allowJudgeVolunteering={tournament.allow_judge_volunteering}
-                onRefresh={() => {
-                  // Trigger refetch
-                  setSelectedRoundId(prev => prev);
-                }}
-              />
-            )}
-          </CardContent>
-        </Card>
-      )}
+                  {filteredRounds.map((round) => (
+                    <AccordionItem key={round.id} value={round.id}>
+                      <AccordionTrigger className="hover:no-underline">
+                        <div className="flex items-center justify-between w-full pr-4">
+                          <div className="flex items-center gap-3">
+                            <span className="font-medium">{round.name}</span>
+                            {round.scheduled_date && (
+                              <span className="text-sm text-muted-foreground">
+                                {format(new Date(round.scheduled_date), 'MMM d')}
+                              </span>
+                            )}
+                          </div>
+                          <Badge 
+                            variant={
+                              round.status === 'completed' ? 'secondary' :
+                              round.status === 'in_progress' ? 'default' : 'outline'
+                            }
+                            className="ml-2"
+                          >
+                            {round.status === 'completed' ? 'Done' : 
+                             round.status === 'in_progress' ? 'Live' : 'Upcoming'}
+                          </Badge>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        {round.id === selectedRoundId && (
+                          <>
+                            {/* Show bracket for elimination rounds */}
+                            {isEliminationRound && bracketMatches.length > 0 && (
+                              <div className="mb-4">
+                                <TournamentBracket 
+                                  matches={bracketMatches}
+                                  totalRounds={Math.ceil(Math.log2(bracketMatches.length * 2))}
+                                />
+                              </div>
+                            )}
+                            
+                            {enrichedPairings.length === 0 ? (
+                              <RoundEmptyState 
+                                status={isAdmin && pairings.some(p => !p.released) ? 'unpublished' : 'no_rounds'}
+                                isAdmin={isAdmin}
+                                unreleasedCount={pairings.filter(p => !p.released).length}
+                              />
+                            ) : (
+                              <RoundPairingsTable
+                                pairings={enrichedPairings}
+                                roundId={round.id}
+                                tournamentId={tournament.id}
+                                userRole={userRole}
+                                userRegistrationId={userRegistrationId}
+                                userJudgeProfileId={userJudgeProfileId}
+                                allowJudgeVolunteering={tournament.allow_judge_volunteering}
+                                onRefresh={fetchPairings}
+                              />
+                            )}
+                          </>
+                        )}
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              </CardContent>
+            </Card>
+          ) : (
+            <RoundEmptyState status="no_rounds" isAdmin={isAdmin} />
+          )}
+        </div>
 
-      {/* No rounds message */}
-      {filteredRounds.length === 0 && (
-        <Card>
-          <CardContent className="text-center py-12">
-            <Calendar className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
-            <h3 className="text-lg font-semibold mb-2">No Rounds Available</h3>
-            <p className="text-muted-foreground">
-              Rounds haven't been created for this tournament yet.
-            </p>
-          </CardContent>
-        </Card>
+        {/* Sidebar - Right Panel */}
+        {showSidebar && (
+          <aside className="hidden lg:block w-1/3 min-w-[300px]">
+            <Card className="sticky top-4 h-[calc(100vh-120px)]">
+              <TournamentSidebar
+                tournamentId={tournament.id}
+                tournamentName={tournament.name}
+                formatName={selectedEvent?.debate_formats?.name}
+                rounds={filteredRounds}
+                className="h-full"
+              />
+            </Card>
+          </aside>
+        )}
+      </div>
+
+      {/* Mobile Sidebar Sheet */}
+      {showSidebar && (
+        <div className="fixed inset-x-0 bottom-0 lg:hidden bg-background border-t z-50 max-h-[50vh] overflow-hidden">
+          <TournamentSidebar
+            tournamentId={tournament.id}
+            tournamentName={tournament.name}
+            formatName={selectedEvent?.debate_formats?.name}
+            rounds={filteredRounds}
+            className="h-[50vh]"
+          />
+        </div>
       )}
     </div>
   );
