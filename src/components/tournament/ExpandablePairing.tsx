@@ -110,14 +110,14 @@ export default function ExpandablePairing({
   const canViewEvidence = isParticipant || isAssignedJudge || isAdmin;
   const canVolunteer = userRole === 'judge' && !isAssignedJudge && needsJudge && allowJudgeVolunteering;
 
-  // Fetch chat messages with polling
+  // Fetch chat messages with real-time subscription
   useEffect(() => {
     const fetchMessages = async () => {
+      // Query messages for this specific pairing (message_type is null for pairing chat)
       const { data, error } = await supabase
         .from('pairing_chat_messages')
         .select('id, message, created_at, sender_id')
         .eq('pairing_id', pairing.id)
-        .is('message_type', null)
         .order('created_at', { ascending: true });
 
       if (error) {
@@ -128,24 +128,65 @@ export default function ExpandablePairing({
 
       if (data && data.length > 0) {
         const senderIds = [...new Set(data.map(m => m.sender_id).filter(Boolean))];
-        const { data: profiles } = await supabase
-          .from('profiles')
-          .select('user_id, first_name, last_name')
-          .in('user_id', senderIds);
+        if (senderIds.length > 0) {
+          const { data: profiles } = await supabase
+            .from('profiles')
+            .select('user_id, first_name, last_name')
+            .in('user_id', senderIds);
 
-        const profileMap = new Map(profiles?.map(p => [p.user_id, `${p.first_name || ''} ${p.last_name || ''}`.trim()]) || []);
-        
-        setMessages(data.map(m => ({
-          ...m,
-          sender_name: profileMap.get(m.sender_id) || 'Unknown'
-        })));
+          const profileMap = new Map(profiles?.map(p => [p.user_id, `${p.first_name || ''} ${p.last_name || ''}`.trim()]) || []);
+          
+          setMessages(data.map(m => ({
+            ...m,
+            sender_name: profileMap.get(m.sender_id) || 'Unknown'
+          })));
+        } else {
+          setMessages(data.map(m => ({ ...m, sender_name: 'Unknown' })));
+        }
       }
       setLoadingChat(false);
     };
 
     fetchMessages();
-    const interval = setInterval(fetchMessages, 10000);
-    return () => clearInterval(interval);
+
+    // Real-time subscription
+    const channel = supabase
+      .channel(`pairing-chat-${pairing.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'pairing_chat_messages',
+          filter: `pairing_id=eq.${pairing.id}`
+        },
+        async (payload) => {
+          const newMsg = payload.new as any;
+          // Get sender name
+          const { data: senderProfile } = await supabase
+            .from('profiles')
+            .select('first_name, last_name')
+            .eq('user_id', newMsg.sender_id)
+            .single();
+          
+          const senderName = senderProfile 
+            ? `${senderProfile.first_name || ''} ${senderProfile.last_name || ''}`.trim() 
+            : 'Unknown';
+
+          setMessages(prev => [...prev, {
+            id: newMsg.id,
+            message: newMsg.message,
+            created_at: newMsg.created_at,
+            sender_id: newMsg.sender_id,
+            sender_name: senderName
+          }]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [pairing.id]);
 
   // Fetch evidence
