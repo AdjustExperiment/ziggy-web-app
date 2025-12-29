@@ -286,9 +286,9 @@ export default function TournamentLanding() {
                 </Link>
               </Button>
               <Button variant="outline" asChild className="justify-start">
-                <Link to={`/pairings/${tournament.id}`}>
+                <Link to={`/tournaments/${tournament.id}/live`}>
                   <Users className="h-4 w-4 mr-2" />
-                  View Pairings
+                  Enter Tournament
                 </Link>
               </Button>
             </div>
