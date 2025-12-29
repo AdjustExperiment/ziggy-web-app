@@ -102,34 +102,46 @@ export default function TournamentSidebar({
     fetchContent();
   }, [tournamentId, formatName]);
 
-  // Fetch and subscribe to chat messages
+  // Fetch and subscribe to chat messages (using tournament_id in metadata)
   useEffect(() => {
     const fetchMessages = async () => {
-      // Fetch messages from pairing_chat_messages with tournament scope
-      const { data } = await supabase
+      // For tournament-wide chat, we use message_type = 'tournament_chat' with tournament_id in metadata
+      const { data, error } = await supabase
         .from('pairing_chat_messages')
-        .select('id, message, sender_id, created_at')
+        .select('id, message, sender_id, created_at, metadata')
         .eq('message_type', 'tournament_chat')
-        .eq('metadata->>tournament_id', tournamentId)
         .order('created_at', { ascending: true })
-        .limit(50);
+        .limit(100);
 
-      if (data) {
-        // Get sender names
-        const senderIds = [...new Set(data.map(m => m.sender_id).filter(Boolean))];
-        const { data: profiles } = await supabase
-          .from('profiles')
-          .select('user_id, first_name, last_name')
-          .in('user_id', senderIds);
+      if (error) {
+        console.error('Error fetching chat:', error);
+        return;
+      }
 
-        const profileMap = new Map(
-          profiles?.map(p => [p.user_id, `${p.first_name || ''} ${p.last_name || ''}`.trim()]) || []
-        );
+      // Filter by tournament_id from metadata
+      const tournamentMessages = (data || []).filter(
+        (m: any) => m.metadata?.tournament_id === tournamentId
+      );
 
-        setChatMessages(data.map(m => ({
-          ...m,
-          sender_name: profileMap.get(m.sender_id) || 'Unknown'
-        })));
+      if (tournamentMessages.length > 0) {
+        const senderIds = [...new Set(tournamentMessages.map(m => m.sender_id).filter(Boolean))];
+        if (senderIds.length > 0) {
+          const { data: profiles } = await supabase
+            .from('profiles')
+            .select('user_id, first_name, last_name')
+            .in('user_id', senderIds);
+
+          const profileMap = new Map(
+            profiles?.map(p => [p.user_id, `${p.first_name || ''} ${p.last_name || ''}`.trim()]) || []
+          );
+
+          setChatMessages(tournamentMessages.map(m => ({
+            ...m,
+            sender_name: profileMap.get(m.sender_id) || 'Unknown'
+          })));
+        } else {
+          setChatMessages(tournamentMessages.map(m => ({ ...m, sender_name: 'Unknown' })));
+        }
       }
     };
 
@@ -143,17 +155,29 @@ export default function TournamentSidebar({
         {
           event: 'INSERT',
           schema: 'public',
-          table: 'pairing_chat_messages',
-          filter: `message_type=eq.tournament_chat`
+          table: 'pairing_chat_messages'
         },
-        (payload) => {
+        async (payload) => {
           const newMsg = payload.new as any;
-          if (newMsg.metadata?.tournament_id === tournamentId) {
+          // Check if it's a tournament chat for this tournament
+          if (newMsg.message_type === 'tournament_chat' && 
+              newMsg.metadata?.tournament_id === tournamentId) {
+            // Get sender name
+            const { data: senderProfile } = await supabase
+              .from('profiles')
+              .select('first_name, last_name')
+              .eq('user_id', newMsg.sender_id)
+              .single();
+            
+            const senderName = senderProfile 
+              ? `${senderProfile.first_name || ''} ${senderProfile.last_name || ''}`.trim() 
+              : 'Unknown';
+
             setChatMessages(prev => [...prev, {
               id: newMsg.id,
               message: newMsg.message,
               sender_id: newMsg.sender_id,
-              sender_name: 'New User',
+              sender_name: senderName,
               created_at: newMsg.created_at
             }]);
           }
