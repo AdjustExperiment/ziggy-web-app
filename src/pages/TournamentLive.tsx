@@ -492,6 +492,8 @@ export default function TournamentLive() {
                     allowJudgeVolunteering={tournament.allow_judge_volunteering}
                     onRefresh={fetchPairings}
                     isAdmin={isAdmin}
+                    allRegistrations={registrations}
+                    allJudges={judges}
                   />
                 )}
               </CardContent>

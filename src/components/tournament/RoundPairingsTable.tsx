@@ -2,19 +2,31 @@ import { useState } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { ChevronDown, ChevronUp, UserCheck, Clock, CheckCircle2, AlertCircle, Edit2, ArrowLeftRight } from 'lucide-react';
+import { ChevronDown, ChevronUp, UserCheck, Clock, CheckCircle2, AlertCircle, Edit2, ArrowLeftRight, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import ExpandablePairing from './ExpandablePairing';
 import SpectateRequestButton from './SpectateRequestButton';
+import PairingEditModal from './PairingEditModal';
 import { cn } from '@/lib/utils';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+
+interface Team {
+  id: string;
+  participant_name: string;
+  partner_name: string | null;
+  school_organization: string | null;
+  participant_email?: string;
+}
+
+interface Judge {
+  id: string;
+  name: string;
+  email?: string;
+  alumni: boolean;
+}
 
 interface Pairing {
   id: string;
@@ -26,23 +38,9 @@ interface Pairing {
   status: string;
   result: any;
   released: boolean;
-  aff_team?: {
-    id: string;
-    participant_name: string;
-    partner_name: string | null;
-    school_organization: string | null;
-  };
-  neg_team?: {
-    id: string;
-    participant_name: string;
-    partner_name: string | null;
-    school_organization: string | null;
-  };
-  judge?: {
-    id: string;
-    name: string;
-    alumni: boolean;
-  } | null;
+  aff_team?: Team;
+  neg_team?: Team;
+  judge?: Judge | null;
 }
 
 interface RoundPairingsTableProps {
@@ -55,6 +53,8 @@ interface RoundPairingsTableProps {
   allowJudgeVolunteering?: boolean;
   onRefresh?: () => void;
   isAdmin?: boolean;
+  allRegistrations?: Team[];
+  allJudges?: Judge[];
 }
 
 export default function RoundPairingsTable({
@@ -66,13 +66,12 @@ export default function RoundPairingsTable({
   userJudgeProfileId,
   allowJudgeVolunteering = false,
   onRefresh,
-  isAdmin = false
+  isAdmin = false,
+  allRegistrations = [],
+  allJudges = []
 }: RoundPairingsTableProps) {
   const [expandedPairingId, setExpandedPairingId] = useState<string | null>(null);
   const [editingPairing, setEditingPairing] = useState<Pairing | null>(null);
-  const [editRoom, setEditRoom] = useState('');
-  const [editTime, setEditTime] = useState('');
-  const [saving, setSaving] = useState(false);
   const isMobile = useIsMobile();
 
   const toggleExpand = (pairingId: string) => {
@@ -141,8 +140,6 @@ export default function RoundPairingsTable({
   const handleEditPairing = (pairing: Pairing, e: React.MouseEvent) => {
     e.stopPropagation();
     setEditingPairing(pairing);
-    setEditRoom(pairing.room || '');
-    setEditTime(pairing.scheduled_time ? format(new Date(pairing.scheduled_time), "yyyy-MM-dd'T'HH:mm") : '');
   };
 
   const handleSwapSides = async (pairing: Pairing, e: React.MouseEvent) => {
@@ -161,33 +158,6 @@ export default function RoundPairingsTable({
       toast.success('Sides swapped');
       onRefresh?.();
     }
-  };
-
-  const handleSaveEdit = async () => {
-    if (!editingPairing) return;
-    setSaving(true);
-
-    const updates: any = {
-      room: editRoom || null
-    };
-
-    if (editTime) {
-      updates.scheduled_time = new Date(editTime).toISOString();
-    }
-
-    const { error } = await supabase
-      .from('pairings')
-      .update(updates)
-      .eq('id', editingPairing.id);
-
-    if (error) {
-      toast.error('Failed to update pairing');
-    } else {
-      toast.success('Pairing updated');
-      setEditingPairing(null);
-      onRefresh?.();
-    }
-    setSaving(false);
   };
 
   const expandedPairing = pairings.find(p => p.id === expandedPairingId);
@@ -282,30 +252,25 @@ export default function RoundPairingsTable({
           </SheetContent>
         </Sheet>
 
-        {/* Edit Dialog */}
-        <Dialog open={!!editingPairing} onOpenChange={(open) => !open && setEditingPairing(null)}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Edit Pairing</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label>Room</Label>
-                <Input value={editRoom} onChange={(e) => setEditRoom(e.target.value)} placeholder="Room name or number" />
-              </div>
-              <div className="space-y-2">
-                <Label>Scheduled Time</Label>
-                <Input type="datetime-local" value={editTime} onChange={(e) => setEditTime(e.target.value)} />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setEditingPairing(null)}>Cancel</Button>
-              <Button onClick={handleSaveEdit} disabled={saving}>
-                {saving ? 'Saving...' : 'Save Changes'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        {/* Edit Modal */}
+        {editingPairing && (
+          <PairingEditModal
+            open={!!editingPairing}
+            onOpenChange={(open) => !open && setEditingPairing(null)}
+            pairing={editingPairing}
+            tournamentId={tournamentId}
+            registrations={allRegistrations.length > 0 ? allRegistrations : 
+              pairings.flatMap(p => [p.aff_team, p.neg_team].filter(Boolean)) as Team[]
+            }
+            judges={allJudges.length > 0 ? allJudges : 
+              pairings.map(p => p.judge).filter(Boolean) as Judge[]
+            }
+            onSave={() => {
+              setEditingPairing(null);
+              onRefresh?.();
+            }}
+          />
+        )}
       </>
     );
   }
@@ -450,30 +415,25 @@ export default function RoundPairingsTable({
         </Table>
       </div>
 
-      {/* Edit Dialog */}
-      <Dialog open={!!editingPairing} onOpenChange={(open) => !open && setEditingPairing(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Pairing</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Room</Label>
-              <Input value={editRoom} onChange={(e) => setEditRoom(e.target.value)} placeholder="Room name or number" />
-            </div>
-            <div className="space-y-2">
-              <Label>Scheduled Time</Label>
-              <Input type="datetime-local" value={editTime} onChange={(e) => setEditTime(e.target.value)} />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingPairing(null)}>Cancel</Button>
-            <Button onClick={handleSaveEdit} disabled={saving}>
-              {saving ? 'Saving...' : 'Save Changes'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Edit Modal */}
+      {editingPairing && (
+        <PairingEditModal
+          open={!!editingPairing}
+          onOpenChange={(open) => !open && setEditingPairing(null)}
+          pairing={editingPairing as any}
+          tournamentId={tournamentId}
+          registrations={allRegistrations.length > 0 ? allRegistrations : 
+            pairings.flatMap(p => [p.aff_team, p.neg_team].filter(Boolean)) as any[]
+          }
+          judges={allJudges.length > 0 ? allJudges : 
+            pairings.map(p => p.judge).filter(Boolean) as any[]
+          }
+          onSave={() => {
+            setEditingPairing(null);
+            onRefresh?.();
+          }}
+        />
+      )}
     </>
   );
 }
