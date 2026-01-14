@@ -787,7 +787,7 @@ export function PairingGenerator({
         .eq('tournament_id', tournamentId);
 
       // Get judge availability if date is set
-      let availabilityMap: Map<string, string[]> = new Map();
+      const availabilityMap: Map<string, string[]> = new Map();
       if (roundDate) {
         const { data: availability } = await supabase
           .from('judge_availability')

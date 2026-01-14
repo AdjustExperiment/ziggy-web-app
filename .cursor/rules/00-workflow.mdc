@@ -1,0 +1,33 @@
+---
+description: Vibecoder workflow rules for safe, low-friction changes (Cursor + agents).
+---
+
+## Goal
+Ship features with minimal friction while keeping production safe.
+
+## Default workflow (prompt → preview → production)
+- Work on a branch (`feat/...`, `fix/...`, `chore/...`)
+- Run local checks: `lint`, `test`, `typecheck`, `build`
+- Push branch → open PR → Vercel Preview URL appears
+- Merge PR → Vercel Production deploys from `main`
+
+## Vibecoder prompts (ask before coding)
+- What is the acceptance criteria?
+- What could break (auth, payments, permissions, migrations)?
+- What is the smallest PR that accomplishes it?
+- What checks should be added/updated (tests, types)?
+
+## Change rules
+- Prefer small PRs (reviewable in < 15 minutes).
+- Do not introduce new secrets into the repo.
+- If touching Supabase:
+  - Never test destructive changes against production
+  - Ensure migrations are additive/safe, include rollback notes in PR
+  - Prefer staging first (Preview/branch env)
+
+## Release checklist (agent must confirm)
+- `npm run lint`
+- `npm test -- --run`
+- `npm run typecheck`
+- `npm run build`
+

@@ -31,16 +31,11 @@ export function PerformanceMonitor() {
 
     // Web Vitals monitoring
     if ('web-vital' in window) {
-      // @ts-ignore
-      window['web-vital'].getCLS(console.log);
-      // @ts-ignore
-      window['web-vital'].getFID(console.log);
-      // @ts-ignore
-      window['web-vital'].getFCP(console.log);
-      // @ts-ignore
-      window['web-vital'].getLCP(console.log);
-      // @ts-ignore
-      window['web-vital'].getTTFB(console.log);
+      (window as any)['web-vital'].getCLS(console.log);
+      (window as any)['web-vital'].getFID(console.log);
+      (window as any)['web-vital'].getFCP(console.log);
+      (window as any)['web-vital'].getLCP(console.log);
+      (window as any)['web-vital'].getTTFB(console.log);
     }
   }, [metrics]);
 

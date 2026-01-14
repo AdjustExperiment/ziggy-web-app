@@ -215,7 +215,18 @@ export default function ExpandablePairing({
       {canViewEvidence && <Card><CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><FileText className="h-4 w-4" />Evidence</CardTitle></CardHeader><CardContent>{canUploadEvidence && <div className="mb-4"><label><Button variant="outline" className="gap-2 cursor-pointer" asChild><span><Upload className="h-4 w-4" />Upload Evidence<input type="file" className="hidden" onChange={handleFileUpload} accept=".pdf,.doc,.docx,.png,.jpg,.jpeg" /></span></Button></label></div>}{loadingEvidence ? <div className="flex items-center justify-center py-8"><Loader2 className="h-6 w-6 animate-spin" /></div> : evidence.length === 0 ? <p className="text-center text-muted-foreground py-4">No evidence uploaded</p> : <div className="space-y-2">{evidence.map((file) => <div key={file.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50"><span className="text-sm truncate flex-1">{file.file_name}</span><Button variant="ghost" size="sm" asChild><a href={file.file_url} target="_blank" rel="noopener noreferrer"><Download className="h-4 w-4" /></a></Button></div>)}</div>}</CardContent></Card>}
 
       {isSpectator && <div className="flex justify-center"><SpectateRequestButton pairingId={pairing.id} tournamentId={tournamentId} /></div>}
-      {showVolunteerModal && <JudgeVolunteerModal pairingId={pairing.id} tournamentId={tournamentId} onClose={() => setShowVolunteerModal(false)} onSuccess={() => { setShowVolunteerModal(false); onRefresh?.(); }} />}
+      {showVolunteerModal && (
+        <JudgeVolunteerModal
+          open={showVolunteerModal}
+          onOpenChange={setShowVolunteerModal}
+          pairing={pairing}
+          tournamentId={tournamentId}
+          onSuccess={() => {
+            setShowVolunteerModal(false);
+            onRefresh?.();
+          }}
+        />
+      )}
     </div>
   );
 }

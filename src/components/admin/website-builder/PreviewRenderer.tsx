@@ -14,7 +14,7 @@ export const PreviewRenderer = ({ page, blocks }: PreviewRendererProps) => {
     const content = block.content || {};
 
     switch (block.type) {
-      case 'heading':
+      case 'heading': {
         const HeadingTag = `h${content.level || 1}` as keyof JSX.IntrinsicElements;
         return (
           <HeadingTag 
@@ -30,6 +30,7 @@ export const PreviewRenderer = ({ page, blocks }: PreviewRendererProps) => {
             {content.text || 'Heading'}
           </HeadingTag>
         );
+      }
 
       case 'text':
         return (

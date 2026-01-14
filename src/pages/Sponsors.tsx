@@ -118,13 +118,14 @@ const Sponsors = () => {
 
   const renderSiteBlock = (block: SiteBlock) => {
     switch (block.type) {
-      case 'heading':
+      case 'heading': {
         const HeadingTag = block.content.level || 'h2';
         return (
           <HeadingTag key={block.id} className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 text-center">
             {block.content.text}
           </HeadingTag>
         );
+      }
       case 'text':
         return (
           <div 

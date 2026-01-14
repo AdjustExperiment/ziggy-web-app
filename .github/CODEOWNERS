@@ -1,0 +1,6 @@
+# CODEOWNERS controls who is auto-requested for review when files change.
+# Update the GitHub handle(s) below to real users/teams in your org.
+
+* @YOUR_GITHUB_USERNAME
+
+

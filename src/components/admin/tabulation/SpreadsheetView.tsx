@@ -247,7 +247,7 @@ export function SpreadsheetView({ tournamentId, eventId }: SpreadsheetViewProps)
 
   // Filter and sort teams
   const displayTeams = useMemo(() => {
-    let filtered = teams.filter(t => {
+    const filtered = teams.filter(t => {
       const matchesSearch = t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         t.school.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus = statusFilter === 'all' ||

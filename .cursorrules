@@ -1,0 +1,14 @@
+# Vibecoder-friendly agent rules (compatibility file)
+#
+# If you use an AI agent in this repo, it should:
+# - Keep PRs small and incremental
+# - Avoid committing secrets (.env, keys)
+# - Preserve existing Supabase structure; use staging first
+# - Ensure `npm run lint`, `npm test -- --run`, `npm run typecheck`, `npm run build` are passing
+#
+# Prompts to ask yourself:
+# - What is the acceptance criteria?
+# - What could break?
+# - How can we validate quickly (tests/types)?
+
+

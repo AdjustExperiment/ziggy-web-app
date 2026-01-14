@@ -2,8 +2,12 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = "https://kiummwyxeleejbwapssa.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtpdW1td3l4ZWxlZWpid2Fwc3NhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU3MzYxMDgsImV4cCI6MjA3MTMxMjEwOH0.C0t-4ZtFEZpDcpsGpLr2vIyT8tK7fCfhfIqFyB0db10";
+// Prefer env vars (Vercel Preview/Production can differ); fallback keeps local dev working.
+const SUPABASE_URL =
+  import.meta.env.VITE_SUPABASE_URL ?? "https://kiummwyxeleejbwapssa.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY =
+  import.meta.env.VITE_SUPABASE_ANON_KEY ??
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtpdW1td3l4ZWxlZWpid2Fwc3NhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU3MzYxMDgsImV4cCI6MjA3MTMxMjEwOH0.C0t-4ZtFEZpDcpsGpLr2vIyT8tK7fCfhfIqFyB0db10";
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";

@@ -87,7 +87,7 @@ serve(async (req) => {
     }
 
     // Calculate subtotal
-    let subtotal = items.reduce((sum, item) => {
+    const subtotal = items.reduce((sum, item) => {
       const itemTotal = (item.base_price || 0) - (item.discount_amount || 0);
       return sum + Math.max(0, itemTotal);
     }, 0);
