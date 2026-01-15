@@ -58,9 +58,12 @@ export function PayPalCheckout({
       }
 
       setOrderId(data.order_id);
-      
-      // Open PayPal in new window
-      const paypalUrl = `https://www.sandbox.paypal.com/checkoutnow?token=${data.order_id}`;
+
+      // Open PayPal in new window - use production or sandbox URL based on mode
+      const paypalDomain = data.paypal_mode === 'production'
+        ? 'www.paypal.com'
+        : 'www.sandbox.paypal.com';
+      const paypalUrl = `https://${paypalDomain}/checkoutnow?token=${data.order_id}`;
       window.open(paypalUrl, 'paypal_checkout', 'width=500,height=700');
 
       toast({

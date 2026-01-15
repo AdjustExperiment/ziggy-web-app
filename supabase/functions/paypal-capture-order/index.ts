@@ -6,6 +6,42 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+/**
+ * Decrypts a string using AES-GCM with the provided key
+ */
+async function decryptSecret(
+  ciphertextBase64: string,
+  ivBase64: string,
+  masterKeyHex: string
+): Promise<string> {
+  // Convert hex key to bytes
+  const keyBytes = new Uint8Array(
+    masterKeyHex.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16))
+  );
+
+  // Import the key for AES-GCM
+  const key = await crypto.subtle.importKey(
+    "raw",
+    keyBytes,
+    { name: "AES-GCM", length: 256 },
+    false,
+    ["decrypt"]
+  );
+
+  // Convert base64 back to bytes
+  const ciphertextBytes = Uint8Array.from(atob(ciphertextBase64), c => c.charCodeAt(0));
+  const iv = Uint8Array.from(atob(ivBase64), c => c.charCodeAt(0));
+
+  // Decrypt
+  const plaintextBuffer = await crypto.subtle.decrypt(
+    { name: "AES-GCM", iv },
+    key,
+    ciphertextBytes
+  );
+
+  return new TextDecoder().decode(plaintextBuffer);
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -21,20 +57,73 @@ serve(async (req) => {
       );
     }
 
-    const clientId = Deno.env.get('PAYPAL_CLIENT_ID');
-    const clientSecret = Deno.env.get('PAYPAL_CLIENT_SECRET');
-    const mode = Deno.env.get('PAYPAL_MODE') || 'sandbox';
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const masterKey = Deno.env.get('PAYPAL_CREDENTIALS_MASTER_KEY');
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
-    if (!clientId || !clientSecret) {
+    // First fetch the cart to get tournament_id
+    const { data: cartForTournament, error: cartTournamentError } = await supabase
+      .from('registration_carts')
+      .select('tournament_id')
+      .eq('id', cart_id)
+      .single();
+
+    if (cartTournamentError || !cartForTournament) {
+      return new Response(
+        JSON.stringify({ error: 'Cart not found' }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Fetch tournament PayPal settings
+    const { data: paypalSettings, error: settingsError } = await supabase
+      .from('tournament_payment_settings')
+      .select('paypal_enabled, paypal_mode, paypal_client_id, paypal_secret_ciphertext, paypal_secret_iv')
+      .eq('tournament_id', cartForTournament.tournament_id)
+      .single();
+
+    if (settingsError || !paypalSettings) {
+      return new Response(
+        JSON.stringify({ error: 'PayPal is not configured for this tournament', not_configured: true }),
+        { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!paypalSettings.paypal_enabled || !paypalSettings.paypal_client_id ||
+        !paypalSettings.paypal_secret_ciphertext || !paypalSettings.paypal_secret_iv) {
       return new Response(
         JSON.stringify({ error: 'PayPal is not configured', not_configured: true }),
         { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    if (!masterKey || masterKey.length !== 64) {
+      console.error('PAYPAL_CREDENTIALS_MASTER_KEY not configured or invalid');
+      return new Response(
+        JSON.stringify({ error: 'Server configuration error' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Decrypt the PayPal client secret
+    let clientSecret: string;
+    try {
+      clientSecret = await decryptSecret(
+        paypalSettings.paypal_secret_ciphertext,
+        paypalSettings.paypal_secret_iv,
+        masterKey
+      );
+    } catch (decryptError) {
+      console.error('Failed to decrypt PayPal secret:', decryptError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to decrypt payment credentials' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const clientId = paypalSettings.paypal_client_id;
+    const mode = paypalSettings.paypal_mode || 'sandbox';
 
     // Get PayPal access token
     const baseUrl = mode === 'production'

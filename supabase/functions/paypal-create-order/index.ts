@@ -20,6 +20,42 @@ interface GroupDiscountRule {
   discount_value: number;
 }
 
+/**
+ * Decrypts a string using AES-GCM with the provided key
+ */
+async function decryptSecret(
+  ciphertextBase64: string,
+  ivBase64: string,
+  masterKeyHex: string
+): Promise<string> {
+  // Convert hex key to bytes
+  const keyBytes = new Uint8Array(
+    masterKeyHex.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16))
+  );
+
+  // Import the key for AES-GCM
+  const key = await crypto.subtle.importKey(
+    "raw",
+    keyBytes,
+    { name: "AES-GCM", length: 256 },
+    false,
+    ["decrypt"]
+  );
+
+  // Convert base64 back to bytes
+  const ciphertextBytes = Uint8Array.from(atob(ciphertextBase64), c => c.charCodeAt(0));
+  const iv = Uint8Array.from(atob(ivBase64), c => c.charCodeAt(0));
+
+  // Decrypt
+  const plaintextBuffer = await crypto.subtle.decrypt(
+    { name: "AES-GCM", iv },
+    key,
+    ciphertextBytes
+  );
+
+  return new TextDecoder().decode(plaintextBuffer);
+}
+
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -36,25 +72,10 @@ serve(async (req) => {
       );
     }
 
-    // Check if PayPal is configured
-    const clientId = Deno.env.get('PAYPAL_CLIENT_ID');
-    const clientSecret = Deno.env.get('PAYPAL_CLIENT_SECRET');
-    const mode = Deno.env.get('PAYPAL_MODE') || 'sandbox';
-
-    if (!clientId || !clientSecret) {
-      console.log('PayPal credentials not configured');
-      return new Response(
-        JSON.stringify({ 
-          error: 'PayPal is not configured. Please add PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, and PAYPAL_MODE secrets.',
-          not_configured: true 
-        }),
-        { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const masterKey = Deno.env.get('PAYPAL_CREDENTIALS_MASTER_KEY');
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Fetch cart with items
@@ -77,8 +98,77 @@ serve(async (req) => {
       );
     }
 
+    // Fetch tournament PayPal settings
+    const { data: paypalSettings, error: settingsError } = await supabase
+      .from('tournament_payment_settings')
+      .select('paypal_enabled, paypal_mode, paypal_client_id, paypal_secret_ciphertext, paypal_secret_iv')
+      .eq('tournament_id', cart.tournament_id)
+      .single();
+
+    if (settingsError || !paypalSettings) {
+      console.log('PayPal not configured for tournament:', cart.tournament_id);
+      return new Response(
+        JSON.stringify({
+          error: 'PayPal is not configured for this tournament. Please contact the tournament administrator.',
+          not_configured: true
+        }),
+        { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!paypalSettings.paypal_enabled) {
+      return new Response(
+        JSON.stringify({
+          error: 'PayPal payments are not enabled for this tournament.',
+          not_configured: true
+        }),
+        { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!paypalSettings.paypal_client_id || !paypalSettings.paypal_secret_ciphertext || !paypalSettings.paypal_secret_iv) {
+      console.log('PayPal credentials incomplete for tournament:', cart.tournament_id);
+      return new Response(
+        JSON.stringify({
+          error: 'PayPal credentials are incomplete. Please contact the tournament administrator.',
+          not_configured: true
+        }),
+        { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!masterKey || masterKey.length !== 64) {
+      console.error('PAYPAL_CREDENTIALS_MASTER_KEY not configured or invalid');
+      return new Response(
+        JSON.stringify({
+          error: 'Server configuration error. Please contact the administrator.',
+          not_configured: true
+        }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Decrypt the PayPal client secret
+    let clientSecret: string;
+    try {
+      clientSecret = await decryptSecret(
+        paypalSettings.paypal_secret_ciphertext,
+        paypalSettings.paypal_secret_iv,
+        masterKey
+      );
+    } catch (decryptError) {
+      console.error('Failed to decrypt PayPal secret:', decryptError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to decrypt payment credentials' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const clientId = paypalSettings.paypal_client_id;
+    const mode = paypalSettings.paypal_mode || 'sandbox';
+
     const items: CartItem[] = cart.cart_items || [];
-    
+
     if (items.length === 0) {
       return new Response(
         JSON.stringify({ error: 'Cart is empty' }),
@@ -227,7 +317,8 @@ serve(async (req) => {
         group_discount: groupDiscountAmount,
         total,
         currency,
-        items_count: items.length
+        items_count: items.length,
+        paypal_mode: mode
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
