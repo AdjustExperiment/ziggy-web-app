@@ -55,6 +55,7 @@ const Sponsors = React.lazy(() => import('@/pages/Sponsors'));
 const LearnAboutDebate = React.lazy(() => import('@/pages/LearnAboutDebate'));
 const TournamentDashboard = React.lazy(() => import('@/pages/TournamentDashboard'));
 const TournamentLive = React.lazy(() => import('@/pages/TournamentLive'));
+const TournamentStandings = React.lazy(() => import('@/pages/TournamentStandings'));
 const MyDashboard = React.lazy(() => import('@/pages/MyDashboard'));
 const ObserverDashboard = React.lazy(() => import('@/pages/ObserverDashboard'));
 const PrintPostings = React.lazy(() => import('@/pages/PrintPostings'));
@@ -91,6 +92,7 @@ function App() {
               <Route path="/" element={<Index />} />
               <Route path="/tournaments" element={<Tournaments />} />
               <Route path="/tournaments/:tournamentId" element={<TournamentLanding />} />
+              <Route path="/tournaments/:tournamentId/standings" element={<TournamentStandings />} />
               <Route path="/tournaments/:id/register" element={<TournamentRegistration />} />
               <Route path="/tournament/:id/register" element={<TournamentRegistration />} />
               <Route path="/results" element={<Results />} />
