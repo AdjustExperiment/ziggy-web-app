@@ -1,22 +1,52 @@
-import React, { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+/**
+ * StandingsView.tsx
+ *
+ * NOTE: This component is ~635 lines and contains the main StandingsView component,
+ * a sub-component (ExpandableStandingRow), and several helper functions.
+ * In a future refactor, consider extracting:
+ * - ExpandableStandingRow into its own file
+ * - Helper functions (getRecordBadgeColor, getTeamDisplayName, getResultDisplay) into a utils file
+ * - Export functionality into a custom hook
+ */
+import React, { useState, useMemo, Fragment } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  Trophy, 
-  Medal, 
-  Award, 
-  Users, 
-  TrendingUp, 
+import {
+  Trophy,
+  Medal,
+  Award,
+  Users,
+  TrendingUp,
   RotateCcw,
   Download,
   Star,
-  ArrowUpDown
+  ArrowUpDown,
+  ChevronDown,
+  ChevronRight,
+  FileSpreadsheet,
+  FileJson,
+  FileText,
+  Printer,
 } from 'lucide-react';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { useComputedStandings, useRecomputeStandings } from '@/hooks/useComputedStandings';
+import {
+  downloadStandingsCSV,
+  downloadStandingsJSON,
+  downloadStandingsExcel,
+  printStandings,
+} from '@/lib/tabulation/importExportService';
+import type { StandingWithTeam, RoundResult } from '@/types/tabulation';
 
 interface StandingsViewProps {
   tournamentId: string;
@@ -24,234 +54,308 @@ interface StandingsViewProps {
   eventId?: string | null;
 }
 
-interface TeamStanding {
-  teamId: string;
-  teamName: string;
-  school: string;
-  wins: number;
-  losses: number;
-  totalSpeaks: number;
-  avgSpeaks: number;
-  opponentWins: number;
-  rank: number;
-  isBreaking?: boolean;
-}
-
 type SortField = 'rank' | 'wins' | 'totalSpeaks' | 'avgSpeaks' | 'opponentWins';
 type SortOrder = 'asc' | 'desc';
 
+/**
+ * Get color class for win bracket badges
+ */
+function getRecordBadgeColor(wins: number, losses: number): string {
+  if (losses === 0 && wins > 0) return 'bg-green-500/20 text-green-700 dark:text-green-400 border-green-500/30';
+  if (wins > losses) return 'bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-500/30';
+  if (wins === losses) return 'bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 border-yellow-500/30';
+  return 'bg-red-500/20 text-red-700 dark:text-red-400 border-red-500/30';
+}
+
+/**
+ * Get the display name for a team
+ */
+function getTeamDisplayName(standing: StandingWithTeam): string {
+  const reg = standing.registration;
+  if (reg.partner_name) {
+    return `${reg.participant_name} & ${reg.partner_name}`;
+  }
+  return reg.participant_name;
+}
+
+/**
+ * Get the result display text
+ */
+function getResultDisplay(result: string): { text: string; color: string } {
+  switch (result) {
+    case 'win':
+      return { text: 'W', color: 'text-green-600 dark:text-green-400' };
+    case 'loss':
+      return { text: 'L', color: 'text-red-600 dark:text-red-400' };
+    case 'bye':
+      return { text: 'BYE', color: 'text-muted-foreground' };
+    case 'forfeit_win':
+      return { text: 'FW', color: 'text-green-600/70 dark:text-green-400/70' };
+    case 'forfeit_loss':
+      return { text: 'FL', color: 'text-red-600/70 dark:text-red-400/70' };
+    default:
+      return { text: result, color: 'text-muted-foreground' };
+  }
+}
+
+interface ExpandableStandingRowProps {
+  standing: StandingWithTeam;
+  rank: number;
+  isBreaking: boolean;
+  expanded: boolean;
+  onToggle: () => void;
+  teamName: string;
+}
+
+function ExpandableStandingRow({
+  standing,
+  rank,
+  isBreaking,
+  expanded,
+  onToggle,
+  teamName,
+}: ExpandableStandingRowProps) {
+  const getRankIcon = (r: number) => {
+    switch (r) {
+      case 1:
+        return <Trophy className="h-4 w-4 text-yellow-500" />;
+      case 2:
+        return <Medal className="h-4 w-4 text-gray-400" />;
+      case 3:
+        return <Award className="h-4 w-4 text-amber-600" />;
+      default:
+        return <span className="text-sm font-medium tabular-nums">{r}</span>;
+    }
+  };
+
+  const roundResults = standing.round_results || [];
+  const hasRoundData = roundResults.length > 0;
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onToggle();
+    }
+  };
+
+  return (
+    <>
+      <TableRow
+        onClick={hasRoundData ? onToggle : undefined}
+        onKeyDown={hasRoundData ? handleKeyDown : undefined}
+        role={hasRoundData ? 'button' : undefined}
+        tabIndex={hasRoundData ? 0 : undefined}
+        aria-expanded={hasRoundData ? expanded : undefined}
+        aria-label={hasRoundData ? `${teamName} - click to ${expanded ? 'collapse' : 'expand'} round details` : undefined}
+        className={`
+          ${hasRoundData ? 'cursor-pointer' : ''}
+          ${isBreaking ? 'bg-primary/5' : ''}
+          hover:bg-muted/50 transition-colors
+        `}
+      >
+        {/* Expand Chevron */}
+        <TableCell className="w-8 p-2">
+          {hasRoundData ? (
+            expanded ? (
+              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+            ) : (
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            )
+          ) : null}
+        </TableCell>
+
+        {/* Rank */}
+        <TableCell className="w-12 p-2">
+          <div className="flex items-center justify-center gap-1">
+            {getRankIcon(rank)}
+            {isBreaking && (
+              <Star className="h-3 w-3 text-primary fill-primary" />
+            )}
+          </div>
+        </TableCell>
+
+        {/* Team Name */}
+        <TableCell className="p-2">
+          <div className="font-medium text-sm">{getTeamDisplayName(standing)}</div>
+        </TableCell>
+
+        {/* School */}
+        <TableCell className="p-2 hidden md:table-cell">
+          <span className="text-sm text-muted-foreground truncate max-w-[150px] block">
+            {standing.registration.school_organization || 'Independent'}
+          </span>
+        </TableCell>
+
+        {/* Record */}
+        <TableCell className="p-2 text-center">
+          <Badge
+            variant="outline"
+            className={`${getRecordBadgeColor(standing.wins, standing.losses)} font-mono text-xs border`}
+          >
+            {standing.wins}-{standing.losses}
+          </Badge>
+        </TableCell>
+
+        {/* Total Speaks */}
+        <TableCell className="p-2 text-center font-mono text-sm hidden sm:table-cell">
+          {standing.total_speaks.toFixed(1)}
+        </TableCell>
+
+        {/* Avg Speaks */}
+        <TableCell className="p-2 text-center font-mono text-sm">
+          {standing.avg_speaks.toFixed(2)}
+        </TableCell>
+
+        {/* Opp Strength */}
+        <TableCell className="p-2 text-center font-mono text-sm hidden lg:table-cell">
+          {standing.opp_wins}
+        </TableCell>
+      </TableRow>
+
+      {/* Expanded Row - Round Breakdown */}
+      {expanded && hasRoundData && (
+        <TableRow className="hover:bg-transparent">
+          <TableCell colSpan={8} className="p-0">
+            <div className="bg-muted/30 p-4 border-y border-muted">
+              <div className="text-xs font-medium text-muted-foreground mb-3">
+                Round-by-Round Breakdown
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                {roundResults
+                  .sort((a, b) => a.round_number - b.round_number)
+                  .map((result: RoundResult) => {
+                    const { text, color } = getResultDisplay(result.result);
+                    return (
+                      <div
+                        key={result.id}
+                        className="flex flex-col p-2 bg-background rounded-md border border-border/50"
+                      >
+                        <div className="text-xs text-muted-foreground mb-1">
+                          R{result.round_number}
+                          {result.side && (
+                            <span className="ml-1 uppercase">
+                              ({result.side})
+                            </span>
+                          )}
+                        </div>
+                        <div className={`text-sm font-semibold ${color}`}>
+                          {text}
+                        </div>
+                        {result.total_speaks !== null && result.total_speaks !== undefined && (
+                          <div className="text-xs text-muted-foreground mt-0.5 font-mono">
+                            {result.total_speaks.toFixed(1)} pts
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+          </TableCell>
+        </TableRow>
+      )}
+    </>
+  );
+}
+
 export function StandingsView({ tournamentId, registrations, eventId }: StandingsViewProps) {
   const { toast } = useToast();
-  const [standings, setStandings] = useState<TeamStanding[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [syncing, setSyncing] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [sortField, setSortField] = useState<SortField>('rank');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
   const [breakSize, setBreakSize] = useState<number>(8);
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    if (tournamentId && registrations.length > 0) {
-      fetchStandings();
+  // Use React Query hook for standings
+  const {
+    standings: computedStandings,
+    isLoading,
+    isFetching,
+    computedAt,
+    refetch,
+  } = useComputedStandings(tournamentId, eventId, {
+    enabled: !!tournamentId && registrations.length > 0,
+    forceCompute: false,
+  });
+
+  // Recompute mutation
+  const { recompute, isRecomputing } = useRecomputeStandings({
+    onSuccess: () => {
+      toast({
+        title: 'Success',
+        description: 'Standings recalculated successfully',
+      });
+      refetch();
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to recalculate standings',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Transform computed standings to include team info
+  const standings = useMemo<StandingWithTeam[]>(() => {
+    if (!computedStandings || computedStandings.length === 0) {
+      return [];
     }
-  }, [tournamentId, registrations]);
+    // The hook already returns StandingWithTeam from the service
+    return computedStandings as StandingWithTeam[];
+  }, [computedStandings]);
 
-  // Fetch from tournament_standings table
-  const fetchStandings = async () => {
-    try {
-      setLoading(true);
+  // Sort standings
+  const sortedStandings = useMemo(() => {
+    const sorted = [...standings];
 
-      const { data: dbStandings, error } = await (supabase
-        .from('tournament_standings' as any)
-        .select(`
-          *,
-          registration:tournament_registrations(
-            id,
-            participant_name,
-            partner_name,
-            school_organization
-          )
-        `) as any)
-        .eq('tournament_id', tournamentId)
-        .order('wins', { ascending: false });
+    sorted.sort((a, b) => {
+      let aVal: number;
+      let bVal: number;
 
-      if (error) throw error;
-
-      if (dbStandings && dbStandings.length > 0) {
-        // Map DB standings to our interface
-        const mapped: TeamStanding[] = dbStandings.map((s: any, index: number) => ({
-          teamId: s.registration_id,
-          teamName: s.registration?.participant_name + 
-            (s.registration?.partner_name ? ` & ${s.registration.partner_name}` : ''),
-          school: s.registration?.school_organization || 'Independent',
-          wins: s.wins,
-          losses: s.losses,
-          totalSpeaks: parseFloat(s.speaks_total) || 0,
-          avgSpeaks: parseFloat(s.speaks_avg) || 0,
-          opponentWins: parseFloat(s.opp_strength) || 0,
-          rank: index + 1,
-        }));
-
-        // Sort and assign ranks
-        sortAndRankStandings(mapped);
-        setStandings(mapped);
-        setLastUpdated(new Date());
-      } else {
-        // Fallback: calculate from pairings
-        await calculateFromPairings();
-      }
-    } catch (error: any) {
-      console.error('Error fetching standings:', error);
-      await calculateFromPairings();
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Fallback calculation from pairings
-  const calculateFromPairings = async () => {
-    try {
-      let query = supabase
-        .from('pairings')
-        .select(`
-          *,
-          aff_registration:tournament_registrations!aff_registration_id(*),
-          neg_registration:tournament_registrations!neg_registration_id(*)
-        `)
-        .eq('tournament_id', tournamentId);
-
-      // Filter by event if specified
-      if (eventId) {
-        query = query.eq('event_id', eventId);
+      switch (sortField) {
+        case 'rank':
+          aVal = a.prelim_rank ?? a.overall_rank ?? 999;
+          bVal = b.prelim_rank ?? b.overall_rank ?? 999;
+          break;
+        case 'wins':
+          aVal = a.wins;
+          bVal = b.wins;
+          break;
+        case 'totalSpeaks':
+          aVal = a.total_speaks;
+          bVal = b.total_speaks;
+          break;
+        case 'avgSpeaks':
+          aVal = a.avg_speaks;
+          bVal = b.avg_speaks;
+          break;
+        case 'opponentWins':
+          aVal = a.opp_wins;
+          bVal = b.opp_wins;
+          break;
+        default:
+          return 0;
       }
 
-      const { data: pairings, error: pairingsError } = await query;
-
-      if (pairingsError) throw pairingsError;
-
-      // Build standings map
-      const statsMap = new Map<string, {
-        wins: number;
-        losses: number;
-        speaks: number;
-        rounds: number;
-        opponents: string[];
-      }>();
-
-      // Initialize all registrations
-      registrations.forEach((reg: any) => {
-        statsMap.set(reg.id, { wins: 0, losses: 0, speaks: 0, rounds: 0, opponents: [] });
-      });
-
-      // Process pairings with results
-      pairings?.forEach((pairing: any) => {
-        if (!pairing.result?.winner) return;
-
-        const affId = pairing.aff_registration_id;
-        const negId = pairing.neg_registration_id;
-        const winner = pairing.result.winner;
-        const affSpeaks = parseFloat(pairing.result.aff_speaks) || 0;
-        const negSpeaks = parseFloat(pairing.result.neg_speaks) || 0;
-
-        // Update AFF team stats
-        const affStats = statsMap.get(affId);
-        if (affStats) {
-          if (winner === 'aff') affStats.wins++;
-          else affStats.losses++;
-          affStats.speaks += affSpeaks;
-          affStats.rounds++;
-          affStats.opponents.push(negId);
-        }
-
-        // Update NEG team stats
-        const negStats = statsMap.get(negId);
-        if (negStats) {
-          if (winner === 'neg') negStats.wins++;
-          else negStats.losses++;
-          negStats.speaks += negSpeaks;
-          negStats.rounds++;
-          negStats.opponents.push(affId);
-        }
-      });
-
-      // Calculate opponent strength (sum of opponent wins)
-      const standingsData: TeamStanding[] = registrations.map((reg: any) => {
-        const stats = statsMap.get(reg.id) || { wins: 0, losses: 0, speaks: 0, rounds: 0, opponents: [] };
-        const oppWins = stats.opponents.reduce((sum, oppId) => {
-          const oppStats = statsMap.get(oppId);
-          return sum + (oppStats?.wins || 0);
-        }, 0);
-
-        return {
-          teamId: reg.id,
-          teamName: reg.participant_name + (reg.partner_name ? ` & ${reg.partner_name}` : ''),
-          school: reg.school_organization || 'Independent',
-          wins: stats.wins,
-          losses: stats.losses,
-          totalSpeaks: stats.speaks,
-          avgSpeaks: stats.rounds > 0 ? stats.speaks / stats.rounds : 0,
-          opponentWins: oppWins,
-          rank: 0,
-        };
-      });
-
-      sortAndRankStandings(standingsData);
-      setStandings(standingsData);
-      setLastUpdated(new Date());
-    } catch (error: any) {
-      console.error('Error calculating standings:', error);
-      toast({
-        title: "Error",
-        description: "Failed to calculate standings",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const sortAndRankStandings = (data: TeamStanding[]) => {
-    // Sort by wins (desc), then total speaks (desc), then opp wins (desc)
-    data.sort((a, b) => {
-      if (a.wins !== b.wins) return b.wins - a.wins;
-      if (a.totalSpeaks !== b.totalSpeaks) return b.totalSpeaks - a.totalSpeaks;
-      return b.opponentWins - a.opponentWins;
+      const multiplier = sortOrder === 'asc' ? 1 : -1;
+      return (aVal - bVal) * multiplier;
     });
 
-    // Assign ranks
-    data.forEach((team, index) => {
-      team.rank = index + 1;
-      team.isBreaking = index < breakSize;
-    });
-  };
+    return sorted;
+  }, [standings, sortField, sortOrder]);
 
-  // Recalculate and sync to database
-  const syncStandings = async () => {
-    try {
-      setSyncing(true);
-      
-      // Call the database function to recalculate
-      const { error } = await (supabase as any).rpc('recalc_tournament_standings', {
-        p_tournament_id: tournamentId
-      });
+  // Summary stats
+  const stats = useMemo(() => {
+    const totalTeams = standings.length;
+    const undefeated = standings.filter((s) => s.losses === 0 && s.wins > 0).length;
+    const avgSpeaks =
+      totalTeams > 0
+        ? Math.round(standings.reduce((acc, s) => acc + s.avg_speaks, 0) / totalTeams)
+        : 0;
+    const breaking = Math.min(breakSize, totalTeams);
 
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Standings recalculated and synced",
-      });
-
-      await fetchStandings();
-    } catch (error: any) {
-      console.error('Error syncing standings:', error);
-      toast({
-        title: "Error",
-        description: "Failed to sync standings",
-        variant: "destructive",
-      });
-    } finally {
-      setSyncing(false);
-    }
-  };
+    return { totalTeams, undefeated, avgSpeaks, breaking };
+  }, [standings, breakSize]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -260,57 +364,56 @@ export function StandingsView({ tournamentId, registrations, eventId }: Standing
       setSortField(field);
       setSortOrder(field === 'rank' ? 'asc' : 'desc');
     }
-
-    const sorted = [...standings].sort((a, b) => {
-      const aVal = a[field];
-      const bVal = b[field];
-      const multiplier = sortOrder === 'asc' ? 1 : -1;
-      return (aVal - bVal) * multiplier;
-    });
-
-    setStandings(sorted);
   };
 
-  const exportStandings = () => {
-    const csv = [
-      ['Rank', 'Team', 'School', 'Wins', 'Losses', 'Total Speaks', 'Avg Speaks', 'Opp Strength'].join(','),
-      ...standings.map(s => [
-        s.rank,
-        `"${s.teamName}"`,
-        `"${s.school}"`,
-        s.wins,
-        s.losses,
-        s.totalSpeaks.toFixed(1),
-        s.avgSpeaks.toFixed(1),
-        s.opponentWins
-      ].join(','))
-    ].join('\n');
-
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `standings-${tournamentId}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const getRankIcon = (rank: number) => {
-    switch (rank) {
-      case 1: return <Trophy className="h-5 w-5 text-yellow-500" />;
-      case 2: return <Medal className="h-5 w-5 text-gray-400" />;
-      case 3: return <Award className="h-5 w-5 text-amber-600" />;
-      default: return <span className="h-5 w-5 flex items-center justify-center text-sm font-medium">{rank}</span>;
+  const handleRecalculate = async () => {
+    try {
+      await recompute({
+        tournamentId,
+        eventId: eventId || undefined,
+      });
+    } catch {
+      // Error handled in onError callback
     }
   };
 
-  const getRankBadgeVariant = (rank: number): "default" | "secondary" | "outline" => {
-    if (rank === 1) return 'default';
-    if (rank === 2) return 'secondary';
-    return 'outline';
+  const toggleRowExpand = (teamId: string) => {
+    setExpandedRows((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(teamId)) {
+        newSet.delete(teamId);
+      } else {
+        newSet.add(teamId);
+      }
+      return newSet;
+    });
   };
 
-  if (loading) {
+  // Export handlers
+  const handleExportCSV = () => {
+    downloadStandingsCSV(standings, `standings-${tournamentId}.csv`);
+    toast({ title: 'Exported', description: 'Standings exported to CSV' });
+  };
+
+  const handleExportJSON = () => {
+    downloadStandingsJSON(standings, undefined, `standings-${tournamentId}.json`);
+    toast({ title: 'Exported', description: 'Standings exported to JSON' });
+  };
+
+  const handleExportExcel = () => {
+    downloadStandingsExcel(
+      standings,
+      { includeRoundBreakdown: true },
+      `standings-${tournamentId}.xlsx`
+    );
+    toast({ title: 'Exported', description: 'Standings exported to Excel' });
+  };
+
+  const handlePrint = () => {
+    printStandings(standings, { showSpeakerPoints: true });
+  };
+
+  if (isLoading) {
     return (
       <Card>
         <CardContent className="flex items-center justify-center p-8">
@@ -321,218 +424,237 @@ export function StandingsView({ tournamentId, registrations, eventId }: Standing
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
+        <CardHeader className="pb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-lg">
                 <TrendingUp className="h-5 w-5" />
                 Tournament Standings
+                {isFetching && (
+                  <span className="ml-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                )}
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-xs mt-1">
                 Rankings based on wins, speaker points, and opponent strength
-                {lastUpdated && (
-                  <span className="block text-xs mt-1">
-                    Last updated: {lastUpdated.toLocaleString()}
+                {computedAt && (
+                  <span className="block mt-0.5">
+                    Last updated: {new Date(computedAt).toLocaleString()}
                   </span>
                 )}
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
+              {/* Export Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" disabled={standings.length === 0}>
+                    <Download className="h-4 w-4 mr-2" />
+                    Export
+                    <ChevronDown className="h-3 w-3 ml-1" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={handleExportCSV}>
+                    <FileText className="h-4 w-4 mr-2" />
+                    Export CSV
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleExportJSON}>
+                    <FileJson className="h-4 w-4 mr-2" />
+                    Export JSON
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleExportExcel}>
+                    <FileSpreadsheet className="h-4 w-4 mr-2" />
+                    Export Excel
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handlePrint}>
+                    <Printer className="h-4 w-4 mr-2" />
+                    Print Standings
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Recalculate Button */}
               <Button
                 variant="outline"
                 size="sm"
-                onClick={exportStandings}
+                onClick={handleRecalculate}
+                disabled={isRecomputing}
               >
-                <Download className="h-4 w-4 mr-2" />
-                Export
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={syncStandings}
-                disabled={syncing}
-              >
-                <RotateCcw className={`h-4 w-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
-                {syncing ? 'Syncing...' : 'Recalculate'}
+                <RotateCcw className={`h-4 w-4 mr-2 ${isRecomputing ? 'animate-spin' : ''}`} />
+                {isRecomputing ? 'Syncing...' : 'Recalculate'}
               </Button>
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-0">
           {standings.length === 0 ? (
             <ErrorDisplay
               errorCode="ERR_NO_BALLOTS"
               message="No Standings Yet"
               details="Standings will appear once rounds are completed and ballots are submitted. Use the Recalculate button after ballots are entered."
-              retryAction={syncStandings}
+              retryAction={handleRecalculate}
               variant="empty"
             />
           ) : (
             <div className="space-y-4">
               {/* Summary Stats */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Card>
-                  <CardContent className="p-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <Card className="border-muted">
+                  <CardContent className="p-3">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm text-muted-foreground">Total Teams</p>
-                        <p className="text-2xl font-bold">{standings.length}</p>
+                        <p className="text-xs text-muted-foreground">Total Teams</p>
+                        <p className="text-xl font-bold">{stats.totalTeams}</p>
                       </div>
-                      <Users className="h-8 w-8 text-muted-foreground" />
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-muted-foreground">Undefeated</p>
-                        <p className="text-2xl font-bold text-green-600">
-                          {standings.filter(s => s.losses === 0 && s.wins > 0).length}
-                        </p>
-                      </div>
-                      <Trophy className="h-8 w-8 text-green-600" />
+                      <Users className="h-6 w-6 text-muted-foreground" />
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card>
-                  <CardContent className="p-4">
+                <Card className="border-muted">
+                  <CardContent className="p-3">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm text-muted-foreground">Avg Speaks</p>
-                        <p className="text-2xl font-bold">
-                          {standings.length > 0 ? 
-                            Math.round(standings.reduce((acc, s) => acc + s.avgSpeaks, 0) / standings.length) : 0}
+                        <p className="text-xs text-muted-foreground">Undefeated</p>
+                        <p className="text-xl font-bold text-green-600 dark:text-green-400">
+                          {stats.undefeated}
                         </p>
                       </div>
-                      <TrendingUp className="h-8 w-8 text-muted-foreground" />
+                      <Trophy className="h-6 w-6 text-green-600 dark:text-green-400" />
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card>
-                  <CardContent className="p-4">
+                <Card className="border-muted">
+                  <CardContent className="p-3">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm text-muted-foreground">Breaking Teams</p>
-                        <p className="text-2xl font-bold text-primary">
-                          {breakSize}
-                        </p>
+                        <p className="text-xs text-muted-foreground">Avg Speaks</p>
+                        <p className="text-xl font-bold">{stats.avgSpeaks}</p>
                       </div>
-                      <Star className="h-8 w-8 text-primary" />
+                      <TrendingUp className="h-6 w-6 text-muted-foreground" />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-muted">
+                  <CardContent className="p-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs text-muted-foreground">Breaking</p>
+                        <p className="text-xl font-bold text-primary">{stats.breaking}</p>
+                      </div>
+                      <Star className="h-6 w-6 text-primary" />
                     </div>
                   </CardContent>
                 </Card>
               </div>
 
               {/* Standings Table */}
-              <Card>
-                <CardContent className="p-0">
+              <Card className="border-muted overflow-hidden">
+                <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-16">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
+                      <TableRow className="hover:bg-transparent">
+                        <TableHead className="w-8 p-2"></TableHead>
+                        <TableHead className="w-12 p-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => handleSort('rank')}
-                            className="p-0 h-auto font-medium"
+                            className="p-0 h-auto font-medium text-xs"
+                            aria-sort={sortField === 'rank' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : undefined}
                           >
                             Rank
                             <ArrowUpDown className="h-3 w-3 ml-1" />
                           </Button>
                         </TableHead>
-                        <TableHead>Team</TableHead>
-                        <TableHead>School</TableHead>
-                        <TableHead className="text-center">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
+                        <TableHead className="p-2 text-xs">Team</TableHead>
+                        <TableHead className="p-2 text-xs hidden md:table-cell">School</TableHead>
+                        <TableHead className="p-2 text-center">
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => handleSort('wins')}
-                            className="p-0 h-auto font-medium"
+                            className="p-0 h-auto font-medium text-xs"
+                            aria-sort={sortField === 'wins' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : undefined}
                           >
                             Record
                             <ArrowUpDown className="h-3 w-3 ml-1" />
                           </Button>
                         </TableHead>
-                        <TableHead className="text-center">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
+                        <TableHead className="p-2 text-center hidden sm:table-cell">
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => handleSort('totalSpeaks')}
-                            className="p-0 h-auto font-medium"
+                            className="p-0 h-auto font-medium text-xs"
+                            aria-sort={sortField === 'totalSpeaks' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : undefined}
                           >
-                            Total Speaks
+                            Speaks
                             <ArrowUpDown className="h-3 w-3 ml-1" />
                           </Button>
                         </TableHead>
-                        <TableHead className="text-center">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
+                        <TableHead className="p-2 text-center">
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => handleSort('avgSpeaks')}
-                            className="p-0 h-auto font-medium"
+                            className="p-0 h-auto font-medium text-xs"
+                            aria-sort={sortField === 'avgSpeaks' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : undefined}
                           >
-                            Avg Speaks
+                            Avg
                             <ArrowUpDown className="h-3 w-3 ml-1" />
                           </Button>
                         </TableHead>
-                        <TableHead className="text-center">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
+                        <TableHead className="p-2 text-center hidden lg:table-cell">
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => handleSort('opponentWins')}
-                            className="p-0 h-auto font-medium"
+                            className="p-0 h-auto font-medium text-xs"
+                            aria-sort={sortField === 'opponentWins' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : undefined}
                           >
-                            Opp Strength
+                            Opp W
                             <ArrowUpDown className="h-3 w-3 ml-1" />
                           </Button>
                         </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {standings.map((team) => (
-                        <TableRow 
-                          key={team.teamId} 
-                          className={team.isBreaking ? 'bg-primary/5 border-l-2 border-l-primary' : ''}
-                        >
-                          <TableCell>
-                            <div className="flex items-center justify-center gap-1">
-                              {getRankIcon(team.rank)}
-                              {team.isBreaking && (
-                                <Star className="h-3 w-3 text-primary fill-primary" />
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="font-medium">{team.teamName}</div>
-                          </TableCell>
-                          <TableCell>
-                            <span className="text-sm text-muted-foreground">{team.school}</span>
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <Badge variant={getRankBadgeVariant(team.rank)}>
-                              {team.wins}-{team.losses}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-center font-mono">
-                            {team.totalSpeaks.toFixed(1)}
-                          </TableCell>
-                          <TableCell className="text-center font-mono">
-                            {team.avgSpeaks.toFixed(1)}
-                          </TableCell>
-                          <TableCell className="text-center font-mono">
-                            {team.opponentWins}
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                      {sortedStandings.map((standing, index) => {
+                        const rank = standing.prelim_rank ?? standing.overall_rank ?? index + 1;
+                        const isBreaking = rank <= breakSize;
+                        const isLastBreaking = rank === breakSize;
+                        const teamName = getTeamDisplayName(standing);
+
+                        return (
+                          <Fragment key={standing.registration_id}>
+                            <ExpandableStandingRow
+                              standing={standing}
+                              rank={rank}
+                              isBreaking={isBreaking}
+                              expanded={expandedRows.has(standing.registration_id)}
+                              onToggle={() => toggleRowExpand(standing.registration_id)}
+                              teamName={teamName}
+                            />
+                            {/* Break line indicator */}
+                            {isLastBreaking && index < sortedStandings.length - 1 && (
+                              <TableRow className="hover:bg-transparent">
+                                <TableCell colSpan={8} className="h-1 p-0">
+                                  <div className="h-0.5 bg-primary/40 mx-2" />
+                                </TableCell>
+                              </TableRow>
+                            )}
+                          </Fragment>
+                        );
+                      })}
                     </TableBody>
                   </Table>
-                </CardContent>
+                </div>
               </Card>
             </div>
           )}
