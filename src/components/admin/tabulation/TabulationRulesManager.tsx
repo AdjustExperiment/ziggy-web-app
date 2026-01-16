@@ -10,6 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/components/ui/use-toast';
 import { Settings, Save, RotateCcw, Users, Zap, AlertCircle } from 'lucide-react';
+import { TiebreakerConfig } from './TiebreakerConfig';
 
 interface TabulationSettings {
   id?: string;
@@ -445,6 +446,9 @@ export function TabulationRulesManager({ tournamentId }: TabulationRulesManagerP
           </div>
         </CardContent>
       </Card>
+
+      {/* Tiebreaker Configuration */}
+      <TiebreakerConfig tournamentId={tournamentId} />
 
       {/* Actions */}
       <div className="flex gap-4">
