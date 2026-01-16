@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Trophy, Calendar, MapPin, Users, Eye, Clock, FileText, Play } from 'lucide-react';
 import { Registration } from '@/types/database';
+import { MyTournamentsSkeleton } from '@/components/loading';
 
 interface TournamentWithRegistration extends Registration {
   tournament: {
@@ -113,9 +114,7 @@ export default function MyTournaments() {
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
+        <MyTournamentsSkeleton />
       </div>
     );
   }

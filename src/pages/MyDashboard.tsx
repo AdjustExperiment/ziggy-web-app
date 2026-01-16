@@ -17,6 +17,7 @@ import { MyJudgings } from '@/components/MyJudgings';
 import JudgeNotifications from '@/components/JudgeNotifications';
 import { UnifiedNotifications } from '@/components/UnifiedNotifications';
 import { Link } from 'react-router-dom';
+import { DashboardSkeleton } from '@/components/loading';
 
 interface DashboardStats {
   totalTournaments: number;
@@ -230,6 +231,14 @@ export default function MyDashboard() {
   ];
 
   const isJudge = !!judgeProfile;
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <DashboardSkeleton />
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">

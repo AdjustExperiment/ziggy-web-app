@@ -18,6 +18,7 @@ import {
   FileText
 } from 'lucide-react';
 import { BackButton } from '@/components/ui/back-button';
+import { PostingsSkeleton } from '@/components/loading';
 
 interface PairingWithDetails {
   id: string;
@@ -282,9 +283,7 @@ export default function TournamentPostings() {
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
+        <PostingsSkeleton />
       </div>
     );
   }

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useOptimizedAuth } from '@/hooks/useOptimizedAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,6 +12,7 @@ import { JudgeProfileEditor } from '@/components/JudgeProfileEditor';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AccountSkeleton } from '@/components/loading';
 
 interface Registration {
   id: string;
@@ -204,10 +204,9 @@ export default function UserAccount() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-8">
+          <AccountSkeleton />
         </div>
       </div>
     );

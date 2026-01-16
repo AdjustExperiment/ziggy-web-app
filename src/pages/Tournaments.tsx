@@ -13,6 +13,7 @@ import { FluidBlobBackground } from "@/components/FluidBlobBackground";
 import { TournamentCardCalendar } from "@/components/TournamentCardCalendar";
 import { useOptimizedAuth } from "@/hooks/useOptimizedAuth";
 import { AuthModal } from "@/components/AuthModal";
+import { TournamentGridSkeleton } from "@/components/loading";
 
 interface Sponsor {
   name: string;
@@ -278,10 +279,7 @@ const Tournaments = () => {
       <section className="py-12 bg-background relative z-10">        
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           {loading ? (
-            <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
-              <p className="mt-4 text-muted-foreground">Loading tournaments...</p>
-            </div>
+            <TournamentGridSkeleton count={6} />
           ) : filteredTournaments.length === 0 ? (
             <div className="text-center py-12">
               <Trophy className="h-16 w-16 text-muted mx-auto mb-4" />

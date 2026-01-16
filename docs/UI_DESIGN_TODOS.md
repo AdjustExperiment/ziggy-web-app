@@ -34,14 +34,22 @@
 - [ ] Add focus ring to invalid fields
 - [ ] Scroll to first error on form submission
 
-### 1.3 Loading State Consistency
+### 1.3 Loading State Consistency ✅ COMPLETED
 **Location:** Multiple pages  
 **Issue:** Loading states vary between pages (spinner, skeleton, blank)  
 **Acceptance Criteria:**
-- [ ] Create unified `<PageLoader>` component with consistent skeleton
-- [ ] Apply to all data-fetching pages: Tournaments, Dashboard, etc.
-- [ ] Add loading shimmer animation matching design system
-- [ ] Prevent layout shift during loading transitions
+- [x] Create unified `<PageLoader>` component with consistent skeleton
+- [x] Apply to all data-fetching pages: Tournaments, Dashboard, etc.
+- [x] Add loading shimmer animation matching design system
+- [x] Prevent layout shift during loading transitions
+
+**Implementation Notes:**
+- Created `src/components/loading/` with:
+  - `PageLoader.tsx` - Full-page and inline loading components
+  - `skeletons.tsx` - Card, Table, Stats, List, Form skeleton variants
+  - `PageSkeletons.tsx` - Page-specific layouts (Tournament, Dashboard, Results, etc.)
+- Enhanced `Skeleton` primitive with `variant` and `shimmer` props
+- Applied to 8 critical pages: Tournaments, MyDashboard, JudgeDashboard, MyTournaments, TournamentPostings, TournamentLanding, Results, UserAccount
 
 ### 1.4 Empty State Standardization
 **Location:** Tournament rounds, pairings, registrations  

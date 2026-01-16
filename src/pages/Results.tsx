@@ -12,6 +12,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Progress } from "@/components/ui/progress";
 import { Trophy, Medal, Award, Calendar, Users, Search, Crown, Star, MapPin, DollarSign, Gift, Building, MessageSquare, TrendingUp, Swords, ArrowRightLeft, Check, ChevronsUpDown, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ResultsSkeleton } from '@/components/loading';
 import { 
   LineChart, Line, AreaChart, Area, XAxis, YAxis, 
   CartesianGrid, Tooltip, ResponsiveContainer, Legend 
@@ -751,8 +752,10 @@ const Results = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="min-h-screen bg-background">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+          <ResultsSkeleton />
+        </div>
       </div>
     );
   }

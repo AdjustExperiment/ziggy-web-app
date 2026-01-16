@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useOptimizedAuth } from '@/hooks/useOptimizedAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { TournamentDetailSkeleton } from '@/components/loading';
 import { 
   Trophy, 
   Calendar, 
@@ -191,9 +192,7 @@ export default function TournamentLanding() {
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
+        <TournamentDetailSkeleton />
       </div>
     );
   }

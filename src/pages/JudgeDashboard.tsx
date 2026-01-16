@@ -12,6 +12,7 @@ import JudgeAvailability from '@/components/JudgeAvailability';
 import WeeklyAvailabilityTab from '@/components/WeeklyAvailabilityTab';
 import JudgeNotifications from '@/components/JudgeNotifications';
 import { JudgeProfileEditor } from '@/components/JudgeProfileEditor';
+import { DashboardSkeleton } from '@/components/loading';
 
 interface JudgeProfile {
   id: string;
@@ -151,9 +152,7 @@ export default function JudgeDashboard() {
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
+        <DashboardSkeleton />
       </div>
     );
   }
