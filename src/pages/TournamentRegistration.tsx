@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useOptimizedAuth } from '@/hooks/useOptimizedAuth';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -25,6 +26,18 @@ import { useRegistrationCart } from '@/hooks/useRegistrationCart';
 import { AddToCartForm } from '@/components/cart/AddToCartForm';
 import { RegistrationCart } from '@/components/cart/RegistrationCart';
 import { PayPalCheckout } from '@/components/payment/PayPalCheckout';
+import { cn } from '@/lib/utils';
+
+// Validation schema for tournament registration form
+const registrationFormSchema = z.object({
+  participantName: z.string().min(1, 'Name is required').min(2, 'Name must be at least 2 characters'),
+  email: z.string().min(1, 'Email is required').email('Please enter a valid email address'),
+  partnerEmail: z.string().email('Please enter a valid email').optional().or(z.literal('')),
+  judgeEmail: z.string().min(1, 'Judge email is required').email('Please enter a valid email address'),
+  timezone: z.string().min(1, 'Timezone is required'),
+});
+
+type FieldErrors = Partial<Record<keyof z.infer<typeof registrationFormSchema>, string>>;
 
 interface Tournament {
   id: string;
@@ -100,6 +113,10 @@ export default function TournamentRegistration() {
 
   // Registration mode: 'self' or 'cart'
   const [registrationMode, setRegistrationMode] = useState<'self' | 'cart'>('self');
+  
+  // Form validation state
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const formRef = useRef<HTMLFormElement>(null);
   
   // Cart state
   const {
@@ -256,10 +273,52 @@ export default function TournamentRegistration() {
       [name]: value
     }));
 
+    // Clear field error when user types
+    if (fieldErrors[name as keyof FieldErrors]) {
+      setFieldErrors(prev => ({ ...prev, [name]: undefined }));
+    }
+
     // Check judge email when it changes
     if (name === 'judgeEmail' && value.includes('@')) {
       checkJudgeEmail(value);
     }
+  };
+
+  // Validate form and return errors
+  const validateForm = (): FieldErrors => {
+    const result = registrationFormSchema.safeParse({
+      participantName: formData.participantName,
+      email: formData.email,
+      partnerEmail: formData.partnerEmail || '',
+      judgeEmail: formData.judgeEmail,
+      timezone: formData.timezone,
+    });
+
+    if (result.success) {
+      return {};
+    }
+
+    const errors: FieldErrors = {};
+    result.error.errors.forEach((err) => {
+      const field = err.path[0] as keyof FieldErrors;
+      if (!errors[field]) {
+        errors[field] = err.message;
+      }
+    });
+    return errors;
+  };
+
+  // Scroll to first invalid field
+  const scrollToFirstError = () => {
+    setTimeout(() => {
+      if (formRef.current) {
+        const firstInvalid = formRef.current.querySelector<HTMLElement>('[aria-invalid="true"]');
+        if (firstInvalid) {
+          firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          firstInvalid.focus({ preventScroll: true });
+        }
+      }
+    }, 0);
   };
 
   const checkJudgeEmail = async (email: string) => {
@@ -302,6 +361,15 @@ export default function TournamentRegistration() {
       setShowSignInModal(true);
       return;
     }
+
+    // Validate form before submitting
+    const errors = validateForm();
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      scrollToFirstError();
+      return;
+    }
+    setFieldErrors({});
     
     setIsSubmitting(true);
 
@@ -599,6 +667,12 @@ export default function TournamentRegistration() {
     );
   };
 
+  // Inline error message component
+  const FieldError = ({ error }: { error?: string }) => {
+    if (!error) return null;
+    return <p className="text-sm font-medium text-destructive mt-1">{error}</p>;
+  };
+
   const renderRegistrationForm = () => (
     <Card>
       <CardHeader>
@@ -611,7 +685,7 @@ export default function TournamentRegistration() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
           {/* Event Selection (if multiple events) */}
           {renderEventSelection()}
 
@@ -619,24 +693,32 @@ export default function TournamentRegistration() {
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Personal Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="participantName">Your Name *</Label>
+              <div className="space-y-2">
+                <Label htmlFor="participantName" className={cn(fieldErrors.participantName && "text-destructive")}>
+                  Your Name *
+                </Label>
                 <Input
                   id="participantName"
                   value={formData.participantName}
                   onChange={(e) => handleInputChange('participantName', e.target.value)}
+                  aria-invalid={!!fieldErrors.participantName}
                   required
                 />
+                <FieldError error={fieldErrors.participantName} />
               </div>
-              <div>
-                <Label htmlFor="email">Email *</Label>
+              <div className="space-y-2">
+                <Label htmlFor="email" className={cn(fieldErrors.email && "text-destructive")}>
+                  Email *
+                </Label>
                 <Input
                   id="email"
                   type="email"
                   value={formData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
+                  aria-invalid={!!fieldErrors.email}
                   required
                 />
+                <FieldError error={fieldErrors.email} />
               </div>
             </div>
           </div>
@@ -645,7 +727,7 @@ export default function TournamentRegistration() {
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Partner Information (Optional)</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
+              <div className="space-y-2">
                 <Label htmlFor="partnerName">Partner Name</Label>
                 <Input
                   id="partnerName"
@@ -654,15 +736,19 @@ export default function TournamentRegistration() {
                   placeholder="Leave blank if competing individually"
                 />
               </div>
-              <div>
-                <Label htmlFor="partnerEmail">Partner Email</Label>
+              <div className="space-y-2">
+                <Label htmlFor="partnerEmail" className={cn(fieldErrors.partnerEmail && "text-destructive")}>
+                  Partner Email
+                </Label>
                 <Input
                   id="partnerEmail"
                   type="email"
                   value={formData.partnerEmail}
                   onChange={(e) => handleInputChange('partnerEmail', e.target.value)}
                   placeholder="Partner must also register separately"
+                  aria-invalid={!!fieldErrors.partnerEmail}
                 />
+                <FieldError error={fieldErrors.partnerEmail} />
               </div>
             </div>
           </div>
@@ -670,16 +756,20 @@ export default function TournamentRegistration() {
           {/* Judge Information */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Judge Information (Required)</h3>
-            <div>
-              <Label htmlFor="judgeEmail">Judge Email *</Label>
+            <div className="space-y-2">
+              <Label htmlFor="judgeEmail" className={cn(fieldErrors.judgeEmail && "text-destructive")}>
+                Judge Email *
+              </Label>
               <Input
                 id="judgeEmail"
                 type="email"
                 value={formData.judgeEmail}
                 onChange={(e) => handleInputChange('judgeEmail', e.target.value)}
                 placeholder="Email of the judge who will judge your rounds"
+                aria-invalid={!!fieldErrors.judgeEmail}
                 required
               />
+              <FieldError error={fieldErrors.judgeEmail} />
               
               {/* Judge validation feedback */}
               {judgeValidation.status === 'checking' && (
@@ -760,13 +850,15 @@ export default function TournamentRegistration() {
                 />
               </div>
             </div>
-            <div>
-              <Label htmlFor="timezone">Timezone *</Label>
+            <div className="space-y-2">
+              <Label htmlFor="timezone" className={cn(fieldErrors.timezone && "text-destructive")}>
+                Timezone *
+              </Label>
               <Select 
                 value={formData.timezone} 
                 onValueChange={(value) => handleInputChange('timezone', value)}
               >
-                <SelectTrigger>
+                <SelectTrigger aria-invalid={!!fieldErrors.timezone}>
                   <SelectValue placeholder="Select your timezone" />
                 </SelectTrigger>
                 <SelectContent className="max-h-60">
@@ -777,6 +869,7 @@ export default function TournamentRegistration() {
                   ))}
                 </SelectContent>
               </Select>
+              <FieldError error={fieldErrors.timezone} />
             </div>
             <div>
               <Label htmlFor="experienceLevel">Experience Level</Label>

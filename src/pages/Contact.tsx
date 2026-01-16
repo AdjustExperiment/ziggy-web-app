@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,6 +10,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Mail, MessageCircle, Clock, Send, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { scrollToFirstInvalid } from "@/lib/forms/scrollToFirstInvalid";
 
 // Contact configuration - easily editable
 const CONTACT_CONFIG = {
@@ -16,35 +28,32 @@ const CONTACT_CONFIG = {
   responseTime: "2 hours",
 };
 
+// Zod schema for contact form validation
+const contactFormSchema = z.object({
+  name: z.string().min(1, "Name is required").min(2, "Name must be at least 2 characters"),
+  email: z.string().min(1, "Email is required").email("Please enter a valid email address"),
+  subject: z.string().optional(),
+  message: z.string().min(1, "Message is required").min(10, "Message must be at least 10 characters"),
+});
+
+type ContactFormValues = z.infer<typeof contactFormSchema>;
+
 const Contact = () => {
   const { toast } = useToast();
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    subject: "",
-    message: "",
-  });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+  const form = useForm<ContactFormValues>({
+    resolver: zodResolver(contactFormSchema),
+    mode: "onChange",
+    defaultValues: {
+      name: "",
+      email: "",
+      subject: "",
+      message: "",
+    },
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!formData.name || !formData.email || !formData.message) {
-      toast({
-        title: "Missing fields",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
-      return;
-    }
-
+  const onSubmit = async (data: ContactFormValues) => {
     setIsSubmitting(true);
     
     try {
@@ -52,10 +61,10 @@ const Contact = () => {
       const { error } = await (supabase as any)
         .from("contact_submissions")
         .insert({
-          name: formData.name,
-          email: formData.email,
-          subject: formData.subject || null,
-          message: formData.message,
+          name: data.name,
+          email: data.email,
+          subject: data.subject || null,
+          message: data.message,
         });
 
       if (error) throw error;
@@ -66,14 +75,14 @@ const Contact = () => {
       });
 
       // Reset form
-      setFormData({ name: "", email: "", subject: "", message: "" });
+      form.reset();
     } catch (error) {
       console.error("Error submitting contact form:", error);
       // Fallback: open mailto link
       const mailtoUrl = `mailto:${CONTACT_CONFIG.email}?subject=${encodeURIComponent(
-        formData.subject || "Contact Form Submission"
+        data.subject || "Contact Form Submission"
       )}&body=${encodeURIComponent(
-        `Name: ${formData.name}\nEmail: ${formData.email}\n\n${formData.message}`
+        `Name: ${data.name}\nEmail: ${data.email}\n\n${data.message}`
       )}`;
       window.open(mailtoUrl, "_blank");
       
@@ -185,80 +194,108 @@ const Contact = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div>
-                      <label className="text-sm font-medium text-foreground mb-2 block">
-                        Name <span className="text-destructive">*</span>
-                      </label>
-                      <Input
-                        name="name"
-                        value={formData.name}
-                        onChange={handleInputChange}
-                        placeholder="Your name"
-                        className="bg-background border-border text-foreground placeholder:text-muted-foreground"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-foreground mb-2 block">
-                        Email <span className="text-destructive">*</span>
-                      </label>
-                      <Input
-                        name="email"
-                        type="email"
-                        value={formData.email}
-                        onChange={handleInputChange}
-                        placeholder="your.email@example.com"
-                        className="bg-background border-border text-foreground placeholder:text-muted-foreground"
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-foreground mb-2 block">
-                      Subject
-                    </label>
-                    <Input
-                      name="subject"
-                      value={formData.subject}
-                      onChange={handleInputChange}
-                      placeholder="What can we help you with?"
-                      className="bg-background border-border text-foreground placeholder:text-muted-foreground"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-foreground mb-2 block">
-                      Message <span className="text-destructive">*</span>
-                    </label>
-                    <Textarea
-                      name="message"
-                      value={formData.message}
-                      onChange={handleInputChange}
-                      placeholder="Tell us more about your question or concern..."
-                      rows={6}
-                      className="bg-background border-border text-foreground placeholder:text-muted-foreground resize-none"
-                      required
-                    />
-                  </div>
-                  <Button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-secondary"
+                <Form {...form}>
+                  <form 
+                    onSubmit={form.handleSubmit(onSubmit, scrollToFirstInvalid)} 
+                    className="space-y-6"
                   >
-                    {isSubmitting ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary-foreground border-t-transparent mr-2" />
-                        Sending...
-                      </>
-                    ) : (
-                      <>
-                        <Send className="h-4 w-4 mr-2" />
-                        Send Message
-                      </>
-                    )}
-                  </Button>
-                </form>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <FormField
+                        control={form.control}
+                        name="name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>
+                              Name <span className="text-destructive">*</span>
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="Your name"
+                                className="bg-background border-border text-foreground placeholder:text-muted-foreground"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>
+                              Email <span className="text-destructive">*</span>
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="email"
+                                placeholder="your.email@example.com"
+                                className="bg-background border-border text-foreground placeholder:text-muted-foreground"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <FormField
+                      control={form.control}
+                      name="subject"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Subject</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="What can we help you with?"
+                              className="bg-background border-border text-foreground placeholder:text-muted-foreground"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="message"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            Message <span className="text-destructive">*</span>
+                          </FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Tell us more about your question or concern..."
+                              rows={6}
+                              className="bg-background border-border text-foreground placeholder:text-muted-foreground resize-none"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <Button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-secondary"
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary-foreground border-t-transparent mr-2" />
+                          Sending...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="h-4 w-4 mr-2" />
+                          Send Message
+                        </>
+                      )}
+                    </Button>
+                  </form>
+                </Form>
               </CardContent>
             </Card>
           </div>

@@ -1,84 +1,79 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from '@/components/ui/use-toast';
 import { Trophy, Mail, Lock, User, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  FormDescription,
+} from '@/components/ui/form';
+import { scrollToFirstInvalid } from '@/lib/forms/scrollToFirstInvalid';
+
+// Zod schema for sign up form
+const signUpSchema = z.object({
+  firstName: z.string().min(1, 'First name is required').min(2, 'First name must be at least 2 characters'),
+  lastName: z.string().min(1, 'Last name is required').min(2, 'Last name must be at least 2 characters'),
+  email: z.string().min(1, 'Email is required').email('Please enter a valid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+  confirmPassword: z.string().min(1, 'Please confirm your password'),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: 'Passwords do not match',
+  path: ['confirmPassword'],
+});
+
+type SignUpFormValues = z.infer<typeof signUpSchema>;
 
 export function SignUp() {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    password: '',
-    confirmPassword: ''
-  });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [serverError, setServerError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [submittedEmail, setSubmittedEmail] = useState('');
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    setError(null);
-  };
+  const form = useForm<SignUpFormValues>({
+    resolver: zodResolver(signUpSchema),
+    mode: 'onChange',
+    defaultValues: {
+      firstName: '',
+      lastName: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+    },
+  });
 
-  const validateForm = (): boolean => {
-    if (!formData.firstName.trim()) {
-      setError('First name is required');
-      return false;
-    }
-    if (!formData.lastName.trim()) {
-      setError('Last name is required');
-      return false;
-    }
-    if (!formData.email.trim()) {
-      setError('Email is required');
-      return false;
-    }
-    if (!formData.email.includes('@')) {
-      setError('Please enter a valid email address');
-      return false;
-    }
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters');
-      return false;
-    }
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
-      return false;
-    }
-    return true;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validateForm()) return;
-    
+  const onSubmit = async (data: SignUpFormValues) => {
     setLoading(true);
-    setError(null);
+    setServerError(null);
 
     try {
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
         options: {
           data: {
-            first_name: formData.firstName,
-            last_name: formData.lastName
+            first_name: data.firstName,
+            last_name: data.lastName
           }
         }
       });
 
       if (signUpError) throw signUpError;
 
-      if (data.user) {
+      if (authData.user) {
+        setSubmittedEmail(data.email);
         setSuccess(true);
         toast({
           title: "Account Created!",
@@ -87,7 +82,7 @@ export function SignUp() {
       }
     } catch (err: any) {
       console.error('Sign up error:', err);
-      setError(err.message || 'An error occurred during sign up');
+      setServerError(err.message || 'An error occurred during sign up');
     } finally {
       setLoading(false);
     }
@@ -101,7 +96,7 @@ export function SignUp() {
             <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
             <CardTitle className="text-2xl">Check Your Email</CardTitle>
             <CardDescription>
-              We've sent a verification link to <strong>{formData.email}</strong>
+              We've sent a verification link to <strong>{submittedEmail}</strong>
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 text-center">
@@ -137,132 +132,158 @@ export function SignUp() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="firstName">First Name</Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="firstName"
-                    name="firstName"
-                    placeholder="John"
-                    value={formData.firstName}
-                    onChange={handleInputChange}
-                    className="pl-9"
-                    required
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name</Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="lastName"
-                    name="lastName"
-                    placeholder="Doe"
-                    value={formData.lastName}
-                    onChange={handleInputChange}
-                    className="pl-9"
-                    required
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="john@example.com"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  className="pl-9"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  className="pl-9"
-                  required
-                  minLength={6}
-                />
-              </div>
-              <p className="text-xs text-muted-foreground">Must be at least 6 characters</p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  placeholder="••••••••"
-                  value={formData.confirmPassword}
-                  onChange={handleInputChange}
-                  className="pl-9"
-                  required
-                />
-              </div>
-            </div>
-
-            <Button 
-              type="submit" 
-              className="w-full bg-gradient-accent hover:opacity-90 text-white shadow-glow"
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Creating Account...
-                </>
-              ) : (
-                <>
-                  <Trophy className="h-4 w-4 mr-2" />
-                  Create Account
-                </>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit, scrollToFirstInvalid)} className="space-y-4">
+              {serverError && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{serverError}</AlertDescription>
+                </Alert>
               )}
-            </Button>
 
-            <div className="text-center text-sm">
-              <span className="text-muted-foreground">Already have an account? </span>
-              <Link to="/login" className="text-primary hover:underline font-medium">
-                Sign in
-              </Link>
-            </div>
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="firstName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>First Name</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            placeholder="John"
+                            className="pl-9"
+                            {...field}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="lastName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Last Name</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            placeholder="Doe"
+                            className="pl-9"
+                            {...field}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
-            <p className="text-xs text-center text-muted-foreground">
-              By creating an account, you agree to our{' '}
-              <Link to="/terms" className="underline hover:text-foreground">Terms of Service</Link>
-              {' '}and{' '}
-              <Link to="/privacy" className="underline hover:text-foreground">Privacy Policy</Link>
-            </p>
-          </form>
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          type="email"
+                          placeholder="john@example.com"
+                          className="pl-9"
+                          {...field}
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          type="password"
+                          placeholder="••••••••"
+                          className="pl-9"
+                          {...field}
+                        />
+                      </div>
+                    </FormControl>
+                    <FormDescription>Must be at least 6 characters</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Confirm Password</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          type="password"
+                          placeholder="••••••••"
+                          className="pl-9"
+                          {...field}
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <Button 
+                type="submit" 
+                className="w-full bg-gradient-accent hover:opacity-90 text-white shadow-glow"
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Creating Account...
+                  </>
+                ) : (
+                  <>
+                    <Trophy className="h-4 w-4 mr-2" />
+                    Create Account
+                  </>
+                )}
+              </Button>
+
+              <div className="text-center text-sm">
+                <span className="text-muted-foreground">Already have an account? </span>
+                <Link to="/login" className="text-primary hover:underline font-medium">
+                  Sign in
+                </Link>
+              </div>
+
+              <p className="text-xs text-center text-muted-foreground">
+                By creating an account, you agree to our{' '}
+                <Link to="/terms" className="underline hover:text-foreground">Terms of Service</Link>
+                {' '}and{' '}
+                <Link to="/privacy" className="underline hover:text-foreground">Privacy Policy</Link>
+              </p>
+            </form>
+          </Form>
         </CardContent>
       </Card>
     </div>
