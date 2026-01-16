@@ -17,3 +17,4 @@ export * from './breakGenerator';
 export * from './judgeAllocator';
 export * from './tiebreakerEngine';
 export * from './importExportService';
+export * from './speakerAwards';
