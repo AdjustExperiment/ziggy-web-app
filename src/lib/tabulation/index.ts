@@ -16,3 +16,4 @@ export * from './munkres';
 export * from './breakGenerator';
 export * from './judgeAllocator';
 export * from './tiebreakerEngine';
+export * from './importExportService';
