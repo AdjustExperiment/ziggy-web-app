@@ -1,6 +1,6 @@
 import { Calendar, Lock, Shield, Clock } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
 
 interface RoundEmptyStateProps {
   status: 'no_rounds' | 'unpublished' | 'no_permission' | 'loading';
@@ -9,60 +9,64 @@ interface RoundEmptyStateProps {
   onAdminAction?: () => void;
 }
 
+const statusConfigs = {
+  no_rounds: {
+    icon: Calendar,
+    title: 'No Rounds Available',
+    description: "Rounds haven't been created for this tournament yet.",
+    adminActionLabel: null,
+    variant: 'no_data' as const
+  },
+  unpublished: {
+    icon: Lock,
+    title: 'Rounds Exist But Not Published',
+    description: '', // Dynamic, set below
+    adminActionLabel: 'View All Rounds',
+    variant: 'no_data' as const
+  },
+  no_permission: {
+    icon: Shield,
+    title: 'Access Restricted',
+    description: "You don't have permission to view pairings for this tournament.",
+    adminActionLabel: null,
+    variant: 'not_authorized' as const
+  },
+  loading: {
+    icon: Clock,
+    title: 'Loading Rounds...',
+    description: 'Please wait while we fetch the round information.',
+    adminActionLabel: null,
+    variant: 'loading' as const
+  }
+};
+
 export default function RoundEmptyState({ 
   status, 
   isAdmin = false, 
   unreleasedCount = 0,
   onAdminAction 
 }: RoundEmptyStateProps) {
-  const configs = {
-    no_rounds: {
-      icon: Calendar,
-      title: 'No Rounds Available',
-      description: 'Rounds haven\'t been created for this tournament yet.',
-      adminAction: null
-    },
-    unpublished: {
-      icon: Lock,
-      title: 'Rounds Exist But Not Published',
-      description: `${unreleasedCount} round${unreleasedCount !== 1 ? 's have' : ' has'} been created but ${unreleasedCount !== 1 ? 'are' : 'is'} not yet released to participants.`,
-      adminAction: 'View All Rounds'
-    },
-    no_permission: {
-      icon: Shield,
-      title: 'Access Restricted',
-      description: 'You don\'t have permission to view pairings for this tournament.',
-      adminAction: null
-    },
-    loading: {
-      icon: Clock,
-      title: 'Loading Rounds...',
-      description: 'Please wait while we fetch the round information.',
-      adminAction: null
-    }
-  };
+  const config = statusConfigs[status];
+  
+  // Dynamic description for 'unpublished' status
+  const description = status === 'unpublished'
+    ? `${unreleasedCount} round${unreleasedCount !== 1 ? 's have' : ' has'} been created but ${unreleasedCount !== 1 ? 'are' : 'is'} not yet released to participants.`
+    : config.description;
 
-  const config = configs[status];
-  const Icon = config.icon;
+  // Build action element if admin and action is available
+  const actionElement = isAdmin && config.adminActionLabel && onAdminAction ? (
+    <Button variant="outline" onClick={onAdminAction}>
+      {config.adminActionLabel}
+    </Button>
+  ) : undefined;
 
   return (
-    <Card>
-      <CardContent className="text-center py-12">
-        <Icon className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
-        <h3 className="text-lg font-semibold mb-2">{config.title}</h3>
-        <p className="text-muted-foreground max-w-md mx-auto">
-          {config.description}
-        </p>
-        {isAdmin && config.adminAction && onAdminAction && (
-          <Button 
-            variant="outline" 
-            className="mt-4"
-            onClick={onAdminAction}
-          >
-            {config.adminAction}
-          </Button>
-        )}
-      </CardContent>
-    </Card>
+    <EmptyState
+      icon={config.icon}
+      title={config.title}
+      description={description}
+      variant={config.variant}
+      action={actionElement}
+    />
   );
 }

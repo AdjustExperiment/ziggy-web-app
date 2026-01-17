@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from '@/components/ui/use-toast';
 import { Download, RefreshCw, Search, ArrowUpDown, ChevronDown, ChevronUp, Users } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ErrorDisplay, EmptyState } from '@/components/ErrorDisplay';
+import { ErrorDisplay, SimpleEmptyState } from '@/components/ErrorDisplay';
 
 interface SpreadsheetViewProps {
   tournamentId: string;
@@ -414,7 +414,7 @@ export function SpreadsheetView({ tournamentId, eventId }: SpreadsheetViewProps)
             variant="empty"
           />
         ) : displayTeams.length === 0 ? (
-          <EmptyState
+          <SimpleEmptyState
             icon={<Users className="h-12 w-12 text-muted-foreground" />}
             title="No matching teams"
             description="Try adjusting your search or filter criteria."

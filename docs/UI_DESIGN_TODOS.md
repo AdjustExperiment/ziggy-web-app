@@ -51,14 +51,20 @@
 - Enhanced `Skeleton` primitive with `variant` and `shimmer` props
 - Applied to 8 critical pages: Tournaments, MyDashboard, JudgeDashboard, MyTournaments, TournamentPostings, TournamentLanding, Results, UserAccount
 
-### 1.4 Empty State Standardization
+### 1.4 Empty State Standardization ✅ COMPLETED
 **Location:** Tournament rounds, pairings, registrations  
 **Issue:** Empty states inconsistent; some show only text, others have icons  
 **Acceptance Criteria:**
-- [ ] Create `<EmptyState>` component with icon, title, description, action
-- [ ] Apply to: Tournament Rounds, My Tournaments, Judge Assignments
-- [ ] Use consistent illustration style (lucide icons)
-- [ ] Include contextual call-to-action buttons
+- [x] Create `<EmptyState>` component with icon, title, description, action
+- [x] Apply to: Tournament Rounds, My Tournaments, Judge Assignments
+- [x] Use consistent illustration style (lucide icons)
+- [x] Include contextual call-to-action buttons
+
+**Implementation Notes:**
+- Promoted `src/components/ui/empty-state.tsx` as canonical component with `action?: ReactNode` API
+- Refactored `RoundEmptyState` to wrap canonical `EmptyState`
+- Renamed duplicate `EmptyState` in `ErrorDisplay.tsx` to `SimpleEmptyState` (deprecated)
+- Applied to: `TournamentRounds.tsx`, `MyTournaments.tsx`, `MyJudgings.tsx`
 
 ---
 

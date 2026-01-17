@@ -138,8 +138,11 @@ export function ErrorDisplay({
   );
 }
 
-// Simple empty state component for common use cases
-interface EmptyStateProps {
+/**
+ * @deprecated Use `EmptyState` from `@/components/ui/empty-state` instead.
+ * This simple version is kept for backward compatibility with existing code.
+ */
+interface SimpleEmptyStateProps {
   icon?: React.ReactNode;
   title: string;
   description?: string;
@@ -150,7 +153,10 @@ interface EmptyStateProps {
   className?: string;
 }
 
-export function EmptyState({ icon, title, description, action, className }: EmptyStateProps) {
+/**
+ * @deprecated Use `EmptyState` from `@/components/ui/empty-state` instead.
+ */
+export function SimpleEmptyState({ icon, title, description, action, className }: SimpleEmptyStateProps) {
   return (
     <div className={cn('flex flex-col items-center justify-center py-12 text-center', className)}>
       {icon || <AlertCircle className="h-12 w-12 text-muted-foreground" />}

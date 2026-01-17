@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Gavel, MessageSquare, FileText, Lock } from 'lucide-react';
 import { BallotEntry } from './BallotEntry';
 import { PairingChat } from './PairingChat';
+import { EmptyState } from '@/components/ui/empty-state';
 
 interface AssignmentDisplay {
   id: string;
@@ -181,18 +182,11 @@ export function MyJudgings() {
       </div>
 
       {assignments.length === 0 ? (
-        <Card>
-          <CardContent className="text-center py-8">
-            <Gavel className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No Judging Assignments</h3>
-            <p className="text-muted-foreground">
-              Your judging assignments will appear here once you are assigned to debates.
-            </p>
-            <p className="text-sm text-muted-foreground mt-2">
-              This feature is being set up and will be fully functional soon.
-            </p>
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={Gavel}
+          title="No Judging Assignments"
+          description="Your judging assignments will appear here once you are assigned to debates. Check back after you've been assigned to a round."
+        />
       ) : (
         <div className="grid gap-6">
           {assignments.map((assignment) => {

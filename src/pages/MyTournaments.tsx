@@ -6,9 +6,10 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Trophy, Calendar, MapPin, Users, Eye, Clock, FileText, Play } from 'lucide-react';
+import { Trophy, Calendar, MapPin, Users, Eye, Clock, FileText, Play, LogIn } from 'lucide-react';
 import { Registration } from '@/types/database';
 import { MyTournamentsSkeleton } from '@/components/loading';
+import { EmptyState } from '@/components/ui/empty-state';
 
 interface TournamentWithRegistration extends Registration {
   tournament: {
@@ -122,18 +123,17 @@ export default function MyTournaments() {
   if (!user) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <Card>
-          <CardContent className="text-center py-8">
-            <Trophy className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h2 className="text-xl font-semibold mb-2">Please Sign In</h2>
-            <p className="text-muted-foreground mb-4">
-              You need to be signed in to view your tournaments.
-            </p>
+        <EmptyState
+          icon={LogIn}
+          title="Please Sign In"
+          description="You need to be signed in to view your tournaments."
+          variant="not_authorized"
+          action={
             <Button asChild>
               <Link to="/login">Sign In</Link>
             </Button>
-          </CardContent>
-        </Card>
+          }
+        />
       </div>
     );
   }
@@ -148,18 +148,16 @@ export default function MyTournaments() {
       </div>
 
       {registrations.length === 0 ? (
-        <Card>
-          <CardContent className="text-center py-8">
-            <Trophy className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h2 className="text-xl font-semibold mb-2">No Tournaments Yet</h2>
-            <p className="text-muted-foreground mb-4">
-              You haven't registered for any tournaments yet.
-            </p>
+        <EmptyState
+          icon={Trophy}
+          title="No Tournaments Yet"
+          description="You haven't registered for any tournaments yet."
+          action={
             <Button asChild>
               <Link to="/tournaments">Browse Tournaments</Link>
             </Button>
-          </CardContent>
-        </Card>
+          }
+        />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {registrations.map((registration) => (

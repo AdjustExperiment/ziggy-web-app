@@ -8,8 +8,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/components/ui/use-toast';
-import { Calendar, Clock, MapPin, User, Users } from 'lucide-react';
+import { Calendar, Clock, MapPin, User, Users, FileText } from 'lucide-react';
 import { RoundOptOutManager } from '@/components/tournament/RoundOptOutManager';
+import { EmptyState } from '@/components/ui/empty-state';
 
 interface Tournament {
   id: string;
@@ -274,9 +275,13 @@ export default function TournamentRounds() {
                         </div>
                       </div>
                     )) || (
-                      <div className="text-center py-4 text-muted-foreground">
-                        No pairings released for this round yet
-                      </div>
+                      <EmptyState
+                        icon={FileText}
+                        title="No Pairings Released"
+                        description="Pairings for this round haven't been released yet. Check back later!"
+                        withCard={false}
+                        className="py-4"
+                      />
                     )}
                   </div>
                 </CardContent>
@@ -284,17 +289,11 @@ export default function TournamentRounds() {
             ))}
 
             {rounds.length === 0 && (
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="text-center py-8">
-                    <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                    <h3 className="text-lg font-medium mb-2">No Rounds Yet</h3>
-                    <p className="text-muted-foreground">
-                      Tournament rounds haven't been created yet. Check back later!
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
+              <EmptyState
+                icon={Calendar}
+                title="No Rounds Yet"
+                description="Tournament rounds haven't been created yet. Check back later!"
+              />
             )}
           </div>
         </TabsContent>
