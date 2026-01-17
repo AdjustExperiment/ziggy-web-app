@@ -227,10 +227,11 @@ async function fetchTabConfig(
   eventId?: string | null
 ): Promise<{ tiebreaker_order: TiebreakerType[]; drop_high_low_speaks: number } | null> {
   try {
-    let query = supabase
-      .from('tournament_tab_config' as 'tournaments')
+    // Using type assertion for table not in generated types
+    let query = (supabase
+      .from('tournament_tab_config' as any)
       .select('tiebreaker_order, drop_high_low_speaks')
-      .eq('tournament_id', tournamentId);
+      .eq('tournament_id', tournamentId) as any);
 
     if (eventId) {
       query = query.eq('event_id', eventId);
@@ -245,7 +246,7 @@ async function fetchTabConfig(
     }
 
     // Type assertion since we're using 'as' in the query
-    const configData = data as unknown as {
+    const configData = data as {
       tiebreaker_order: TiebreakerType[];
       drop_high_low_speaks: number;
     };
@@ -343,12 +344,14 @@ export async function aggregateRoundResults(
     if (roundIds.length > 0) {
       const { data: rounds } = await supabase
         .from('rounds')
-        .select('id, is_elimination, round_type')
+        .select('id, name')
         .in('id', roundIds);
 
+      // Determine elimination rounds by name pattern since round_type column may not exist
+      const elimPatterns = ['final', 'semi', 'quarter', 'octo', 'double-octo', 'elim', 'break'];
       const elimRoundIds = new Set(
-        ((rounds ?? []) as RoundRow[])
-          .filter((r) => r.is_elimination || r.round_type === 'elimination')
+        ((rounds ?? []) as Array<{ id: string; name: string }>)
+          .filter((r) => elimPatterns.some(p => r.name.toLowerCase().includes(p)))
           .map((r) => r.id)
       );
 
@@ -734,13 +737,13 @@ export async function upsertStandings(
   }));
 
   try {
-    // Upsert using tournament_id + registration_id as unique key
-    const { error } = await supabase
-      .from('computed_standings' as 'tournaments')
-      .upsert(inserts as unknown as Record<string, unknown>[], {
+    // Upsert using tournament_id + registration_id as unique key - using type assertion
+    const { error } = await (supabase
+      .from('computed_standings' as any)
+      .upsert(inserts, {
         onConflict: 'tournament_id,registration_id',
         ignoreDuplicates: false,
-      });
+      }) as any);
 
     if (error) {
       console.error('Error upserting standings:', error);
@@ -774,12 +777,13 @@ export async function upsertHeadToHead(
   }));
 
   try {
-    const { error } = await supabase
-      .from('head_to_head' as 'tournaments')
-      .upsert(inserts as unknown as Record<string, unknown>[], {
+    // Using type assertion for table not in generated types
+    const { error } = await (supabase
+      .from('head_to_head' as any)
+      .upsert(inserts, {
         onConflict: 'tournament_id,registration_id,opponent_id',
         ignoreDuplicates: false,
-      });
+      }) as any);
 
     if (error) {
       console.error('Error upserting head-to-head records:', error);
@@ -804,10 +808,11 @@ export async function fetchComputedStandings(
   tournamentId: string,
   eventId?: string | null
 ): Promise<ComputedStanding[]> {
-  let query = supabase
-    .from('computed_standings' as 'tournaments')
+  // Using type assertion for table not in generated types
+  let query = (supabase
+    .from('computed_standings' as any)
     .select('*')
-    .eq('tournament_id', tournamentId);
+    .eq('tournament_id', tournamentId) as any);
 
   if (eventId) {
     query = query.eq('event_id', eventId);
