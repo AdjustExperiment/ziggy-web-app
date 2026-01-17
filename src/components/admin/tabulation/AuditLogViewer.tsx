@@ -83,18 +83,20 @@ export function AuditLogViewer({ tournamentId }: AuditLogViewerProps) {
   const fetchAuditLog = async () => {
     setLoading(true);
     try {
-      // Fetch audit log entries
-      const { data: logsData, error: logsError } = await supabase
-        .from('tab_audit_log')
+      // Fetch audit log entries - using type assertion for table not in generated types
+      const { data: logsData, error: logsError } = await (supabase
+        .from('tab_audit_log' as any)
         .select('*')
         .eq('tournament_id', tournamentId)
         .order('created_at', { ascending: false })
-        .limit(200);
+        .limit(200) as any);
 
       if (logsError) throw logsError;
 
+      const typedLogs = (logsData || []) as TabAuditEntry[];
+
       // Get user profiles for all unique user IDs
-      const userIds = [...new Set((logsData || []).map(log => log.user_id).filter(Boolean))] as string[];
+      const userIds = [...new Set(typedLogs.map(log => log.user_id).filter(Boolean))] as string[];
 
       let profilesMap: Record<string, { first_name: string; last_name: string }> = {};
 
@@ -113,7 +115,7 @@ export function AuditLogViewer({ tournamentId }: AuditLogViewerProps) {
       }
 
       // Transform data to include user names
-      const transformedEntries: AuditEntryWithUser[] = (logsData || []).map(log => {
+      const transformedEntries: AuditEntryWithUser[] = typedLogs.map(log => {
         const profile = log.user_id ? profilesMap[log.user_id] : null;
         return {
           ...log,

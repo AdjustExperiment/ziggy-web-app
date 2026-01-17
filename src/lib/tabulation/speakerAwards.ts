@@ -274,12 +274,12 @@ async function fetchBreakingTeamIds(
   tournamentId: string,
   eventId?: string | null
 ): Promise<Set<string>> {
-  // Query computed_standings for breaking teams
-  let query = supabase
-    .from('computed_standings' as 'tournaments')
+  // Query computed_standings for breaking teams - using type assertion
+  let query = (supabase
+    .from('computed_standings' as any)
     .select('registration_id')
     .eq('tournament_id', tournamentId)
-    .eq('is_breaking', true);
+    .eq('is_breaking', true) as any);
 
   if (eventId) {
     query = query.eq('event_id', eventId);
@@ -293,7 +293,8 @@ async function fetchBreakingTeamIds(
   }
 
   const ids = new Set<string>();
-  for (const row of (data ?? []) as { registration_id: string }[]) {
+  const typedData = (data ?? []) as { registration_id: string }[];
+  for (const row of typedData) {
     ids.add(row.registration_id);
   }
 
