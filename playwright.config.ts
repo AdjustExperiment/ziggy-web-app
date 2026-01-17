@@ -35,7 +35,7 @@ export default defineConfig({
   // Shared settings for all projects
   use: {
     // Base URL for the application
-    baseURL: process.env.E2E_BASE_URL || 'http://localhost:5173',
+    baseURL: process.env.E2E_BASE_URL || 'http://localhost:8080',
 
     // Collect trace when retrying failed test
     trace: 'on-first-retry',
@@ -108,8 +108,8 @@ export default defineConfig({
   // Web server configuration - starts dev server before tests
   webServer: {
     command: 'npm run dev',
-    url: 'http://localhost:5173',
-    reuseExistingServer: !process.env.CI,
+    url: process.env.E2E_BASE_URL || 'http://localhost:8080',
+    reuseExistingServer: true,
     timeout: 120000,
   },
 
