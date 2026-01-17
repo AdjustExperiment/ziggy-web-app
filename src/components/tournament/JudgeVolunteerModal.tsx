@@ -20,14 +20,18 @@ interface Pairing {
   id: string;
   scheduled_time: string | null;
   aff_team?: {
+    id?: string;
     participant_name: string;
     partner_name: string | null;
     school_organization: string | null;
+    participant_email?: string;
   };
   neg_team?: {
+    id?: string;
     participant_name: string;
     partner_name: string | null;
     school_organization: string | null;
+    participant_email?: string;
   };
 }
 

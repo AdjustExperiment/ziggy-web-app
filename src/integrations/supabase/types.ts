@@ -1816,12 +1816,14 @@ export type Database = {
           id: string
           metadata: Json | null
           payment_method: string
+          payment_provider: string | null
           paypal_capture_id: string | null
           paypal_order_id: string | null
           registration_id: string | null
           status: string
           stripe_payment_intent_id: string | null
           stripe_session_id: string | null
+          tournament_id: string | null
           updated_at: string
           user_id: string | null
         }
@@ -1833,12 +1835,14 @@ export type Database = {
           id?: string
           metadata?: Json | null
           payment_method?: string
+          payment_provider?: string | null
           paypal_capture_id?: string | null
           paypal_order_id?: string | null
           registration_id?: string | null
           status?: string
           stripe_payment_intent_id?: string | null
           stripe_session_id?: string | null
+          tournament_id?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -1850,12 +1854,14 @@ export type Database = {
           id?: string
           metadata?: Json | null
           payment_method?: string
+          payment_provider?: string | null
           paypal_capture_id?: string | null
           paypal_order_id?: string | null
           registration_id?: string | null
           status?: string
           stripe_payment_intent_id?: string | null
           stripe_session_id?: string | null
+          tournament_id?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -1872,6 +1878,13 @@ export type Database = {
             columns: ["registration_id"]
             isOneToOne: false
             referencedRelation: "tournament_registrations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_transactions_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
             referencedColumns: ["id"]
           },
         ]
@@ -3569,8 +3582,13 @@ export type Database = {
           payment_handler: string | null
           paypal_button_html: string | null
           paypal_client_id: string | null
+          paypal_enabled: boolean | null
+          paypal_mode: string | null
+          paypal_secret_ciphertext: string | null
+          paypal_secret_iv: string | null
           tournament_id: string
           updated_at: string
+          updated_by_user_id: string | null
           venmo_button_html: string | null
         }
         Insert: {
@@ -3579,8 +3597,13 @@ export type Database = {
           payment_handler?: string | null
           paypal_button_html?: string | null
           paypal_client_id?: string | null
+          paypal_enabled?: boolean | null
+          paypal_mode?: string | null
+          paypal_secret_ciphertext?: string | null
+          paypal_secret_iv?: string | null
           tournament_id: string
           updated_at?: string
+          updated_by_user_id?: string | null
           venmo_button_html?: string | null
         }
         Update: {
@@ -3589,8 +3612,13 @@ export type Database = {
           payment_handler?: string | null
           paypal_button_html?: string | null
           paypal_client_id?: string | null
+          paypal_enabled?: boolean | null
+          paypal_mode?: string | null
+          paypal_secret_ciphertext?: string | null
+          paypal_secret_iv?: string | null
           tournament_id?: string
           updated_at?: string
+          updated_by_user_id?: string | null
           venmo_button_html?: string | null
         }
         Relationships: [
@@ -4246,7 +4274,38 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      tournament_payment_public: {
+        Row: {
+          payment_handler: string | null
+          paypal_client_id: string | null
+          paypal_enabled: boolean | null
+          paypal_mode: string | null
+          tournament_id: string | null
+        }
+        Insert: {
+          payment_handler?: string | null
+          paypal_client_id?: string | null
+          paypal_enabled?: boolean | null
+          paypal_mode?: string | null
+          tournament_id?: string | null
+        }
+        Update: {
+          payment_handler?: string | null
+          paypal_client_id?: string | null
+          paypal_enabled?: boolean | null
+          paypal_mode?: string | null
+          tournament_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tournament_payment_settings_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: true
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       admin_lock_ballots: {
@@ -4255,6 +4314,10 @@ export type Database = {
       }
       can_admin_tournament: {
         Args: { _tournament_id: string }
+        Returns: boolean
+      }
+      can_admin_tournament_payments: {
+        Args: { p_tournament_id: string }
         Returns: boolean
       }
       can_submit_ballot: { Args: { _pairing_id: string }; Returns: boolean }
