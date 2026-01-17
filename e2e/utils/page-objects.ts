@@ -29,7 +29,7 @@ export class BasePage {
     return null;
   }
 
-  async expectToastMessage(message: string) {
+  async expectToastMessage(message: string | RegExp) {
     await expect(this.page.locator('[data-sonner-toast]')).toContainText(message, {
       timeout: 10000
     });
