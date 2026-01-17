@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useOptimizedAuth } from '@/hooks/useOptimizedAuth';
 import { supabase } from '@/integrations/supabase/client';
 import {
@@ -10,11 +10,11 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Gavel, Calendar, Users, AlertTriangle, Loader2, CheckCircle2 } from 'lucide-react';
+import { Gavel, Calendar, AlertTriangle, Loader2, CheckCircle2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { formatTeamName } from '@/lib/teamUtils';
 
 interface Pairing {
   id: string;
@@ -52,16 +52,24 @@ export default function JudgeVolunteerModal({
 }: JudgeVolunteerModalProps) {
   const { user } = useOptimizedAuth();
   const [loading, setLoading] = useState(false);
-  const [checking, setChecking] = useState(false);
   const [hasConflicts, setHasConflicts] = useState(false);
+  const [autoApprove, setAutoApprove] = useState(false);
 
-  const formatTeamName = (team?: Pairing['aff_team']) => {
-    if (!team) return 'TBD';
-    if (team.partner_name) {
-      return `${team.participant_name} / ${team.partner_name}`;
-    }
-    return team.participant_name;
-  };
+  // Check tournament settings for auto-approve
+  useEffect(() => {
+    const checkSettings = async () => {
+      const { data } = await supabase
+        .from('tournaments')
+        .select('auto_approve_judge_volunteers')
+        .eq('id', tournamentId)
+        .single();
+      
+      if (data?.auto_approve_judge_volunteers) {
+        setAutoApprove(true);
+      }
+    };
+    if (open) checkSettings();
+  }, [tournamentId, open]);
 
   const handleVolunteer = async () => {
     if (!user) return;
@@ -106,6 +114,9 @@ export default function JudgeVolunteerModal({
         }
       }
 
+      // Determine status based on auto-approve setting
+      const assignmentStatus = autoApprove ? 'assigned' : 'volunteered';
+      
       // Insert volunteer assignment
       const { error: assignError } = await supabase
         .from('pairing_judge_assignments')
@@ -113,12 +124,27 @@ export default function JudgeVolunteerModal({
           pairing_id: pairing.id,
           judge_profile_id: judgeProfile.id,
           role: 'chair',
-          status: 'volunteered',
-          notes: 'Volunteered through tournament interface'
+          status: assignmentStatus,
+          notes: autoApprove 
+            ? 'Auto-approved volunteer assignment' 
+            : 'Volunteered through tournament interface'
         });
 
       if (assignError) {
         throw assignError;
+      }
+      
+      // If auto-approve, also update the pairing's judge_id
+      if (autoApprove) {
+        const { error: pairingError } = await supabase
+          .from('pairings')
+          .update({ judge_id: judgeProfile.id })
+          .eq('id', pairing.id);
+        
+        if (pairingError) {
+          console.error('Failed to update pairing judge_id:', pairingError);
+          // Not a critical error, the assignment was created
+        }
       }
 
       // Create notification for competitors
@@ -183,7 +209,7 @@ export default function JudgeVolunteerModal({
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs text-muted-foreground uppercase">Affirmative</p>
-                  <p className="font-medium text-primary">{formatTeamName(pairing.aff_team)}</p>
+                  <p className="font-medium text-primary">{formatTeamName(pairing.aff_team, { partnerSeparator: ' / ' })}</p>
                   {pairing.aff_team?.school_organization && (
                     <p className="text-xs text-muted-foreground">{pairing.aff_team.school_organization}</p>
                   )}
@@ -191,7 +217,7 @@ export default function JudgeVolunteerModal({
                 <span className="text-muted-foreground px-2">vs</span>
                 <div className="text-right">
                   <p className="text-xs text-muted-foreground uppercase">Negative</p>
-                  <p className="font-medium">{formatTeamName(pairing.neg_team)}</p>
+                  <p className="font-medium">{formatTeamName(pairing.neg_team, { partnerSeparator: ' / ' })}</p>
                   {pairing.neg_team?.school_organization && (
                     <p className="text-xs text-muted-foreground">{pairing.neg_team.school_organization}</p>
                   )}

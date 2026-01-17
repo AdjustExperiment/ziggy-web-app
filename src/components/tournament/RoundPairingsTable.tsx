@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { ChevronDown, ChevronUp, UserCheck, Clock, CheckCircle2, AlertCircle, Edit2, ArrowLeftRight, Trophy } from 'lucide-react';
+import { ChevronDown, ChevronUp, UserCheck, Clock, CheckCircle2, AlertCircle, Edit2, ArrowLeftRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import ExpandablePairing from './ExpandablePairing';
@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+
 
 interface Team {
   id: string;
@@ -111,7 +112,7 @@ export default function RoundPairingsTable({
     );
   };
 
-  // Format team name as LastName/LastName for pairs, or full name for individuals
+  // Format team name - delegates to shared utility but with custom logic for compact display
   const formatTeamName = (team?: Pairing['aff_team']) => {
     if (!team) return 'TBD';
     
@@ -121,7 +122,7 @@ export default function RoundPairingsTable({
     };
     
     if (team.partner_name) {
-      // Team format: LastName/LastName
+      // Team format: LastName/LastName (compact for table)
       return `${getLastName(team.participant_name)}/${getLastName(team.partner_name)}`;
     }
     // Individual format: Full Name
