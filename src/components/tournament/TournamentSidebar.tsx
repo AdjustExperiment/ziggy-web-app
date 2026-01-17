@@ -388,7 +388,7 @@ export default function TournamentSidebar({
                           {round.scheduled_date && (
                             <p className="text-xs text-muted-foreground flex items-center gap-1">
                               <Clock className="h-3 w-3" />
-                              {format(new Date(round.scheduled_date), 'MMM d, h:mm a')}
+                              {format(new Date(round.scheduled_date), 'MMM d')}
                             </p>
                           )}
                         </div>

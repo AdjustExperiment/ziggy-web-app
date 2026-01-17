@@ -163,10 +163,14 @@ export default function PairingEditModal({
 
       // If teams changed and there's tab data, log it
       if (showWarning) {
+        // Get user ID first to avoid async issues in insert
+        const { data: userData } = await supabase.auth.getUser();
+        const userId = userData?.user?.id || 'unknown';
+        
         // Log the edit for audit purposes
         await supabase.from('pairing_edit_history').insert({
           pairing_id: pairing.id,
-          changed_by: (await supabase.auth.getUser()).data.user?.id || 'unknown',
+          changed_by: userId,
           field_changed: 'team_replacement',
           old_value: {
             aff: pairing.aff_registration_id,
