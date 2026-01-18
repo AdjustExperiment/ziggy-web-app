@@ -158,9 +158,9 @@ export async function createTournamentAsAdmin(
   await page.getByRole('button', { name: /create|submit/i }).click();
 
   // Wait for tournament to be created and get ID from URL
-  await page.waitForURL(/\/admin\/tournaments\/([^\/]+)/);
+  await page.waitForURL(/\/admin\/tournaments\/([^/]+)/);
   const url = page.url();
-  const match = url.match(/\/admin\/tournaments\/([^\/]+)/);
+  const match = url.match(/\/admin\/tournaments\/([^/]+)/);
   return match ? match[1] : '';
 }
 

@@ -51,22 +51,47 @@ export class LoginPage extends BasePage {
   readonly signUpLink: Locator;
   readonly forgotPasswordLink: Locator;
   readonly errorMessage: Locator;
+  readonly createAccountButton: Locator;
+  readonly userTab: Locator;
+  readonly adminTab: Locator;
 
   constructor(page: Page) {
     super(page);
-    this.emailInput = page.getByLabel(/email/i);
-    this.passwordInput = page.getByLabel(/password/i);
-    this.loginButton = page.getByRole('button', { name: /sign in|log in/i });
-    this.signUpLink = page.getByRole('link', { name: /sign up|create account/i });
-    this.forgotPasswordLink = page.getByRole('link', { name: /forgot password/i });
-    this.errorMessage = page.locator('.text-destructive, [role="alert"]');
+    // Use multiple selector strategies for robustness
+    this.emailInput = page.locator('input[type="email"]').first();
+    this.passwordInput = page.locator('input[type="password"]').first();
+    this.loginButton = page.getByRole('button', { name: /sign in|log in|access/i }).first();
+    this.signUpLink = page.locator('button:has-text("Need an account"), a:has-text("sign up"), a:has-text("create account")');
+    this.forgotPasswordLink = page.locator('button:has-text("Forgot password")');
+    this.errorMessage = page.locator('[role="alert"], .text-destructive, [data-sonner-toast]');
+    this.createAccountButton = page.getByRole('button', { name: /create new account/i });
+    this.userTab = page.getByRole('tab', { name: /user/i });
+    this.adminTab = page.getByRole('tab', { name: /admin/i });
   }
 
   async goto() {
     await super.goto('/login');
+    // Wait for the page to fully load (not in loading state)
+    await this.page.waitForSelector('input[type="email"]', { state: 'visible', timeout: 15000 });
+  }
+
+  async selectUserTab() {
+    if (await this.userTab.isVisible()) {
+      await this.userTab.click();
+      await this.page.waitForTimeout(300);
+    }
+  }
+
+  async selectAdminTab() {
+    if (await this.adminTab.isVisible()) {
+      await this.adminTab.click();
+      await this.page.waitForTimeout(300);
+    }
   }
 
   async login(email: string, password: string) {
+    // Wait for form to be ready
+    await this.emailInput.waitFor({ state: 'visible', timeout: 10000 });
     await this.emailInput.fill(email);
     await this.passwordInput.fill(password);
     await this.loginButton.click();
@@ -84,6 +109,10 @@ export class LoginPage extends BasePage {
     // Should redirect away from login page
     await expect(this.page).not.toHaveURL(/\/login/);
   }
+
+  async clickCreateAccount() {
+    await this.createAccountButton.click();
+  }
 }
 
 export class SignUpPage extends BasePage {
@@ -94,36 +123,43 @@ export class SignUpPage extends BasePage {
   readonly confirmPasswordInput: Locator;
   readonly signUpButton: Locator;
   readonly loginLink: Locator;
+  readonly successMessage: Locator;
 
   constructor(page: Page) {
     super(page);
-    this.firstNameInput = page.getByLabel(/first name/i);
-    this.lastNameInput = page.getByLabel(/last name/i);
-    this.emailInput = page.getByLabel(/email/i);
-    this.passwordInput = page.locator('input[name="password"], input[type="password"]').first();
-    this.confirmPasswordInput = page.getByLabel(/confirm password/i);
-    this.signUpButton = page.getByRole('button', { name: /sign up|create account|register/i });
-    this.loginLink = page.getByRole('link', { name: /log in|sign in|already have/i });
+    // Use placeholder-based selectors for more robustness
+    this.firstNameInput = page.locator('input[placeholder*="First"], input[placeholder="John"]').first();
+    this.lastNameInput = page.locator('input[placeholder*="Last"], input[placeholder="Doe"]').first();
+    this.emailInput = page.locator('input[type="email"]').first();
+    this.passwordInput = page.locator('input[type="password"]').first();
+    this.confirmPasswordInput = page.locator('input[type="password"]').nth(1);
+    this.signUpButton = page.getByRole('button', { name: /create account/i });
+    this.loginLink = page.locator('a:has-text("Sign in"), a:has-text("Log in")');
+    this.successMessage = page.locator('text=Check Your Email, text=verification, text=Account Created');
   }
 
   async goto() {
     await super.goto('/signup');
+    // Wait for the form to load
+    await this.page.waitForSelector('input[type="email"]', { state: 'visible', timeout: 15000 });
   }
 
   async signUp(user: TestUser) {
+    await this.firstNameInput.waitFor({ state: 'visible', timeout: 10000 });
     await this.firstNameInput.fill(user.firstName);
     await this.lastNameInput.fill(user.lastName);
     await this.emailInput.fill(user.email);
     await this.passwordInput.fill(user.password);
-    if (await this.confirmPasswordInput.isVisible()) {
+    // Check if confirm password field exists (some forms have it)
+    if (await this.confirmPasswordInput.isVisible({ timeout: 1000 }).catch(() => false)) {
       await this.confirmPasswordInput.fill(user.password);
     }
     await this.signUpButton.click();
   }
 
   async expectSignUpSuccess() {
-    // Should redirect to dashboard or show success message
-    await expect(this.page).toHaveURL(/\/(dashboard|account|verify)/);
+    // Wait for success message or redirect
+    await expect(this.successMessage.or(this.page.locator('text=Check Your Email'))).toBeVisible({ timeout: 15000 });
   }
 }
 
