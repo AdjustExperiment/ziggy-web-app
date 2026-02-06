@@ -34,12 +34,17 @@ export function BallotEntry({
   const [ballot, setBallot] = useState<any>(null);
   const [winner, setWinner] = useState<string>('');
   const [comments, setComments] = useState<string>('');
-  const [affPoints, setAffPoints] = useState<string>('');
-  const [negPoints, setNegPoints] = useState<string>('');
+  const [affSpeaks, setAffSpeaks] = useState<string>('');
+  const [negSpeaks, setNegSpeaks] = useState<string>('');
   const [affRank, setAffRank] = useState<string>('');
   const [negRank, setNegRank] = useState<string>('');
   const [affFeedback, setAffFeedback] = useState<string>('');
   const [negFeedback, setNegFeedback] = useState<string>('');
+  const [speaksError, setSpeaksError] = useState<string | null>(null);
+  
+  // Speaker point validation
+  const SPEAKS_MIN = 20;
+  const SPEAKS_MAX = 30;
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [judgeProfileId, setJudgeProfileId] = useState<string | null>(null);
@@ -58,7 +63,7 @@ export function BallotEntry({
       if (canEdit) saveBallot('draft', true);
     }, 3000); // Increased from 1000ms to reduce API calls
     return () => clearTimeout(timer);
-  }, [winner, comments, affPoints, negPoints, affRank, negRank, affFeedback, negFeedback, isOpen]);
+  }, [winner, comments, affSpeaks, negSpeaks, affRank, negRank, affFeedback, negFeedback, isOpen]);
 
   const fetchBallot = async () => {
     setLoading(true);
@@ -97,8 +102,9 @@ export function BallotEntry({
         const payload = data.payload as any || {};
         setWinner(payload.winner || '');
         setComments(payload.comments || '');
-        setAffPoints(payload.aff_points?.toString() || '');
-        setNegPoints(payload.neg_points?.toString() || '');
+        // Support both legacy aff_points and new aff_speaks field names
+        setAffSpeaks(payload.aff_speaks?.toString() || payload.aff_points?.toString() || '');
+        setNegSpeaks(payload.neg_speaks?.toString() || payload.neg_points?.toString() || '');
         setAffRank(payload.aff_rank?.toString() || '');
         setNegRank(payload.neg_rank?.toString() || '');
         setAffFeedback(payload.aff_feedback || '');
@@ -107,8 +113,8 @@ export function BallotEntry({
         setBallot(null);
         setWinner('');
         setComments('');
-        setAffPoints('');
-        setNegPoints('');
+        setAffSpeaks('');
+        setNegSpeaks('');
         setAffRank('');
         setNegRank('');
         setAffFeedback('');
@@ -126,15 +132,43 @@ export function BallotEntry({
     }
   };
 
+  const validateSpeakerPoints = (): boolean => {
+    setSpeaksError(null);
+    const affValue = affSpeaks ? parseFloat(affSpeaks) : null;
+    const negValue = negSpeaks ? parseFloat(negSpeaks) : null;
+    
+    if (affValue !== null && (affValue < SPEAKS_MIN || affValue > SPEAKS_MAX)) {
+      setSpeaksError(`Affirmative speaker points must be between ${SPEAKS_MIN} and ${SPEAKS_MAX}`);
+      return false;
+    }
+    if (negValue !== null && (negValue < SPEAKS_MIN || negValue > SPEAKS_MAX)) {
+      setSpeaksError(`Negative speaker points must be between ${SPEAKS_MIN} and ${SPEAKS_MAX}`);
+      return false;
+    }
+    return true;
+  };
+
   const saveBallot = async (status: 'draft' | 'submitted', auto = false) => {
     if (!judgeProfileId || !judgeUserId) return;
+    
+    // Validate speaker points on submit
+    if (status === 'submitted' && !validateSpeakerPoints()) {
+      toast({
+        title: "Validation Error",
+        description: speaksError || "Please check speaker points",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if (!auto) setSaving(true);
     try {
+      // Use aff_speaks/neg_speaks as the standard field names
       const payload = {
         winner,
         comments,
-        aff_points: affPoints ? parseFloat(affPoints) : null,
-        neg_points: negPoints ? parseFloat(negPoints) : null,
+        aff_speaks: affSpeaks ? parseFloat(affSpeaks) : null,
+        neg_speaks: negSpeaks ? parseFloat(negSpeaks) : null,
         aff_rank: affRank ? parseInt(affRank) : null,
         neg_rank: negRank ? parseInt(negRank) : null,
         aff_feedback: affFeedback,
@@ -322,36 +356,49 @@ export function BallotEntry({
             {/* Speaker Points */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="aff-points">Affirmative Points</Label>
+                <Label htmlFor="aff-speaks">Affirmative Speaker Points</Label>
                 <input
-                  id="aff-points"
+                  id="aff-speaks"
                   type="number"
-                  min="0"
-                  max="30"
+                  min={SPEAKS_MIN}
+                  max={SPEAKS_MAX}
                   step="0.1"
-                  value={affPoints}
-                  onChange={(e) => setAffPoints(e.target.value)}
+                  value={affSpeaks}
+                  onChange={(e) => {
+                    setAffSpeaks(e.target.value);
+                    setSpeaksError(null);
+                  }}
                   disabled={!canEdit}
                   className="w-full p-2 border rounded-md disabled:opacity-50 disabled:bg-muted"
-                  placeholder="0.0"
+                  placeholder={`${SPEAKS_MIN}-${SPEAKS_MAX}`}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="neg-points">Negative Points</Label>
+                <Label htmlFor="neg-speaks">Negative Speaker Points</Label>
                 <input
-                  id="neg-points"
+                  id="neg-speaks"
                   type="number"
-                  min="0"
-                  max="30"
+                  min={SPEAKS_MIN}
+                  max={SPEAKS_MAX}
                   step="0.1"
-                  value={negPoints}
-                  onChange={(e) => setNegPoints(e.target.value)}
+                  value={negSpeaks}
+                  onChange={(e) => {
+                    setNegSpeaks(e.target.value);
+                    setSpeaksError(null);
+                  }}
                   disabled={!canEdit}
                   className="w-full p-2 border rounded-md disabled:opacity-50 disabled:bg-muted"
-                  placeholder="0.0"
+                  placeholder={`${SPEAKS_MIN}-${SPEAKS_MAX}`}
                 />
               </div>
             </div>
+            
+            {/* Speaker Points Validation Error */}
+            {speaksError && (
+              <div className="text-sm text-destructive bg-destructive/10 p-2 rounded-md">
+                {speaksError}
+              </div>
+            )}
 
             {/* Rankings */}
             <div className="grid grid-cols-2 gap-4">

@@ -83,13 +83,13 @@ export function AuditLogViewer({ tournamentId }: AuditLogViewerProps) {
   const fetchAuditLog = async () => {
     setLoading(true);
     try {
-      // Fetch audit log entries - using type assertion for table not in generated types
-      const { data: logsData, error: logsError } = await (supabase
-        .from('tab_audit_log' as any)
+      // Fetch audit log entries
+      const { data: logsData, error: logsError } = await supabase
+        .from('tab_audit_log')
         .select('*')
         .eq('tournament_id', tournamentId)
         .order('created_at', { ascending: false })
-        .limit(200) as any);
+        .limit(200);
 
       if (logsError) throw logsError;
 

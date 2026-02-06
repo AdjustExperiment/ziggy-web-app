@@ -227,11 +227,10 @@ async function fetchTabConfig(
   eventId?: string | null
 ): Promise<{ tiebreaker_order: TiebreakerType[]; drop_high_low_speaks: number } | null> {
   try {
-    // Using type assertion for table not in generated types
-    let query = (supabase
-      .from('tournament_tab_config' as any)
+    let query = supabase
+      .from('tournament_tab_config')
       .select('tiebreaker_order, drop_high_low_speaks')
-      .eq('tournament_id', tournamentId) as any);
+      .eq('tournament_id', tournamentId);
 
     if (eventId) {
       query = query.eq('event_id', eventId);
@@ -245,13 +244,10 @@ async function fetchTabConfig(
       return null;
     }
 
-    // Type assertion since we're using 'as' in the query
-    const configData = data as {
-      tiebreaker_order: TiebreakerType[];
-      drop_high_low_speaks: number;
+    return {
+      tiebreaker_order: data.tiebreaker_order as TiebreakerType[],
+      drop_high_low_speaks: data.drop_high_low_speaks ?? 1,
     };
-
-    return configData;
   } catch {
     return null;
   }
@@ -737,13 +733,13 @@ export async function upsertStandings(
   }));
 
   try {
-    // Upsert using tournament_id + registration_id as unique key - using type assertion
-    const { error } = await (supabase
-      .from('computed_standings' as any)
-      .upsert(inserts, {
+    // Upsert using tournament_id + registration_id as unique key
+    const { error } = await supabase
+      .from('computed_standings')
+      .upsert(inserts as any, {
         onConflict: 'tournament_id,registration_id',
         ignoreDuplicates: false,
-      }) as any);
+      });
 
     if (error) {
       console.error('Error upserting standings:', error);
@@ -777,13 +773,13 @@ export async function upsertHeadToHead(
   }));
 
   try {
-    // Using type assertion for table not in generated types
-    const { error } = await (supabase
-      .from('head_to_head' as any)
-      .upsert(inserts, {
+    // Upsert head-to-head records
+    const { error } = await supabase
+      .from('head_to_head')
+      .upsert(inserts as any, {
         onConflict: 'tournament_id,registration_id,opponent_id',
         ignoreDuplicates: false,
-      }) as any);
+      });
 
     if (error) {
       console.error('Error upserting head-to-head records:', error);
