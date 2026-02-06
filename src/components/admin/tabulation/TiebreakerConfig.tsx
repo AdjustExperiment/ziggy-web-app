@@ -120,18 +120,16 @@ export function TiebreakerConfig({ tournamentId, eventId }: TiebreakerConfigProp
   const fetchConfig = async () => {
     setLoading(true);
     try {
-      // Using type assertion for table not in generated types
-      const { data, error } = await (supabase
-        .from('tournament_tab_config' as any)
+      const { data, error } = await supabase
+        .from('tournament_tab_config')
         .select('tiebreaker_order')
         .eq('tournament_id', tournamentId)
-        .maybeSingle() as any);
+        .maybeSingle();
 
       if (error && error.code !== 'PGRST116') throw error;
 
-      const typedData = data as { tiebreaker_order: TiebreakerType[] } | null;
-      if (typedData?.tiebreaker_order) {
-        setTiebreakerOrder(typedData.tiebreaker_order);
+      if (data?.tiebreaker_order) {
+        setTiebreakerOrder(data.tiebreaker_order as TiebreakerType[]);
       }
     } catch (error) {
       console.error('Error fetching tiebreaker config:', error);
@@ -173,15 +171,14 @@ export function TiebreakerConfig({ tournamentId, eventId }: TiebreakerConfigProp
   const handleSave = async () => {
     setSaving(true);
     try {
-      // Using type assertion for table not in generated types
-      const { error } = await (supabase
-        .from('tournament_tab_config' as any)
+      const { error } = await supabase
+        .from('tournament_tab_config')
         .upsert({
           tournament_id: tournamentId,
           event_id: eventId || null,
           tiebreaker_order: tiebreakerOrder,
           updated_at: new Date().toISOString()
-        }, { onConflict: 'tournament_id,event_id' }) as any);
+        } as any, { onConflict: 'tournament_id' });
 
       if (error) throw error;
 

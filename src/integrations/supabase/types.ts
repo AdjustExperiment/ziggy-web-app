@@ -572,6 +572,121 @@ export type Database = {
           },
         ]
       }
+      computed_standings: {
+        Row: {
+          adjusted_ranks: number | null
+          adjusted_speaks: number | null
+          aff_rounds: number | null
+          avg_ranks: number | null
+          avg_speaks: number | null
+          break_seed: number | null
+          byes: number | null
+          double_adjusted_ranks: number | null
+          double_adjusted_speaks: number | null
+          event_id: string | null
+          forfeits_given: number | null
+          forfeits_received: number | null
+          id: string
+          is_breaking: boolean | null
+          last_computed_at: string | null
+          losses: number | null
+          neg_rounds: number | null
+          opp_win_pct: number | null
+          opp_wins: number | null
+          overall_rank: number | null
+          prelim_rank: number | null
+          registration_id: string
+          rounds_completed: number | null
+          total_ranks: number | null
+          total_speaks: number | null
+          tournament_id: string
+          updated_at: string | null
+          wins: number | null
+        }
+        Insert: {
+          adjusted_ranks?: number | null
+          adjusted_speaks?: number | null
+          aff_rounds?: number | null
+          avg_ranks?: number | null
+          avg_speaks?: number | null
+          break_seed?: number | null
+          byes?: number | null
+          double_adjusted_ranks?: number | null
+          double_adjusted_speaks?: number | null
+          event_id?: string | null
+          forfeits_given?: number | null
+          forfeits_received?: number | null
+          id?: string
+          is_breaking?: boolean | null
+          last_computed_at?: string | null
+          losses?: number | null
+          neg_rounds?: number | null
+          opp_win_pct?: number | null
+          opp_wins?: number | null
+          overall_rank?: number | null
+          prelim_rank?: number | null
+          registration_id: string
+          rounds_completed?: number | null
+          total_ranks?: number | null
+          total_speaks?: number | null
+          tournament_id: string
+          updated_at?: string | null
+          wins?: number | null
+        }
+        Update: {
+          adjusted_ranks?: number | null
+          adjusted_speaks?: number | null
+          aff_rounds?: number | null
+          avg_ranks?: number | null
+          avg_speaks?: number | null
+          break_seed?: number | null
+          byes?: number | null
+          double_adjusted_ranks?: number | null
+          double_adjusted_speaks?: number | null
+          event_id?: string | null
+          forfeits_given?: number | null
+          forfeits_received?: number | null
+          id?: string
+          is_breaking?: boolean | null
+          last_computed_at?: string | null
+          losses?: number | null
+          neg_rounds?: number | null
+          opp_win_pct?: number | null
+          opp_wins?: number | null
+          overall_rank?: number | null
+          prelim_rank?: number | null
+          registration_id?: string
+          rounds_completed?: number | null
+          total_ranks?: number | null
+          total_speaks?: number | null
+          tournament_id?: string
+          updated_at?: string | null
+          wins?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "computed_standings_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "computed_standings_registration_id_fkey"
+            columns: ["registration_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_registrations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "computed_standings_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contact_submissions: {
         Row: {
           created_at: string
@@ -1076,6 +1191,71 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "group_discount_rules_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      head_to_head: {
+        Row: {
+          event_id: string | null
+          id: string
+          losses: number | null
+          opponent_id: string
+          registration_id: string
+          total_speaks_against: number | null
+          total_speaks_for: number | null
+          tournament_id: string
+          wins: number | null
+        }
+        Insert: {
+          event_id?: string | null
+          id?: string
+          losses?: number | null
+          opponent_id: string
+          registration_id: string
+          total_speaks_against?: number | null
+          total_speaks_for?: number | null
+          tournament_id: string
+          wins?: number | null
+        }
+        Update: {
+          event_id?: string | null
+          id?: string
+          losses?: number | null
+          opponent_id?: string
+          registration_id?: string
+          total_speaks_against?: number | null
+          total_speaks_for?: number | null
+          tournament_id?: string
+          wins?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "head_to_head_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "head_to_head_opponent_id_fkey"
+            columns: ["opponent_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_registrations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "head_to_head_registration_id_fkey"
+            columns: ["registration_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_registrations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "head_to_head_tournament_id_fkey"
             columns: ["tournament_id"]
             isOneToOne: false
             referencedRelation: "tournaments"
@@ -3050,6 +3230,53 @@ export type Database = {
         }
         Relationships: []
       }
+      tab_audit_log: {
+        Row: {
+          action: string
+          created_at: string | null
+          entity_id: string
+          entity_type: string
+          id: string
+          new_value: Json | null
+          old_value: Json | null
+          reason: string | null
+          tournament_id: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          new_value?: Json | null
+          old_value?: Json | null
+          reason?: string | null
+          tournament_id: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          new_value?: Json | null
+          old_value?: Json | null
+          reason?: string | null
+          tournament_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tab_audit_log_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       team_achievements: {
         Row: {
           achieved_at: string | null
@@ -3926,6 +4153,79 @@ export type Database = {
           },
         ]
       }
+      tournament_tab_config: {
+        Row: {
+          break_to: number | null
+          created_at: string | null
+          debate_format_id: string | null
+          drop_high_low_ranks: number | null
+          drop_high_low_speaks: number | null
+          event_id: string | null
+          id: string
+          prelim_rounds: number | null
+          rank_scale: number | null
+          speaker_point_max: number | null
+          speaker_point_min: number | null
+          tiebreaker_order: string[] | null
+          tournament_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          break_to?: number | null
+          created_at?: string | null
+          debate_format_id?: string | null
+          drop_high_low_ranks?: number | null
+          drop_high_low_speaks?: number | null
+          event_id?: string | null
+          id?: string
+          prelim_rounds?: number | null
+          rank_scale?: number | null
+          speaker_point_max?: number | null
+          speaker_point_min?: number | null
+          tiebreaker_order?: string[] | null
+          tournament_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          break_to?: number | null
+          created_at?: string | null
+          debate_format_id?: string | null
+          drop_high_low_ranks?: number | null
+          drop_high_low_speaks?: number | null
+          event_id?: string | null
+          id?: string
+          prelim_rounds?: number | null
+          rank_scale?: number | null
+          speaker_point_max?: number | null
+          speaker_point_min?: number | null
+          tiebreaker_order?: string[] | null
+          tournament_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tournament_tab_config_debate_format_id_fkey"
+            columns: ["debate_format_id"]
+            isOneToOne: false
+            referencedRelation: "debate_formats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_tab_config_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_tab_config_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: true
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tournament_tabulation_settings: {
         Row: {
           allow_judges_view_all_chat: boolean
@@ -4391,6 +4691,7 @@ export type Database = {
         | "participant"
         | "user"
         | "sponsor"
+      round_status: "upcoming" | "in_progress" | "completed" | "locked"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -4526,6 +4827,7 @@ export const Constants = {
         "user",
         "sponsor",
       ],
+      round_status: ["upcoming", "in_progress", "completed", "locked"],
     },
   },
 } as const
