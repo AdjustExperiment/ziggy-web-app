@@ -1,310 +1,353 @@
 
-# Comprehensive Tabulation System Review
 
-## Executive Summary
+# Comprehensive Tournament Workflow Test Suite
 
-I've conducted a thorough review of the tabulation system, analyzing the database schema, business logic, UI components, and data flow. The system is well-architected with Tabbycat-style algorithms but has several critical issues and workflow gaps that need addressing.
+## Overview
 
-## Current System Architecture
+This plan creates a complete end-to-end test suite that validates the entire tournament lifecycle - from user registration through results publication. We'll enhance the existing `qa-simulation` edge function and create complementary frontend tests.
+
+---
+
+## Test Architecture
 
 ```text
-+-------------------+     +-------------------+     +-------------------+
-|   Admin Tab UI    |     |   Draw Generator  |     |   Database        |
-|   (Dashboard)     |---->|   (Algorithms)    |---->|   (Supabase)      |
-+-------------------+     +-------------------+     +-------------------+
-        |                         |                         |
-        v                         v                         v
-+-------------------+     +-------------------+     +-------------------+
-| PairingGenerator  |     | Munkres/Swiss     |     | pairings          |
-| StandingsView     |     | PowerPairing      |     | rounds            |
-| BreakManager      |     | TiebreakerEngine  |     | ballots           |
-| SpreadsheetView   |     | JudgeAllocator    |     | tournament_stands |
-+-------------------+     +-------------------+     +-------------------+
-```
-
-## Critical Issues Identified
-
-### 1. Missing Database Tables (CRITICAL)
-
-**Issue**: The code references tables that don't exist in the database:
-- `computed_standings` - referenced in `standingsService.ts` but doesn't exist
-- `head_to_head` - referenced in `standingsService.ts` but doesn't exist  
-- `tournament_tab_config` - referenced in `TiebreakerConfig.tsx` but doesn't exist
-- `tab_audit_log` - referenced in `AuditLogViewer.tsx` but doesn't exist
-
-**Impact**: The `upsertStandings()` and `upsertHeadToHead()` functions silently fail, meaning computed standings are never cached. The standings are recomputed from scratch every time.
-
-**Evidence**: Query for `computed_standings` returned "relation does not exist" error.
-
-### 2. Dual Standings Systems Causing Confusion
-
-**Issue**: There are TWO standings tables:
-1. `tournament_standings` - contains 4 rows with precomputed test data
-2. `computed_standings` - referenced in code but doesn't exist
-
-**Impact**: Results page reads from `tournament_standings`, but `StandingsView` computes standings on-the-fly from `pairings.result`. These could become out of sync.
-
-### 3. Ballot-to-Standings Data Flow Incomplete
-
-**Issue**: The standings computation in `standingsService.ts` reads from `pairings.result` JSONB field, but the ballot entry (`BallotEntry.tsx`) does NOT update `pairings.result` after ballot submission.
-
-**Current Flow**:
-1. Judge submits ballot -> saves to `ballots` table with `payload`
-2. `pairings.result` is NOT updated
-3. Standings computation reads from `pairings.result` -> Gets stale/empty data
-
-**Expected Flow**:
-1. Judge submits ballot -> saves to `ballots` table
-2. Trigger/function updates `pairings.result` from ballot
-3. Standings computation reads correct data
-
-### 4. Type Assertions Hiding Errors
-
-**Issue**: Multiple files use `as any` type assertions to bypass TypeScript errors, hiding schema mismatches:
-- `standingsService.ts` lines 740-745: `supabase.from('computed_standings' as any)`
-- `AuditLogViewer.tsx`: `supabase.from('tab_audit_log' as any)`
-- `TiebreakerConfig.tsx`: `supabase.from('tournament_tab_config' as any)`
-
-**Impact**: These queries silently fail at runtime instead of catching issues at compile time.
-
----
-
-## Medium Priority Issues
-
-### 5. Speaker Points Field Mismatch
-
-**Issue**: Ballot entry uses `aff_points/neg_points` but standings service expects `aff_speaks/neg_speaks`:
-- `BallotEntry.tsx` saves: `{ winner, aff_points, neg_points }`
-- Test data has: `{ winner, aff_speaks, neg_speaks }`
-- `PairingGenerator.tsx` reads: `payload.aff_speaks`
-
-### 6. Break Manager Not Connected to Computed Standings
-
-**Issue**: `BreakManager.tsx` receives `standings: TeamStanding[]` as prop but this interface doesn't match `ComputedStanding`. The break generation might fail when connecting to real data.
-
-### 7. Legacy Export/Import Edge Cases
-
-**Issue**: `LegacyPairingUploader` uses fuzzy matching but doesn't handle:
-- Teams with identical names from different schools
-- Unicode characters in names
-- Partner name variations
-
-### 8. Round Status Inconsistency
-
-**Issue**: Round status values aren't enforced:
-- Code uses: `'upcoming' | 'in_progress' | 'completed' | 'locked'`
-- Some places check for capitalized versions
-- No database enum constraint
-
----
-
-## Workflow Gaps
-
-### 9. No Automatic Standings Recalculation
-
-**Gap**: After ballot submission, standings are not automatically recalculated. Admin must manually click "Recalculate" in StandingsView.
-
-**Recommendation**: Add a database trigger or post-ballot-submit hook to flag standings as stale.
-
-### 10. No Ballot Validation
-
-**Gap**: `BallotEntry.tsx` allows submission with:
-- No speaker point range validation (min/max)
-- No check for duplicate ballots from same judge
-- No warning if both teams get same points
-
-### 11. No Break Announcement Workflow
-
-**Gap**: After breaks are generated, there's no workflow to:
-- Notify breaking teams
-- Generate elimination brackets
-- Lock break results
-
-### 12. Missing Print/Export Features
-
-**Gap**: While `StandingsView` has export buttons, they're not connected to:
-- Tournament name in exports
-- Multi-event filtering
-- PDF generation
-
----
-
-## What's Working Well
-
-1. **Draw Generation Algorithm**: Munkres/power-pairing implementation is solid with proper conflict avoidance
-2. **Test Data Seeding**: Edge function `seed-test-data` provides good sample data for QA
-3. **Real-time Subscriptions**: Pairings table has postgres_changes subscriptions
-4. **Tiebreaker Engine**: Comprehensive with 12 tiebreaker types and head-to-head support
-5. **Multi-Event Support**: Dashboard properly filters by event_id
-6. **Spreadsheet View**: Good data visualization with sorting and filtering
-
----
-
-## Implementation Plan
-
-### Phase 1: Database Schema Fixes (Critical)
-
-1. Create missing tables via migration:
-   - `computed_standings` with proper columns matching `ComputedStanding` type
-   - `head_to_head` for head-to-head records
-   - `tournament_tab_config` for tournament-specific tab settings
-   - `tab_audit_log` for audit logging
-
-2. Add trigger to sync `ballots.payload` to `pairings.result` on ballot insert/update
-
-3. Add database enum for round status
-
-### Phase 2: Data Flow Fixes
-
-1. Update `BallotEntry.tsx` to:
-   - Use consistent field names (`aff_speaks` not `aff_points`)
-   - Validate speaker point ranges
-   - Update `pairings.result` after ballot submission
-
-2. Add standings recalculation trigger after ballot submission
-
-3. Fix type assertions with proper database types
-
-### Phase 3: UI/UX Improvements
-
-1. Add "Sync from Ballots" button to populate `pairings.result` from existing ballots
-2. Add break announcement workflow
-3. Add ballot validation warnings
-4. Connect export functions to tournament metadata
-
-### Phase 4: Testing & Verification
-
-1. Run existing unit tests for standings/tiebreaker
-2. Test full workflow: registration -> pairing -> ballot -> standings
-3. Test break generation with real standings data
-4. Test import/export with edge cases
-
----
-
-## Technical Details
-
-### Tables to Create
-
-```sql
--- computed_standings: cache for computed standings
-CREATE TABLE computed_standings (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  tournament_id UUID NOT NULL REFERENCES tournaments(id),
-  event_id UUID REFERENCES tournament_events(id),
-  registration_id UUID NOT NULL REFERENCES tournament_registrations(id),
-  wins INTEGER DEFAULT 0,
-  losses INTEGER DEFAULT 0,
-  byes INTEGER DEFAULT 0,
-  forfeits_given INTEGER DEFAULT 0,
-  forfeits_received INTEGER DEFAULT 0,
-  total_speaks NUMERIC DEFAULT 0,
-  avg_speaks NUMERIC DEFAULT 0,
-  adjusted_speaks NUMERIC DEFAULT 0,
-  double_adjusted_speaks NUMERIC DEFAULT 0,
-  total_ranks NUMERIC DEFAULT 0,
-  avg_ranks NUMERIC DEFAULT 0,
-  adjusted_ranks NUMERIC DEFAULT 0,
-  double_adjusted_ranks NUMERIC DEFAULT 0,
-  opp_wins INTEGER DEFAULT 0,
-  opp_win_pct NUMERIC DEFAULT 0,
-  aff_rounds INTEGER DEFAULT 0,
-  neg_rounds INTEGER DEFAULT 0,
-  prelim_rank INTEGER,
-  overall_rank INTEGER,
-  is_breaking BOOLEAN DEFAULT false,
-  break_seed INTEGER,
-  rounds_completed INTEGER DEFAULT 0,
-  last_computed_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now(),
-  UNIQUE(tournament_id, registration_id)
-);
-
--- head_to_head: records of matchups between teams
-CREATE TABLE head_to_head (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  tournament_id UUID NOT NULL REFERENCES tournaments(id),
-  event_id UUID REFERENCES tournament_events(id),
-  registration_id UUID NOT NULL REFERENCES tournament_registrations(id),
-  opponent_id UUID NOT NULL REFERENCES tournament_registrations(id),
-  wins INTEGER DEFAULT 0,
-  losses INTEGER DEFAULT 0,
-  total_speaks_for NUMERIC DEFAULT 0,
-  total_speaks_against NUMERIC DEFAULT 0,
-  UNIQUE(tournament_id, registration_id, opponent_id)
-);
-
--- tournament_tab_config: per-tournament tabulation settings
-CREATE TABLE tournament_tab_config (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  tournament_id UUID NOT NULL REFERENCES tournaments(id) UNIQUE,
-  event_id UUID REFERENCES tournament_events(id),
-  debate_format_id UUID REFERENCES debate_formats(id),
-  speaker_point_min NUMERIC DEFAULT 20,
-  speaker_point_max NUMERIC DEFAULT 30,
-  rank_scale INTEGER DEFAULT 4,
-  tiebreaker_order TEXT[] DEFAULT ARRAY['wins','speaks','adjusted_speaks','opp_wins'],
-  drop_high_low_speaks INTEGER DEFAULT 1,
-  drop_high_low_ranks INTEGER DEFAULT 1,
-  prelim_rounds INTEGER,
-  break_to INTEGER,
-  created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now()
-);
-
--- tab_audit_log: audit trail for tabulation changes
-CREATE TABLE tab_audit_log (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  tournament_id UUID NOT NULL REFERENCES tournaments(id),
-  user_id UUID REFERENCES auth.users(id),
-  action TEXT NOT NULL,
-  entity_type TEXT NOT NULL,
-  entity_id UUID NOT NULL,
-  old_value JSONB,
-  new_value JSONB,
-  reason TEXT,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-```
-
-### Ballot-to-Pairing Sync Trigger
-
-```sql
-CREATE OR REPLACE FUNCTION sync_ballot_to_pairing()
-RETURNS TRIGGER AS $$
-BEGIN
-  UPDATE pairings
-  SET result = NEW.payload,
-      status = CASE WHEN NEW.status = 'submitted' THEN 'completed' ELSE status END,
-      updated_at = now()
-  WHERE id = NEW.pairing_id;
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER on_ballot_insert_update
-AFTER INSERT OR UPDATE ON ballots
-FOR EACH ROW
-EXECUTE FUNCTION sync_ballot_to_pairing();
++---------------------------+     +---------------------------+
+|  Edge Function Tests      |     |  E2E Playwright Tests     |
+|  (Database/API Layer)     |     |  (UI Interactions)        |
++---------------------------+     +---------------------------+
+           |                                   |
+           v                                   v
++------------------------------------------------------------------+
+|                    qa-comprehensive-test                          |
+|  Edge Function that orchestrates full tournament simulation       |
++------------------------------------------------------------------+
+           |
+           v
++------------------------------------------------------------------+
+|                     Database Layer                                |
+|  tournaments, registrations, rounds, pairings, ballots,          |
+|  sponsor_profiles, computed_standings, results                   |
++------------------------------------------------------------------+
 ```
 
 ---
 
-## Risk Assessment
+## Phase 1: Enhanced Edge Function - `qa-comprehensive-test`
 
-| Issue | Severity | Likelihood | Impact |
-|-------|----------|------------|--------|
-| Missing computed_standings table | High | Certain | Standings never cached |
-| Ballot field mismatch | Medium | Likely | Incorrect speaks in standings |
-| No auto standings refresh | Medium | Certain | Stale standings shown |
-| Type assertion hiding errors | Low | Certain | Silent failures in production |
+Create a new edge function that orchestrates the complete workflow:
+
+### 1.1 Test Account Matrix
+
+| Account Type | Email Pattern | Count | Purpose |
+|--------------|---------------|-------|---------|
+| Global Admin | `qa_admin@ziggy-test.qa` | 1 | Tournament management |
+| Debaters | `qa_debater_{N}@ziggy-test.qa` | 32 (16 teams) | Team Policy pairs |
+| Judges | `qa_judge_{N}@ziggy-test.qa` | 12 | Round coverage |
+| Sponsor | `qa_sponsor@ziggy-test.qa` | 1 | Sponsor onboarding |
+| Register-for-Others | `qa_registrar@ziggy-test.qa` | 1 | Bulk registration |
+
+### 1.2 Tournament Configuration
+
+- **Format**: Team Policy (TP) - 2v2
+- **Teams**: 16 registered teams (32 debaters)
+- **Prelim Rounds**: 6 Swiss/Power-paired rounds
+- **Break**: Top 8 teams to elimination
+- **Elim Rounds**: Quarterfinals (4), Semifinals (2), 3rd Place (1), Finals (1)
+- **Judges**: 12 judges with varied specializations
 
 ---
 
-## Recommended Approval Flow
+## Phase 2: Test Workflows
 
-1. **First**: Create database tables and triggers (Phase 1)
-2. **Second**: Fix data flow and field consistency (Phase 2)  
-3. **Third**: Add UI improvements and validation (Phase 3)
-4. **Fourth**: Comprehensive testing (Phase 4)
+### 2.1 User & Account Workflows
 
-This plan addresses all critical issues first while maintaining backward compatibility with existing data.
+```text
+Test: User Registration Flow
+  1. Create standalone account (/signup)
+  2. Verify email confirmation (auto-confirm in test)
+  3. Complete profile setup
+  4. Verify user_roles assignment
+  
+Test: Account Editing
+  1. Login as existing user
+  2. Navigate to /account
+  3. Update first name, last name, email
+  4. Verify changes persisted
+  
+Test: Registration Drop
+  1. User with active registration
+  2. Navigate to tournament dashboard
+  3. Request registration cancellation
+  4. Admin approves refund request
+  5. Verify registration marked inactive
+```
+
+### 2.2 Tournament Registration Workflows
+
+```text
+Test: Self-Registration
+  1. Login as debater
+  2. Navigate to tournament landing
+  3. Add to cart (self + partner)
+  4. Apply promo code
+  5. Complete PayPal checkout (simulated)
+  6. Verify registration created
+
+Test: Register-for-Others
+  1. Login as registrar account
+  2. Add multiple teams to cart (other people)
+  3. Complete checkout
+  4. Verify pending_registrant_invitations created
+  5. Invited user claims registration via /claim-registration/:token
+  6. Verify registration linked to claimed user
+```
+
+### 2.3 Sponsor Onboarding Workflow
+
+```text
+Test: Sponsor Invitation Flow
+  1. Admin creates sponsor invitation via SponsorInvitationManager
+  2. System creates pending_sponsor_invitations record
+  3. send-sponsor-invitation edge function triggered
+  4. Sponsor visits /sponsor/invite/:token
+  5. Sponsor creates account
+  6. Sponsor profile created with is_approved=false
+  7. Admin approves sponsor in SponsorsManager
+  8. Verify sponsor_profile.is_approved=true
+  9. Verify user_roles includes 'sponsor'
+```
+
+### 2.4 Tournament Lifecycle (6 Prelims + 4 Elims)
+
+```text
+Round Flow (repeated 6 times for prelims):
+  1. Admin generates pairings via PairingGenerator
+  2. Pairings saved with power-pairing logic
+  3. Judges auto-assigned via JudgeAllocator
+  4. Round posted (released=true)
+  5. Competitor notifications created
+  6. For each pairing:
+     a. Judge submits ballot via BallotEntry
+     b. Trigger sync_ballot_to_pairing updates pairings.result
+     c. Ballot marked submitted
+  7. Round status set to 'completed'
+  8. Standings recalculated
+
+Break Announcement:
+  1. After Round 6, admin clicks "Generate Break"
+  2. Top 8 teams identified via BreakGenerator
+  3. Break notifications sent
+  4. computed_standings.is_breaking=true for top 8
+
+Elimination Rounds:
+  - Quarterfinals: 4 matchups (1v8, 2v7, 3v6, 4v5)
+  - Semifinals: 2 matchups
+  - Finals: 1 matchup (+ 3rd place)
+  - Each uses single-elimination pairing
+  - Ballots submitted for each round
+```
+
+### 2.5 Results Publication
+
+```text
+Test: Publish Results
+  1. Tournament status set to 'Completed'
+  2. Admin navigates to ResultsManager
+  3. Selects tournament, configures visibility
+  4. Clicks "Publish Results"
+  5. Verify tournaments.results_published=true
+  6. Verify public /results page shows tournament
+  7. Verify standings visible on /tournament/:id/standings
+```
+
+---
+
+## Phase 3: Implementation Details
+
+### 3.1 New Edge Function: `qa-comprehensive-test/index.ts`
+
+**Features:**
+- Configurable via JSON body
+- Returns detailed phase-by-phase report
+- Cleans up test data (optional)
+- Validates all integration points
+
+**Configuration Options:**
+```typescript
+interface QAComprehensiveConfig {
+  // Core settings
+  testPrefix: string;           // Default: 'QA_COMP_'
+  numTeams: number;             // Default: 16
+  numJudges: number;            // Default: 12
+  numPrelimRounds: number;      // Default: 6
+  breakSize: number;            // Default: 8
+  
+  // Feature toggles
+  testSponsorFlow: boolean;     // Default: true
+  testRegisterForOthers: boolean; // Default: true
+  testDropRegistration: boolean;  // Default: true
+  testAccountEditing: boolean;    // Default: true
+  
+  // Cleanup
+  cleanupAfter: boolean;        // Default: false
+}
+```
+
+### 3.2 Database Validations
+
+Each phase validates database state:
+
+| Phase | Tables Validated | Assertions |
+|-------|------------------|------------|
+| User Creation | `auth.users`, `profiles`, `user_roles` | Users created, roles assigned |
+| Registration | `tournament_registrations`, `payment_transactions` | Paid registrations exist |
+| Judge Setup | `judge_profiles`, `judge_availability`, `tournament_judge_registrations` | Judges available |
+| Pairing Gen | `rounds`, `pairings`, `pairing_judge_assignments` | Pairings created |
+| Ballots | `ballots`, `pairings.result` | Sync trigger works |
+| Standings | `computed_standings`, `head_to_head` | Standings computed |
+| Break | `computed_standings.is_breaking` | Top 8 marked |
+| Results | `tournaments.results_published` | Results visible |
+
+### 3.3 Ballot Generation Strategy
+
+Realistic ballot data with controlled randomness:
+- Winner: 55% higher seed wins (realistic upset rate)
+- Speaker points: Normal distribution 26-29, ±0.5 decimal
+- Edge cases: Some tied scores, some max/min points
+
+### 3.4 Error Handling & Reporting
+
+```typescript
+interface PhaseReport {
+  phase: string;
+  status: 'pass' | 'fail' | 'warning' | 'skipped';
+  message: string;
+  duration_ms: number;
+  assertions: {
+    name: string;
+    passed: boolean;
+    expected?: any;
+    actual?: any;
+  }[];
+  data?: Record<string, unknown>;
+}
+```
+
+---
+
+## Phase 4: Playwright E2E Tests
+
+### 4.1 Enhanced Test Suite Structure
+
+```
+e2e/
+├── fixtures/
+│   └── comprehensive-test-data.ts    # Extended fixtures
+├── workflows/
+│   ├── user-registration.spec.ts     # Account creation/editing
+│   ├── tournament-registration.spec.ts # Self/other registration
+│   ├── sponsor-onboarding.spec.ts    # Sponsor invitation flow
+│   └── results-publication.spec.ts   # Publish & verify
+└── tournament-simulation/
+    └── comprehensive-tournament.spec.ts # Full lifecycle
+```
+
+### 4.2 Test Execution Strategy
+
+```text
+1. Pre-test: Call qa-comprehensive-test edge function to seed data
+2. UI Tests: Validate critical user-facing workflows
+3. Post-test: Verify database state matches expectations
+4. Cleanup: Optionally purge QA_COMP_ prefixed data
+```
+
+---
+
+## Phase 5: Execution Plan
+
+### Step 1: Create Edge Function (New File)
+`supabase/functions/qa-comprehensive-test/index.ts`
+- Complete tournament lifecycle simulation
+- 16 teams, 6 prelim rounds, 4 elim rounds
+- Sponsor invitation + onboarding
+- Register-for-others workflow
+- Results publication
+
+### Step 2: Update E2E Fixtures
+`e2e/fixtures/comprehensive-test-data.ts`
+- Extended test accounts
+- Sponsor invitation data
+- Register-for-others data
+
+### Step 3: Create Comprehensive Test Suite
+`e2e/workflows/*.spec.ts`
+- User registration/editing tests
+- Sponsor onboarding tests
+- Registration drop tests
+
+### Step 4: Enhance Tournament Simulation
+`e2e/tournament-simulation/comprehensive-tournament.spec.ts`
+- 6 prelim rounds (not 5)
+- Full elimination bracket
+- Results publication verification
+
+---
+
+## Technical Considerations
+
+### Database Trigger Verification
+The `sync_ballot_to_pairing` trigger must:
+1. Update `pairings.result` from `ballots.payload`
+2. Set `pairings.status = 'completed'`
+3. Work for both INSERT and UPDATE on ballots
+
+### Standings Calculation
+After each round:
+1. Compute wins/losses from `pairings.result`
+2. Calculate speaker point averages
+3. Determine opponent strength
+4. Rank teams appropriately
+
+### Elimination Pairing Logic
+- Use `generateEliminationPairings` from `src/lib/pairings/elimination.ts`
+- Seeds: 1v8, 2v7, 3v6, 4v5 standard bracket
+
+---
+
+## Success Criteria
+
+All phases must pass:
+- **50+ test users created** successfully
+- **16 teams registered** with paid status
+- **6 prelim rounds** with power-paired matchups
+- **96 ballots submitted** (16 teams * 6 rounds / 2 pairings)
+- **8 teams break** to elimination
+- **4 elim rounds** completed (QF, SF, 3rd, Finals)
+- **Results published** and visible publicly
+- **Sponsor onboarded** via invitation flow
+- **Registration claimed** via register-for-others
+
+---
+
+## Files to Create/Modify
+
+| File | Action | Purpose |
+|------|--------|---------|
+| `supabase/functions/qa-comprehensive-test/index.ts` | Create | Main test orchestrator |
+| `e2e/fixtures/comprehensive-test-data.ts` | Create | Extended test data |
+| `e2e/workflows/user-registration.spec.ts` | Create | Account tests |
+| `e2e/workflows/sponsor-onboarding.spec.ts` | Create | Sponsor flow tests |
+| `e2e/workflows/results-publication.spec.ts` | Create | Results tests |
+| `e2e/tournament-simulation/comprehensive-tournament.spec.ts` | Create | Full lifecycle |
+
+---
+
+## Suggested Additions
+
+1. **Performance Benchmarks**: Track time for each phase, set baseline thresholds
+2. **Stress Test Mode**: Generate 50+ teams to test scaling
+3. **Rollback Testing**: Verify registration cancellations properly refund
+4. **Notification Verification**: Check all notification types created
+5. **Chat Simulation**: Validate pairing chat RLS policies with test messages
+6. **PDF/Export Verification**: Test standings export functionality
+
