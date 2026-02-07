@@ -174,6 +174,9 @@ verify_jwt = true
 [functions.qa-simulation]
 verify_jwt = true
 
+[functions.qa-comprehensive-test]
+verify_jwt = false
+
 [functions.collect-performance-metrics]
 verify_jwt = false
 
