@@ -2,7 +2,7 @@ import React, { useMemo, memo, lazy, Suspense, useState, useCallback, useEffect,
 import { Link, useLocation, NavLink } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useOptimizedAuth } from '@/hooks/useOptimizedAuth';
-import { ThemeToggle } from './ThemeToggle';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { LanguageSelector } from './LanguageSelector';
 import { LazyImage } from '@/components/LazyImage';
 import LazyGlobalSearch from './LazyGlobalSearch';
