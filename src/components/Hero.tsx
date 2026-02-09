@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BoxedText } from "@/components/ui/boxed-text";
 import { LazyGlobe } from "@/components/LazyGlobe";
+import { Typewriter } from "@/components/ui/typewriter";
 import { useTranslation } from "react-i18next";
 
 export function Hero() {
@@ -63,6 +64,26 @@ export function Hero() {
                   </BoxedText>
                 </span>
               </h1>
+
+              {/* Typewriter CTA */}
+              <div className="text-xl sm:text-2xl lg:text-3xl font-secondary text-foreground/90">
+                <span className="text-muted-foreground">Your platform to </span>
+                <Typewriter
+                  text={[
+                    "host world-class debates",
+                    "discover top talent",
+                    "build championship teams",
+                    "connect debaters globally",
+                    "run seamless tournaments"
+                  ]}
+                  speed={60}
+                  deleteSpeed={40}
+                  waitTime={2500}
+                  className="text-primary font-semibold"
+                  cursorChar="▌"
+                  cursorClassName="ml-0.5 text-primary"
+                />
+              </div>
               
               <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto lg:mx-0 font-secondary">
                 {t('hero.description')}
