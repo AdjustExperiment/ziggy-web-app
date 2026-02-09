@@ -13,6 +13,7 @@ import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { GlobalSearchProvider } from '@/hooks/useGlobalSearch';
 import { VitalsCollector } from '@/components/VitalsCollector';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 // Conditionally load PerformanceMonitor only in development
 const PerformanceMonitor = import.meta.env.DEV 
@@ -75,8 +76,9 @@ const PageLoader = () => (
 
 function App() {
   return (
-    <Router>
-      <GlobalSearchProvider>
+    <ErrorBoundary>
+      <Router>
+        <GlobalSearchProvider>
         <Toaster />
         <VitalsCollector />
         <div className="min-h-screen bg-background">
@@ -201,8 +203,9 @@ function App() {
         </main>
           <Footer />
         </div>
-      </GlobalSearchProvider>
-    </Router>
+        </GlobalSearchProvider>
+      </Router>
+    </ErrorBoundary>
   );
 }
 
