@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, Users, Calendar, MessageSquare, Clock, Video, FileText, CheckCircle, PlayCircle } from "lucide-react";
+import { ActionSearchBar } from "@/components/ui/action-search-bar";
+import { BookOpen, Users, Calendar, MessageSquare, Clock, Video, FileText, CheckCircle, PlayCircle, Search } from "lucide-react";
 import { BackgroundFX } from "@/components/BackgroundFX";
 import { Button } from "@/components/ui/button";
 import VideoDialog from "@/components/VideoDialog";
@@ -102,6 +103,29 @@ const GettingStarted = () => {
           <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed max-w-3xl mx-auto font-secondary animate-fade-in">
             Quick instructions for debaters and judges to get started with Ziggy Online Debate.
           </p>
+        </div>
+      </section>
+
+      {/* Quick navigation – search commands and pages */}
+      <section className="relative py-8 px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="mx-auto max-w-xl">
+          <Card className="bg-card/80 border-border shadow-sm">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-semibold text-card-foreground flex items-center gap-2">
+                <Search className="h-4 w-4 text-primary" />
+                Quick navigation
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Search pages and commands. Results respect your role and permissions.
+              </p>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <ActionSearchBar
+                placeholder="Search pages and commands…"
+                label="Search Commands"
+              />
+            </CardContent>
+          </Card>
         </div>
       </section>
 

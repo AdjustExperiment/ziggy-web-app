@@ -20,7 +20,7 @@ export interface GlobalSearchResult {
   matchScore: number;
 }
 
-interface SearchablePage {
+export interface SearchablePage {
   id: string;
   title: string;
   url: string;
@@ -33,8 +33,8 @@ interface SearchablePage {
   roles?: string[];
 }
 
-// Static page index
-const staticPages: SearchablePage[] = [
+// Static page index (exported for action search bar and other search UIs)
+export const staticPages: SearchablePage[] = [
   // Public pages
   { id: 'home', title: 'Home', url: '/', description: 'Welcome to Ziggy Debate', keywords: ['home', 'main', 'landing'], icon: Home, type: 'page' },
   { id: 'tournaments', title: 'Browse Tournaments', url: '/tournaments', description: 'Find and register for debate tournaments', keywords: ['tournaments', 'events', 'competition', 'register'], icon: Trophy, type: 'page' },
