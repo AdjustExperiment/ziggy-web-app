@@ -66,20 +66,20 @@ export function Hero() {
               </h1>
 
               {/* Typewriter CTA */}
-              <div className="text-xl sm:text-2xl lg:text-3xl font-secondary text-foreground/90">
+              <div className="text-xl sm:text-2xl lg:text-3xl font-secondary text-foreground/90 whitespace-nowrap">
                 <span className="text-muted-foreground">Your platform to </span>
                 <Typewriter
                   text={[
                     "host world-class debates",
-                    "discover top talent",
-                    "build championship teams",
+                    "discover educational opportunity",
+                    "train top teams",
                     "connect debaters globally",
-                    "run seamless tournaments"
+                    "run seamless events"
                   ]}
                   speed={60}
                   deleteSpeed={40}
                   waitTime={2500}
-                  className="text-primary font-semibold"
+                  className="text-primary font-semibold inline-block min-w-[280px] sm:min-w-[340px] lg:min-w-[400px]"
                   cursorChar="▌"
                   cursorClassName="ml-0.5 text-primary"
                 />
