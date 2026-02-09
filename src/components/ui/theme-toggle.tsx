@@ -38,7 +38,7 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
   return (
     <div
       className={cn(
-        "flex w-16 h-8 p-1 rounded-full cursor-pointer transition-all duration-300",
+        "flex w-16 h-8 p-1 rounded-full cursor-pointer transition-all duration-300 ease-in-out",
         isDark
           ? "bg-zinc-950 border border-zinc-800"
           : "bg-white border border-zinc-200",
@@ -55,46 +55,53 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
       tabIndex={0}
       aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
     >
-      <div className="flex justify-between items-center w-full">
+      <div className="relative flex justify-between items-center w-full h-full min-h-[1.5rem]">
+        {/* Sliding thumb with both icons crossfading */}
         <div
           className={cn(
-            "flex justify-center items-center w-6 h-6 rounded-full transition-transform duration-300",
+            "absolute left-1 top-1 flex justify-center items-center w-6 h-6 rounded-full transition-[transform,background-color] duration-300 ease-in-out",
             isDark
-              ? "transform translate-x-0 bg-zinc-800"
-              : "transform translate-x-8 bg-gray-200"
+              ? "translate-x-0 bg-zinc-800"
+              : "translate-x-8 bg-gray-200"
           )}
         >
-          {isDark ? (
-            <Moon
-              className="w-4 h-4 text-white"
-              strokeWidth={1.5}
-            />
-          ) : (
-            <Sun
-              className="w-4 h-4 text-gray-700"
-              strokeWidth={1.5}
-            />
-          )}
+          <Moon
+            className={cn(
+              "absolute w-4 h-4 text-white transition-opacity duration-300 ease-in-out",
+              isDark ? "opacity-100" : "opacity-0"
+            )}
+            strokeWidth={1.5}
+            aria-hidden
+          />
+          <Sun
+            className={cn(
+              "absolute w-4 h-4 text-gray-700 transition-opacity duration-300 ease-in-out",
+              isDark ? "opacity-0" : "opacity-100"
+            )}
+            strokeWidth={1.5}
+            aria-hidden
+          />
         </div>
-        <div
-          className={cn(
-            "flex justify-center items-center w-6 h-6 rounded-full transition-transform duration-300",
-            isDark
-              ? "bg-transparent"
-              : "transform -translate-x-8"
-          )}
-        >
-          {isDark ? (
-            <Sun
-              className="w-4 h-4 text-gray-500"
-              strokeWidth={1.5}
-            />
-          ) : (
-            <Moon
-              className="w-4 h-4 text-black"
-              strokeWidth={1.5}
-            />
-          )}
+        {/* Static icons on both sides (visible in the track) */}
+        <div className="flex justify-center items-center w-6 h-6 rounded-full shrink-0 pointer-events-none">
+          <Sun
+            className={cn(
+              "w-4 h-4 transition-opacity duration-300 ease-in-out",
+              isDark ? "text-gray-500 opacity-100" : "opacity-0"
+            )}
+            strokeWidth={1.5}
+            aria-hidden
+          />
+        </div>
+        <div className="flex justify-center items-center w-6 h-6 rounded-full shrink-0 pointer-events-none">
+          <Moon
+            className={cn(
+              "w-4 h-4 transition-opacity duration-300 ease-in-out",
+              isDark ? "opacity-0" : "text-black opacity-100"
+            )}
+            strokeWidth={1.5}
+            aria-hidden
+          />
         </div>
       </div>
     </div>
