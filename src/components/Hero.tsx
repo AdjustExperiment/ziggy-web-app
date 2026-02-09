@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { BoxedText } from "@/components/ui/boxed-text";
 import { LazyGlobe } from "@/components/LazyGlobe";
 import { Typewriter } from "@/components/ui/typewriter";
+import { GradientButton } from "@/components/ui/gradient-button";
 import { useTranslation } from "react-i18next";
 
 export function Hero() {
@@ -91,14 +92,22 @@ export function Hero() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start flex-wrap">
-              <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-glow text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-6 min-h-[44px] sm:min-h-[56px] transition-all duration-300 hover:scale-105" onClick={() => window.location.href = '/tournaments'}>
+              <GradientButton 
+                size="lg" 
+                className="gap-2"
+                onClick={() => window.location.href = '/tournaments'}
+              >
                 Sign Up Now
-                <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
-              </Button>
+                <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5" />
+              </GradientButton>
               
-              <Button variant="outline" size="lg" className="border-border text-foreground hover:bg-accent text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-6 min-h-[44px] sm:min-h-[56px] transition-all duration-300 hover:scale-105 backdrop-blur-sm" onClick={() => window.location.href = '/login'}>
+              <GradientButton 
+                variant="variant" 
+                size="lg"
+                onClick={() => window.location.href = '/login'}
+              >
                 Members Page
-              </Button>
+              </GradientButton>
 
               <Button variant="outline" size="lg" className="border-primary/50 text-primary hover:bg-primary/10 text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-6 min-h-[44px] sm:min-h-[56px] transition-all duration-300 hover:scale-105 backdrop-blur-sm" onClick={() => window.location.href = '/host-tournament'}>
                 Host Your Tournament
