@@ -66,7 +66,7 @@ export function Hero() {
               </h1>
 
               {/* Typewriter CTA */}
-              <div className="text-xl sm:text-2xl lg:text-3xl font-secondary text-foreground/90 whitespace-nowrap">
+              <div className="text-lg sm:text-xl lg:text-2xl font-secondary text-foreground/90 overflow-hidden">
                 <span className="text-muted-foreground">Your platform to </span>
                 <Typewriter
                   text={[
@@ -79,7 +79,7 @@ export function Hero() {
                   speed={60}
                   deleteSpeed={40}
                   waitTime={2500}
-                  className="text-primary font-semibold inline-block min-w-[280px] sm:min-w-[340px] lg:min-w-[400px]"
+                  className="text-primary font-semibold"
                   cursorChar="▌"
                   cursorClassName="ml-0.5 text-primary"
                 />
