@@ -4,13 +4,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { 
   Megaphone, Info, Calendar, MessageCircle, 
   ChevronDown, Send, Clock, MapPin, Users, FileText,
-  Bell, Pin, Loader2
+  Bell, Pin, Loader2, BarChart3, Plus
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useOptimizedAuth } from '@/hooks/useOptimizedAuth';
@@ -55,6 +56,7 @@ interface TournamentSidebarProps {
   formatName?: string;
   rounds?: Round[];
   className?: string;
+  isAdmin?: boolean;
 }
 
 export default function TournamentSidebar({
@@ -62,7 +64,8 @@ export default function TournamentSidebar({
   tournamentName,
   formatName,
   rounds = [],
-  className = ''
+  className = '',
+  isAdmin = false,
 }: TournamentSidebarProps) {
   const { user, profile } = useOptimizedAuth();
   const [activeTab, setActiveTab] = useState('announcements');
@@ -72,6 +75,17 @@ export default function TournamentSidebar({
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [sendingMessage, setSendingMessage] = useState(false);
+  
+  // Admin announcement creation
+  const [showAddAnnouncement, setShowAddAnnouncement] = useState(false);
+  const [newAnnTitle, setNewAnnTitle] = useState('');
+  const [newAnnMessage, setNewAnnMessage] = useState('');
+  const [newAnnPriority, setNewAnnPriority] = useState<'low' | 'medium' | 'high'>('medium');
+  const [savingAnnouncement, setSavingAnnouncement] = useState(false);
+
+  // Standings
+  const [standings, setStandings] = useState<any[]>([]);
+  const [standingsLoading, setStandingsLoading] = useState(false);
 
   // Fetch tournament content (announcements, info)
   useEffect(() => {
@@ -218,6 +232,75 @@ export default function TournamentSidebar({
     setSendingMessage(false);
   };
 
+  // Create announcement (admin only)
+  const handleCreateAnnouncement = async () => {
+    if (!newAnnTitle.trim() || !newAnnMessage.trim()) return;
+    setSavingAnnouncement(true);
+    try {
+      // Fetch current content, append announcement
+      const { data: contentData } = await supabase
+        .from('tournament_content')
+        .select('*')
+        .eq('tournament_id', tournamentId)
+        .single();
+
+      const existingAnns = (contentData as any)?.announcements || [];
+      const newAnn = {
+        id: crypto.randomUUID(),
+        title: newAnnTitle.trim(),
+        message: newAnnMessage.trim(),
+        priority: newAnnPriority,
+        created_at: new Date().toISOString(),
+        is_pinned: newAnnPriority === 'high',
+      };
+
+      const updatedAnns = [newAnn, ...existingAnns];
+
+      if (contentData) {
+        await supabase
+          .from('tournament_content')
+          .update({ announcements: updatedAnns })
+          .eq('tournament_id', tournamentId);
+      } else {
+        await supabase
+          .from('tournament_content')
+          .insert({ tournament_id: tournamentId, announcements: updatedAnns });
+      }
+
+      setAnnouncements(updatedAnns);
+      setNewAnnTitle('');
+      setNewAnnMessage('');
+      setShowAddAnnouncement(false);
+      toast.success('Announcement posted');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to post announcement');
+    } finally {
+      setSavingAnnouncement(false);
+    }
+  };
+
+  // Fetch standings
+  useEffect(() => {
+    if (activeTab !== 'standings') return;
+    const fetchStandings = async () => {
+      setStandingsLoading(true);
+      try {
+        const { data } = await supabase
+          .from('computed_standings')
+          .select('*, tournament_registrations(participant_name, partner_name, school_organization)')
+          .eq('tournament_id', tournamentId)
+          .order('overall_rank', { ascending: true })
+          .limit(20);
+        setStandings(data || []);
+      } catch (err) {
+        console.error('Error fetching standings:', err);
+      } finally {
+        setStandingsLoading(false);
+      }
+    };
+    fetchStandings();
+  }, [activeTab, tournamentId]);
+
   const pinnedAnnouncements = announcements.filter(a => a.is_pinned || a.priority === 'high');
   const recentAnnouncements = announcements
     .filter(a => !a.is_pinned && a.priority !== 'high')
@@ -226,7 +309,7 @@ export default function TournamentSidebar({
   return (
     <div className={`flex flex-col h-full ${className}`}>
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="announcements" className="text-xs">
             <Megaphone className="h-3 w-3 mr-1" />
             <span className="hidden sm:inline">News</span>
@@ -243,12 +326,68 @@ export default function TournamentSidebar({
             <MessageCircle className="h-3 w-3 mr-1" />
             <span className="hidden sm:inline">Chat</span>
           </TabsTrigger>
+          <TabsTrigger value="standings" className="text-xs">
+            <BarChart3 className="h-3 w-3 mr-1" />
+            <span className="hidden sm:inline">Standings</span>
+          </TabsTrigger>
         </TabsList>
 
         {/* Announcements Tab */}
         <TabsContent value="announcements" className="flex-1 overflow-hidden">
           <ScrollArea className="h-full">
             <div className="space-y-3 p-2">
+              {/* Admin: Add Announcement */}
+              {isAdmin && (
+                <Collapsible open={showAddAnnouncement} onOpenChange={setShowAddAnnouncement}>
+                  <CollapsibleTrigger asChild>
+                    <Button size="sm" variant="outline" className="w-full gap-1 text-xs">
+                      <Plus className="h-3 w-3" />
+                      Post Announcement
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="mt-2">
+                    <Card>
+                      <CardContent className="p-3 space-y-2">
+                        <Input
+                          placeholder="Title"
+                          value={newAnnTitle}
+                          onChange={(e) => setNewAnnTitle(e.target.value)}
+                          className="text-sm"
+                        />
+                        <Textarea
+                          placeholder="Message..."
+                          value={newAnnMessage}
+                          onChange={(e) => setNewAnnMessage(e.target.value)}
+                          className="text-sm min-h-[60px]"
+                        />
+                        <div className="flex gap-2">
+                          {(['low', 'medium', 'high'] as const).map(p => (
+                            <Button
+                              key={p}
+                              size="sm"
+                              variant={newAnnPriority === p ? 'default' : 'outline'}
+                              onClick={() => setNewAnnPriority(p)}
+                              className="text-xs capitalize flex-1"
+                            >
+                              {p}
+                            </Button>
+                          ))}
+                        </div>
+                        <Button
+                          size="sm"
+                          className="w-full"
+                          disabled={savingAnnouncement || !newAnnTitle.trim() || !newAnnMessage.trim()}
+                          onClick={handleCreateAnnouncement}
+                        >
+                          {savingAnnouncement ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Megaphone className="h-3 w-3 mr-1" />}
+                          Post
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </CollapsibleContent>
+                </Collapsible>
+              )}
+
               {loading ? (
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="h-6 w-6 animate-spin" />
@@ -480,6 +619,61 @@ export default function TournamentSidebar({
               Sign in to participate in chat
             </div>
           )}
+        </TabsContent>
+
+        {/* Standings Tab */}
+        <TabsContent value="standings" className="flex-1 overflow-hidden">
+          <ScrollArea className="h-full">
+            <div className="space-y-2 p-2">
+              {standingsLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin" />
+                </div>
+              ) : standings.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <BarChart3 className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">No standings available</p>
+                  <p className="text-xs">Standings appear after rounds are completed</p>
+                </div>
+              ) : (
+                standings.map((s, idx) => {
+                  const reg = s.tournament_registrations;
+                  const teamName = reg?.partner_name
+                    ? `${reg.participant_name} & ${reg.partner_name}`
+                    : reg?.participant_name || 'Unknown';
+                  return (
+                    <Card key={s.id}>
+                      <CardContent className="p-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-bold text-muted-foreground w-6">
+                              #{s.overall_rank || idx + 1}
+                            </span>
+                            <div>
+                              <p className="text-sm font-medium">{teamName}</p>
+                              {reg?.school_organization && (
+                                <p className="text-xs text-muted-foreground">{reg.school_organization}</p>
+                              )}
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <Badge variant="outline" className="text-xs">
+                              {s.wins || 0}-{s.losses || 0}
+                            </Badge>
+                            {s.avg_speaks != null && (
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                {Number(s.avg_speaks).toFixed(1)} avg
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })
+              )}
+            </div>
+          </ScrollArea>
         </TabsContent>
       </Tabs>
     </div>

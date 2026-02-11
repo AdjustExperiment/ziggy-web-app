@@ -335,4 +335,4 @@ function ActionSearchBar({
   );
 }
 
-export { ActionSearchBar, type Action };
+export { ActionSearchBar };
