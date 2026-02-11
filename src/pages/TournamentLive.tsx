@@ -13,6 +13,7 @@ import TournamentHeader from '@/components/tournament/TournamentHeader';
 import RoundPairingsTable from '@/components/tournament/RoundPairingsTable';
 import RoundEmptyState from '@/components/tournament/RoundEmptyState';
 import TournamentSidebar from '@/components/tournament/TournamentSidebar';
+import AdminTournamentControls from '@/components/tournament/AdminTournamentControls';
 import { useTournamentRealtime } from '@/hooks/useTournamentRealtime';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 
@@ -102,6 +103,19 @@ export default function TournamentLive() {
   const [userRegistrationId, setUserRegistrationId] = useState<string | null>(null);
   const [userJudgeProfileId, setUserJudgeProfileId] = useState<string | null>(null);
   const [isObserver, setIsObserver] = useState(false);
+
+  // Refetch rounds helper (used by admin controls)
+  const refetchRounds = useCallback(async () => {
+    if (!tournamentId) return;
+    const { data: roundsData } = await supabase
+      .from('rounds')
+      .select('*')
+      .eq('tournament_id', tournamentId)
+      .order('round_number', { ascending: true });
+    setRounds(roundsData || []);
+    // Also refresh pairings
+    fetchPairings();
+  }, [tournamentId]);
 
   // Fetch tournament data
   useEffect(() => {
@@ -388,6 +402,18 @@ export default function TournamentLive() {
             </Tabs>
           )}
 
+          {/* Admin Controls Panel */}
+          {isAdmin && (
+            <AdminTournamentControls
+              tournamentId={tournament.id}
+              rounds={filteredRounds}
+              selectedRoundId={selectedRoundId}
+              onRoundsUpdate={refetchRounds}
+              onRoundSelect={setSelectedRoundId}
+              eventId={selectedEventId}
+            />
+          )}
+
           {/* Round List - Click to navigate to round view */}
           {filteredRounds.length > 0 ? (
             <Card>
@@ -511,6 +537,7 @@ export default function TournamentLive() {
                 formatName={selectedEvent?.debate_formats?.name}
                 rounds={filteredRounds}
                 className="h-full"
+                isAdmin={isAdmin}
               />
             </Card>
           </aside>
@@ -526,6 +553,7 @@ export default function TournamentLive() {
             formatName={selectedEvent?.debate_formats?.name}
             rounds={filteredRounds}
             className="h-[50vh]"
+            isAdmin={isAdmin}
           />
         </div>
       )}
