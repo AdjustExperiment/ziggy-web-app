@@ -4,14 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { SectionFX } from "@/components/SectionFX";
-import DisplayCards from "@/components/ui/display-cards";
 import { ArrowRight, Trophy, Users, BarChart3, Target, Zap, Shield, Globe, DollarSign, Clock, Award, Calendar, TrendingUp } from "lucide-react";
-
-const STACK_CLASSES = [
-  "[grid-area:stack] hover:-translate-y-10 before:absolute before:w-[100%] before:outline-1 before:rounded-xl before:outline-border before:h-[100%] before:content-[''] before:bg-blend-overlay before:bg-background/50 grayscale-[100%] hover:before:opacity-0 before:transition-opacity before:duration-700 hover:grayscale-0 before:left-0 before:top-0",
-  "[grid-area:stack] translate-x-16 translate-y-10 hover:-translate-y-1 before:absolute before:w-[100%] before:outline-1 before:rounded-xl before:outline-border before:h-[100%] before:content-[''] before:bg-blend-overlay before:bg-background/50 grayscale-[100%] hover:before:opacity-0 before:transition-opacity before:duration-700 hover:grayscale-0 before:left-0 before:top-0",
-  "[grid-area:stack] translate-x-32 translate-y-20 hover:translate-y-10",
-];
 
 const features = [
   {
@@ -100,33 +93,20 @@ const Home = () => {
             </p>
           </div>
 
-          <div className="flex justify-center min-h-[320px] py-8 md:min-h-[380px]">
-            <div className="w-full max-w-3xl">
-              <DisplayCards
-                cards={features.slice(0, 3).map((feature, i) => ({
-                  icon: feature.icon,
-                  title: feature.title,
-                  description: feature.description.length > 60 ? `${feature.description.slice(0, 57)}...` : feature.description,
-                  date: "Feature",
-                  iconClassName: "text-primary",
-                  titleClassName: "text-primary",
-                  className: STACK_CLASSES[i],
-                }))}
-              />
-            </div>
-          </div>
-
-          <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mt-12">
-            {features.slice(3).map((feature, index) => (
-              <Card key={index} className="bg-gradient-card border-border/50 shadow-card hover:shadow-tournament transition-smooth group">
-                <CardHeader className="pb-2">
-                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-2 group-hover:scale-110 transition-spring group-hover:bg-primary/20">
+          <div className="grid gap-6 sm:gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {features.map((feature, index) => (
+              <Card
+                key={index}
+                className="bg-muted/50 dark:bg-muted/30 backdrop-blur-md border border-border/60 shadow-sm hover:shadow-lg hover:border-primary/20 transition-smooth group rounded-xl overflow-hidden"
+              >
+                <CardHeader>
+                  <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary mb-4 group-hover:scale-110 transition-spring group-hover:bg-primary/20">
                     {feature.icon}
                   </div>
-                  <CardTitle className="text-lg font-primary text-card-foreground">{feature.title}</CardTitle>
+                  <CardTitle className="text-xl font-primary text-card-foreground">{feature.title}</CardTitle>
                 </CardHeader>
-                <CardContent className="pt-0">
-                  <p className="text-muted-foreground text-sm">{feature.description}</p>
+                <CardContent>
+                  <p className="text-muted-foreground">{feature.description}</p>
                 </CardContent>
               </Card>
             ))}
