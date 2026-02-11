@@ -200,7 +200,7 @@ export default function TournamentLanding() {
   if (!tournament) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <Card>
+        <Card className="glass-card">
           <CardContent className="text-center py-8">
             <Trophy className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h2 className="text-xl font-semibold mb-2">Tournament Not Found</h2>
@@ -326,7 +326,7 @@ export default function TournamentLanding() {
         <TabsContent value="overview" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
-              <Card>
+              <Card className="glass-card">
                 <CardHeader>
                   <CardTitle>Tournament Information</CardTitle>
                 </CardHeader>
@@ -357,7 +357,7 @@ export default function TournamentLanding() {
               </Card>
 
               {/* Tournament Calendar */}
-              <Card>
+              <Card className="glass-card">
                 <CardHeader>
                   <CardTitle>Tournament Calendar</CardTitle>
                 </CardHeader>
@@ -376,7 +376,7 @@ export default function TournamentLanding() {
             </div>
 
             <div className="space-y-6">
-              <Card>
+              <Card className="glass-card">
                 <CardHeader>
                   <CardTitle>Registration Status</CardTitle>
                 </CardHeader>
@@ -413,7 +413,7 @@ export default function TournamentLanding() {
               </Card>
 
               {tournament.registration_fee && (
-                <Card>
+                <Card className="glass-card">
                   <CardHeader>
                     <CardTitle>Registration Fee</CardTitle>
                   </CardHeader>
@@ -428,7 +428,7 @@ export default function TournamentLanding() {
         </TabsContent>
 
         <TabsContent value="announcements" className="space-y-6">
-          <Card>
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle className="flex items-center">
                 <Megaphone className="h-5 w-5 mr-2" />
@@ -463,7 +463,7 @@ export default function TournamentLanding() {
         </TabsContent>
 
         <TabsContent value="rules" className="space-y-6">
-          <Card>
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle className="flex items-center">
                 <BookOpen className="h-5 w-5 mr-2" />
@@ -485,7 +485,7 @@ export default function TournamentLanding() {
         </TabsContent>
 
         <TabsContent value="sponsors" className="space-y-6">
-          <Card>
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle className="flex items-center">
                 <Building className="h-5 w-5 mr-2" />
@@ -555,7 +555,7 @@ export default function TournamentLanding() {
         )}
 
         <TabsContent value="contact" className="space-y-6">
-          <Card>
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle className="flex items-center">
                 <Phone className="h-5 w-5 mr-2" />
@@ -586,7 +586,7 @@ export default function TournamentLanding() {
       {/* Related Tournaments */}
       {relatedTournaments.length > 0 && (
         <div className="mt-12">
-          <Card>
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle className="flex items-center">
                 <Trophy className="h-5 w-5 mr-2" />
@@ -599,7 +599,7 @@ export default function TournamentLanding() {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {relatedTournaments.map((relatedTournament) => (
-                  <Card key={relatedTournament.id} className="hover:shadow-lg transition-shadow">
+                  <Card key={relatedTournament.id} className="glass-card hover:shadow-lg transition-shadow">
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between mb-2">
                         <Badge variant={relatedTournament.status === 'Registration Open' ? 'default' : 'secondary'}>

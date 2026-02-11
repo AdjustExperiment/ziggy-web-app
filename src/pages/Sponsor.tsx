@@ -57,7 +57,7 @@ const Sponsor = () => {
           <section className="relative py-16 bg-gradient-subtle">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
               <div className="grid md:grid-cols-3 gap-8 mb-16">
-                <Card className="bg-card border-primary/30 shadow-elegant hover-scale group">
+                <Card className="glass-card group">
                   <CardHeader>
                     <Users className="h-12 w-12 text-primary mb-4" />
                     <CardTitle className="text-card-foreground">Reach & Impact</CardTitle>
@@ -70,7 +70,7 @@ const Sponsor = () => {
                   </CardContent>
                 </Card>
 
-                <Card className="bg-card border-primary/30 shadow-elegant hover-scale group">
+                <Card className="glass-card group">
                   <CardHeader>
                     <Calendar className="h-12 w-12 text-primary mb-4" />
                     <CardTitle className="text-card-foreground">Year-Round Exposure</CardTitle>
@@ -83,7 +83,7 @@ const Sponsor = () => {
                   </CardContent>
                 </Card>
 
-                <Card className="bg-card border-primary/30 shadow-elegant hover-scale group">
+                <Card className="glass-card group">
                   <CardHeader>
                     <Target className="h-12 w-12 text-primary mb-4" />
                     <CardTitle className="text-card-foreground">Targeted Audience</CardTitle>
@@ -238,7 +238,7 @@ const Sponsor = () => {
               Past Sponsorship <span className="text-primary">Examples</span>
             </h3>
             
-            <Card className="bg-card border-primary/30 shadow-elegant">
+            <Card className="glass-card">
               <CardHeader>
                 <CardTitle className="text-lg font-bold text-card-foreground">Prize Examples</CardTitle>
               </CardHeader>
@@ -264,7 +264,7 @@ const Sponsor = () => {
           {/* Call to Action */}
           <section className="relative py-16 bg-gradient-to-r from-primary/10 to-secondary/10">
             <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center relative z-10">
-                <Card className="bg-gradient-to-r from-primary/20 to-secondary/20 border-primary/30 shadow-elegant backdrop-blur-sm">
+                <Card className="glass-card">
                 <CardHeader>
                   <CardTitle className="text-2xl sm:text-3xl font-bold text-card-foreground flex items-center justify-center gap-3">
                     Ready to Make an Impact?
@@ -285,7 +285,7 @@ const Sponsor = () => {
                       <ArrowRight className="ml-2 h-5 w-5" />
                     </Button>
                     <Link to="/contact">
-                      <Button variant="outline" size="lg" className="w-full sm:w-auto">
+                      <Button variant="outlineCta" size="lg" className="w-full sm:w-auto">
                         View Guidelines
                       </Button>
                     </Link>

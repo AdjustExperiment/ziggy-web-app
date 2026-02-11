@@ -2,6 +2,8 @@ import { Hero } from "@/components/Hero";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import DisplayCards from "@/components/ui/display-cards";
+import { whyZiggyCards } from "@/lib/whyZiggyDisplayCards";
 import { ArrowRight, Trophy, Users, BarChart3, Target, Zap, Shield, Globe, DollarSign, Clock, Award, Calendar, TrendingUp } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -74,6 +76,21 @@ const Index = () => {
   return (
     <div className="min-h-screen">
       <Hero />
+
+      {/* Why Ziggy – stacked hover cards */}
+      <section className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="mx-auto max-w-3xl text-center mb-10">
+          <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2 font-primary">
+            Why Ziggy
+          </h2>
+          <p className="text-muted-foreground text-sm sm:text-base">
+            Hover a card to bring it forward.
+          </p>
+        </div>
+        <div className="flex justify-center min-h-[280px] sm:min-h-[320px]">
+          <DisplayCards cards={whyZiggyCards} />
+        </div>
+      </section>
       
       {/* Features Section */}
       <section className="py-16 sm:py-20 lg:py-24 relative overflow-hidden">
@@ -109,10 +126,7 @@ const Index = () => {
 
           <div className="grid gap-6 sm:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {features.map((feature, index) => (
-              <Card
-                key={index}
-                className="bg-muted/50 dark:bg-muted/30 backdrop-blur-md border border-border/60 shadow-sm hover:shadow-lg hover:border-primary/20 transition-smooth group rounded-xl overflow-hidden"
-              >
+              <Card key={index} className="glass-card group">
                 <CardHeader>
                   <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary mb-4 group-hover:scale-110 transition-spring group-hover:bg-primary/20">
                     {feature.icon}
@@ -149,7 +163,7 @@ const Index = () => {
           </div>
 
           <div className="grid gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-3">
-            <Card className="bg-card/50 border-border shadow-card">
+            <Card className="glass-card">
               <CardContent className="p-6">
                 <p className="text-foreground/80 mb-4 italic">
                   "I'm going into my third year of competition and Ziggy was one of the best decisions I made to help prepare myself. 
@@ -159,7 +173,7 @@ const Index = () => {
               </CardContent>
             </Card>
 
-            <Card className="bg-card/50 border-border shadow-card">
+            <Card className="glass-card">
               <CardContent className="p-6">
                 <p className="text-foreground/80 mb-4 italic">
                   "I am grateful for Ziggy because it gives you a ton of practice with arguments from all over the world. 
@@ -169,7 +183,7 @@ const Index = () => {
               </CardContent>
             </Card>
 
-            <Card className="bg-card/50 border-border shadow-card">
+            <Card className="glass-card">
               <CardContent className="p-6">
                 <p className="text-foreground/80 mb-4 italic">
                   "Ziggy is a necessity for any debater. On a personal level, I credit much of my success to honing my skills 
@@ -211,9 +225,9 @@ const Index = () => {
             </Button>
             
             <Button 
-              variant="outline" 
+              variant="outlineCta" 
               size="lg"
-              className="border-border text-foreground hover:bg-accent text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-6 min-h-[44px] sm:min-h-[56px] transition-all duration-300 hover:scale-105 backdrop-blur-sm"
+              className="text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-6 min-h-[44px] sm:min-h-[56px]"
               onClick={() => window.location.href = '/contact'}
             >
               Contact

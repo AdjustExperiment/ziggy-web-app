@@ -128,7 +128,7 @@ const About = () => {
       <section className="relative py-16 bg-muted/20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid gap-8 sm:grid-cols-3">
-            <Card className="bg-card border-primary/30 shadow-elegant hover-scale text-center group">
+            <Card className="glass-card text-center group">
               <CardHeader>
                 <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-4 mx-auto group-hover:bg-primary/20 transition-colors">
                   <Users className="h-6 w-6" />
@@ -140,7 +140,7 @@ const About = () => {
               </CardContent>
             </Card>
 
-            <Card className="bg-card border-primary/30 shadow-elegant hover-scale text-center group">
+            <Card className="glass-card text-center group">
               <CardHeader>
                 <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-4 mx-auto group-hover:bg-primary/20 transition-colors">
                   <Globe className="h-6 w-6" />
@@ -152,7 +152,7 @@ const About = () => {
               </CardContent>
             </Card>
 
-            <Card className="bg-card border-primary/30 shadow-elegant hover-scale text-center group">
+            <Card className="glass-card text-center group">
               <CardHeader>
                 <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-4 mx-auto group-hover:bg-primary/20 transition-colors">
                   <Trophy className="h-6 w-6" />
@@ -173,7 +173,7 @@ const About = () => {
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-8 font-primary">
             Founded by Excellence
           </h2>
-          <Card className="bg-card/50 border-primary/30 shadow-elegant backdrop-blur-sm">
+          <Card className="glass-card">
             <CardContent className="p-8">
                 <p className="text-lg text-foreground leading-relaxed font-secondary">
                   Ziggy Online Debate™ was founded in 2011 by <strong className="text-primary">Isaac Sommers</strong>,
@@ -203,7 +203,7 @@ const About = () => {
           </div>
           
           <div className="flex justify-center">
-            <Card className="bg-card border-primary/30 shadow-elegant hover-scale max-w-2xl w-full">
+            <Card className="glass-card max-w-2xl w-full">
               <CardHeader className="text-center">
                 <CardTitle className="text-xl font-bold text-card-foreground flex items-center justify-center gap-3">
                   <MessageSquare className="h-6 w-6 text-primary" />
@@ -236,7 +236,7 @@ const About = () => {
           </h2>
           
           <div className="grid gap-8 lg:grid-cols-3">
-            <Card className="bg-card/50 border-primary/30 shadow-elegant backdrop-blur-sm hover-scale">
+            <Card className="glass-card">
               <CardHeader>
                 <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-4">
                   <TrendingUp className="h-6 w-6" />
@@ -251,7 +251,7 @@ const About = () => {
               </CardContent>
             </Card>
 
-            <Card className="bg-card/50 border-primary/30 shadow-elegant backdrop-blur-sm hover-scale">
+            <Card className="glass-card">
               <CardHeader>
                 <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-4">
                   <Zap className="h-6 w-6" />
@@ -266,7 +266,7 @@ const About = () => {
               </CardContent>
             </Card>
 
-            <Card className="bg-card/50 border-primary/30 shadow-elegant backdrop-blur-sm hover-scale">
+            <Card className="glass-card">
               <CardHeader>
                 <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-4">
                   <Star className="h-6 w-6" />
@@ -389,7 +389,7 @@ const About = () => {
           </p>
           
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            <Card className="bg-card/50 border-primary/30 shadow-elegant backdrop-blur-sm hover-scale text-center">
+            <Card className="glass-card text-center">
               <CardContent className="p-6">
                 <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-4 mx-auto">
                   <Users className="h-6 w-6" />
@@ -399,7 +399,7 @@ const About = () => {
               </CardContent>
             </Card>
 
-            <Card className="bg-card/50 border-primary/30 shadow-elegant backdrop-blur-sm hover-scale text-center">
+            <Card className="glass-card text-center">
               <CardContent className="p-6">
                 <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-4 mx-auto">
                   <BookOpen className="h-6 w-6" />
@@ -409,7 +409,7 @@ const About = () => {
               </CardContent>
             </Card>
 
-            <Card className="bg-card/50 border-primary/30 shadow-elegant backdrop-blur-sm hover-scale text-center">
+            <Card className="glass-card text-center">
               <CardContent className="p-6">
                 <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-4 mx-auto">
                   <Globe className="h-6 w-6" />
@@ -419,7 +419,7 @@ const About = () => {
               </CardContent>
             </Card>
 
-            <Card className="bg-card/50 border-primary/30 shadow-elegant backdrop-blur-sm hover-scale text-center">
+            <Card className="glass-card text-center">
               <CardContent className="p-6">
                 <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-4 mx-auto">
                   <FileText className="h-6 w-6" />
@@ -429,7 +429,7 @@ const About = () => {
               </CardContent>
             </Card>
 
-            <Card className="bg-card/50 border-primary/30 shadow-elegant backdrop-blur-sm hover-scale text-center">
+            <Card className="glass-card text-center">
               <CardContent className="p-6">
                 <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-4 mx-auto">
                   <GraduationCap className="h-6 w-6" />
@@ -439,7 +439,7 @@ const About = () => {
               </CardContent>
             </Card>
 
-            <Card className="bg-card/50 border-primary/30 shadow-elegant backdrop-blur-sm hover-scale text-center">
+            <Card className="glass-card text-center">
               <CardContent className="p-6">
                 <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-4 mx-auto">
                   <TrendingUp className="h-6 w-6" />
@@ -471,7 +471,7 @@ const About = () => {
           </h2>
           
           <div className="space-y-6">
-            <Card className="bg-card/50 border-primary/30 shadow-elegant backdrop-blur-sm">
+            <Card className="glass-card">
               <CardHeader>
                 <CardTitle className="text-xl font-bold text-card-foreground flex items-center gap-3">
                   <Calendar className="h-6 w-6 text-primary" />
@@ -486,7 +486,7 @@ const About = () => {
               </CardContent>
             </Card>
 
-            <Card className="bg-card/50 border-primary/30 shadow-elegant backdrop-blur-sm">
+            <Card className="glass-card">
               <CardHeader>
                 <CardTitle className="text-xl font-bold text-card-foreground flex items-center gap-3">
                   <Calendar className="h-6 w-6 text-primary" />
@@ -502,7 +502,7 @@ const About = () => {
               </CardContent>
             </Card>
 
-            <Card className="bg-card/50 border-primary/30 shadow-elegant backdrop-blur-sm">
+            <Card className="glass-card">
               <CardHeader>
                 <CardTitle className="text-xl font-bold text-card-foreground flex items-center gap-3">
                   <DollarSign className="h-6 w-6 text-primary" />

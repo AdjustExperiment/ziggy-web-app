@@ -325,7 +325,7 @@ export default function SponsorInvite() {
         <div className="grid md:grid-cols-2 gap-8 mb-12">
           {/* Tournament Card */}
           {invitation.tournaments && (
-            <Card className="border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden">
+            <Card className="glass-card overflow-hidden">
               <div className="h-2 bg-gradient-to-r from-primary to-red-400" />
               <CardContent className="pt-6">
                 <div className="flex items-center gap-2 mb-4">
@@ -405,7 +405,7 @@ export default function SponsorInvite() {
         {/* Impact Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
           {impactStats.map((stat, idx) => (
-            <Card key={idx} className="border-border/30 bg-card/30 backdrop-blur-sm text-center py-6">
+            <Card key={idx} className="glass-card text-center py-6">
               <stat.icon className="w-6 h-6 text-primary mx-auto mb-2" />
               <div className="text-2xl md:text-3xl font-bold text-foreground">{stat.value}</div>
               <div className="text-xs md:text-sm text-muted-foreground">{stat.label}</div>
@@ -414,7 +414,7 @@ export default function SponsorInvite() {
         </div>
 
         {/* CTA Section */}
-        <Card className="border-primary/20 bg-gradient-to-r from-primary/5 via-card to-primary/5 overflow-hidden">
+        <Card className="glass-card overflow-hidden">
           <CardContent className="py-10 text-center">
             <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
               Ready to Make an Impact?

@@ -228,7 +228,7 @@ const Teams = () => {
                 <h2 className="text-2xl font-bold mb-6">Available Teams</h2>
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                   {allTeams.slice(0, 6).map((team) => (
-                    <Card key={team.id} className="text-left">
+                    <Card key={team.id} className="glass-card text-left">
                       <CardHeader>
                         <CardTitle className="text-lg">{team.name}</CardTitle>
                         {team.school_organization && (
@@ -304,7 +304,7 @@ const Teams = () => {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {teamStats.map((stat, index) => (
-              <Card key={index}>
+              <Card key={index} className="glass-card">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">{stat.label}</CardTitle>
                   <stat.icon className="h-4 w-4 text-red-500" />
@@ -342,7 +342,7 @@ const Teams = () => {
               </div>
 
               {filteredMembers.length === 0 ? (
-                <Card className="p-8 text-center">
+                <Card className="glass-card p-8 text-center">
                   <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
                   <p className="text-muted-foreground">No team members found.</p>
                 </Card>
@@ -355,7 +355,7 @@ const Teams = () => {
                     const initials = name.split(' ').map(n => n[0]).join('').toUpperCase() || 'TM';
                     
                     return (
-                      <Card key={member.id} className="hover:border-primary/30 transition-colors">
+                      <Card key={member.id} className="glass-card hover:border-primary/30 transition-colors">
                         <CardHeader>
                           <div className="flex items-center gap-4">
                             <Avatar className="h-12 w-12">
@@ -385,7 +385,7 @@ const Teams = () => {
 
             <TabsContent value="schedule" className="space-y-6">
               <div className="grid gap-6 lg:grid-cols-2">
-                <Card>
+                <Card className="glass-card">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Calendar className="h-5 w-5 text-red-500" />
@@ -479,7 +479,7 @@ const Teams = () => {
                   </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="glass-card">
                   <CardHeader>
                     <CardTitle>Quick Actions</CardTitle>
                   </CardHeader>
@@ -503,7 +503,7 @@ const Teams = () => {
 
             <TabsContent value="achievements" className="space-y-6">
               {achievements.length === 0 ? (
-                <Card className="p-8 text-center">
+                <Card className="glass-card p-8 text-center">
                   <Trophy className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
                   <p className="text-muted-foreground">No achievements yet. Compete in tournaments to earn achievements!</p>
                   <Button className="mt-4" onClick={() => navigate('/tournaments')}>
@@ -513,7 +513,7 @@ const Teams = () => {
               ) : (
                 <div className="space-y-6">
                   {achievements.map((achievement) => (
-                    <Card key={achievement.id} className="hover:border-primary/30 transition-colors">
+                    <Card key={achievement.id} className="glass-card hover:border-primary/30 transition-colors">
                       <CardContent className="pt-6">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-4">

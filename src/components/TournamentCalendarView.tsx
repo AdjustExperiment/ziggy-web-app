@@ -127,7 +127,7 @@ END:VCALENDAR`;
 
   return (
     <div className={cn("space-y-6", className)}>
-      <Card className="bg-card/80 backdrop-blur-sm border-border/50">
+      <Card className="glass-card">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-foreground">
             <CalendarIcon className="h-5 w-5" />

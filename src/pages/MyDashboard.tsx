@@ -262,7 +262,7 @@ export default function MyDashboard() {
 
       {/* Quick Stats */}
       <div className={`grid grid-cols-2 gap-3 sm:gap-4 ${isJudge ? 'lg:grid-cols-7' : 'lg:grid-cols-5'} mb-8`}>
-        <Card>
+        <Card className="glass-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Tournaments</CardTitle>
             <Trophy className="h-4 w-4 text-muted-foreground" />
@@ -272,7 +272,7 @@ export default function MyDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="glass-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Active Pairings</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
@@ -282,7 +282,7 @@ export default function MyDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="glass-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Completed Rounds</CardTitle>
             <CheckCircle className="h-4 w-4 text-muted-foreground" />
@@ -292,7 +292,7 @@ export default function MyDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="glass-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Win Rate</CardTitle>
             <Target className="h-4 w-4 text-muted-foreground" />
@@ -338,7 +338,7 @@ export default function MyDashboard() {
       </div>
 
       {/* Quick Links */}
-      <Card className="mb-8">
+      <Card className="glass-card mb-8">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <ExternalLink className="h-5 w-5" />
@@ -427,7 +427,7 @@ export default function MyDashboard() {
                 </SelectContent>
               </Select>
               {chatTournament && (
-                <Card>
+                <Card className="glass-card">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <MessageSquare className="h-5 w-5" />
@@ -448,7 +448,7 @@ export default function MyDashboard() {
               )}
             </>
           ) : (
-            <Card>
+            <Card className="glass-card">
               <CardContent className="py-8">
                 <p className="text-muted-foreground text-center">
                   You are not registered for any tournaments. 
@@ -460,7 +460,7 @@ export default function MyDashboard() {
         </TabsContent>
 
         <TabsContent value="results" className="space-y-4">
-          <Card>
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Award className="h-5 w-5" />
@@ -494,7 +494,7 @@ export default function MyDashboard() {
         </TabsContent>
 
         <TabsContent value="ballots" className="space-y-4">
-          <Card>
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileText className="h-5 w-5" />

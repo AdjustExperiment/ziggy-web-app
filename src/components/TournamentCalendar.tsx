@@ -67,7 +67,7 @@ export const TournamentCalendar = ({ tournaments, onTournamentSelect, className 
 
   return (
     <div className={cn("space-y-6", className)}>
-      <Card className="bg-card/80 backdrop-blur-sm border-border/50">
+      <Card className="glass-card">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-foreground">
             <CalendarIcon className="h-5 w-5" />
@@ -107,7 +107,7 @@ export const TournamentCalendar = ({ tournaments, onTournamentSelect, className 
               <div className="space-y-3 max-h-96 overflow-y-auto">
                 {selectedDateTournaments.length > 0 ? (
                   selectedDateTournaments.map((tournament) => (
-                    <Card key={tournament.id} className="bg-background/60 border-border/30 hover:border-primary/30 transition-smooth">
+                    <Card key={tournament.id} className="glass-card">
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between">
                           <div className="space-y-2 flex-1">

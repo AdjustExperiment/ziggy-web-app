@@ -161,9 +161,8 @@ const HostTournament = () => {
               </Link>
             </Button>
             <Button 
-              variant="outline" 
+              variant="outlineCta" 
               size="lg"
-              className="border-border text-foreground hover:bg-accent"
               asChild
             >
               <Link to="/contact?subject=Tournament%20Admin%20Access%20Request">
@@ -189,7 +188,7 @@ const HostTournament = () => {
           
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {featureCategories.map((feature, index) => (
-              <Card key={index} className="bg-card border-border/50 shadow-card hover:shadow-tournament transition-smooth group">
+              <Card key={index} className="glass-card group">
                 <CardHeader>
                   <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-4 group-hover:scale-110 transition-spring group-hover:bg-primary/20">
                     {feature.icon}
@@ -221,7 +220,7 @@ const HostTournament = () => {
           
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {selfServiceSteps.map((step, index) => (
-              <Card key={index} className="bg-card/50 border-primary/30 shadow-elegant backdrop-blur-sm text-center">
+              <Card key={index} className="glass-card text-center">
                 <CardHeader>
                   <span className="text-4xl font-mono font-bold text-primary mb-2">
                     {step.number}
@@ -359,9 +358,8 @@ const HostTournament = () => {
               </Link>
             </Button>
             <Button 
-              variant="outline" 
+              variant="outlineCta" 
               size="lg"
-              className="border-border text-foreground hover:bg-accent"
               asChild
             >
               <Link to="/contact?subject=Enterprise%20Tournament%20Hosting">

@@ -291,7 +291,7 @@ const Tournaments = () => {
               {/* Calendar View */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredTournaments.map((tournament) => (
-                  <Card key={tournament.id} className="bg-card/80 backdrop-blur-sm border-border/50 hover:border-primary/30 hover:bg-card/90 transition-smooth group">
+                  <Card key={tournament.id} className="glass-card group">
                     <CardHeader className="pb-4">
                       <div className="flex justify-between items-start mb-3">
                         <Badge 
@@ -361,8 +361,8 @@ const Tournaments = () => {
                         </Button>
                         
                         <Button 
-                          variant="outline" 
-                          className="w-full border-border text-foreground hover:bg-muted text-sm"
+                          variant="outlineCta" 
+                          className="w-full text-sm"
                           onClick={() => handleViewDetails(tournament.id)}
                         >
                           Learn More
@@ -376,7 +376,7 @@ const Tournaments = () => {
           ) : (
             <div className={`grid gap-4 sm:gap-6 ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
               {filteredTournaments.map((tournament) => (
-                <Card key={tournament.id} className={`bg-card/80 backdrop-blur-sm border-border/50 hover:border-primary/30 hover:bg-card/90 transition-smooth group ${viewMode === 'list' ? 'lg:flex lg:flex-row' : ''}`}>
+                <Card key={tournament.id} className={`glass-card group ${viewMode === 'list' ? 'lg:flex lg:flex-row' : ''}`}>
                   <CardHeader className={`${viewMode === 'list' ? 'lg:flex-none lg:w-1/3' : ''} pb-4`}>
                     <div className="flex justify-between items-start mb-3">
                       <div className="flex items-center gap-3 flex-wrap">
@@ -527,8 +527,8 @@ const Tournaments = () => {
                       )}
                       
                       <Button 
-                        variant="outline" 
-                        className="border-border text-foreground hover:bg-muted hover:text-foreground text-sm"
+                        variant="outlineCta" 
+                        className="text-sm"
                         onClick={() => handleViewDetails(tournament.id)}
                       >
                         Learn More
@@ -557,7 +557,7 @@ const Tournaments = () => {
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredTournaments.slice(0, 3).map((tournament) => (
-                <Card key={tournament.id} className="bg-card/80 backdrop-blur-sm border-border/50 hover:border-primary/30 hover:bg-card/90 transition-smooth group">
+                <Card key={tournament.id} className="glass-card group">
                   <CardHeader className="pb-3">
                     <Badge 
                       variant={tournament.status === 'Registration Open' ? 'default' : 'secondary'}
@@ -591,9 +591,9 @@ const Tournaments = () => {
                         {tournament.registration_open ? 'Register' : 'View'}
                       </Button>
                       <Button 
-                        variant="outline" 
+                        variant="outlineCta" 
                         size="sm"
-                        className="flex-1 border-border text-foreground hover:bg-muted"
+                        className="flex-1"
                         onClick={() => handleViewDetails(tournament.id)}
                       >
                         Details

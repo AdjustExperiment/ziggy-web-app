@@ -201,7 +201,7 @@ export default function BlogPostDetail() {
 
       {/* Content */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
-        <Card className="bg-card/50 border-primary/20 backdrop-blur-sm">
+        <Card className="glass-card">
           <CardContent className="pt-8 pb-8">
             {post.excerpt && !post.content && (
               <p className="text-lg text-muted-foreground leading-relaxed">

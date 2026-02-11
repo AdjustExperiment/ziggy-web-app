@@ -106,9 +106,8 @@ const Ambassador = () => {
               </Link>
             </Button>
             <Button 
-              variant="outline" 
+              variant="outlineCta" 
               size="lg"
-              className="border-border text-foreground hover:bg-accent"
               asChild
             >
               <Link to="/about">
@@ -133,7 +132,7 @@ const Ambassador = () => {
           
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {ambassadorBenefits.map((benefit, index) => (
-              <Card key={index} className="bg-card border-border/50 shadow-card hover:shadow-tournament transition-smooth group">
+              <Card key={index} className="glass-card group">
                 <CardHeader>
                   <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-4 group-hover:scale-110 transition-spring group-hover:bg-primary/20">
                     {benefit.icon}
@@ -160,7 +159,7 @@ const Ambassador = () => {
             </h2>
           </div>
           
-          <Card className="bg-card/50 border-primary/30 shadow-elegant backdrop-blur-sm">
+          <Card className="glass-card">
             <CardContent className="p-8">
               <div className="space-y-4">
                 {responsibilities.map((item, index) => (
@@ -184,7 +183,7 @@ const Ambassador = () => {
             </h2>
           </div>
           
-          <Card className="bg-card/50 border-primary/30 shadow-elegant backdrop-blur-sm">
+          <Card className="glass-card">
             <CardContent className="p-8">
               <div className="space-y-4">
                 {requirements.map((requirement, index) => (

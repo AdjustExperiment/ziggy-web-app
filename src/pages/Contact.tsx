@@ -151,10 +151,7 @@ const Contact = () => {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-16">
             {contactMethods.map((method) => (
-              <Card 
-                key={method.title} 
-                className="bg-card border-border shadow-card text-center hover:shadow-lg transition-shadow group"
-              >
+              <Card key={method.title} className="glass-card text-center group">
                 <CardHeader>
                   <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-4 mx-auto group-hover:bg-primary/20 transition-colors">
                     <method.icon className="h-6 w-6" />
@@ -187,7 +184,7 @@ const Contact = () => {
 
           {/* Contact Form */}
           <div className="max-w-2xl mx-auto">
-            <Card className="bg-card border-border shadow-card">
+            <Card className="glass-card">
               <CardHeader>
                 <CardTitle className="text-2xl font-primary text-card-foreground text-center">
                   Send us a Message

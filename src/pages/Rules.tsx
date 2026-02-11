@@ -183,7 +183,7 @@ export default function Rules() {
 
         {/* Table of Contents */}
         {rules.length > 0 && (
-          <Card className="mb-8 bg-card/80 backdrop-blur-sm">
+          <Card className="glass-card mb-8">
             <CardHeader>
               <CardTitle className="text-xl font-semibold flex items-center">
                 <FileText className="h-5 w-5 mr-2" />
@@ -213,7 +213,7 @@ export default function Rules() {
         )}
 
         {/* Rules Accordion */}
-        <Card className="bg-card/80 backdrop-blur-sm">
+        <Card className="glass-card">
           <CardContent className="p-6">
             <Accordion type="single" collapsible className="space-y-4">
               {rules.map((rule) => (
@@ -253,7 +253,7 @@ export default function Rules() {
             <p className="text-muted-foreground mb-4">
               If you have any questions about these rules, please contact us.
             </p>
-            <Button asChild variant="outline">
+            <Button asChild variant="outlineCta">
               <a href="mailto:rules@ziggyonlinedebate.com?subject=Rules%20Question">
                 <ExternalLink className="h-4 w-4 mr-2" />
                 Contact Rules Committee

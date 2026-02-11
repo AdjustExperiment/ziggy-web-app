@@ -20,7 +20,7 @@ const Terms = () => {
           </p>
         </div>
 
-        <Card className="backdrop-blur-sm bg-card/80 border-border/50 shadow-lg">
+        <Card className="glass-card">
           <div className="p-8 md:p-12">
             <div className="prose prose-lg max-w-none dark:prose-invert">
               

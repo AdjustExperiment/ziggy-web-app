@@ -97,9 +97,8 @@ const ClubPartners = () => {
               </Link>
             </Button>
             <Button 
-              variant="outline" 
+              variant="outlineCta" 
               size="lg"
-              className="border-border text-foreground hover:bg-accent"
               asChild
             >
               <Link to="/about">
@@ -124,7 +123,7 @@ const ClubPartners = () => {
           
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {partnerBenefits.map((benefit, index) => (
-              <Card key={index} className="bg-card border-border/50 shadow-card hover:shadow-tournament transition-smooth group">
+              <Card key={index} className="glass-card group">
                 <CardHeader>
                   <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-4 group-hover:scale-110 transition-spring group-hover:bg-primary/20">
                     {benefit.icon}
@@ -181,7 +180,7 @@ const ClubPartners = () => {
               { step: "2", title: "Review", desc: "Our team will review your application within 48 hours" },
               { step: "3", title: "Welcome!", desc: "Once approved, you'll receive your partner benefits immediately" }
             ].map((item, index) => (
-              <Card key={index} className="bg-card/50 border-primary/30 shadow-elegant backdrop-blur-sm text-center">
+              <Card key={index} className="glass-card text-center">
                 <CardHeader>
                   <span className="text-4xl font-mono font-bold text-primary mb-2">
                     {item.step}

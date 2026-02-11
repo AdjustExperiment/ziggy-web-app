@@ -172,7 +172,7 @@ const LearnAboutDebate = () => {
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
-            <Button size="lg" variant="outline" asChild className="hover-scale">
+            <Button size="lg" variant="outlineCta" asChild className="hover-scale">
               <Link to="/tournaments">View Tournaments</Link>
             </Button>
           </div>
@@ -186,7 +186,7 @@ const LearnAboutDebate = () => {
             Why Debate?
           </h2>
           <div className="grid md:grid-cols-3 gap-6 mb-16">
-            <Card className="hover-scale animate-fade-in">
+            <Card className="glass-card hover-scale animate-fade-in">
               <CardHeader>
                 <BookOpen className="h-8 w-8 text-primary mb-2" />
                 <CardTitle>What is Debate?</CardTitle>
@@ -200,7 +200,7 @@ const LearnAboutDebate = () => {
               </CardContent>
             </Card>
 
-            <Card className="hover-scale animate-fade-in">
+            <Card className="glass-card hover-scale animate-fade-in">
               <CardHeader>
                 <Gavel className="h-8 w-8 text-primary mb-2" />
                 <CardTitle>How It Works</CardTitle>
@@ -214,7 +214,7 @@ const LearnAboutDebate = () => {
               </CardContent>
             </Card>
 
-            <Card className="hover-scale animate-fade-in">
+            <Card className="glass-card hover-scale animate-fade-in">
               <CardHeader>
                 <Trophy className="h-8 w-8 text-primary mb-2" />
                 <CardTitle>Why It Matters</CardTitle>
@@ -239,7 +239,7 @@ const LearnAboutDebate = () => {
           </h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {debateFormats.map((format, index) => (
-              <Card key={index} className="hover-scale animate-fade-in h-full">
+              <Card key={index} className="glass-card hover-scale animate-fade-in h-full">
                 <CardHeader>
                   <div className="flex items-center justify-between mb-2">
                     {format.icon}
@@ -289,7 +289,7 @@ const LearnAboutDebate = () => {
           </h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {skillsGained.map((skill, index) => (
-              <Card key={index} className="hover-scale animate-fade-in">
+              <Card key={index} className="glass-card hover-scale animate-fade-in">
                 <CardHeader className="pb-4">
                   <div className="flex items-center space-x-3">
                     <div className="p-2 rounded-lg bg-primary/10">
@@ -395,7 +395,7 @@ const LearnAboutDebate = () => {
           </h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {gettingStartedSteps.map((step, index) => (
-              <Card key={index} className="hover-scale animate-fade-in relative">
+              <Card key={index} className="glass-card hover-scale animate-fade-in relative">
                 <CardHeader>
                   <div className="flex items-center space-x-3">
                     <div className="p-2 rounded-lg bg-primary text-primary-foreground font-bold min-w-[2rem] text-center">
@@ -465,7 +465,7 @@ const LearnAboutDebate = () => {
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
-            <Button size="lg" variant="outline" asChild className="hover-scale">
+            <Button size="lg" variant="outlineCta" asChild className="hover-scale">
               <Link to="/tournaments">Browse Tournaments</Link>
             </Button>
           </div>

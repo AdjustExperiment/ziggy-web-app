@@ -168,7 +168,7 @@ export default function Blog() {
       {featuredPost && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-16">
           <div className="relative">
-            <Card className="bg-card/50 border-primary/30 overflow-hidden backdrop-blur-sm">
+            <Card className="glass-card overflow-hidden">
               <div className="md:flex">
                 <div className="md:w-1/2 relative">
                   <div className="h-64 md:h-full bg-gradient-to-br from-red-600/10 to-muted/50 flex items-center justify-center">
@@ -240,7 +240,7 @@ export default function Blog() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {otherPosts.map((post) => (
-              <Card key={post.id} className="bg-card/30 border-primary/20 hover:border-primary/40 transition-all duration-300 backdrop-blur-sm group">
+              <Card key={post.id} className="glass-card group">
                 <div className="h-48 bg-gradient-to-br from-red-600/10 to-muted/30 flex items-center justify-center relative overflow-hidden">
                   {post.cover_image_url ? (
                     <img 

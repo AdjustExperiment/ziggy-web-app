@@ -289,7 +289,7 @@ const SponsorDashboard = () => {
       <div className="min-h-screen bg-background">
         <Navbar />
         <main className="container mx-auto px-4 py-16">
-          <Card className="max-w-2xl mx-auto">
+          <Card className="glass-card max-w-2xl mx-auto">
             <CardHeader className="text-center">
               <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
                 <Sparkles className="h-8 w-8 text-primary" />
@@ -324,7 +324,7 @@ const SponsorDashboard = () => {
       <div className="min-h-screen bg-background">
         <Navbar />
         <main className="container mx-auto px-4 py-16">
-          <Card className="max-w-2xl mx-auto">
+          <Card className="glass-card max-w-2xl mx-auto">
             <CardHeader className="text-center">
               <div className="mx-auto w-16 h-16 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center mb-4">
                 <Clock className="h-8 w-8 text-amber-600" />
@@ -409,7 +409,7 @@ const SponsorDashboard = () => {
           </TabsList>
 
           <TabsContent value="profile">
-            <Card>
+            <Card className="glass-card">
               <CardHeader>
                 <CardTitle>Sponsor Profile</CardTitle>
               </CardHeader>
@@ -530,7 +530,7 @@ const SponsorDashboard = () => {
           </TabsContent>
 
           <TabsContent value="apply">
-            <Card>
+            <Card className="glass-card">
               <CardHeader>
                 <CardTitle>Apply to Sponsor a Tournament</CardTitle>
                 <CardDescription>

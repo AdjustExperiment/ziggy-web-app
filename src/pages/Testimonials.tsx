@@ -60,9 +60,7 @@ const Testimonials = () => {
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
             <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
               {testimonials.map((testimonial, index) => (
-                <Card key={index} className={`bg-gradient-card border-border/50 shadow-card hover:shadow-tournament transition-smooth ${
-                  testimonial.highlight ? 'lg:col-span-3 md:col-span-2' : ''
-                }`}>
+                <Card key={index} className={`glass-card ${testimonial.highlight ? 'lg:col-span-3 md:col-span-2' : ''}`}>
                   <CardContent className="p-6">
                     {testimonial.highlight && (
                       <Badge className="bg-primary/10 text-primary border-border mb-4">
