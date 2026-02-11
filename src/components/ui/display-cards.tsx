@@ -25,18 +25,18 @@ function DisplayCard({
   return (
     <div
       className={cn(
-        "relative flex h-40 w-[20rem] min-w-[20rem] -skew-y-[8deg] select-none flex-col justify-between rounded-xl border-2 border-border/80 bg-card/95 dark:bg-card/90 backdrop-blur-md shadow-xl px-4 py-3 transition-all duration-700 after:absolute after:-right-1 after:top-[-5%] after:h-[110%] after:w-[20rem] after:bg-gradient-to-l after:from-background after:to-transparent after:content-[''] hover:border-primary/40 hover:shadow-2xl hover:z-10 [&>*]:flex [&>*]:items-center [&>*]:gap-2",
+        "relative flex h-40 w-[20rem] min-w-[20rem] -skew-y-[8deg] select-none flex-col justify-between rounded-xl border-2 border-border/80 bg-card shadow-xl px-4 py-3 transition-all duration-700 after:absolute after:-right-1 after:top-[-5%] after:h-[110%] after:w-[20rem] after:bg-gradient-to-l after:from-background after:to-transparent after:content-[''] after:pointer-events-none hover:border-primary/40 hover:shadow-2xl hover:z-20 [&>*]:flex [&>*]:items-center [&>*]:gap-2 isolate",
         className
       )}
     >
-      <div>
+      <div className="relative z-[1]">
         <span className={cn("relative inline-block rounded-full bg-primary/20 p-1.5", iconClassName)}>
           {icon}
         </span>
         <p className={cn("text-lg font-semibold text-foreground", titleClassName)}>{title}</p>
       </div>
-      <p className="text-foreground/90 text-base line-clamp-2">{description}</p>
-      <p className="text-muted-foreground text-sm">{date}</p>
+      <p className="text-foreground text-base line-clamp-2 relative z-[1]">{description}</p>
+      <p className="text-muted-foreground text-sm relative z-[1]">{date}</p>
     </div>
   );
 }
@@ -49,15 +49,15 @@ export default function DisplayCards({ cards }: DisplayCardsProps) {
   const defaultCards: DisplayCardProps[] = [
     {
       className:
-        "[grid-area:stack] hover:-translate-y-10 before:absolute before:w-[100%] before:outline-1 before:rounded-xl before:outline-border before:h-[100%] before:content-[''] before:bg-blend-overlay before:bg-background/50 grayscale-[100%] hover:before:opacity-0 before:transition-opacity before:duration-700 hover:grayscale-0 before:left-0 before:top-0",
+        "[grid-area:stack] hover:-translate-y-24 before:absolute before:w-[100%] before:outline-1 before:rounded-xl before:outline-border before:h-[100%] before:content-[''] before:bg-blend-overlay before:bg-background/50 grayscale-[100%] hover:before:opacity-0 before:transition-opacity before:duration-700 hover:grayscale-0 before:left-0 before:top-0 before:z-0",
     },
     {
       className:
-        "[grid-area:stack] translate-x-16 translate-y-10 hover:-translate-y-1 before:absolute before:w-[100%] before:outline-1 before:rounded-xl before:outline-border before:h-[100%] before:content-[''] before:bg-blend-overlay before:bg-background/50 grayscale-[100%] hover:before:opacity-0 before:transition-opacity before:duration-700 hover:grayscale-0 before:left-0 before:top-0",
+        "[grid-area:stack] translate-x-16 translate-y-10 hover:-translate-y-24 hover:translate-x-16 before:absolute before:w-[100%] before:outline-1 before:rounded-xl before:outline-border before:h-[100%] before:content-[''] before:bg-blend-overlay before:bg-background/50 grayscale-[100%] hover:before:opacity-0 before:transition-opacity before:duration-700 hover:grayscale-0 before:left-0 before:top-0 before:z-0",
     },
     {
       className:
-        "[grid-area:stack] translate-x-32 translate-y-20 hover:translate-y-10",
+        "[grid-area:stack] translate-x-32 translate-y-20 hover:-translate-y-24 hover:translate-x-32",
     },
   ];
 
