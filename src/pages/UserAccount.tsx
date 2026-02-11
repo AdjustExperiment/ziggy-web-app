@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useOptimizedAuth } from '@/hooks/useOptimizedAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { EvervaultCard } from '@/components/ui/evervault-card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ProfileSetup } from '@/components/auth/ProfileSetup';
@@ -253,7 +254,7 @@ export default function UserAccount() {
             <TabsContent value="profile">
 
             {/* Profile Information */}
-            <Card>
+            <EvervaultCard className="p-0">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <User className="h-5 w-5" />
@@ -311,7 +312,7 @@ export default function UserAccount() {
                 </div>
               )}
             </CardContent>
-            </Card>
+            </EvervaultCard>
             </TabsContent>
 
             <TabsContent value="security">
